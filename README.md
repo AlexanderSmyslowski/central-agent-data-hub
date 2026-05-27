@@ -10,8 +10,8 @@ PostgreSQL ist die operative Wahrheit: Hier liegen die normalisierten Daten, Rel
 - Demo-Seed ist vorhanden: `seed/demo.sql`
 - Obsidian-Jinja2-Templates sind vorhanden: `templates/`
 - Minimaler Obsidian-Exporter ist vorhanden: `agent_hub/export_obsidian.py`
-- CLI-Kommando ist vorhanden: `agent-hub export`
-- CLI-Platzhalter sind vorhanden, aber noch nicht implementiert: `init`, `import`, `check`, `status`
+- CLI-Kommandos sind vorhanden: `agent-hub export`, `agent-hub status`, `agent-hub check`
+- CLI-Platzhalter sind vorhanden, aber noch nicht implementiert: `init`, `import`
 
 ## Voraussetzungen
 
@@ -67,12 +67,14 @@ python3 -m venv .venv
 python -m pip install -e .
 ```
 
-Exportziel setzen und Export ausfuehren:
+Exportziel setzen, Status pruefen, Konsistenz pruefen und Export ausfuehren:
 
 ```bash
 export DATABASE_URL="postgresql://postgres@localhost:55432/agent_hub_test"
 export OBSIDIAN_EXPORT_DIR="/tmp/agent-hub-obsidian"
 
+agent-hub status
+agent-hub check
 agent-hub export
 ```
 
@@ -106,6 +108,39 @@ Jede Datei enthaelt YAML-Frontmatter, einen automatisch ueberschreibbaren Bereic
 ```
 
 Beim erneuten Export bleibt der Inhalt innerhalb des Human-Notes-Blocks erhalten.
+
+## CLI Commands
+
+- `agent-hub export`: exportiert Datenbankzeilen als Obsidian-Markdown-Dateien
+- `agent-hub status`: zeigt eine schnelle Diagnose fuer Datenbank, Exportordner und Tabellenzaehlungen
+- `agent-hub check`: prueft einfache Konsistenzregeln fuer Export und Review
+- `agent-hub init`: noch nicht implementiert
+- `agent-hub import`: noch nicht implementiert
+
+## Status Pruefen
+
+`agent-hub status` zeigt, ob die Grundkonfiguration arbeitsfaehig ist:
+
+```bash
+agent-hub status
+```
+
+Geprueft werden unter anderem `DATABASE_URL`, die Datenbankverbindung, `OBSIDIAN_EXPORT_DIR`, der Exportordner und die Datensatzanzahl der Kern-Tabellen.
+
+## Konsistenz Pruefen
+
+`agent-hub check` fuehrt einfache Konsistenzpruefungen fuer Export und Review aus:
+
+```bash
+agent-hub check
+```
+
+Bewertung:
+
+- niedrige Confidence bei Fakten ist eine Warning
+- offene Fragen sind eine Warning
+- kaputte polymorphe Relationen sind ein Error
+- eine nicht erreichbare Datenbank ist ein Error
 
 ## Projektstruktur
 
