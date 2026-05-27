@@ -1,0 +1,40 @@
+---
+type: open_question
+db_id: "{{ id | default('', true) }}"
+{% if slug is defined and slug %}slug: "{{ slug }}"
+{% endif %}{% if project_id is defined and project_id %}project_id: "{{ project_id }}"
+{% endif %}status: "{{ status | default('unknown', true) }}"
+source: "{{ source | default('database', true) }}"
+{% if confidence is defined and confidence is not none %}confidence: {{ confidence }}
+{% endif %}created_at: "{{ created_at | default('', true) }}"
+updated_at: "{{ updated_at | default('', true) }}"
+last_exported_at: "{{ last_exported_at | default('', true) }}"
+---
+
+# Question: {{ title | default(question | default('Untitled Question', true), true) }}
+
+<!-- AUTO-GENERATED:START -->
+
+{% if question is defined and question %}
+{{ question }}
+{% else %}
+_No question text exported._
+{% endif %}
+
+{% if answer is defined and answer %}
+## Answer
+
+{{ answer }}
+{% endif %}
+
+{% if resolved_at is defined and resolved_at %}
+**Resolved At:** {{ resolved_at }}
+{% endif %}
+
+<!-- AUTO-GENERATED:END -->
+
+## Human Notes
+
+<!-- HUMAN-NOTES:START -->
+
+<!-- HUMAN-NOTES:END -->

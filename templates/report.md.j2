@@ -1,0 +1,40 @@
+---
+type: report
+db_id: "{{ id | default('', true) }}"
+{% if slug is defined and slug %}slug: "{{ slug }}"
+{% endif %}{% if project_id is defined and project_id %}project_id: "{{ project_id }}"
+{% endif %}status: "{{ status | default('unknown', true) }}"
+source: "{{ source | default('database', true) }}"
+{% if confidence is defined and confidence is not none %}confidence: {{ confidence }}
+{% endif %}created_at: "{{ created_at | default('', true) }}"
+updated_at: "{{ updated_at | default('', true) }}"
+last_exported_at: "{{ last_exported_at | default('', true) }}"
+---
+
+# {{ title | default('Untitled Report', true) }}
+
+<!-- AUTO-GENERATED:START -->
+
+{% if report_type is defined and report_type %}
+**Report Type:** {{ report_type }}
+
+{% endif %}{% if summary is defined and summary %}
+## Summary
+
+{{ summary }}
+
+{% endif %}{% if body is defined and body %}
+## Body
+
+{{ body }}
+{% else %}
+_No report body exported._
+{% endif %}
+
+<!-- AUTO-GENERATED:END -->
+
+## Human Notes
+
+<!-- HUMAN-NOTES:START -->
+
+<!-- HUMAN-NOTES:END -->

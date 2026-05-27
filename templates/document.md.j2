@@ -1,0 +1,39 @@
+---
+type: document
+db_id: "{{ id | default('', true) }}"
+{% if slug is defined and slug %}slug: "{{ slug }}"
+{% endif %}{% if project_id is defined and project_id %}project_id: "{{ project_id }}"
+{% endif %}status: "{{ status | default('unknown', true) }}"
+source: "{{ source | default(path | default('database', true), true) }}"
+{% if confidence is defined and confidence is not none %}confidence: {{ confidence }}
+{% endif %}created_at: "{{ created_at | default('', true) }}"
+updated_at: "{{ updated_at | default('', true) }}"
+last_exported_at: "{{ last_exported_at | default('', true) }}"
+---
+
+# {{ title | default(slug | default('Untitled Document', true), true) }}
+
+<!-- AUTO-GENERATED:START -->
+
+{% if path is defined and path %}
+**Path:** `{{ path }}`
+
+{% endif %}{% if content is defined and content %}
+{{ content }}
+{% else %}
+_No document content exported._
+{% endif %}
+
+{% if content_hash is defined and content_hash %}
+## Content Hash
+
+`{{ content_hash }}`
+{% endif %}
+
+<!-- AUTO-GENERATED:END -->
+
+## Human Notes
+
+<!-- HUMAN-NOTES:START -->
+
+<!-- HUMAN-NOTES:END -->

@@ -1,0 +1,39 @@
+---
+type: risk
+db_id: "{{ id | default('', true) }}"
+{% if slug is defined and slug %}slug: "{{ slug }}"
+{% endif %}{% if project_id is defined and project_id %}project_id: "{{ project_id }}"
+{% endif %}status: "{{ status | default('unknown', true) }}"
+source: "{{ source | default('database', true) }}"
+{% if confidence is defined and confidence is not none %}confidence: {{ confidence }}
+{% endif %}created_at: "{{ created_at | default('', true) }}"
+updated_at: "{{ updated_at | default('', true) }}"
+last_exported_at: "{{ last_exported_at | default('', true) }}"
+---
+
+# Risk: {{ title | default('Untitled Risk', true) }}
+
+<!-- AUTO-GENERATED:START -->
+
+{% if severity is defined and severity %}
+**Severity:** {{ severity }}
+
+{% endif %}{% if impact is defined and impact %}
+## Impact
+
+{{ impact }}
+{% endif %}
+
+{% if mitigation is defined and mitigation %}
+## Mitigation
+
+{{ mitigation }}
+{% endif %}
+
+<!-- AUTO-GENERATED:END -->
+
+## Human Notes
+
+<!-- HUMAN-NOTES:START -->
+
+<!-- HUMAN-NOTES:END -->

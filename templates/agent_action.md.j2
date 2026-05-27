@@ -1,0 +1,54 @@
+---
+type: agent_action
+db_id: "{{ id | default('', true) }}"
+{% if slug is defined and slug %}slug: "{{ slug }}"
+{% endif %}{% if project_id is defined and project_id %}project_id: "{{ project_id }}"
+{% endif %}status: "{{ status | default('unknown', true) }}"
+source: "{{ source | default('database', true) }}"
+{% if confidence is defined and confidence is not none %}confidence: {{ confidence }}
+{% endif %}created_at: "{{ created_at | default('', true) }}"
+updated_at: "{{ updated_at | default('', true) }}"
+last_exported_at: "{{ last_exported_at | default('', true) }}"
+---
+
+# Agent Action: {{ action | default('Untitled Action', true) }}
+
+<!-- AUTO-GENERATED:START -->
+
+{% if agent_id is defined and agent_id %}
+**Agent ID:** `{{ agent_id }}`
+
+{% endif %}{% if object_type is defined and object_type %}
+**Object:** {{ object_type }}{% if object_id is defined and object_id %} `{{ object_id }}`{% endif %}
+
+{% endif %}{% if input is defined and input %}
+## Input
+
+```json
+{{ input | tojson(indent=2) }}
+```
+{% endif %}
+
+{% if output is defined and output %}
+## Output
+
+```json
+{{ output | tojson(indent=2) }}
+```
+{% endif %}
+
+{% if error is defined and error %}
+## Error
+
+```text
+{{ error }}
+```
+{% endif %}
+
+<!-- AUTO-GENERATED:END -->
+
+## Human Notes
+
+<!-- HUMAN-NOTES:START -->
+
+<!-- HUMAN-NOTES:END -->

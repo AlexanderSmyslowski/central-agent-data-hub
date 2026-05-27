@@ -1,0 +1,38 @@
+---
+type: project
+db_id: "{{ id | default('', true) }}"
+{% if slug is defined and slug %}slug: "{{ slug }}"
+{% endif %}{% if project_id is defined and project_id %}project_id: "{{ project_id }}"
+{% endif %}status: "{{ status | default('unknown', true) }}"
+source: "{{ source | default('database', true) }}"
+{% if confidence is defined and confidence is not none %}confidence: {{ confidence }}
+{% endif %}created_at: "{{ created_at | default('', true) }}"
+updated_at: "{{ updated_at | default('', true) }}"
+last_exported_at: "{{ last_exported_at | default('', true) }}"
+---
+
+# {{ name | default(slug | default('Untitled Project', true), true) }}
+
+<!-- AUTO-GENERATED:START -->
+
+{% if description is defined and description %}
+{{ description }}
+{% else %}
+_No project description exported._
+{% endif %}
+
+{% if metadata is defined and metadata %}
+## Metadata
+
+```json
+{{ metadata | tojson(indent=2) }}
+```
+{% endif %}
+
+<!-- AUTO-GENERATED:END -->
+
+## Human Notes
+
+<!-- HUMAN-NOTES:START -->
+
+<!-- HUMAN-NOTES:END -->

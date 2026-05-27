@@ -1,0 +1,42 @@
+---
+type: decision
+db_id: "{{ id | default('', true) }}"
+{% if slug is defined and slug %}slug: "{{ slug }}"
+{% endif %}{% if project_id is defined and project_id %}project_id: "{{ project_id }}"
+{% endif %}status: "{{ status | default('unknown', true) }}"
+source: "{{ source | default('database', true) }}"
+{% if confidence is defined and confidence is not none %}confidence: {{ confidence }}
+{% endif %}created_at: "{{ created_at | default('', true) }}"
+updated_at: "{{ updated_at | default('', true) }}"
+last_exported_at: "{{ last_exported_at | default('', true) }}"
+---
+
+# Decision: {{ title | default(decision | default('Untitled Decision', true), true) }}
+
+<!-- AUTO-GENERATED:START -->
+
+{% if decision is defined and decision %}
+{{ decision }}
+{% else %}
+_No decision text exported._
+{% endif %}
+
+{% if rationale is defined and rationale %}
+## Rationale
+
+{{ rationale }}
+{% endif %}
+
+{% if consequences is defined and consequences %}
+## Consequences
+
+{{ consequences }}
+{% endif %}
+
+<!-- AUTO-GENERATED:END -->
+
+## Human Notes
+
+<!-- HUMAN-NOTES:START -->
+
+<!-- HUMAN-NOTES:END -->
