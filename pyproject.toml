@@ -1,0 +1,17 @@
+[project]
+name = "central-agent-data-hub"
+version = "0.1.0"
+description = "Minimal Obsidian exporter for the Central Agent Data Hub."
+requires-python = ">=3.11"
+dependencies = [
+  "jinja2",
+  "psycopg[binary]",
+  "pyyaml",
+]
+
+[project.scripts]
+agent-hub-export-obsidian = "agent_hub.export_obsidian:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
