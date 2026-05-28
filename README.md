@@ -114,8 +114,71 @@ Beim erneuten Export bleibt der Inhalt innerhalb des Human-Notes-Blocks erhalten
 - `agent-hub export`: exportiert Datenbankzeilen als Obsidian-Markdown-Dateien
 - `agent-hub status`: zeigt eine schnelle Diagnose fuer Datenbank, Exportordner und Tabellenzaehlungen
 - `agent-hub check`: prueft einfache Konsistenzregeln fuer Export und Review
+- `agent-hub brief --project <slug>`: gibt einen kompakten Projektbrief fuer Agenten aus
+- `agent-hub remember --project <slug> --type <type> --text <text>`: speichert eine gepruefte Erinnerung
 - `agent-hub init`: noch nicht implementiert
 - `agent-hub import`: noch nicht implementiert
+
+## Codex-/Hermes-Gedaechtnis
+
+Die neuen `brief`- und `remember`-Kommandos bilden den kleinen kontrollierten Zugriffspfad fuer Codex und Hermes.
+
+Vor groesseren Arbeiten:
+
+```bash
+agent-hub brief --project commcats-de
+agent-hub brief --project the-one-catering
+```
+
+Die Website-Projekte haben unterschiedliche Bearbeitungsstaende:
+
+- `commcats-de`: aktuelle Live-Seite ist bereits eine statische Alfahosting-Website. Agenten sollen lokal in der statischen Quelle arbeiten und nur nach ausdruecklicher Freigabe hochladen.
+- `the-one-catering`: aktuelle Live-Seite bleibt vorerst Framer. Agenten sollen die Live-Seite stabil halten, optisch unsichtbare SEO-/AI-Schritte vorbereiten und eine geschuetzte statische Staging-Version bauen, bevor ueber Migration gesprochen wird.
+
+Nach relevanten, geprueften Entscheidungen:
+
+```bash
+agent-hub remember \
+  --project the-one-catering \
+  --type decision \
+  --text "Build the static Alfahosting prototype before any live migration." \
+  --rationale "The live Framer site remains in use and must not be disrupted."
+```
+
+Fuer neue Fakten mit Quelle:
+
+```bash
+agent-hub remember \
+  --project commcats-de \
+  --type fact \
+  --text "commcats.de has a static Alfahosting deployment." \
+  --source "/Users/alexandersmyslowski/Documents/commcats.de/DEPLOYMENT-LOG.md" \
+  --confidence 0.95
+```
+
+Erlaubte Typen fuer `remember`:
+
+- `fact`
+- `decision`
+- `open-question`
+- `risk`
+- `report`
+
+Wichtig: `remember` ist fuer kuratierte, nicht-sensitive Arbeitsfakten gedacht. Passwoerter, rohe Rechnungsdaten, private Kundendaten und ungepruefte Behauptungen gehoeren nicht in den Hub.
+
+Ein nicht-sensibler Start-Seed fuer die Website-Projekte liegt in:
+
+```txt
+seed/business_sites.sql
+```
+
+Einspielen nach der Basismigration:
+
+```bash
+docker exec -i central-agent-data-hub-demo \
+  psql -v ON_ERROR_STOP=1 -U postgres -d agent_hub_test \
+  < seed/business_sites.sql
+```
 
 ## Status Pruefen
 
