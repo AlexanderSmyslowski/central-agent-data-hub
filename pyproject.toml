@@ -9,6 +9,11 @@ dependencies = [
   "pyyaml",
 ]
 
+[project.optional-dependencies]
+dev = [
+  "pytest",
+]
+
 [project.scripts]
 agent-hub = "agent_hub.cli:main"
 agent-hub-export-obsidian = "agent_hub.export_obsidian:main"
@@ -19,3 +24,6 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 include = ["agent_hub*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
