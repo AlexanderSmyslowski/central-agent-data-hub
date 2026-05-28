@@ -64,7 +64,7 @@ Paket lokal installieren, zum Beispiel als editable install:
 ```bash
 python3 -m venv .venv
 . .venv/bin/activate
-python -m pip install -e .
+python -m pip install -e ".[dev]"
 ```
 
 Exportziel setzen, Status pruefen, Konsistenz pruefen und Export ausfuehren:
@@ -205,12 +205,40 @@ Bewertung:
 - kaputte polymorphe Relationen sind ein Error
 - eine nicht erreichbare Datenbank ist ein Error
 
+## Tests Ausfuehren
+
+Die schnellen lokalen Tests benoetigen keine Datenbank:
+
+```bash
+python3 -m compileall agent_hub
+python -m pytest
+agent-hub --help
+agent-hub brief --help
+agent-hub remember --help
+```
+
+PostgreSQL-Checks bleiben optional. Sie koennen gegen jede disposable Testdatenbank laufen, die ueber `DATABASE_URL` erreichbar ist. Docker ist dafuer praktisch, aber keine Pflicht fuer normale Entwicklung.
+
+## Sichere Import-Richtung
+
+`agent-hub import` ist absichtlich noch nicht implementiert. Ein spaeterer Obsidian-Rueckimport darf nur ueber eine explizite Allowlist laufen:
+
+- erlaubte Projekt-Slugs
+- erlaubte Quellpfade
+- erlaubte Frontmatter-Typen
+- erlaubte Zielfelder
+- keine Secrets, privaten Kundendaten, rohen Rechnungsdaten oder Deployment-Credentials
+
+Die Richtung ist in `docs/import-allowlist.md` dokumentiert.
+
 ## Projektstruktur
 
 - `migrations/`: PostgreSQL-Migrationen
 - `seed/`: reproduzierbare Demo-Daten
 - `templates/`: Jinja2-Templates fuer Obsidian-Markdown
 - `agent_hub/`: Python-Code fuer Datenbankzugriff, Markdown-Rendering, Exporter und CLI
+- `tests/`: schnelle lokale Unit-Tests
+- `ROADMAP.md`: priorisierte v0-Folgearbeiten
 
 ## Was v0 Bewusst Noch Nicht Macht
 
@@ -222,7 +250,6 @@ Bewertung:
 
 ## Naechste Sinnvolle Schritte
 
-- `agent-hub status`
-- `agent-hub check`
 - Import-Allowlist
-- Tests automatisieren
+- optionale PostgreSQL-Smoke-Tests scriptbar machen
+- `agent-hub import` erst nach Allowlist-Tests implementieren
