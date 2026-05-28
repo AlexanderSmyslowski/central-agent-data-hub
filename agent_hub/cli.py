@@ -10,7 +10,7 @@ from pathlib import Path
 
 from agent_hub.db import connect
 from agent_hub.export_obsidian import export_all
-from agent_hub.import_obsidian import import_markdown
+from agent_hub.import_obsidian import import_markdown, sync_markdown
 
 CORE_TABLES = (
     "projects",
@@ -841,6 +841,7 @@ def run_import(args: argparse.Namespace) -> int:
                 Path(args.allowlist),
                 conn,
                 dry_run=args.dry_run,
+                on_duplicate=args.on_duplicate,
             )
     except Exception as exc:
         print(f"Error: {concise_error(exc)}", file=sys.stderr)
@@ -854,7 +855,11 @@ def run_import(args: argparse.Namespace) -> int:
         print(f"{action} {len(rows)} Markdown note(s).")
         for row in rows:
             suffix = f" -> {row['id']}" if "id" in row else ""
-            print(f"- {row['type']} {row['project']}: {row['path']}{suffix}")
+            row_action = row.get("action", "import")
+            print(
+                f"- {row_action} {row['type']} {row['project']}: "
+                f"{row['path']}{suffix}"
+            )
         if result.errors:
             print()
             print(f"Errors: {len(result.errors)}")
@@ -862,6 +867,65 @@ def run_import(args: argparse.Namespace) -> int:
                 print(f"- {error['path']}: {error['error']}")
 
     return 1 if result.errors else 0
+
+
+def print_sync_result(result) -> None:
+    print(f"Planned {len(result.planned)} Markdown note(s).")
+    for row in result.planned:
+        label = row.get("type", "unknown")
+        project = row.get("project", "unknown")
+        reason = f" ({row['reason']})" if row.get("reason") else ""
+        print(f"- {row['action']} {label} {project}: {row['path']}{reason}")
+    if result.applied:
+        print()
+        print(f"Applied {len(result.applied)} change(s).")
+        for row in result.applied:
+            print(f"- {row['action']} {row['type']} {row['project']}: {row['id']}")
+    if result.errors:
+        print()
+        print(f"Errors: {len(result.errors)}")
+        for error in result.errors:
+            print(f"- {error['path']}: {error['error']}")
+
+
+def run_sync(args: argparse.Namespace) -> int:
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        print("Error: DATABASE_URL is not set", file=sys.stderr)
+        return 2
+
+    if args.watch:
+        print(
+            "Error: sync --watch is intentionally not implemented yet. "
+            "Use --plan or --apply first.",
+            file=sys.stderr,
+        )
+        return 2
+    if args.plan == args.apply:
+        print("Error: choose exactly one of --plan or --apply", file=sys.stderr)
+        return 2
+
+    try:
+        with connect() as conn:
+            result = sync_markdown(
+                Path(args.path),
+                Path(args.allowlist),
+                conn,
+                apply=args.apply,
+            )
+    except Exception as exc:
+        print(f"Error: {concise_error(exc)}", file=sys.stderr)
+        return 1
+
+    if args.format == "json":
+        print(json.dumps(result.__dict__, indent=2, default=json_default))
+    else:
+        print_sync_result(result)
+
+    blockers = result.blocking_actions
+    if result.errors or blockers:
+        return 1
+    return 0
 
 
 def not_implemented(args: argparse.Namespace) -> int:
@@ -1031,12 +1095,55 @@ def build_parser() -> argparse.ArgumentParser:
         help="Validate and show planned imports without writing to Postgres.",
     )
     import_parser.add_argument(
+        "--on-duplicate",
+        choices=("skip", "error", "update"),
+        default="skip",
+        help="How to handle an existing import target. Defaults to skip.",
+    )
+    import_parser.add_argument(
         "--format",
         choices=("text", "json"),
         default="text",
         help="Output format.",
     )
     import_parser.set_defaults(func=run_import)
+
+    sync_parser = subparsers.add_parser(
+        "sync",
+        help="Plan or apply allowlisted Obsidian-to-Postgres sync.",
+    )
+    sync_parser.add_argument(
+        "--path",
+        required=True,
+        help="Markdown file or directory to sync.",
+    )
+    sync_parser.add_argument(
+        "--allowlist",
+        default="import_allowlist.yml",
+        help="YAML allowlist path. Defaults to import_allowlist.yml.",
+    )
+    sync_parser.add_argument(
+        "--plan",
+        action="store_true",
+        help="Show create/update/skip/conflict/reject actions without writing.",
+    )
+    sync_parser.add_argument(
+        "--apply",
+        action="store_true",
+        help="Apply create/update actions only when the plan has no blockers.",
+    )
+    sync_parser.add_argument(
+        "--watch",
+        action="store_true",
+        help="Reserved for a future defensive automation mode.",
+    )
+    sync_parser.add_argument(
+        "--format",
+        choices=("text", "json"),
+        default="text",
+        help="Output format.",
+    )
+    sync_parser.set_defaults(func=run_sync)
 
     for name in ("init",):
         placeholder = subparsers.add_parser(

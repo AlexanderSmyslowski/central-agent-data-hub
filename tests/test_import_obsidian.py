@@ -12,6 +12,7 @@ from agent_hub.import_obsidian import (
     load_allowlist,
     normalize_import_item,
     parse_markdown,
+    sync_markdown,
 )
 
 
@@ -147,7 +148,8 @@ source: smoke test
     )
 
     class ReadOnlyCursor:
-        statements: list[str] = []
+        def __init__(self):
+            self.last_sql = ""
 
         def __enter__(self):
             return self
@@ -156,12 +158,17 @@ source: smoke test
             return None
 
         def execute(self, sql, *_args):
-            self.statements.append(sql)
+            self.last_sql = sql
             if "INSERT" in sql.upper():
                 raise AssertionError("dry run should not execute writes")
 
         def fetchone(self):
-            return {"id": "project-id", "slug": "commcats-de", "name": "CommCats"}
+            if "FROM projects" in self.last_sql:
+                return {"id": "project-id", "slug": "commcats-de", "name": "CommCats"}
+            return None
+
+        def fetchall(self):
+            return []
 
     class DryRunConnection:
         def cursor(self):
@@ -172,6 +179,7 @@ source: smoke test
     assert result.errors == []
     assert result.imported == []
     assert result.planned[0]["type"] == "fact"
+    assert result.planned[0]["action"] == "create"
 
 
 def test_dry_run_rejects_missing_database_project(tmp_path: Path) -> None:
@@ -207,6 +215,244 @@ source: smoke test
 
     assert result.planned == []
     assert result.errors[0]["error"] == "Project not found: commcats-de"
+
+
+def test_duplicate_import_defaults_to_skip(tmp_path: Path) -> None:
+    allowlist_path = write_allowlist(tmp_path)
+    note = write_note(
+        tmp_path / "notes" / "fact.md",
+        """
+type: fact
+project_slug: commcats-de
+import_key: commcats-static-fact
+statement: Dry run fact.
+source: smoke test
+""",
+    )
+
+    class DuplicateCursor:
+        def __init__(self):
+            self.last_sql = ""
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        def execute(self, sql, *_args):
+            self.last_sql = sql
+            if "INSERT" in sql.upper():
+                raise AssertionError("duplicate skip should not write")
+
+        def fetchone(self):
+            if "FROM projects" in self.last_sql:
+                return {"id": "project-id", "slug": "commcats-de", "name": "CommCats"}
+            return None
+
+        def fetchall(self):
+            return [
+                {
+                    "id": "fact-id",
+                    "project_id": "project-id",
+                    "statement": "Dry run fact.",
+                    "source": "smoke test",
+                    "confidence": 0.9,
+                    "status": "verified",
+                    "metadata": {
+                        "agent_hub_import": {
+                            "import_key": "commcats-static-fact",
+                            "content_hash": "old",
+                            "data_hash": "old",
+                        }
+                    },
+                    "updated_at": "2026-05-28T00:00:00Z",
+                }
+            ]
+
+    class DuplicateConnection:
+        def cursor(self):
+            return DuplicateCursor()
+
+    result = import_markdown(note, allowlist_path, DuplicateConnection())
+
+    assert result.errors == []
+    assert result.imported == []
+    assert result.planned[0]["action"] == "skip"
+
+
+def test_duplicate_import_can_error(tmp_path: Path) -> None:
+    allowlist_path = write_allowlist(tmp_path)
+    note = write_note(
+        tmp_path / "notes" / "fact.md",
+        """
+type: fact
+project_slug: commcats-de
+import_key: commcats-static-fact
+statement: Dry run fact.
+source: smoke test
+""",
+    )
+
+    class DuplicateCursor:
+        def __init__(self):
+            self.last_sql = ""
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        def execute(self, sql, *_args):
+            self.last_sql = sql
+
+        def fetchone(self):
+            if "FROM projects" in self.last_sql:
+                return {"id": "project-id", "slug": "commcats-de", "name": "CommCats"}
+            return None
+
+        def fetchall(self):
+            return [
+                {
+                    "id": "fact-id",
+                    "project_id": "project-id",
+                    "statement": "Dry run fact.",
+                    "source": "smoke test",
+                    "confidence": 0.9,
+                    "status": "verified",
+                    "metadata": {
+                        "agent_hub_import": {
+                            "import_key": "commcats-static-fact",
+                            "content_hash": "old",
+                            "data_hash": "old",
+                        }
+                    },
+                    "updated_at": "2026-05-28T00:00:00Z",
+                }
+            ]
+
+    class DuplicateConnection:
+        def cursor(self):
+            return DuplicateCursor()
+
+    result = import_markdown(
+        note,
+        allowlist_path,
+        DuplicateConnection(),
+        on_duplicate="error",
+    )
+
+    assert result.imported == []
+    assert result.errors[0]["error"] == "duplicate import target"
+
+
+def test_sync_plan_reports_create(tmp_path: Path) -> None:
+    allowlist_path = write_allowlist(tmp_path)
+    note = write_note(
+        tmp_path / "notes" / "fact.md",
+        """
+type: fact
+project_slug: commcats-de
+import_key: commcats-static-fact
+statement: Sync fact.
+source: smoke test
+""",
+    )
+
+    class PlanningCursor:
+        def __init__(self):
+            self.last_sql = ""
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        def execute(self, sql, *_args):
+            self.last_sql = sql
+            if "INSERT" in sql.upper():
+                raise AssertionError("sync plan should not write")
+
+        def fetchone(self):
+            if "FROM projects" in self.last_sql:
+                return {"id": "project-id", "slug": "commcats-de", "name": "CommCats"}
+            return None
+
+        def fetchall(self):
+            return []
+
+    class PlanningConnection:
+        def cursor(self):
+            return PlanningCursor()
+
+    result = sync_markdown(note, allowlist_path, PlanningConnection(), apply=False)
+
+    assert result.errors == []
+    assert result.applied == []
+    assert result.planned[0]["action"] == "create"
+
+
+def test_sync_plan_reports_conflict(tmp_path: Path) -> None:
+    allowlist_path = write_allowlist(tmp_path)
+    note = write_note(
+        tmp_path / "notes" / "fact.md",
+        """
+type: fact
+project_slug: commcats-de
+import_key: commcats-static-fact
+statement: Changed Markdown fact.
+source: smoke test
+""",
+    )
+
+    class ConflictCursor:
+        def __init__(self):
+            self.last_sql = ""
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        def execute(self, sql, *_args):
+            self.last_sql = sql
+
+        def fetchone(self):
+            if "FROM projects" in self.last_sql:
+                return {"id": "project-id", "slug": "commcats-de", "name": "CommCats"}
+            return None
+
+        def fetchall(self):
+            return [
+                {
+                    "id": "fact-id",
+                    "project_id": "project-id",
+                    "statement": "Database changed fact.",
+                    "source": "smoke test",
+                    "confidence": 0.9,
+                    "status": "verified",
+                    "metadata": {
+                        "agent_hub_import": {
+                            "import_key": "commcats-static-fact",
+                            "content_hash": "previous-note-hash",
+                            "data_hash": "previous-data-hash",
+                        }
+                    },
+                    "updated_at": "2026-05-28T00:00:00Z",
+                }
+            ]
+
+    class ConflictConnection:
+        def cursor(self):
+            return ConflictCursor()
+
+    result = sync_markdown(note, allowlist_path, ConflictConnection(), apply=False)
+
+    assert result.planned[0]["action"] == "conflict"
+    assert result.blocking_actions == result.planned
 
 
 def test_import_cli_without_database_url_has_clear_error(monkeypatch, capsys) -> None:

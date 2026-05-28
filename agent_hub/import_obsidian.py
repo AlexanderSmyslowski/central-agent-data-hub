@@ -4,9 +4,13 @@ from __future__ import annotations
 
 import json
 import re
+from datetime import datetime, timezone
+from decimal import Decimal
+from hashlib import sha256
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 import yaml
 
@@ -39,6 +43,9 @@ class ImportItem:
     project_slug: str
     memory_type: str
     data: dict[str, Any]
+    db_id: str | None
+    import_key: str
+    content_hash: str
 
 
 @dataclass
@@ -52,12 +59,59 @@ class ImportResult:
         return bool(self.errors)
 
 
+@dataclass
+class SyncResult:
+    planned: list[dict[str, Any]] = field(default_factory=list)
+    applied: list[dict[str, Any]] = field(default_factory=list)
+    errors: list[dict[str, str]] = field(default_factory=list)
+
+    @property
+    def blocking_actions(self) -> list[dict[str, Any]]:
+        return [
+            item
+            for item in self.planned
+            if item.get("action") in {"conflict", "reject", "error"}
+        ]
+
+
 TYPE_DEFAULT_FIELDS = {
     "fact": {"statement", "source", "confidence", "status", "metadata"},
     "decision": {"decision", "rationale", "consequences", "status", "metadata"},
     "open_question": {"question", "answer", "status", "metadata"},
     "risk": {"title", "severity", "impact", "mitigation", "status", "metadata"},
     "report": {"title", "report_type", "summary", "body", "status", "metadata"},
+}
+
+TYPE_TABLES = {
+    "fact": "facts",
+    "decision": "decisions",
+    "open_question": "open_questions",
+    "risk": "risks",
+    "report": "reports",
+}
+
+TYPE_COLUMNS = {
+    "fact": ("statement", "source", "confidence", "status"),
+    "decision": ("decision", "rationale", "consequences", "status"),
+    "open_question": ("question", "answer", "status"),
+    "risk": ("title", "severity", "impact", "mitigation", "status"),
+    "report": ("title", "report_type", "summary", "body", "status"),
+}
+
+TYPE_DEFAULT_VALUES = {
+    "fact": {"confidence": 0.9, "status": "verified"},
+    "decision": {"status": "accepted"},
+    "open_question": {"status": "open"},
+    "risk": {"severity": "medium", "status": "open"},
+    "report": {"report_type": "status", "status": "published"},
+}
+
+STATUS_VALUES = {
+    "fact": {"proposed", "verified", "disputed", "deprecated", "archived"},
+    "decision": {"proposed", "accepted", "rejected", "superseded", "archived"},
+    "open_question": {"open", "answered", "deferred", "closed", "archived"},
+    "risk": {"open", "mitigating", "accepted", "resolved", "archived"},
+    "report": {"draft", "published", "superseded", "archived"},
 }
 
 REQUIRED_FIELDS = {
@@ -150,6 +204,14 @@ def iter_markdown_files(path: Path, allowlist: ImportAllowlist) -> list[Path]:
     return sorted(file for file in resolved.rglob("*.md") if file.is_file())
 
 
+def relative_import_path(path: Path, allowlist: ImportAllowlist) -> str:
+    resolved = path.resolve()
+    for root in allowlist.roots:
+        if is_relative_to(resolved, root):
+            return str(resolved.relative_to(root))
+    return str(resolved)
+
+
 def parse_markdown(path: Path) -> tuple[dict[str, Any], str]:
     text = path.read_text(encoding="utf-8")
     if not text.startswith("---\n"):
@@ -167,6 +229,78 @@ def parse_markdown(path: Path) -> tuple[dict[str, Any], str]:
 def contains_secret(frontmatter: dict[str, Any], body: str) -> bool:
     haystack = json.dumps(frontmatter, default=str, ensure_ascii=False) + "\n" + body
     return bool(SENSITIVE_PATTERN.search(haystack))
+
+
+def json_default(value: Any) -> Any:
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return float(value)
+    if isinstance(value, UUID):
+        return str(value)
+    return str(value)
+
+
+def canonical_json(value: Any) -> str:
+    return json.dumps(value, default=json_default, ensure_ascii=False, sort_keys=True)
+
+
+def hash_payload(value: Any) -> str:
+    return sha256(canonical_json(value).encode("utf-8")).hexdigest()
+
+
+def item_values(item: ImportItem) -> dict[str, Any]:
+    values: dict[str, Any] = {}
+    for column in TYPE_COLUMNS[item.memory_type]:
+        values[column] = item.data.get(
+            column,
+            TYPE_DEFAULT_VALUES[item.memory_type].get(column),
+        )
+    return values
+
+
+def row_values(memory_type: str, row: dict[str, Any]) -> dict[str, Any]:
+    return {column: row.get(column) for column in TYPE_COLUMNS[memory_type]}
+
+
+def user_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
+    return {key: value for key, value in metadata.items() if key != "agent_hub_import"}
+
+
+def import_metadata(item: ImportItem, existing_metadata: dict[str, Any] | None = None) -> dict[str, Any]:
+    metadata = dict(user_metadata(existing_metadata or {}))
+    metadata.update(dict(item.data.get("metadata") or {}))
+    now = datetime.now(timezone.utc).isoformat()
+    metadata["agent_hub_import"] = {
+        "import_key": item.import_key,
+        "source_path": str(item.path),
+        "content_hash": item.content_hash,
+        "data_hash": hash_payload(item_values(item)),
+        "last_imported_at": now,
+        "imported_by": "agent-hub import",
+    }
+    return metadata
+
+
+def derive_import_key(
+    path: Path,
+    allowlist: ImportAllowlist,
+    frontmatter: dict[str, Any],
+    memory_type: str,
+    project_slug: str,
+) -> str:
+    explicit = frontmatter.get("import_key")
+    if explicit is not None:
+        if not isinstance(explicit, str) or not explicit.strip():
+            raise RuntimeError("import_key must be a non-empty string")
+        return explicit.strip()
+
+    db_id = frontmatter.get("db_id")
+    if db_id is not None:
+        return f"{memory_type}:{db_id}"
+
+    relative_path = relative_import_path(path, allowlist)
+    return f"{project_slug}:{memory_type}:{relative_path}"
 
 
 def normalize_import_item(path: Path, allowlist: ImportAllowlist) -> ImportItem:
@@ -200,6 +334,10 @@ def normalize_import_item(path: Path, allowlist: ImportAllowlist) -> ImportItem:
         if confidence < 0 or confidence > 1:
             raise RuntimeError("confidence must be between 0 and 1")
         data["confidence"] = confidence
+    if "status" in data and data["status"] not in STATUS_VALUES[memory_type]:
+        raise RuntimeError(
+            f"Unsupported status for {memory_type}: {data['status']}"
+        )
     if memory_type == "report" and "body" in allowed_fields and "body" not in data:
         data["body"] = body
 
@@ -209,6 +347,18 @@ def normalize_import_item(path: Path, allowlist: ImportAllowlist) -> ImportItem:
             f"Missing required field(s) for {memory_type}: {', '.join(sorted(missing))}"
         )
 
+    db_id = frontmatter.get("db_id")
+    if db_id is not None and not isinstance(db_id, str):
+        raise RuntimeError("db_id must be a string when provided")
+    import_key = derive_import_key(path, allowlist, frontmatter, memory_type, project_slug)
+    content_hash = hash_payload(
+        {
+            "type": memory_type,
+            "project": project_slug,
+            "data": data,
+        }
+    )
+
     return ImportItem(
         path=path,
         frontmatter=frontmatter,
@@ -216,6 +366,9 @@ def normalize_import_item(path: Path, allowlist: ImportAllowlist) -> ImportItem:
         project_slug=project_slug,
         memory_type=memory_type,
         data=data,
+        db_id=db_id,
+        import_key=import_key,
+        content_hash=content_hash,
     )
 
 
@@ -227,9 +380,7 @@ def fetch_project(cur, project_slug: str) -> dict[str, Any]:
     return project
 
 
-def insert_import_item(cur, item: ImportItem) -> dict[str, Any]:
-    project = fetch_project(cur, item.project_slug)
-
+def ensure_import_agent(cur, project_id: Any) -> dict[str, Any]:
     cur.execute(
         """
         INSERT INTO agents (project_id, name, slug, role, status, metadata)
@@ -242,13 +393,50 @@ def insert_import_item(cur, item: ImportItem) -> dict[str, Any]:
           metadata = agents.metadata || EXCLUDED.metadata
         RETURNING id
         """,
-        (project["id"],),
+        (project_id,),
     )
-    agent = cur.fetchone()
+    return cur.fetchone()
 
-    metadata = dict(item.data.get("metadata") or {})
-    metadata.setdefault("imported_by", "agent-hub import")
-    metadata.setdefault("import_source_path", str(item.path))
+
+def log_import_action(
+    cur,
+    agent_id: Any,
+    action: str,
+    object_type: str,
+    object_id: Any,
+    item: ImportItem,
+    output: dict[str, Any],
+) -> None:
+    cur.execute(
+        """
+        INSERT INTO agent_actions (
+          agent_id, action, object_type, object_id, input, output, status, metadata
+        )
+        VALUES (%s, %s, %s, %s, %s::jsonb, %s::jsonb,
+                'succeeded', %s::jsonb)
+        """,
+        (
+            agent_id,
+            action,
+            object_type,
+            object_id,
+            json.dumps(
+                {
+                    "path": str(item.path),
+                    "type": item.memory_type,
+                    "import_key": item.import_key,
+                }
+            ),
+            json.dumps(output, default=json_default),
+            json.dumps({"created_by": "agent-hub import"}),
+        ),
+    )
+
+
+def insert_import_item(cur, item: ImportItem) -> dict[str, Any]:
+    project = fetch_project(cur, item.project_slug)
+    agent = ensure_import_agent(cur, project["id"])
+    metadata = import_metadata(item)
 
     if item.memory_type == "fact":
         cur.execute(
@@ -344,29 +532,169 @@ def insert_import_item(cur, item: ImportItem) -> dict[str, Any]:
         raise RuntimeError(f"Unsupported import type: {item.memory_type}")
 
     row = cur.fetchone()
-    cur.execute(
-        """
-        INSERT INTO agent_actions (
-          agent_id, action, object_type, object_id, input, output, status, metadata
-        )
-        VALUES (%s, 'import_obsidian_note', %s, %s, %s::jsonb, %s::jsonb,
-                'succeeded', %s::jsonb)
-        """,
-        (
-            agent["id"],
-            object_type,
-            row["id"],
-            json.dumps({"path": str(item.path), "type": item.memory_type}),
-            json.dumps({"project_id": str(project["id"]), "object_id": str(row["id"])}),
-            json.dumps({"created_by": "agent-hub import"}),
-        ),
+    log_import_action(
+        cur,
+        agent["id"],
+        "import_obsidian_note",
+        object_type,
+        row["id"],
+        item,
+        {"project_id": str(project["id"]), "object_id": str(row["id"])},
     )
     return {
+        "action": "create",
         "path": str(item.path),
         "project": project["slug"],
         "type": object_type,
         "id": str(row["id"]),
+        "import_key": item.import_key,
     }
+
+
+def fetch_existing_import(cur, item: ImportItem, project_id: Any) -> dict[str, Any] | None:
+    table = TYPE_TABLES[item.memory_type]
+    columns = ", ".join(TYPE_COLUMNS[item.memory_type])
+    if item.db_id:
+        cur.execute(
+            f"""
+            SELECT id, project_id, metadata, updated_at, {columns}
+            FROM {table}
+            WHERE id = %s AND project_id = %s
+            """,
+            (item.db_id, project_id),
+        )
+        row = cur.fetchone()
+        if not row:
+            raise RuntimeError(f"db_id not found for {item.memory_type}: {item.db_id}")
+        return row
+
+    cur.execute(
+        f"""
+        SELECT id, project_id, metadata, updated_at, {columns}
+        FROM {table}
+        WHERE project_id = %s
+          AND metadata #>> '{{agent_hub_import,import_key}}' = %s
+        ORDER BY updated_at DESC, id
+        """,
+        (project_id, item.import_key),
+    )
+    rows = cur.fetchall()
+    if len(rows) > 1:
+        raise RuntimeError(f"Multiple rows found for import_key: {item.import_key}")
+    return rows[0] if rows else None
+
+
+def plan_import_item(
+    cur,
+    item: ImportItem,
+    on_duplicate: str = "skip",
+) -> dict[str, Any]:
+    project = fetch_project(cur, item.project_slug)
+    existing = fetch_existing_import(cur, item, project["id"])
+    base = {
+        "path": str(item.path),
+        "project": project["slug"],
+        "type": item.memory_type,
+        "import_key": item.import_key,
+    }
+    if not existing:
+        return {**base, "action": "create"}
+
+    base["id"] = str(existing["id"])
+    if on_duplicate == "error":
+        return {**base, "action": "error", "reason": "duplicate import target"}
+    if on_duplicate == "skip":
+        return {**base, "action": "skip", "reason": "duplicate import target"}
+
+    metadata = existing.get("metadata") or {}
+    import_state = metadata.get("agent_hub_import") or {}
+    previous_content_hash = import_state.get("content_hash")
+    previous_data_hash = import_state.get("data_hash")
+    current_data_hash = hash_payload(row_values(item.memory_type, existing))
+    note_changed = previous_content_hash != item.content_hash
+    database_changed = bool(previous_data_hash and previous_data_hash != current_data_hash)
+
+    if previous_content_hash == item.content_hash:
+        return {**base, "action": "skip", "reason": "unchanged import content"}
+    if note_changed and database_changed:
+        return {
+            **base,
+            "action": "conflict",
+            "reason": "database and markdown changed since last import",
+        }
+    return {**base, "action": "update"}
+
+
+def update_import_item(
+    cur,
+    item: ImportItem,
+    planned: dict[str, Any],
+) -> dict[str, Any]:
+    project = fetch_project(cur, item.project_slug)
+    agent = ensure_import_agent(cur, project["id"])
+    existing = fetch_existing_import(cur, item, project["id"])
+    if not existing:
+        raise RuntimeError(f"Import target disappeared: {item.import_key}")
+
+    values = item_values(item)
+    columns = list(values)
+    set_clause = ", ".join([f"{column} = %s" for column in columns])
+    metadata = import_metadata(item, existing.get("metadata") or {})
+    params = [values[column] for column in columns]
+    params.extend([json.dumps(metadata, default=json_default), existing["id"]])
+    table = TYPE_TABLES[item.memory_type]
+    if item.memory_type == "open_question":
+        set_clause += (
+            ", resolved_at = CASE "
+            "WHEN status IN ('answered', 'closed') THEN COALESCE(resolved_at, now()) "
+            "ELSE NULL END"
+        )
+    cur.execute(
+        f"""
+        UPDATE {table}
+        SET {set_clause}, metadata = %s::jsonb
+        WHERE id = %s
+        RETURNING id
+        """,
+        params,
+    )
+    row = cur.fetchone()
+    log_import_action(
+        cur,
+        agent["id"],
+        "sync_obsidian_note",
+        item.memory_type,
+        row["id"],
+        item,
+        {"project_id": str(project["id"]), "object_id": str(row["id"])},
+    )
+    return {
+        **planned,
+        "action": "update",
+        "id": str(row["id"]),
+    }
+
+
+def apply_import_item(cur, item: ImportItem, planned: dict[str, Any]) -> dict[str, Any]:
+    if planned["action"] == "create":
+        return insert_import_item(cur, item)
+    if planned["action"] == "update":
+        return update_import_item(cur, item, planned)
+    return planned
+
+
+def load_import_items(
+    path: Path,
+    allowlist_path: Path,
+) -> tuple[ImportAllowlist, list[Path], ImportResult]:
+    allowlist = load_allowlist(allowlist_path)
+    result = ImportResult()
+    try:
+        files = iter_markdown_files(path, allowlist)
+    except Exception as exc:
+        result.errors.append({"path": str(path), "error": str(exc)})
+        return allowlist, [], result
+    return allowlist, files, result
 
 
 def import_markdown(
@@ -374,32 +702,98 @@ def import_markdown(
     allowlist_path: Path,
     conn,
     dry_run: bool = False,
+    on_duplicate: str = "skip",
 ) -> ImportResult:
-    allowlist = load_allowlist(allowlist_path)
-    result = ImportResult()
+    allowlist, files, result = load_import_items(path, allowlist_path)
+    with conn.cursor() as cur:
+        for file in files:
+            try:
+                item = normalize_import_item(file, allowlist)
+                planned = plan_import_item(cur, item, on_duplicate=on_duplicate)
+                if planned["action"] in {"error", "conflict", "reject"}:
+                    result.errors.append(
+                        {
+                            "path": str(file),
+                            "error": planned.get("reason", planned["action"]),
+                        }
+                    )
+                    continue
+                if dry_run or planned["action"] == "skip":
+                    result.planned.append(planned)
+                    continue
+                result.imported.append(apply_import_item(cur, item, planned))
+            except Exception as exc:
+                result.errors.append({"path": str(file), "error": str(exc)})
 
-    try:
-        files = iter_markdown_files(path, allowlist)
-    except Exception as exc:
-        result.errors.append({"path": str(path), "error": str(exc)})
-        return result
+    return result
+
+
+def sync_markdown(
+    path: Path,
+    allowlist_path: Path,
+    conn,
+    apply: bool = False,
+) -> SyncResult:
+    allowlist, files, import_result = load_import_items(path, allowlist_path)
+    result = SyncResult(errors=import_result.errors)
+    normalized: list[tuple[ImportItem, dict[str, Any]]] = []
 
     with conn.cursor() as cur:
         for file in files:
             try:
                 item = normalize_import_item(file, allowlist)
-                project = fetch_project(cur, item.project_slug)
-                if dry_run:
-                    result.planned.append(
-                        {
-                            "path": str(file),
-                            "project": project["slug"],
-                            "type": item.memory_type,
-                        }
-                    )
-                    continue
-                result.imported.append(insert_import_item(cur, item))
+                planned = plan_import_item(cur, item, on_duplicate="update")
+                result.planned.append(planned)
+                normalized.append((item, planned))
             except Exception as exc:
-                result.errors.append({"path": str(file), "error": str(exc)})
+                result.planned.append(
+                    {
+                        "path": str(file),
+                        "action": "reject",
+                        "reason": str(exc),
+                    }
+                )
+
+        blockers = result.blocking_actions
+        if apply:
+            if blockers or result.errors:
+                log_sync_event(
+                    cur,
+                    status="failed",
+                    payload={"planned": result.planned},
+                    error="Sync apply blocked by conflicts or rejected notes",
+                )
+                return result
+            for item, planned in normalized:
+                if planned["action"] in {"create", "update"}:
+                    result.applied.append(apply_import_item(cur, item, planned))
+            log_sync_event(
+                cur,
+                status="succeeded",
+                payload={
+                    "planned": result.planned,
+                    "applied": result.applied,
+                },
+            )
 
     return result
+
+
+def log_sync_event(
+    cur,
+    status: str,
+    payload: dict[str, Any],
+    error: str | None = None,
+) -> None:
+    cur.execute(
+        """
+        INSERT INTO sync_events (source, direction, status, payload, error, metadata)
+        VALUES ('obsidian', 'inbound', %s, %s::jsonb, %s, %s::jsonb)
+        """,
+        (
+            status,
+            json.dumps(payload, default=json_default),
+            error,
+            json.dumps({"created_by": "agent-hub sync"}),
+        ),
+    )

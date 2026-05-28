@@ -71,6 +71,27 @@ def test_remember_without_database_url_has_clear_error(monkeypatch, capsys) -> N
     assert "Traceback" not in captured.err
 
 
+def test_sync_without_database_url_has_clear_error(monkeypatch, capsys) -> None:
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+
+    code = cli.main(["sync", "--path", "notes", "--plan"])
+
+    captured = capsys.readouterr()
+    assert code == 2
+    assert "DATABASE_URL is not set" in captured.err
+    assert "Traceback" not in captured.err
+
+
+def test_sync_requires_plan_or_apply(monkeypatch, capsys) -> None:
+    monkeypatch.setenv("DATABASE_URL", "postgresql://example.invalid/test")
+
+    code = cli.main(["sync", "--path", "notes"])
+
+    captured = capsys.readouterr()
+    assert code == 2
+    assert "choose exactly one of --plan or --apply" in captured.err
+
+
 class FakeCursor:
     def __init__(self) -> None:
         self.results: list[dict[str, object]] = []
