@@ -10,8 +10,8 @@ PostgreSQL ist die operative Wahrheit: Hier liegen die normalisierten Daten, Rel
 - Demo-Seed ist vorhanden: `seed/demo.sql`
 - Obsidian-Jinja2-Templates sind vorhanden: `templates/`
 - Minimaler Obsidian-Exporter ist vorhanden: `agent_hub/export_obsidian.py`
-- CLI-Kommandos sind vorhanden: `agent-hub export`, `agent-hub status`, `agent-hub check`
-- CLI-Platzhalter sind vorhanden, aber noch nicht implementiert: `init`, `import`
+- CLI-Kommandos sind vorhanden: `agent-hub export`, `agent-hub status`, `agent-hub check`, `agent-hub brief`, `agent-hub remember`, `agent-hub import`
+- CLI-Platzhalter sind vorhanden, aber noch nicht implementiert: `init`
 
 ## Voraussetzungen
 
@@ -116,8 +116,8 @@ Beim erneuten Export bleibt der Inhalt innerhalb des Human-Notes-Blocks erhalten
 - `agent-hub check`: prueft einfache Konsistenzregeln fuer Export und Review
 - `agent-hub brief --project <slug>`: gibt einen kompakten Projektbrief fuer Agenten aus
 - `agent-hub remember --project <slug> --type <type> --text <text>`: speichert eine gepruefte Erinnerung
+- `agent-hub import --path <file-or-directory>`: importiert allowlisted Obsidian-Markdown nach Postgres
 - `agent-hub init`: noch nicht implementiert
-- `agent-hub import`: noch nicht implementiert
 
 ## Codex-/Hermes-Gedaechtnis
 
@@ -219,17 +219,21 @@ agent-hub remember --help
 
 PostgreSQL-Checks bleiben optional. Sie koennen gegen jede disposable Testdatenbank laufen, die ueber `DATABASE_URL` erreichbar ist. Docker ist dafuer praktisch, aber keine Pflicht fuer normale Entwicklung.
 
-## Sichere Import-Richtung
+## Sicherer Obsidian-Import
 
-`agent-hub import` ist absichtlich noch nicht implementiert. Ein spaeterer Obsidian-Rueckimport darf nur ueber eine explizite Allowlist laufen:
+`agent-hub import` schreibt Markdown-Notizen aus Obsidian nach Postgres, aber nur ueber eine explizite Allowlist. Standardmaessig wird geschrieben; `--dry-run` zeigt die geplanten Imports ohne Datenbank-Writes.
 
-- erlaubte Projekt-Slugs
-- erlaubte Quellpfade
-- erlaubte Frontmatter-Typen
-- erlaubte Zielfelder
-- keine Secrets, privaten Kundendaten, rohen Rechnungsdaten oder Deployment-Credentials
+```bash
+cp import_allowlist.example.yml import_allowlist.yml
+# import_allowlist.yml an lokale Vault-/Importpfade anpassen
 
-Die Richtung ist in `docs/import-allowlist.md` dokumentiert.
+agent-hub import --path /path/to/allowlisted-notes --dry-run
+agent-hub import --path /path/to/allowlisted-notes
+```
+
+Die Allowlist definiert erlaubte Projekt-Slugs, Quellpfade, Frontmatter-Typen und Felder. Import blockiert potentielle Secrets, private Kundendaten, rohe Rechnungsdaten, Deployment-Credentials, unbekannte Projekt-Slugs, nicht erlaubte Pfade und nicht erlaubte Typen.
+
+Die V1-Regeln sind in `docs/import-allowlist.md` dokumentiert.
 
 ## Projektstruktur
 
@@ -239,17 +243,18 @@ Die Richtung ist in `docs/import-allowlist.md` dokumentiert.
 - `agent_hub/`: Python-Code fuer Datenbankzugriff, Markdown-Rendering, Exporter und CLI
 - `tests/`: schnelle lokale Unit-Tests
 - `ROADMAP.md`: priorisierte v0-Folgearbeiten
+- `import_allowlist.example.yml`: Beispiel-Allowlist fuer sicheren Import
 
-## Was v0 Bewusst Noch Nicht Macht
+## Was v0/V1 Bewusst Noch Nicht Macht
 
 - kein freier Zwei-Wege-Sync
-- kein Obsidian-Rueckimport
+- kein freier Obsidian-Rueckimport ohne Allowlist; V1 importiert nur kuratierte Memory-Typen
 - kein produktives Rechte-/Mandantenmodell
 - keine Vektor-Suche
 - keine automatische Hintergrundsynchronisation
 
 ## Naechste Sinnvolle Schritte
 
-- Import-Allowlist
+- Dedupe-/Update-Strategie fuer Import
 - optionale PostgreSQL-Smoke-Tests scriptbar machen
-- `agent-hub import` erst nach Allowlist-Tests implementieren
+- Template-/Frontmatter-Tests erweitern

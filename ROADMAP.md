@@ -15,9 +15,9 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
    - Treat broken relations and unreachable databases as errors.
 
 3. Safe import allowlist
-   - Define allowed projects, source paths, and note types before implementing import.
+   - Keep `agent-hub import` limited to allowlisted projects, paths, types, and fields.
    - Reject secrets, private customer data, raw invoice data, and deployment credentials.
-   - Keep `agent-hub import` as a placeholder until the allowlist is tested.
+   - Add dedupe/update strategy only after V1 import behavior is proven.
 
 4. Obsidian projection hardening
    - Keep Human Notes stable across repeated exports.
@@ -32,6 +32,7 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
 ## Later, Not v0
 
 - Free two-way sync.
+- Import deduplication and updates.
 - Background sync workers.
 - Vector search.
 - Production auth, tenancy, or permissions.
