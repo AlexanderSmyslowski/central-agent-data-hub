@@ -6,7 +6,7 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
 
 1. Automated tests
    - Keep fast unit tests for CLI helpers and non-database error paths.
-   - Keep optional PostgreSQL smoke checks runnable against a disposable `DATABASE_URL`.
+   - Keep `scripts/smoke_postgres.sh` runnable against a disposable `DATABASE_URL`.
    - Do not require Docker Desktop for normal development.
 
 2. Status and check improvements
@@ -17,9 +17,14 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
 3. Safe import allowlist
    - Keep `agent-hub import` limited to allowlisted projects, paths, types, and fields.
    - Reject secrets, private customer data, raw invoice data, and deployment credentials.
-   - Add dedupe/update strategy only after V1 import behavior is proven.
+   - Keep import identity based on `import_key`, optional `db_id`, and metadata hashes.
 
-4. Obsidian projection hardening
+4. Sync plan/apply
+   - Keep `agent-hub sync --plan` as the default review path.
+   - Use `agent-hub sync --apply` only when the plan has no conflicts or rejected notes.
+   - Keep `sync --watch` disabled until recovery and conflict handling are boring.
+
+5. Obsidian projection hardening
    - Keep Human Notes stable across repeated exports.
    - Add tests for template rendering and frontmatter once template shape changes again.
 
@@ -32,7 +37,6 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
 ## Later, Not v0
 
 - Free two-way sync.
-- Import deduplication and updates.
-- Background sync workers.
+- Background sync workers or watch mode.
 - Vector search.
 - Production auth, tenancy, or permissions.

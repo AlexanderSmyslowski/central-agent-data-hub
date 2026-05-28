@@ -9,6 +9,14 @@ agent-hub import --path /path/to/notes --allowlist import_allowlist.yml --dry-ru
 agent-hub import --path /path/to/notes --allowlist import_allowlist.yml
 ```
 
+Duplicate handling defaults to `skip` and can be changed explicitly:
+
+```bash
+agent-hub import --path /path/to/notes --on-duplicate skip
+agent-hub import --path /path/to/notes --on-duplicate error
+agent-hub import --path /path/to/notes --on-duplicate update
+```
+
 ## Allowlist Shape
 
 Copy `import_allowlist.example.yml` to `import_allowlist.yml` and adjust it locally. The allowlist must define:
@@ -38,6 +46,8 @@ Every imported note must start with YAML frontmatter and include:
 - `project` or `project_slug`
 - required fields for its type
 
+Every curated note should also include a stable `import_key`. If omitted, `agent-hub` derives a path-based import key from project, type, and the relative file path. `db_id` may be used to target one existing row directly.
+
 Required fields:
 
 - `fact`: `statement`, `source`
@@ -58,6 +68,20 @@ Import rejects or skips content that includes:
 - unsupported frontmatter types
 - missing source/provenance for facts
 
-## Write Behavior
+## Identity, Dedupe, and Sync
 
-V1 intentionally does not update or deduplicate existing rows. Every successful import creates a new memory row and an `agent_actions` audit row with `action='import_obsidian_note'`.
+Successful imports store source path, import key, content hash, data hash, and last import timestamp in `metadata.agent_hub_import`. This enables safe duplicate detection without a new migration.
+
+`agent-hub sync --plan` classifies each allowlisted note as:
+
+- `create`
+- `update`
+- `skip`
+- `conflict`
+- `reject`
+
+`agent-hub sync --apply` writes only when the plan has no `conflict` or `reject` entries. Each create/update writes `agent_actions`, and each apply attempt writes a `sync_events` summary. `sync --watch` is reserved for later and intentionally returns an error today.
+
+## Ownership Rules
+
+Postgres owns IDs, audit rows, relations, timestamps, and export metadata. Obsidian may edit only the allowlisted curated memory fields. Human Notes remain separate and are never merged automatically into structured fields.

@@ -10,7 +10,7 @@ PostgreSQL ist die operative Wahrheit: Hier liegen die normalisierten Daten, Rel
 - Demo-Seed ist vorhanden: `seed/demo.sql`
 - Obsidian-Jinja2-Templates sind vorhanden: `templates/`
 - Minimaler Obsidian-Exporter ist vorhanden: `agent_hub/export_obsidian.py`
-- CLI-Kommandos sind vorhanden: `agent-hub export`, `agent-hub status`, `agent-hub check`, `agent-hub brief`, `agent-hub remember`, `agent-hub import`
+- CLI-Kommandos sind vorhanden: `agent-hub export`, `agent-hub status`, `agent-hub check`, `agent-hub brief`, `agent-hub remember`, `agent-hub import`, `agent-hub sync`
 - CLI-Platzhalter sind vorhanden, aber noch nicht implementiert: `init`
 
 ## Voraussetzungen
@@ -233,7 +233,37 @@ agent-hub import --path /path/to/allowlisted-notes
 
 Die Allowlist definiert erlaubte Projekt-Slugs, Quellpfade, Frontmatter-Typen und Felder. Import blockiert potentielle Secrets, private Kundendaten, rohe Rechnungsdaten, Deployment-Credentials, unbekannte Projekt-Slugs, nicht erlaubte Pfade und nicht erlaubte Typen.
 
+Importierbare Notizen sollten ein stabiles `import_key` im Frontmatter haben. Ohne `import_key` wird ein pfadbasierter Key aus Projekt, Typ und relativem Importpfad abgeleitet. Der Import speichert Herkunft, Import-Key und Content-Hash in `metadata.agent_hub_import`.
+
+Duplikate werden standardmaessig uebersprungen:
+
+```bash
+agent-hub import --path /path/to/allowlisted-notes --on-duplicate skip
+agent-hub import --path /path/to/allowlisted-notes --on-duplicate error
+agent-hub import --path /path/to/allowlisted-notes --on-duplicate update
+```
+
+`agent-hub sync` baut darauf auf und trennt Planung von Anwendung:
+
+```bash
+agent-hub sync --path /path/to/allowlisted-notes --plan
+agent-hub sync --path /path/to/allowlisted-notes --apply
+```
+
+Der Plan klassifiziert Notizen als `create`, `update`, `skip`, `conflict` oder `reject`. `--apply` schreibt nur, wenn der Plan keine Konflikte oder Rejections enthaelt. `sync --watch` ist bewusst noch nicht implementiert; automatische Hintergrundsynchronisation kommt erst nach stabiler Plan-/Apply-Nutzung.
+
 Die V1-Regeln sind in `docs/import-allowlist.md` dokumentiert.
+
+## PostgreSQL Smoke-Test
+
+Der reproduzierbare Smoke-Test laeuft gegen eine vorhandene Wegwerf-Datenbank:
+
+```bash
+export DATABASE_URL="postgresql://postgres@localhost:55432/agent_hub_test"
+scripts/smoke_postgres.sh
+```
+
+Das Skript spielt Migration und Seeds ein, prueft `status`, `check`, `brief`, `import`, `sync --plan`, `export` und Human-Notes-Erhaltung. Docker ist dafuer optional; wichtig ist nur eine disposable PostgreSQL-Datenbank.
 
 ## Projektstruktur
 
@@ -241,6 +271,7 @@ Die V1-Regeln sind in `docs/import-allowlist.md` dokumentiert.
 - `seed/`: reproduzierbare Demo-Daten
 - `templates/`: Jinja2-Templates fuer Obsidian-Markdown
 - `agent_hub/`: Python-Code fuer Datenbankzugriff, Markdown-Rendering, Exporter und CLI
+- `scripts/`: lokale Smoke- und Wartungsskripte
 - `tests/`: schnelle lokale Unit-Tests
 - `ROADMAP.md`: priorisierte v0-Folgearbeiten
 - `import_allowlist.example.yml`: Beispiel-Allowlist fuer sicheren Import
@@ -248,13 +279,13 @@ Die V1-Regeln sind in `docs/import-allowlist.md` dokumentiert.
 ## Was v0/V1 Bewusst Noch Nicht Macht
 
 - kein freier Zwei-Wege-Sync
-- kein freier Obsidian-Rueckimport ohne Allowlist; V1 importiert nur kuratierte Memory-Typen
+- kein freier Obsidian-Rueckimport ohne Allowlist; V1 importiert und synchronisiert nur kuratierte Memory-Typen
 - kein produktives Rechte-/Mandantenmodell
 - keine Vektor-Suche
-- keine automatische Hintergrundsynchronisation
+- keine automatische Hintergrundsynchronisation; `sync --watch` ist reserviert, aber noch nicht aktiv
 
 ## Naechste Sinnvolle Schritte
 
-- Dedupe-/Update-Strategie fuer Import
-- optionale PostgreSQL-Smoke-Tests scriptbar machen
+- Konfliktauflösung und Review-Workflow fuer `agent-hub sync`
+- defensiver Watch-/Cron-Modus nach stabiler Plan-/Apply-Nutzung
 - Template-/Frontmatter-Tests erweitern
