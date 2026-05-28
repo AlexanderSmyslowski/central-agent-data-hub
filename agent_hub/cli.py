@@ -10,6 +10,7 @@ from pathlib import Path
 
 from agent_hub.db import connect
 from agent_hub.export_obsidian import export_all
+from agent_hub.import_obsidian import import_markdown
 
 CORE_TABLES = (
     "projects",
@@ -827,6 +828,42 @@ def run_remember(args: argparse.Namespace) -> int:
     return 0
 
 
+def run_import(args: argparse.Namespace) -> int:
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        print("Error: DATABASE_URL is not set", file=sys.stderr)
+        return 2
+
+    try:
+        with connect() as conn:
+            result = import_markdown(
+                Path(args.path),
+                Path(args.allowlist),
+                conn,
+                dry_run=args.dry_run,
+            )
+    except Exception as exc:
+        print(f"Error: {concise_error(exc)}", file=sys.stderr)
+        return 1
+
+    if args.format == "json":
+        print(json.dumps(result.__dict__, indent=2, default=json_default))
+    else:
+        action = "Planned" if args.dry_run else "Imported"
+        rows = result.planned if args.dry_run else result.imported
+        print(f"{action} {len(rows)} Markdown note(s).")
+        for row in rows:
+            suffix = f" -> {row['id']}" if "id" in row else ""
+            print(f"- {row['type']} {row['project']}: {row['path']}{suffix}")
+        if result.errors:
+            print()
+            print(f"Errors: {len(result.errors)}")
+            for error in result.errors:
+                print(f"- {error['path']}: {error['error']}")
+
+    return 1 if result.errors else 0
+
+
 def not_implemented(args: argparse.Namespace) -> int:
     print(f"Command '{args.command}' is not implemented yet.", file=sys.stderr)
     return 2
@@ -974,7 +1011,34 @@ def build_parser() -> argparse.ArgumentParser:
     remember_parser.add_argument("--body", help="Report body.")
     remember_parser.set_defaults(func=run_remember)
 
-    for name in ("init", "import"):
+    import_parser = subparsers.add_parser(
+        "import",
+        help="Import allowlisted Obsidian Markdown notes into Postgres.",
+    )
+    import_parser.add_argument(
+        "--path",
+        required=True,
+        help="Markdown file or directory to import.",
+    )
+    import_parser.add_argument(
+        "--allowlist",
+        default="import_allowlist.yml",
+        help="YAML allowlist path. Defaults to import_allowlist.yml.",
+    )
+    import_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Validate and show planned imports without writing to Postgres.",
+    )
+    import_parser.add_argument(
+        "--format",
+        choices=("text", "json"),
+        default="text",
+        help="Output format.",
+    )
+    import_parser.set_defaults(func=run_import)
+
+    for name in ("init",):
         placeholder = subparsers.add_parser(
             name,
             help="Not implemented yet.",

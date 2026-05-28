@@ -1,0 +1,47 @@
+# Copy to import_allowlist.yml and adjust roots before running agent-hub import.
+projects:
+  - commcats-de
+  - the-one-catering
+
+roots:
+  - ./obsidian-import
+
+types:
+  - fact
+  - decision
+  - open_question
+  - risk
+  - report
+
+fields:
+  fact:
+    - statement
+    - source
+    - confidence
+    - status
+    - metadata
+  decision:
+    - decision
+    - rationale
+    - consequences
+    - status
+    - metadata
+  open_question:
+    - question
+    - answer
+    - status
+    - metadata
+  risk:
+    - title
+    - severity
+    - impact
+    - mitigation
+    - status
+    - metadata
+  report:
+    - title
+    - report_type
+    - summary
+    - body
+    - status
+    - metadata
