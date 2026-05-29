@@ -469,3 +469,73 @@ def test_projects_type_filter_passes_project_type(monkeypatch, capsys) -> None:
     assert code == 0
     assert "Active projects:" in captured.out
     assert FakeProjectsCursor.last_params == ("website",)
+
+
+class FakeQualityCursor:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def execute(self, _query: str, _params: object = None) -> None:
+        self.calls += 1
+
+    def fetchall(self) -> list[dict[str, object]]:
+        if self.calls == 1:
+            return [
+                {
+                    "id": uuid.UUID("10000000-0000-4000-8000-000000000201"),
+                    "type": "fact",
+                    "title": "Fact without source.",
+                    "issue": "missing source",
+                }
+            ]
+        if self.calls == 2:
+            return [
+                {
+                    "id": uuid.UUID("10000000-0000-4000-8000-000000000301"),
+                    "type": "decision",
+                    "title": "Decision without rationale.",
+                    "issue": "missing rationale",
+                }
+            ]
+        if self.calls == 3:
+            return [
+                {
+                    "id": uuid.UUID("10000000-0000-4000-8000-000000000501"),
+                    "type": "risk",
+                    "title": "Risk without mitigation.",
+                    "issue": "missing impact or mitigation",
+                }
+            ]
+        if self.calls == 4:
+            return [
+                {
+                    "id": uuid.UUID("10000000-0000-4000-8000-000000000601"),
+                    "type": "report",
+                    "title": "Report without summary.",
+                    "issue": "missing summary",
+                }
+            ]
+        if self.calls == 5:
+            return [
+                {
+                    "id": uuid.UUID("10000000-0000-4000-8000-000000000401"),
+                    "type": "open_question",
+                    "title": "Answered without answer?",
+                    "issue": "answered or closed without answer",
+                }
+            ]
+        return []
+
+
+def test_fetch_memory_quality_warnings_collects_curated_quality_gaps() -> None:
+    rows = cli.fetch_memory_quality_warnings(FakeQualityCursor())
+
+    assert [row["type"] for row in rows] == [
+        "fact",
+        "decision",
+        "risk",
+        "report",
+        "open_question",
+    ]
+    assert rows[0]["issue"] == "missing source"
+    assert rows[-1]["issue"] == "answered or closed without answer"

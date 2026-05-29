@@ -1004,6 +1004,75 @@ def fetch_open_questions(cur) -> list[dict[str, object]]:
     return list(cur.fetchall())
 
 
+def fetch_memory_quality_warnings(cur) -> list[dict[str, object]]:
+    warnings: list[dict[str, object]] = []
+
+    cur.execute(
+        """
+        SELECT id, 'fact' AS type, statement AS title,
+               'missing source' AS issue
+        FROM facts
+        WHERE status <> 'archived'
+          AND NULLIF(BTRIM(COALESCE(source, '')), '') IS NULL
+        ORDER BY updated_at DESC, created_at DESC, id
+        """
+    )
+    warnings.extend(cur.fetchall())
+
+    cur.execute(
+        """
+        SELECT id, 'decision' AS type, decision AS title,
+               'missing rationale' AS issue
+        FROM decisions
+        WHERE status <> 'archived'
+          AND NULLIF(BTRIM(COALESCE(rationale, '')), '') IS NULL
+        ORDER BY updated_at DESC, created_at DESC, id
+        """
+    )
+    warnings.extend(cur.fetchall())
+
+    cur.execute(
+        """
+        SELECT id, 'risk' AS type, title,
+               'missing impact or mitigation' AS issue
+        FROM risks
+        WHERE status NOT IN ('resolved', 'archived')
+          AND (
+            NULLIF(BTRIM(COALESCE(impact, '')), '') IS NULL
+            OR NULLIF(BTRIM(COALESCE(mitigation, '')), '') IS NULL
+          )
+        ORDER BY updated_at DESC, created_at DESC, id
+        """
+    )
+    warnings.extend(cur.fetchall())
+
+    cur.execute(
+        """
+        SELECT id, 'report' AS type, title,
+               'missing summary' AS issue
+        FROM reports
+        WHERE status <> 'archived'
+          AND NULLIF(BTRIM(COALESCE(summary, '')), '') IS NULL
+        ORDER BY updated_at DESC, created_at DESC, id
+        """
+    )
+    warnings.extend(cur.fetchall())
+
+    cur.execute(
+        """
+        SELECT id, 'open_question' AS type, question AS title,
+               'answered or closed without answer' AS issue
+        FROM open_questions
+        WHERE status IN ('answered', 'closed')
+          AND NULLIF(BTRIM(COALESCE(answer, '')), '') IS NULL
+        ORDER BY updated_at DESC, created_at DESC, id
+        """
+    )
+    warnings.extend(cur.fetchall())
+
+    return warnings
+
+
 def fetch_latest_sync_event(cur) -> dict[str, object] | None:
     cur.execute(
         """
@@ -1511,6 +1580,21 @@ def run_check(_args: argparse.Namespace) -> int:
                             f"{fact['id']} confidence={fact['confidence']} "
                             f"status={fact['status']} "
                             f"statement={truncate(fact['statement'])}"
+                        )
+                        warnings.append(message)
+                        print(f"  warning: {message}")
+                else:
+                    print("  ok")
+                print()
+
+                quality_warnings = fetch_memory_quality_warnings(cur)
+                print("Memory quality:")
+                if quality_warnings:
+                    for item in quality_warnings:
+                        message = (
+                            f"{item['type']}:{item['id']} "
+                            f"{item['issue']} "
+                            f"title={truncate(item['title'])}"
                         )
                         warnings.append(message)
                         print(f"  warning: {message}")

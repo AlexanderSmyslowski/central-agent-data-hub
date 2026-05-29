@@ -439,6 +439,7 @@ agent-hub check
 Bewertung:
 
 - niedrige Confidence bei Fakten ist eine Warning
+- Memory-Qualitaetsluecken sind Warnings, z. B. Fakten ohne Quelle, Entscheidungen ohne Rationale, Risiken ohne Impact/Mitigation, Reports ohne Summary oder beantwortete Fragen ohne Antwort
 - offene Fragen sind eine Warning
 - offene Migrationen sind eine Warning
 - kaputte polymorphe Relationen sind ein Error
