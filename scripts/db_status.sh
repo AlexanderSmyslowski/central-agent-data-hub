@@ -45,6 +45,10 @@ else
 fi
 
 echo
+echo "== Latest Backup =="
+"$ROOT_DIR/scripts/db_backup_latest.sh"
+
+echo
 echo "== Agent Hub Status =="
 run_agent_hub status
 

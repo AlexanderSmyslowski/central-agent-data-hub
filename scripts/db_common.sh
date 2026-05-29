@@ -100,3 +100,28 @@ sha256_file() {
     return 1
   fi
 }
+
+latest_backup_dump() {
+  find "$AGENT_HUB_BACKUP_DIR" -maxdepth 1 -type f -name 'agent_hub-*.dump' -print 2>/dev/null \
+    | sort \
+    | tail -n 1
+}
+
+verify_backup_checksum() {
+  local dump_path="$1"
+  local sha_path="${dump_path}.sha256"
+
+  if [[ ! -f "$sha_path" ]]; then
+    echo "missing checksum: $sha_path" >&2
+    return 1
+  fi
+
+  if command -v shasum >/dev/null 2>&1; then
+    shasum -c "$sha_path" >/dev/null
+  elif command -v sha256sum >/dev/null 2>&1; then
+    sha256sum -c "$sha_path" >/dev/null
+  else
+    echo "neither shasum nor sha256sum is available" >&2
+    return 1
+  fi
+}
