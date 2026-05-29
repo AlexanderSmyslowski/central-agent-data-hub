@@ -80,7 +80,7 @@ Successful imports store source path, import key, content hash, data hash, and l
 - `conflict`
 - `reject`
 
-`agent-hub sync --apply` writes only when the plan has no `conflict` or `reject` entries. Each create/update writes `agent_actions`, and each apply attempt writes a `sync_events` summary. `sync --watch` is reserved for later and intentionally returns an error today.
+`update` and `conflict` entries include field-level diffs with `database_value`, `markdown_value`, `last_imported_value`, and `owner`. `agent-hub sync --apply` writes only when the plan has no `conflict` or `reject` entries. Each create/update writes `agent_actions`, and each apply attempt writes a `sync_events` summary. `sync --watch` is reserved for later and intentionally returns an error today.
 
 ## Ownership Rules
 

@@ -250,7 +250,7 @@ agent-hub sync --path /path/to/allowlisted-notes --plan
 agent-hub sync --path /path/to/allowlisted-notes --apply
 ```
 
-Der Plan klassifiziert Notizen als `create`, `update`, `skip`, `conflict` oder `reject`. `--apply` schreibt nur, wenn der Plan keine Konflikte oder Rejections enthaelt. `sync --watch` ist bewusst noch nicht implementiert; automatische Hintergrundsynchronisation kommt erst nach stabiler Plan-/Apply-Nutzung.
+Der Plan klassifiziert Notizen als `create`, `update`, `skip`, `conflict` oder `reject`. Bei `update` und `conflict` zeigt er Feld-Diffs mit Datenbankwert, Markdown-Wert, letztem Importwert und Feld-Owner. `--apply` schreibt nur, wenn der Plan keine Konflikte oder Rejections enthaelt. `sync --watch` ist bewusst noch nicht implementiert; automatische Hintergrundsynchronisation kommt erst nach stabiler Plan-/Apply-Nutzung.
 
 Die V1-Regeln sind in `docs/import-allowlist.md` dokumentiert.
 
@@ -263,7 +263,7 @@ export DATABASE_URL="postgresql://postgres@localhost:55432/agent_hub_test"
 scripts/smoke_postgres.sh
 ```
 
-Das Skript spielt Migration und Seeds ein, prueft `status`, `check`, `brief`, `import`, `sync --plan`, `export` und Human-Notes-Erhaltung. Docker ist dafuer optional; wichtig ist nur eine disposable PostgreSQL-Datenbank.
+Das Skript spielt Migration und Seeds ein, prueft `status`, `check`, `brief`, `import`, `sync --plan`, `sync --apply`, einen absichtlichen Konfliktfall, `export` und Human-Notes-Erhaltung. Docker ist dafuer optional; wichtig ist nur eine disposable PostgreSQL-Datenbank.
 
 ## Projektstruktur
 
@@ -286,6 +286,6 @@ Das Skript spielt Migration und Seeds ein, prueft `status`, `check`, `brief`, `i
 
 ## Naechste Sinnvolle Schritte
 
-- Konfliktauflösung und Review-Workflow fuer `agent-hub sync`
+- Konfliktauflösung nach Review fuer `agent-hub sync`
 - defensiver Watch-/Cron-Modus nach stabiler Plan-/Apply-Nutzung
 - Template-/Frontmatter-Tests erweitern

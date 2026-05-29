@@ -21,6 +21,7 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
 
 4. Sync plan/apply
    - Keep `agent-hub sync --plan` as the default review path.
+   - Keep field-level diffs visible for updates and conflicts.
    - Use `agent-hub sync --apply` only when the plan has no conflicts or rejected notes.
    - Keep `sync --watch` disabled until recovery and conflict handling are boring.
 
