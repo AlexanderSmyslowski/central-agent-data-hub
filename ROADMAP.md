@@ -15,7 +15,7 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
    - Use `scripts/project_context.sh` before project work.
    - Use `scripts/project_remember.sh` for reviewed, non-sensitive writeback.
    - Keep each project context explicit; websites are only the first domain profile.
-   - Copy `docs/repo-agent-memory-template.md` into important project repos as `AGENTS.md` or equivalent.
+   - Use `scripts/install_repo_agent_memory.sh` to install or update repo-local Hub instructions in important project repos.
 
 3. Schema evolution and project taxonomy
    - Track applied migrations in `schema_migrations`.

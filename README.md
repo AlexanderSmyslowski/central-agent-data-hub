@@ -208,6 +208,16 @@ Fuer Codex/Hermes-Policy und Repo-spezifische Startkarten:
 - `docs/codex-memory-policy.md`
 - `docs/repo-agent-memory-template.md`
 
+Bestehende Repos koennen idempotent mit einem markierten Hub-Block verbunden werden:
+
+```bash
+scripts/install_repo_agent_memory.sh \
+  --repo /path/to/project \
+  --project <project-slug>
+```
+
+Das Skript ergaenzt oder aktualisiert einen `CENTRAL-AGENT-DATA-HUB`-Block in `AGENTS.md`, ohne vorhandene Projektanweisungen zu ersetzen. Mit `--dry-run` zeigt es den geplanten Block ohne Schreibzugriff.
+
 ## Disposable Demo Lokal Ausfuehren
 
 Eine frische PostgreSQL-16-Testdatenbank per Docker starten:
