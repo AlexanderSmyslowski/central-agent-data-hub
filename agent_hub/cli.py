@@ -59,6 +59,31 @@ RELATION_TARGETS = {
     "agent_action": "agent_actions",
 }
 
+RELATION_TYPES = (
+    "supports",
+    "contradicts",
+    "supersedes",
+    "mitigates",
+    "answers",
+    "raises",
+    "references",
+    "derived_from",
+    "blocks",
+    "depends_on",
+)
+
+RELATION_SUMMARY_COLUMNS = {
+    "project": "name",
+    "agent": "name",
+    "document": "title",
+    "report": "title",
+    "decision": "decision",
+    "fact": "statement",
+    "open_question": "question",
+    "risk": "title",
+    "agent_action": "action",
+}
+
 
 def concise_error(exc: Exception) -> str:
     return str(exc).splitlines()[0]
@@ -110,6 +135,199 @@ def fetch_project(cur, slug: str) -> dict[str, object] | None:
         (slug,),
     )
     return cur.fetchone()
+
+
+def fetch_relation_object(
+    cur, object_type: str, object_id: str
+) -> dict[str, object] | None:
+    table = RELATION_TARGETS[object_type]
+    summary_column = RELATION_SUMMARY_COLUMNS[object_type]
+    if object_type == "agent_action":
+        cur.execute(
+            f"""
+            SELECT aa.id, a.project_id, aa.{summary_column} AS summary
+            FROM agent_actions aa
+            LEFT JOIN agents a ON a.id = aa.agent_id
+            WHERE aa.id = %s
+            """,
+            (object_id,),
+        )
+    else:
+        select_project_id = "id AS project_id" if object_type == "project" else "project_id"
+        cur.execute(
+            f"""
+            SELECT id, {select_project_id}, {summary_column} AS summary
+            FROM {table}
+            WHERE id = %s
+            """,
+            (object_id,),
+        )
+    return cur.fetchone()
+
+
+def validate_relation_object(
+    object_type: str,
+    row: dict[str, object] | None,
+    project: dict[str, object],
+    role: str,
+) -> None:
+    if not row:
+        raise RuntimeError(f"{role} {object_type} not found")
+
+    project_id = row.get("project_id")
+    if object_type == "agent" and project_id is None:
+        return
+    if project_id != project["id"]:
+        raise RuntimeError(
+            f"{role} {object_type}:{row['id']} does not belong to project "
+            f"{project['slug']}"
+        )
+
+
+def relation_project_filter(project_id: object) -> tuple[str, dict[str, object]]:
+    filters = []
+    params: dict[str, object] = {"project_id": project_id}
+    for side in ("source", "target"):
+        side_filters = []
+        for object_type, table in RELATION_TARGETS.items():
+            if object_type == "project":
+                side_filters.append(
+                    f"(r.{side}_type = 'project' AND r.{side}_id = %(project_id)s)"
+                )
+            elif object_type == "agent":
+                side_filters.append(
+                    f"""
+                    (r.{side}_type = 'agent' AND EXISTS (
+                      SELECT 1 FROM agents a
+                      WHERE a.id = r.{side}_id
+                        AND a.project_id = %(project_id)s
+                    ))
+                    """
+                )
+            elif object_type == "agent_action":
+                side_filters.append(
+                    f"""
+                    (r.{side}_type = 'agent_action' AND EXISTS (
+                      SELECT 1 FROM agent_actions aa
+                      LEFT JOIN agents a ON a.id = aa.agent_id
+                      WHERE aa.id = r.{side}_id
+                        AND a.project_id = %(project_id)s
+                    ))
+                    """
+                )
+            else:
+                side_filters.append(
+                    f"""
+                    (r.{side}_type = '{object_type}' AND EXISTS (
+                      SELECT 1 FROM {table} t
+                      WHERE t.id = r.{side}_id
+                        AND t.project_id = %(project_id)s
+                    ))
+                    """
+                )
+        filters.append("(" + " OR ".join(side_filters) + ")")
+    return "(" + " OR ".join(filters) + ")", params
+
+
+def relation_summary_expression(side: str) -> str:
+    parts = []
+    for object_type, table in RELATION_TARGETS.items():
+        summary_column = RELATION_SUMMARY_COLUMNS[object_type]
+        if object_type == "agent_action":
+            parts.append(
+                f"""
+                WHEN r.{side}_type = 'agent_action' THEN (
+                  SELECT aa.{summary_column}
+                  FROM agent_actions aa
+                  WHERE aa.id = r.{side}_id
+                )
+                """
+            )
+        else:
+            parts.append(
+                f"""
+                WHEN r.{side}_type = '{object_type}' THEN (
+                  SELECT t.{summary_column}
+                  FROM {table} t
+                  WHERE t.id = r.{side}_id
+                )
+                """
+            )
+    return "CASE " + " ".join(parts) + " END"
+
+
+def fetch_project_relations(
+    cur,
+    project_id: object,
+    object_type: str | None = None,
+    object_id: str | None = None,
+    limit: int | None = None,
+) -> list[dict[str, object]]:
+    project_where, params = relation_project_filter(project_id)
+    clauses = [project_where]
+    if object_type and object_id:
+        clauses.append(
+            """
+            (
+              (r.source_type = %(object_type)s AND r.source_id = %(object_id)s)
+              OR
+              (r.target_type = %(object_type)s AND r.target_id = %(object_id)s)
+            )
+            """
+        )
+        params["object_type"] = object_type
+        params["object_id"] = object_id
+    elif object_type or object_id:
+        raise RuntimeError("--object-type and --object-id must be used together")
+
+    limit_sql = ""
+    if limit:
+        limit_sql = "LIMIT %(limit)s"
+        params["limit"] = limit
+
+    cur.execute(
+        f"""
+        SELECT
+          r.id,
+          r.source_type,
+          r.source_id,
+          {relation_summary_expression("source")} AS source_summary,
+          r.relation_type,
+          r.target_type,
+          r.target_id,
+          {relation_summary_expression("target")} AS target_summary,
+          r.metadata,
+          r.created_at,
+          r.updated_at
+        FROM relations r
+        WHERE {" AND ".join(clauses)}
+        ORDER BY r.updated_at DESC, r.created_at DESC, r.id
+        {limit_sql}
+        """,
+        params,
+    )
+    return list(cur.fetchall())
+
+
+def print_relations(rows: list[dict[str, object]]) -> None:
+    if not rows:
+        print("- none")
+        return
+    for row in rows:
+        source = (
+            f"{row['source_type']}:{row['source_id']} "
+            f"({truncate(row.get('source_summary') or '', 72)})"
+        )
+        target = (
+            f"{row['target_type']}:{row['target_id']} "
+            f"({truncate(row.get('target_summary') or '', 72)})"
+        )
+        print(f"- {source} --{row['relation_type']}--> {target}")
+        if row.get("metadata"):
+            print(
+                "  metadata: "
+                + json.dumps(row["metadata"], default=json_default, ensure_ascii=False)
+            )
 
 
 def migration_files() -> list[Path]:
@@ -742,6 +960,19 @@ def find_broken_relation_side(cur, side: str) -> list[dict[str, object]]:
     return broken
 
 
+def find_unknown_relation_types(cur) -> list[dict[str, object]]:
+    cur.execute(
+        """
+        SELECT id, relation_type, source_type, source_id, target_type, target_id
+        FROM relations
+        WHERE relation_type <> ALL(%s)
+        ORDER BY created_at, id
+        """,
+        (list(RELATION_TYPES),),
+    )
+    return list(cur.fetchall())
+
+
 def fetch_low_confidence_facts(cur) -> list[dict[str, object]]:
     cur.execute(
         """
@@ -847,6 +1078,22 @@ def run_check(_args: argparse.Namespace) -> int:
                         )
                         errors.append(message)
                         print(f"  error: {message}")
+                else:
+                    print("  ok")
+                print()
+
+                unknown_relation_types = find_unknown_relation_types(cur)
+                print("Unknown relation types:")
+                if unknown_relation_types:
+                    for relation in unknown_relation_types:
+                        message = (
+                            f"{relation['id']} relation_type="
+                            f"{relation['relation_type']} "
+                            f"{relation['source_type']}:{relation['source_id']} -> "
+                            f"{relation['target_type']}:{relation['target_id']}"
+                        )
+                        warnings.append(message)
+                        print(f"  warning: {message}")
                 else:
                     print("  ok")
                 print()
@@ -1005,6 +1252,13 @@ def run_brief(args: argparse.Namespace) -> int:
                     "id, title, report_type, summary",
                     limit=args.limit,
                 )
+                relations = []
+                if args.with_relations:
+                    relations = fetch_project_relations(
+                        cur,
+                        project["id"],
+                        limit=args.limit,
+                    )
 
         brief = {
             "project": project,
@@ -1014,6 +1268,7 @@ def run_brief(args: argparse.Namespace) -> int:
             "open_questions": questions,
             "risks": risks,
             "reports": reports,
+            "relations": relations,
         }
     except Exception as exc:
         print(f"Error: {concise_error(exc)}", file=sys.stderr)
@@ -1039,6 +1294,10 @@ def run_brief(args: argparse.Namespace) -> int:
     print_rows("Open Questions", questions, "question")
     print_rows("Risks", risks, "title")
     print_rows("Reports", reports, "title")
+    if args.with_relations:
+        print("## Relations")
+        print_relations(relations)
+        print()
     return 0
 
 
@@ -1354,6 +1613,125 @@ def run_sync(args: argparse.Namespace) -> int:
     return 0
 
 
+def run_relations(args: argparse.Namespace) -> int:
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        print("Error: DATABASE_URL is not set", file=sys.stderr)
+        return 2
+    if bool(args.object_type) != bool(args.object_id):
+        print(
+            "Error: --object-type and --object-id must be used together",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        with connect() as conn:
+            with conn.cursor() as cur:
+                project = fetch_project(cur, args.project)
+                if not project:
+                    print(
+                        f"Error: project '{args.project}' not found",
+                        file=sys.stderr,
+                    )
+                    return 2
+                rows = fetch_project_relations(
+                    cur,
+                    project["id"],
+                    object_type=args.object_type,
+                    object_id=args.object_id,
+                )
+    except Exception as exc:
+        print(f"Error: {concise_error(exc)}", file=sys.stderr)
+        return 1
+
+    payload = {"project": project, "relations": rows}
+    if args.format == "json":
+        print(json.dumps(payload, indent=2, default=json_default, ensure_ascii=False))
+        return 0
+
+    print(f"Relations for {project['slug']}:")
+    print_relations(rows)
+    return 0
+
+
+def run_relate(args: argparse.Namespace) -> int:
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        print("Error: DATABASE_URL is not set", file=sys.stderr)
+        return 2
+
+    try:
+        metadata = parse_metadata(args.metadata)
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 2
+
+    try:
+        with connect() as conn:
+            with conn.cursor() as cur:
+                project = fetch_project(cur, args.project)
+                if not project:
+                    print(
+                        f"Error: project '{args.project}' not found",
+                        file=sys.stderr,
+                    )
+                    return 2
+
+                source = fetch_relation_object(cur, args.source_type, args.source_id)
+                target = fetch_relation_object(cur, args.target_type, args.target_id)
+                validate_relation_object(args.source_type, source, project, "source")
+                validate_relation_object(args.target_type, target, project, "target")
+
+                cur.execute(
+                    """
+                    INSERT INTO relations (
+                      source_type, source_id, relation_type,
+                      target_type, target_id, metadata
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s::jsonb)
+                    ON CONFLICT (
+                      source_type, source_id, relation_type, target_type, target_id
+                    ) DO UPDATE SET
+                      metadata = relations.metadata || EXCLUDED.metadata
+                    RETURNING id, source_type, source_id, relation_type,
+                              target_type, target_id, metadata, created_at, updated_at
+                    """,
+                    (
+                        args.source_type,
+                        args.source_id,
+                        args.relation,
+                        args.target_type,
+                        args.target_id,
+                        json.dumps(metadata),
+                    ),
+                )
+                relation = cur.fetchone()
+    except Exception as exc:
+        print(f"Error: {concise_error(exc)}", file=sys.stderr)
+        return 1
+
+    payload = {
+        "project": project,
+        "relation": relation,
+        "source_summary": source["summary"],
+        "target_summary": target["summary"],
+    }
+    if args.format == "json":
+        print(json.dumps(payload, indent=2, default=json_default, ensure_ascii=False))
+        return 0
+
+    print("Relation stored:")
+    print(
+        f"- {relation['source_type']}:{relation['source_id']} "
+        f"({truncate(source['summary'], 72)}) "
+        f"--{relation['relation_type']}--> "
+        f"{relation['target_type']}:{relation['target_id']} "
+        f"({truncate(target['summary'], 72)})"
+    )
+    return 0
+
+
 def not_implemented(args: argparse.Namespace) -> int:
     print(f"Command '{args.command}' is not implemented yet.", file=sys.stderr)
     return 2
@@ -1439,7 +1817,89 @@ def build_parser() -> argparse.ArgumentParser:
         default="markdown",
         help="Output format.",
     )
+    brief_parser.add_argument(
+        "--with-relations",
+        action="store_true",
+        help="Include relevant project relations in the brief.",
+    )
     brief_parser.set_defaults(func=run_brief)
+
+    relations_parser = subparsers.add_parser(
+        "relations",
+        help="List curated relations for a project graph.",
+    )
+    relations_parser.add_argument(
+        "--project",
+        required=True,
+        help="Project slug to inspect.",
+    )
+    relations_parser.add_argument(
+        "--object-type",
+        choices=tuple(RELATION_TARGETS),
+        help="Limit to relations touching this object type.",
+    )
+    relations_parser.add_argument(
+        "--object-id",
+        help="Limit to relations touching this object id.",
+    )
+    relations_parser.add_argument(
+        "--format",
+        choices=("text", "json"),
+        default="text",
+        help="Output format.",
+    )
+    relations_parser.set_defaults(func=run_relations)
+
+    relate_parser = subparsers.add_parser(
+        "relate",
+        help="Create or update a curated relation between two Hub objects.",
+    )
+    relate_parser.add_argument(
+        "--project",
+        required=True,
+        help="Project slug that owns the relation context.",
+    )
+    relate_parser.add_argument(
+        "--source-type",
+        required=True,
+        choices=tuple(RELATION_TARGETS),
+        help="Source object type.",
+    )
+    relate_parser.add_argument(
+        "--source-id",
+        required=True,
+        help="Source object UUID.",
+    )
+    relate_parser.add_argument(
+        "--relation",
+        required=True,
+        choices=RELATION_TYPES,
+        help="Curated relation type.",
+    )
+    relate_parser.add_argument(
+        "--target-type",
+        required=True,
+        choices=tuple(RELATION_TARGETS),
+        help="Target object type.",
+    )
+    relate_parser.add_argument(
+        "--target-id",
+        required=True,
+        help="Target object UUID.",
+    )
+    relate_parser.add_argument(
+        "--metadata",
+        action="append",
+        default=[],
+        help="Additional metadata in key=value form; repeatable.",
+    )
+    relate_parser.add_argument(
+        "--format",
+        choices=("text", "json"),
+        default="text",
+        help="Output format.",
+    )
+    relate_parser.set_defaults(func=run_relate)
 
     remember_parser = subparsers.add_parser(
         "remember",

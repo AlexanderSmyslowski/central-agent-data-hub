@@ -187,32 +187,37 @@ VALUES
 (
   '00000000-0000-4000-8000-000000000703',
   'decision', '00000000-0000-4000-8000-000000000401',
-  'resolves',
+  'answers',
   'open_question', '00000000-0000-4000-8000-000000000301',
-  '{"demo": true, "label": "decision resolves open_question"}'::jsonb
+  '{"demo": true, "label": "decision answers open_question"}'::jsonb
 ),
 (
   '00000000-0000-4000-8000-000000000704',
   'risk', '00000000-0000-4000-8000-000000000501',
-  'affects',
+  'blocks',
   'project', '00000000-0000-4000-8000-000000000001',
-  '{"demo": true, "label": "risk affects project"}'::jsonb
+  '{"demo": true, "label": "risk blocks project"}'::jsonb
 ),
 (
   '00000000-0000-4000-8000-000000000705',
   'agent', '00000000-0000-4000-8000-000000000010',
-  'created',
+  'references',
   'report', '00000000-0000-4000-8000-000000000601',
-  '{"demo": true, "label": "agent created report"}'::jsonb
+  '{"demo": true, "label": "agent references report"}'::jsonb
 ),
 (
   '00000000-0000-4000-8000-000000000706',
   'document', '00000000-0000-4000-8000-000000000102',
-  'summarizes',
+  'references',
   'decision', '00000000-0000-4000-8000-000000000401',
-  '{"demo": true, "label": "technical report summarizes decision"}'::jsonb
+  '{"demo": true, "label": "technical report references decision"}'::jsonb
 )
-ON CONFLICT (source_type, source_id, relation_type, target_type, target_id) DO UPDATE SET
+ON CONFLICT (id) DO UPDATE SET
+  source_type = EXCLUDED.source_type,
+  source_id = EXCLUDED.source_id,
+  relation_type = EXCLUDED.relation_type,
+  target_type = EXCLUDED.target_type,
+  target_id = EXCLUDED.target_id,
   metadata = EXCLUDED.metadata;
 
 INSERT INTO agent_actions (id, agent_id, action, object_type, object_id, input, output, status, error, metadata)

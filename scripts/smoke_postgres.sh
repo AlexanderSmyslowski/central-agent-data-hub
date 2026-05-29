@@ -152,6 +152,103 @@ run_agent_hub brief --project commcats-de --limit 4
 run_agent_hub brief --project the-one-catering --limit 4
 
 echo
+echo "== Relation graph checks =="
+run_agent_hub relate \
+  --project commcats-de \
+  --source-type fact \
+  --source-id 10000000-0000-4000-8000-000000000201 \
+  --relation supports \
+  --target-type decision \
+  --target-id 10000000-0000-4000-8000-000000000301 \
+  --metadata smoke=true
+run_agent_hub relate \
+  --project commcats-de \
+  --source-type fact \
+  --source-id 10000000-0000-4000-8000-000000000201 \
+  --relation supports \
+  --target-type decision \
+  --target-id 10000000-0000-4000-8000-000000000301 \
+  --metadata repeated=true
+run_agent_hub relate \
+  --project commcats-de \
+  --source-type decision \
+  --source-id 10000000-0000-4000-8000-000000000301 \
+  --relation mitigates \
+  --target-type risk \
+  --target-id 10000000-0000-4000-8000-000000000503
+run_agent_hub relate \
+  --project the-one-catering \
+  --source-type decision \
+  --source-id 10000000-0000-4000-8000-000000000303 \
+  --relation answers \
+  --target-type open_question \
+  --target-id 10000000-0000-4000-8000-000000000401
+run_agent_hub relations --project commcats-de
+run_agent_hub brief --project commcats-de --limit 4 --with-relations
+"$PYTHON_BIN" - <<'PY'
+import os
+
+import psycopg
+
+with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
+    count = conn.execute(
+        """
+        SELECT count(*)
+        FROM relations
+        WHERE source_type = 'fact'
+          AND source_id = '10000000-0000-4000-8000-000000000201'
+          AND relation_type = 'supports'
+          AND target_type = 'decision'
+          AND target_id = '10000000-0000-4000-8000-000000000301'
+          AND metadata @> '{"repeated": true}'::jsonb
+        """
+    ).fetchone()[0]
+    if count != 1:
+        raise SystemExit("expected idempotent supports relation with merged metadata")
+PY
+"$PYTHON_BIN" - <<'PY'
+import os
+
+import psycopg
+
+with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
+    conn.execute(
+        """
+        INSERT INTO relations (
+          source_type, source_id, relation_type, target_type, target_id, metadata
+        )
+        VALUES (
+          'fact',
+          'ffffffff-ffff-4fff-8fff-ffffffffffff',
+          'supports',
+          'decision',
+          '10000000-0000-4000-8000-000000000301',
+          '{"smoke": "broken-relation"}'::jsonb
+        )
+        """
+    )
+PY
+if run_agent_hub check; then
+  echo "Error: broken relation check unexpectedly succeeded" >&2
+  exit 1
+else
+  echo "Broken relation check failed as expected."
+fi
+"$PYTHON_BIN" - <<'PY'
+import os
+
+import psycopg
+
+with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
+    conn.execute(
+        """
+        DELETE FROM relations
+        WHERE metadata @> '{"smoke": "broken-relation"}'::jsonb
+        """
+    )
+PY
+
+echo
 echo "== Import and sync checks =="
 run_agent_hub import --path "$TMP_DIR/notes" --allowlist "$TMP_DIR/import_allowlist.yml" --dry-run
 run_agent_hub import --path "$TMP_DIR/notes" --allowlist "$TMP_DIR/import_allowlist.yml"

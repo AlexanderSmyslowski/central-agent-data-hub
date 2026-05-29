@@ -105,6 +105,85 @@ def test_migrate_without_database_url_has_clear_error(monkeypatch, capsys) -> No
     assert "Traceback" not in captured.err
 
 
+def test_relations_without_database_url_has_clear_error(monkeypatch, capsys) -> None:
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+
+    code = cli.main(["relations", "--project", "commcats-de"])
+
+    captured = capsys.readouterr()
+    assert code == 2
+    assert "DATABASE_URL is not set" in captured.err
+    assert "Traceback" not in captured.err
+
+
+def test_relate_without_database_url_has_clear_error(monkeypatch, capsys) -> None:
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+
+    code = cli.main(
+        [
+            "relate",
+            "--project",
+            "commcats-de",
+            "--source-type",
+            "fact",
+            "--source-id",
+            "10000000-0000-4000-8000-000000000201",
+            "--relation",
+            "supports",
+            "--target-type",
+            "decision",
+            "--target-id",
+            "10000000-0000-4000-8000-000000000301",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 2
+    assert "DATABASE_URL is not set" in captured.err
+    assert "Traceback" not in captured.err
+
+
+def test_relations_requires_object_type_and_id_together(monkeypatch, capsys) -> None:
+    monkeypatch.setenv("DATABASE_URL", "postgresql://example.invalid/test")
+
+    code = cli.main(
+        [
+            "relations",
+            "--project",
+            "commcats-de",
+            "--object-type",
+            "fact",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 2
+    assert "--object-type and --object-id must be used together" in captured.err
+
+
+def test_validate_relation_object_allows_projectless_agent() -> None:
+    project = {"id": uuid.UUID("10000000-0000-4000-8000-000000000001"), "slug": "demo"}
+    row = {
+        "id": uuid.UUID("10000000-0000-4000-8000-000000000011"),
+        "project_id": None,
+        "summary": "Codex",
+    }
+
+    cli.validate_relation_object("agent", row, project, "source")
+
+
+def test_validate_relation_object_rejects_project_mismatch() -> None:
+    project = {"id": uuid.UUID("10000000-0000-4000-8000-000000000001"), "slug": "demo"}
+    row = {
+        "id": uuid.UUID("10000000-0000-4000-8000-000000000201"),
+        "project_id": uuid.UUID("10000000-0000-4000-8000-000000000002"),
+        "summary": "Wrong project fact",
+    }
+
+    with pytest.raises(RuntimeError, match="does not belong to project demo"):
+        cli.validate_relation_object("fact", row, project, "source")
+
+
 def test_migration_parts_reads_id_and_name() -> None:
     migration_id, name = cli.migration_parts(cli.MIGRATIONS_DIR / "002_schema_migrations.sql")
 
