@@ -55,12 +55,15 @@ else
   echo "Skipping seed/demo.sql. Pass --demo to include sample demo records."
 fi
 apply_sql_file "seed/business_sites.sql"
+apply_sql_file "seed/agentic_projects.sql"
 
 echo
 echo "Readiness check:"
 run_agent_hub status
 echo
 run_agent_hub brief --project commcats-de --limit 4
+echo
+run_agent_hub brief --project catering-agents-platform --limit 4
 
 echo
 echo "Durable local Hub database is ready."

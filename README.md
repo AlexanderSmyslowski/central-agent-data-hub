@@ -51,6 +51,7 @@ scripts/db_start.sh
 ```
 
 Das Skript startet die Compose-DB, wartet auf den Healthcheck, fuehrt `agent-hub migrate --apply` aus und spielt den nicht-sensiblen Business-Sites-Seed ein. `seed/demo.sql` wird bewusst nur auf Wunsch geladen:
+Zusaetzlich wird `seed/agentic_projects.sql` fuer nicht-sensitive agentische Projektkontexte wie `catering-agents-platform` eingespielt.
 
 ```bash
 scripts/db_start.sh --demo
