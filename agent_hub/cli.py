@@ -876,6 +876,22 @@ def print_sync_result(result) -> None:
         project = row.get("project", "unknown")
         reason = f" ({row['reason']})" if row.get("reason") else ""
         print(f"- {row['action']} {label} {project}: {row['path']}{reason}")
+        if row.get("diffs"):
+            fields = ", ".join(diff["field"] for diff in row["diffs"])
+            print(f"  fields: {fields}")
+            if row["action"] == "conflict":
+                print("  blocker: review required before sync --apply")
+            for diff in row["diffs"]:
+                print(
+                    "  - "
+                    f"{diff['field']} [{diff['owner']}]: "
+                    f"db={diff['database_value']!r} "
+                    f"markdown={diff['markdown_value']!r} "
+                    f"last={diff['last_imported_value']!r}"
+                )
+        elif row.get("database_changed_fields"):
+            fields = ", ".join(row["database_changed_fields"])
+            print(f"  database changed fields: {fields}")
     if result.applied:
         print()
         print(f"Applied {len(result.applied)} change(s).")

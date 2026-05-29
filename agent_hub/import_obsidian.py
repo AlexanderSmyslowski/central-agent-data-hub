@@ -106,6 +106,11 @@ TYPE_DEFAULT_VALUES = {
     "report": {"report_type": "status", "status": "published"},
 }
 
+FIELD_OWNERS = {
+    memory_type: {column: "obsidian" for column in columns}
+    for memory_type, columns in TYPE_COLUMNS.items()
+}
+
 STATUS_VALUES = {
     "fact": {"proposed", "verified", "disputed", "deprecated", "archived"},
     "decision": {"proposed", "accepted", "rejected", "superseded", "archived"},
@@ -241,8 +246,27 @@ def json_default(value: Any) -> Any:
     return str(value)
 
 
+def normalize_value(value: Any) -> Any:
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return float(value)
+    if isinstance(value, UUID):
+        return str(value)
+    if isinstance(value, dict):
+        return {key: normalize_value(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [normalize_value(item) for item in value]
+    return value
+
+
 def canonical_json(value: Any) -> str:
-    return json.dumps(value, default=json_default, ensure_ascii=False, sort_keys=True)
+    return json.dumps(
+        normalize_value(value),
+        default=json_default,
+        ensure_ascii=False,
+        sort_keys=True,
+    )
 
 
 def hash_payload(value: Any) -> str:
@@ -260,7 +284,10 @@ def item_values(item: ImportItem) -> dict[str, Any]:
 
 
 def row_values(memory_type: str, row: dict[str, Any]) -> dict[str, Any]:
-    return {column: row.get(column) for column in TYPE_COLUMNS[memory_type]}
+    return {
+        column: normalize_value(row.get(column))
+        for column in TYPE_COLUMNS[memory_type]
+    }
 
 
 def user_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
@@ -276,6 +303,7 @@ def import_metadata(item: ImportItem, existing_metadata: dict[str, Any] | None =
         "source_path": str(item.path),
         "content_hash": item.content_hash,
         "data_hash": hash_payload(item_values(item)),
+        "data": normalize_value(item_values(item)),
         "last_imported_at": now,
         "imported_by": "agent-hub import",
     }
@@ -584,6 +612,58 @@ def fetch_existing_import(cur, item: ImportItem, project_id: Any) -> dict[str, A
     return rows[0] if rows else None
 
 
+def values_equal(left: Any, right: Any) -> bool:
+    return canonical_json(left) == canonical_json(right)
+
+
+def build_field_diffs(item: ImportItem, existing: dict[str, Any]) -> list[dict[str, Any]]:
+    metadata = existing.get("metadata") or {}
+    import_state = metadata.get("agent_hub_import") or {}
+    last_data = import_state.get("data")
+    if not isinstance(last_data, dict):
+        last_data = {}
+
+    database_values = row_values(item.memory_type, existing)
+    markdown_values = item_values(item)
+    diffs: list[dict[str, Any]] = []
+    for field in TYPE_COLUMNS[item.memory_type]:
+        database_value = normalize_value(database_values.get(field))
+        markdown_value = normalize_value(markdown_values.get(field))
+        last_value = normalize_value(last_data.get(field)) if field in last_data else None
+        changed = not values_equal(database_value, markdown_value)
+        changed_from_last = (
+            field in last_data
+            and (
+                not values_equal(database_value, last_value)
+                or not values_equal(markdown_value, last_value)
+            )
+        )
+        if changed or changed_from_last:
+            diffs.append(
+                {
+                    "field": field,
+                    "database_value": database_value,
+                    "markdown_value": markdown_value,
+                    "last_imported_value": last_value,
+                    "owner": FIELD_OWNERS[item.memory_type].get(field, "postgres"),
+                }
+            )
+    return diffs
+
+
+def changed_fields_from_last(
+    memory_type: str,
+    current_values: dict[str, Any],
+    last_values: dict[str, Any],
+) -> set[str]:
+    return {
+        field
+        for field in TYPE_COLUMNS[memory_type]
+        if field in last_values
+        and not values_equal(current_values.get(field), last_values.get(field))
+    }
+
+
 def plan_import_item(
     cur,
     item: ImportItem,
@@ -610,19 +690,48 @@ def plan_import_item(
     import_state = metadata.get("agent_hub_import") or {}
     previous_content_hash = import_state.get("content_hash")
     previous_data_hash = import_state.get("data_hash")
-    current_data_hash = hash_payload(row_values(item.memory_type, existing))
+    last_data = import_state.get("data")
+    if not isinstance(last_data, dict):
+        last_data = {}
+    database_values = row_values(item.memory_type, existing)
+    markdown_values = item_values(item)
+    current_data_hash = hash_payload(database_values)
     note_changed = previous_content_hash != item.content_hash
     database_changed = bool(previous_data_hash and previous_data_hash != current_data_hash)
+    diffs = build_field_diffs(item, existing)
 
     if previous_content_hash == item.content_hash:
+        if database_changed:
+            database_fields = sorted(
+                changed_fields_from_last(item.memory_type, database_values, last_data)
+            )
+            return {
+                **base,
+                "action": "skip",
+                "reason": "database changed since last import; markdown unchanged",
+                "database_changed_fields": database_fields,
+            }
         return {**base, "action": "skip", "reason": "unchanged import content"}
     if note_changed and database_changed:
+        database_fields = changed_fields_from_last(
+            item.memory_type,
+            database_values,
+            last_data,
+        )
+        markdown_fields = changed_fields_from_last(
+            item.memory_type,
+            markdown_values,
+            last_data,
+        )
+        conflicting_fields = sorted(database_fields & markdown_fields)
         return {
             **base,
             "action": "conflict",
             "reason": "database and markdown changed since last import",
+            "diffs": diffs,
+            "conflicting_fields": conflicting_fields,
         }
-    return {**base, "action": "update"}
+    return {**base, "action": "update", "diffs": diffs}
 
 
 def update_import_item(
@@ -749,6 +858,9 @@ def sync_markdown(
                 result.planned.append(
                     {
                         "path": str(file),
+                        "project": None,
+                        "type": None,
+                        "import_key": None,
                         "action": "reject",
                         "reason": str(exc),
                     }
