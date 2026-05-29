@@ -17,6 +17,7 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
    - Keep each project context explicit; websites are only the first domain profile.
    - Use `scripts/install_repo_agent_memory.sh` to install or update repo-local Hub instructions in important project repos.
    - Use `scripts/onboard_known_repos.sh` for dry-run/apply onboarding of active projects with explicit `metadata.local_path`.
+   - Use `scripts/register_project.sh` as the first step for new project repos before substantial agent work.
 
 3. Schema evolution and project taxonomy
    - Track applied migrations in `schema_migrations`.

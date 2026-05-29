@@ -227,6 +227,17 @@ scripts/onboard_known_repos.sh --apply
 
 Das Skript scannt keine Festplatte. Es nutzt nur aktive Hub-Projekte mit gepflegtem `local_path`; Standard ist Dry-run.
 
+Neue Repos werden zuerst registriert und dann direkt mit lokalen Agent-Anweisungen versehen:
+
+```bash
+scripts/register_project.sh \
+  --repo /path/to/new-project \
+  --slug new-project-slug \
+  --name "New Project"
+```
+
+Das setzt `projects.metadata.local_path`, legt einen Codex-Agenten an und installiert den markierten Hub-Block im Zielrepo. `--dry-run` zeigt die geplanten Schritte ohne DB- oder Dateischreibzugriff.
+
 ## Disposable Demo Lokal Ausfuehren
 
 Eine frische PostgreSQL-16-Testdatenbank per Docker starten:
