@@ -218,6 +218,15 @@ scripts/install_repo_agent_memory.sh \
 
 Das Skript ergaenzt oder aktualisiert einen `CENTRAL-AGENT-DATA-HUB`-Block in `AGENTS.md`, ohne vorhandene Projektanweisungen zu ersetzen. Mit `--dry-run` zeigt es den geplanten Block ohne Schreibzugriff.
 
+Bekannte Hub-Projekte mit explizitem `projects.metadata.local_path` koennen gesammelt geprueft oder angeschlossen werden:
+
+```bash
+scripts/onboard_known_repos.sh
+scripts/onboard_known_repos.sh --apply
+```
+
+Das Skript scannt keine Festplatte. Es nutzt nur aktive Hub-Projekte mit gepflegtem `local_path`; Standard ist Dry-run.
+
 ## Disposable Demo Lokal Ausfuehren
 
 Eine frische PostgreSQL-16-Testdatenbank per Docker starten:
