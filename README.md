@@ -10,7 +10,7 @@ PostgreSQL ist die operative Wahrheit: Hier liegen die normalisierten Daten, Rel
 - Demo-Seed ist vorhanden: `seed/demo.sql`
 - Obsidian-Jinja2-Templates sind vorhanden: `templates/`
 - Minimaler Obsidian-Exporter ist vorhanden: `agent_hub/export_obsidian.py`
-- CLI-Kommandos sind vorhanden: `agent-hub export`, `agent-hub status`, `agent-hub check`, `agent-hub brief`, `agent-hub remember`, `agent-hub import`, `agent-hub sync`
+- CLI-Kommandos sind vorhanden: `agent-hub export`, `agent-hub status`, `agent-hub check`, `agent-hub projects`, `agent-hub brief`, `agent-hub remember`, `agent-hub import`, `agent-hub sync`
 - CLI-Platzhalter sind vorhanden, aber noch nicht implementiert: `init`
 
 ## Voraussetzungen
@@ -108,7 +108,7 @@ Rollen der Speicherorte:
 
 ## Operational Readiness Fuer Agenten
 
-Vor Agenten-Writeback oder groesseren Website-Arbeiten sollte der Hub in dieser Reihenfolge geprueft werden:
+Vor Agenten-Writeback oder groesseren Projektarbeiten sollte der Hub in dieser Reihenfolge geprueft werden:
 
 ```bash
 scripts/db_status.sh
@@ -117,7 +117,7 @@ scripts/db_verify_backup.sh
 scripts/agent_preflight.sh
 ```
 
-`scripts/agent_preflight.sh` ist read-only. Es prueft Docker/Compose, den laufenden Durable-DB-Container, einen verifizierten lokalen Backup-Stand, `agent-hub status`, `agent-hub check` und Projekt-Briefs fuer `commcats-de` und `the-one-catering`.
+`scripts/agent_preflight.sh` ist read-only. Es prueft Docker/Compose, den laufenden Durable-DB-Container, einen verifizierten lokalen Backup-Stand, `agent-hub status`, `agent-hub check` und Baseline-Projekt-Briefs.
 
 Exit-Codes:
 
@@ -135,9 +135,11 @@ Der LaunchAgent ruft `scripts/db_backup.sh` lokal auf. Remote-Kopie passiert nur
 
 ## Agent Workflow
 
-Vor Website-Arbeiten laden Agenten den passenden Projektkontext:
+Vor Projektarbeiten laden Agenten den passenden Projektkontext:
 
 ```bash
+scripts/project_context.sh --project <project-slug>
+scripts/project_context.sh --all-projects
 scripts/project_context.sh --project commcats-de
 scripts/project_context.sh --project the-one-catering
 scripts/project_context.sh --all-websites
@@ -149,10 +151,11 @@ Nach abgeschlossener, gepruefter Arbeit schreiben Agenten nur nicht-sensitive Er
 scripts/project_remember.sh \
   --project commcats-de \
   --type fact \
-  --text "Reviewed project memory goes here."
+  --text "Reviewed project memory goes here." \
+  --source "non-sensitive source or review note"
 ```
 
-`scripts/project_remember.sh` ist ein Schutzlayer um `agent-hub remember`: Es fuehrt Preflight und Safety-Scan aus, blockiert Projekterzeugung und erlaubt `--dry-run`. Details und Beispiele stehen in `docs/agent-workflow.md`.
+`scripts/project_remember.sh` ist ein Schutzlayer um `agent-hub remember`: Es fuehrt Preflight und Safety-Scan aus, blockiert Projekterzeugung, verlangt Quellen fuer Fakten und erlaubt `--dry-run`. Details und Beispiele stehen in `docs/agent-workflow.md`.
 
 ## Disposable Demo Lokal Ausfuehren
 
@@ -240,6 +243,7 @@ Beim erneuten Export bleibt der Inhalt innerhalb des Human-Notes-Blocks erhalten
 - `agent-hub export`: exportiert Datenbankzeilen als Obsidian-Markdown-Dateien
 - `agent-hub status`: zeigt eine schnelle Diagnose fuer Datenbank, Exportordner und Tabellenzaehlungen
 - `agent-hub check`: prueft einfache Konsistenzregeln fuer Export und Review
+- `agent-hub projects`: listet aktive Projekte fuer agentische Arbeit
 - `agent-hub brief --project <slug>`: gibt einen kompakten Projektbrief fuer Agenten aus
 - `agent-hub remember --project <slug> --type <type> --text <text>`: speichert eine gepruefte Erinnerung
 - `agent-hub import --path <file-or-directory>`: importiert allowlisted Obsidian-Markdown nach Postgres
@@ -247,16 +251,16 @@ Beim erneuten Export bleibt der Inhalt innerhalb des Human-Notes-Blocks erhalten
 
 ## Codex-/Hermes-Gedaechtnis
 
-Die neuen `brief`- und `remember`-Kommandos bilden den kleinen kontrollierten Zugriffspfad fuer Codex und Hermes.
+Die `projects`-, `brief`- und `remember`-Kommandos bilden den kleinen kontrollierten Zugriffspfad fuer Codex und Hermes.
 
 Vor groesseren Arbeiten:
 
 ```bash
-agent-hub brief --project commcats-de
-agent-hub brief --project the-one-catering
+agent-hub projects
+scripts/project_context.sh --project <project-slug>
 ```
 
-Die Website-Projekte haben unterschiedliche Bearbeitungsstaende:
+Website ist das erste Domain-Profil im Hub. Diese Website-Projekte haben unterschiedliche Bearbeitungsstaende:
 
 - `commcats-de`: aktuelle Live-Seite ist bereits eine statische Alfahosting-Website. Agenten sollen lokal in der statischen Quelle arbeiten und nur nach ausdruecklicher Freigabe hochladen.
 - `the-one-catering`: aktuelle Live-Seite bleibt vorerst Framer. Agenten sollen die Live-Seite stabil halten, optisch unsichtbare SEO-/AI-Schritte vorbereiten und eine geschuetzte statische Staging-Version bauen, bevor ueber Migration gesprochen wird.
@@ -290,7 +294,7 @@ Erlaubte Typen fuer `remember`:
 - `risk`
 - `report`
 
-Wichtig: `remember` ist fuer kuratierte, nicht-sensitive Arbeitsfakten gedacht. Passwoerter, rohe Rechnungsdaten, private Kundendaten und ungepruefte Behauptungen gehoeren nicht in den Hub.
+Wichtig: Erinnerungen sind fuer kuratierte, nicht-sensitive Projektarbeit gedacht. Passwoerter, rohe Rechnungsdaten, private Kundendaten und ungepruefte Behauptungen gehoeren nicht in den Hub.
 
 Ein nicht-sensibler Start-Seed fuer die Website-Projekte liegt in:
 
@@ -400,7 +404,7 @@ Das Skript spielt Migration und Seeds ein, prueft `status`, `check`, `brief`, `i
 - `scripts/`: lokale Smoke- und Wartungsskripte
 - `docker-compose.yml`: dauerhafte lokale PostgreSQL-Betriebsdatenbank
 - `.env.example`: Vorlage fuer lokale, nicht committete Konfiguration
-- `docs/agent-workflow.md`: Arbeitsvertrag fuer Agenten vor und nach Website-Arbeiten
+- `docs/agent-workflow.md`: Arbeitsvertrag fuer Agenten vor und nach Projektarbeiten
 - `tests/`: schnelle lokale Unit-Tests
 - `ROADMAP.md`: priorisierte v0-Folgearbeiten
 - `import_allowlist.example.yml`: Beispiel-Allowlist fuer sicheren Import

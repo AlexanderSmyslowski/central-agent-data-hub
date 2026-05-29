@@ -9,10 +9,10 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
    - Keep the durable local DB, latest verified backup, and project briefs healthy.
    - Treat missing local backup state as an operational blocker for writeback.
 
-2. Agent website workflow
-   - Use `scripts/project_context.sh` before website work.
+2. Agentic work workflow
+   - Use `scripts/project_context.sh` before project work.
    - Use `scripts/project_remember.sh` for reviewed, non-sensitive writeback.
-   - Keep CommCats, THE ONE, and L'Amour as separate project contexts.
+   - Keep each project context explicit; websites are only the first domain profile.
 
 3. Automated tests
    - Keep fast unit tests for CLI helpers and non-database error paths.
@@ -44,7 +44,7 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
    - Keep Human Notes stable across repeated exports.
    - Add tests for template rendering and frontmatter once template shape changes again.
 
-## Website Memory Boundaries
+## Domain Profile: Websites
 
 - `commcats-de` is a static live Alfahosting site.
 - `the-one-catering` remains live on Framer while SEO/AI work and protected static migration prep happen.
