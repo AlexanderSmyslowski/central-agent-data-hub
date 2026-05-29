@@ -14,6 +14,27 @@
 - `agent_actions`: Auditspur für Agentenhandlungen.
 - `event_log`: generische Ereignisspur.
 - `sync_events`: Import-/Export-/Synchronisationsereignisse.
+- `schema_migrations`: angewendete oder fehlgeschlagene Schema-Migrationen mit Checksumme.
+
+## Migration-Modell
+
+`migrations/001_init.sql` bleibt die Baseline und wird nicht nachtraeglich veraendert. `migrations/002_schema_migrations.sql` fuehrt `schema_migrations` ein, damit spaetere Schemaaenderungen nachvollziehbar in Dateireihenfolge angewendet werden koennen.
+
+Der CLI-Runner `agent-hub migrate --apply` registriert bestehende Datenbanken nachtraeglich: Wenn das Basisschema bereits existiert, wird `001_init.sql` als angewendet eingetragen und nur das Tracking ergaenzt. `agent-hub migrate --status`, `agent-hub status` und `agent-hub check` zeigen offene, fehlgeschlagene oder checksum-geaenderte Migrationen an.
+
+## Projekt-Taxonomie
+
+V1 nutzt bewusst keine neue Spalte fuer Projekttypen. Der Typ liegt in `projects.metadata.project_type`, damit die Taxonomie leicht erweiterbar bleibt. Dokumentierte Werte sind:
+
+- `website`
+- `ops`
+- `research`
+- `product`
+- `business`
+- `personal`
+- `learning`
+
+`agent-hub projects --type <project_type>` filtert aktive Projekte nach diesem Metadatenwert.
 
 ## Relation-Modell
 

@@ -14,33 +14,39 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
    - Use `scripts/project_remember.sh` for reviewed, non-sensitive writeback.
    - Keep each project context explicit; websites are only the first domain profile.
 
-3. Automated tests
+3. Schema evolution and project taxonomy
+   - Track applied migrations in `schema_migrations`.
+   - Use `agent-hub migrate --status` and `agent-hub migrate --apply` before schema-dependent work.
+   - Keep `projects.metadata.project_type` as the lightweight taxonomy until a dedicated column is justified.
+   - Block regular agent writeback when migrations are pending, failed, or checksum-changed.
+
+4. Automated tests
    - Keep fast unit tests for CLI helpers and non-database error paths.
    - Keep `scripts/smoke_postgres.sh` runnable against a disposable `DATABASE_URL`.
    - Do not require Docker Desktop for normal development.
 
-4. Durable local database operations
+5. Durable local database operations
    - Use Docker Compose for the local operational Postgres database.
    - Keep backups as local and optional remote dump files, not a live server sync.
    - Verify backups regularly before agents depend on writeback.
 
-5. Status and check improvements
+6. Status and check improvements
    - Keep `agent-hub status` fast and human-readable.
    - Extend `agent-hub check` only with checks that produce clear actions.
    - Treat broken relations and unreachable databases as errors.
 
-6. Safe import allowlist
+7. Safe import allowlist
    - Keep `agent-hub import` limited to allowlisted projects, paths, types, and fields.
    - Reject secrets, private customer data, raw invoice data, and deployment credentials.
    - Keep import identity based on `import_key`, optional `db_id`, and metadata hashes.
 
-7. Sync plan/apply
+8. Sync plan/apply
    - Keep `agent-hub sync --plan` as the default review path.
    - Keep field-level diffs visible for updates and conflicts.
    - Use `agent-hub sync --apply` only when the plan has no conflicts or rejected notes.
    - Keep `sync --watch` disabled until recovery and conflict handling are boring.
 
-8. Obsidian projection hardening
+9. Obsidian projection hardening
    - Keep Human Notes stable across repeated exports.
    - Add tests for template rendering and frontmatter once template shape changes again.
 

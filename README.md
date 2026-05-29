@@ -6,11 +6,11 @@ PostgreSQL ist die operative Wahrheit: Hier liegen die normalisierten Daten, Rel
 
 ## Aktueller v0-Status
 
-- PostgreSQL-Schema ist vorhanden: `migrations/001_init.sql`
+- PostgreSQL-Schema und Migrationstracking sind vorhanden: `migrations/001_init.sql`, `migrations/002_schema_migrations.sql`
 - Demo-Seed ist vorhanden: `seed/demo.sql`
 - Obsidian-Jinja2-Templates sind vorhanden: `templates/`
 - Minimaler Obsidian-Exporter ist vorhanden: `agent_hub/export_obsidian.py`
-- CLI-Kommandos sind vorhanden: `agent-hub export`, `agent-hub status`, `agent-hub check`, `agent-hub projects`, `agent-hub brief`, `agent-hub remember`, `agent-hub import`, `agent-hub sync`
+- CLI-Kommandos sind vorhanden: `agent-hub migrate`, `agent-hub export`, `agent-hub status`, `agent-hub check`, `agent-hub projects`, `agent-hub brief`, `agent-hub remember`, `agent-hub import`, `agent-hub sync`
 - CLI-Platzhalter sind vorhanden, aber noch nicht implementiert: `init`
 
 ## Voraussetzungen
@@ -50,7 +50,7 @@ Starten und initialisieren:
 scripts/db_start.sh
 ```
 
-Das Skript startet die Compose-DB, wartet auf den Healthcheck, legt das Schema an, falls es noch fehlt, und spielt den nicht-sensiblen Business-Sites-Seed ein. `seed/demo.sql` wird bewusst nur auf Wunsch geladen:
+Das Skript startet die Compose-DB, wartet auf den Healthcheck, fuehrt `agent-hub migrate --apply` aus und spielt den nicht-sensiblen Business-Sites-Seed ein. `seed/demo.sql` wird bewusst nur auf Wunsch geladen:
 
 ```bash
 scripts/db_start.sh --demo
@@ -117,7 +117,25 @@ scripts/db_verify_backup.sh
 scripts/agent_preflight.sh
 ```
 
-`scripts/agent_preflight.sh` ist read-only. Es prueft Docker/Compose, den laufenden Durable-DB-Container, einen verifizierten lokalen Backup-Stand, `agent-hub status`, `agent-hub check` und Baseline-Projekt-Briefs.
+`scripts/agent_preflight.sh` ist read-only. Es prueft Docker/Compose, den laufenden Durable-DB-Container, offene oder fehlgeschlagene Migrationen, einen verifizierten lokalen Backup-Stand, `agent-hub status`, `agent-hub check` und Baseline-Projekt-Briefs.
+
+## Schema-Migrationen
+
+Migrationen liegen in `migrations/` und werden in Dateireihenfolge angewendet. `migrations/001_init.sql` bleibt die unveraenderte Baseline; `migrations/002_schema_migrations.sql` fuehrt die Tabelle `schema_migrations` ein.
+
+Status anzeigen:
+
+```bash
+agent-hub migrate --status
+```
+
+Offene Migrationen anwenden:
+
+```bash
+agent-hub migrate --apply
+```
+
+Bestehende Datenbanken werden beim ersten Lauf nachtraeglich migrationsfaehig gemacht: Wenn das Basisschema bereits existiert, wird `001_init.sql` als angewendet registriert und nur das Migrationstracking ergaenzt. Agenten-Writeback soll erst laufen, wenn keine Migration mehr offen oder fehlgeschlagen ist.
 
 Exit-Codes:
 
@@ -241,9 +259,12 @@ Beim erneuten Export bleibt der Inhalt innerhalb des Human-Notes-Blocks erhalten
 ## CLI Commands
 
 - `agent-hub export`: exportiert Datenbankzeilen als Obsidian-Markdown-Dateien
-- `agent-hub status`: zeigt eine schnelle Diagnose fuer Datenbank, Exportordner und Tabellenzaehlungen
-- `agent-hub check`: prueft einfache Konsistenzregeln fuer Export und Review
+- `agent-hub migrate --status`: zeigt angewendete, offene oder fehlgeschlagene Schema-Migrationen
+- `agent-hub migrate --apply`: wendet offene Schema-Migrationen an
+- `agent-hub status`: zeigt eine schnelle Diagnose fuer Datenbank, Exportordner, Tabellenzaehlungen und Schema-Version
+- `agent-hub check`: prueft einfache Konsistenzregeln fuer Export, Review und Migrationen
 - `agent-hub projects`: listet aktive Projekte fuer agentische Arbeit
+- `agent-hub projects --type website`: filtert aktive Projekte nach `projects.metadata.project_type`
 - `agent-hub brief --project <slug>`: gibt einen kompakten Projektbrief fuer Agenten aus
 - `agent-hub remember --project <slug> --type <type> --text <text>`: speichert eine gepruefte Erinnerung
 - `agent-hub import --path <file-or-directory>`: importiert allowlisted Obsidian-Markdown nach Postgres
@@ -264,6 +285,8 @@ Website ist das erste Domain-Profil im Hub. Diese Website-Projekte haben untersc
 
 - `commcats-de`: aktuelle Live-Seite ist bereits eine statische Alfahosting-Website. Agenten sollen lokal in der statischen Quelle arbeiten und nur nach ausdruecklicher Freigabe hochladen.
 - `the-one-catering`: aktuelle Live-Seite bleibt vorerst Framer. Agenten sollen die Live-Seite stabil halten, optisch unsichtbare SEO-/AI-Schritte vorbereiten und eine geschuetzte statische Staging-Version bauen, bevor ueber Migration gesprochen wird.
+
+Projekt-Taxonomie bleibt in v1 bewusst leichtgewichtig ueber `projects.metadata.project_type`. Dokumentierte Werte sind `website`, `ops`, `research`, `product`, `business`, `personal` und `learning`. Eine eigene Spalte kommt erst in Frage, wenn Projekttypen query-kritisch werden.
 
 Nach relevanten, geprueften Entscheidungen:
 
@@ -318,7 +341,7 @@ docker exec -i central-agent-data-hub-demo \
 agent-hub status
 ```
 
-Geprueft werden unter anderem `DATABASE_URL`, die Datenbankverbindung, `OBSIDIAN_EXPORT_DIR`, der Exportordner und die Datensatzanzahl der Kern-Tabellen.
+Geprueft werden unter anderem `DATABASE_URL`, die Datenbankverbindung, `OBSIDIAN_EXPORT_DIR`, der Exportordner, die Datensatzanzahl der Kern-Tabellen und der aktuelle Migrationsstand.
 
 ## Konsistenz Pruefen
 
@@ -332,7 +355,9 @@ Bewertung:
 
 - niedrige Confidence bei Fakten ist eine Warning
 - offene Fragen sind eine Warning
+- offene Migrationen sind eine Warning
 - kaputte polymorphe Relationen sind ein Error
+- fehlgeschlagene oder veraenderte Migrationen sind ein Error
 - eine nicht erreichbare Datenbank ist ein Error
 
 ## Tests Ausfuehren
