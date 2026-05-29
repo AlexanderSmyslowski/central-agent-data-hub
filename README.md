@@ -62,7 +62,7 @@ Status und Readiness pruefen:
 scripts/db_status.sh
 ```
 
-Das zeigt Container, Volume, Port, Healthcheck, `agent-hub status` und einen kurzen `commcats-de`-Brief.
+Das zeigt Container, Volume, Port, Healthcheck, den neuesten lokalen Backup-Stand, `agent-hub status` und einen kurzen `commcats-de`-Brief.
 
 Backup erstellen:
 
@@ -75,6 +75,12 @@ Standardziel ist `.local/backups/`. Das Skript nutzt `pg_dump` im Postgres-Conta
 ```bash
 export AGENT_HUB_BACKUP_REMOTE="user@example.com:/path/to/agent-hub-backups/"
 scripts/db_backup.sh
+```
+
+Neuesten lokalen Backup-Stand anzeigen:
+
+```bash
+scripts/db_backup_latest.sh
 ```
 
 Backup verifizieren:
@@ -99,6 +105,33 @@ Rollen der Speicherorte:
 - Die lokale Postgres-DB ist die operative Wahrheit fuer Agenten-Gedaechtnis.
 - Obsidian ist Projektion und kontrollierter Importkanal, nicht die alleinige Wahrheit.
 - Server-Backups sind Wiederherstellungspunkte als Dump-Dateien, kein Live-DB-Sync.
+
+## Operational Readiness Fuer Agenten
+
+Vor Agenten-Writeback oder groesseren Website-Arbeiten sollte der Hub in dieser Reihenfolge geprueft werden:
+
+```bash
+scripts/db_status.sh
+scripts/db_backup.sh
+scripts/db_verify_backup.sh
+scripts/agent_preflight.sh
+```
+
+`scripts/agent_preflight.sh` ist read-only. Es prueft Docker/Compose, den laufenden Durable-DB-Container, einen verifizierten lokalen Backup-Stand, `agent-hub status`, `agent-hub check` und Projekt-Briefs fuer `commcats-de` und `the-one-catering`.
+
+Exit-Codes:
+
+- `0`: bereit fuer Agentenarbeit
+- `1`: Daten- oder Konsistenzfehler
+- `2`: Konfiguration oder Betriebsabhaengigkeit fehlt
+
+Optional kann ein taegliches lokales Backup als macOS LaunchAgent eingerichtet werden:
+
+```bash
+scripts/install_backup_launch_agent.sh
+```
+
+Der LaunchAgent ruft `scripts/db_backup.sh` lokal auf. Remote-Kopie passiert nur, wenn `AGENT_HUB_BACKUP_REMOTE` lokal gesetzt ist. Server-Zugangsdaten gehoeren nicht ins Repo.
 
 ## Disposable Demo Lokal Ausfuehren
 
