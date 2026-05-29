@@ -279,6 +279,42 @@ def run_status(_args: argparse.Namespace) -> int:
     return 0 if healthy else 1
 
 
+def run_projects(args: argparse.Namespace) -> int:
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        print("Error: DATABASE_URL is not set", file=sys.stderr)
+        return 2
+
+    try:
+        with connect() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT slug, name, status, description, metadata
+                    FROM projects
+                    WHERE status = 'active'
+                    ORDER BY slug
+                    """
+                )
+                projects = list(cur.fetchall())
+    except Exception as exc:
+        print(f"Error: {concise_error(exc)}", file=sys.stderr)
+        return 1
+
+    if args.format == "json":
+        print(json.dumps(projects, indent=2, default=json_default, ensure_ascii=False))
+        return 0
+
+    if not projects:
+        print("No active projects found.")
+        return 0
+
+    print("Active projects:")
+    for project in projects:
+        print(f"- {project['slug']} [{project['status']}] {project['name']}")
+    return 0
+
+
 def fetch_table_counts(cur) -> dict[str, int]:
     counts = {}
     for table in CORE_TABLES:
@@ -973,6 +1009,18 @@ def build_parser() -> argparse.ArgumentParser:
         help="Run consistency checks for export and review readiness.",
     )
     check_parser.set_defaults(func=run_check)
+
+    projects_parser = subparsers.add_parser(
+        "projects",
+        help="List active project slugs available for agent work.",
+    )
+    projects_parser.add_argument(
+        "--format",
+        choices=("text", "json"),
+        default="text",
+        help="Output format.",
+    )
+    projects_parser.set_defaults(func=run_projects)
 
     brief_parser = subparsers.add_parser(
         "brief",
