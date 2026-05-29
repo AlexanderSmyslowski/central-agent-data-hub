@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: central-agent-data-hub-postgres
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:55432:5432"
+    environment:
+      POSTGRES_DB: agent_hub
+      POSTGRES_USER: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - central-agent-data-hub-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d agent_hub"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+
+volumes:
+  central-agent-data-hub-pgdata:
+    name: central-agent-data-hub-pgdata
