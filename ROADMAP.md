@@ -9,33 +9,38 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
    - Keep the durable local DB, latest verified backup, and project briefs healthy.
    - Treat missing local backup state as an operational blocker for writeback.
 
-2. Automated tests
+2. Agent website workflow
+   - Use `scripts/project_context.sh` before website work.
+   - Use `scripts/project_remember.sh` for reviewed, non-sensitive writeback.
+   - Keep CommCats, THE ONE, and L'Amour as separate project contexts.
+
+3. Automated tests
    - Keep fast unit tests for CLI helpers and non-database error paths.
    - Keep `scripts/smoke_postgres.sh` runnable against a disposable `DATABASE_URL`.
    - Do not require Docker Desktop for normal development.
 
-3. Durable local database operations
+4. Durable local database operations
    - Use Docker Compose for the local operational Postgres database.
    - Keep backups as local and optional remote dump files, not a live server sync.
    - Verify backups regularly before agents depend on writeback.
 
-4. Status and check improvements
+5. Status and check improvements
    - Keep `agent-hub status` fast and human-readable.
    - Extend `agent-hub check` only with checks that produce clear actions.
    - Treat broken relations and unreachable databases as errors.
 
-5. Safe import allowlist
+6. Safe import allowlist
    - Keep `agent-hub import` limited to allowlisted projects, paths, types, and fields.
    - Reject secrets, private customer data, raw invoice data, and deployment credentials.
    - Keep import identity based on `import_key`, optional `db_id`, and metadata hashes.
 
-6. Sync plan/apply
+7. Sync plan/apply
    - Keep `agent-hub sync --plan` as the default review path.
    - Keep field-level diffs visible for updates and conflicts.
    - Use `agent-hub sync --apply` only when the plan has no conflicts or rejected notes.
    - Keep `sync --watch` disabled until recovery and conflict handling are boring.
 
-7. Obsidian projection hardening
+8. Obsidian projection hardening
    - Keep Human Notes stable across repeated exports.
    - Add tests for template rendering and frontmatter once template shape changes again.
 

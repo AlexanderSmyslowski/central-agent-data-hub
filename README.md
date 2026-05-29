@@ -133,6 +133,27 @@ scripts/install_backup_launch_agent.sh
 
 Der LaunchAgent ruft `scripts/db_backup.sh` lokal auf. Remote-Kopie passiert nur, wenn `AGENT_HUB_BACKUP_REMOTE` lokal gesetzt ist. Server-Zugangsdaten gehoeren nicht ins Repo.
 
+## Agent Workflow
+
+Vor Website-Arbeiten laden Agenten den passenden Projektkontext:
+
+```bash
+scripts/project_context.sh --project commcats-de
+scripts/project_context.sh --project the-one-catering
+scripts/project_context.sh --all-websites
+```
+
+Nach abgeschlossener, gepruefter Arbeit schreiben Agenten nur nicht-sensitive Erinnerungen zurueck:
+
+```bash
+scripts/project_remember.sh \
+  --project commcats-de \
+  --type fact \
+  --text "Reviewed project memory goes here."
+```
+
+`scripts/project_remember.sh` ist ein Schutzlayer um `agent-hub remember`: Es fuehrt Preflight und Safety-Scan aus, blockiert Projekterzeugung und erlaubt `--dry-run`. Details und Beispiele stehen in `docs/agent-workflow.md`.
+
 ## Disposable Demo Lokal Ausfuehren
 
 Eine frische PostgreSQL-16-Testdatenbank per Docker starten:
@@ -379,6 +400,7 @@ Das Skript spielt Migration und Seeds ein, prueft `status`, `check`, `brief`, `i
 - `scripts/`: lokale Smoke- und Wartungsskripte
 - `docker-compose.yml`: dauerhafte lokale PostgreSQL-Betriebsdatenbank
 - `.env.example`: Vorlage fuer lokale, nicht committete Konfiguration
+- `docs/agent-workflow.md`: Arbeitsvertrag fuer Agenten vor und nach Website-Arbeiten
 - `tests/`: schnelle lokale Unit-Tests
 - `ROADMAP.md`: priorisierte v0-Folgearbeiten
 - `import_allowlist.example.yml`: Beispiel-Allowlist fuer sicheren Import
