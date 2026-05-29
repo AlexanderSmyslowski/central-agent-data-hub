@@ -10,7 +10,7 @@ PostgreSQL ist die operative Wahrheit: Hier liegen die normalisierten Daten, Rel
 - Demo-Seed ist vorhanden: `seed/demo.sql`
 - Obsidian-Jinja2-Templates sind vorhanden: `templates/`
 - Minimaler Obsidian-Exporter ist vorhanden: `agent_hub/export_obsidian.py`
-- CLI-Kommandos sind vorhanden: `agent-hub migrate`, `agent-hub export`, `agent-hub status`, `agent-hub check`, `agent-hub projects`, `agent-hub brief`, `agent-hub daily`, `agent-hub handoff`, `agent-hub review`, `agent-hub search`, `agent-hub context`, `agent-hub receipt`, `agent-hub remember`, `agent-hub relations`, `agent-hub relate`, `agent-hub import`, `agent-hub sync`
+- CLI-Kommandos sind vorhanden: `agent-hub migrate`, `agent-hub export`, `agent-hub status`, `agent-hub check`, `agent-hub projects`, `agent-hub brief`, `agent-hub compile`, `agent-hub daily`, `agent-hub handoff`, `agent-hub review`, `agent-hub search`, `agent-hub context`, `agent-hub quality`, `agent-hub receipt`, `agent-hub remember`, `agent-hub relations`, `agent-hub relate`, `agent-hub import`, `agent-hub sync`
 - CLI-Platzhalter sind vorhanden, aber noch nicht implementiert: `init`
 
 ## Voraussetzungen
@@ -355,6 +355,7 @@ Beim erneuten Export bleibt der Inhalt innerhalb des Human-Notes-Blocks erhalten
 - `agent-hub review --project <slug>`: zeigt Entscheidungs-/Risiko-/Fragenuebersicht plus Relations-Graph
 - `agent-hub search --project <slug> --query <text>`: sucht projektgebunden in kuratierten Memory-Typen
 - `agent-hub context --project <slug> --query <text>`: baut ein kompaktes Kontextpaket aus Recent Activity, Suchtreffern und Relations
+- `agent-hub quality --project <slug>`: zeigt Memory-Qualitaet, offene Luecken und Relations-Abdeckung
 - `agent-hub receipt --project <slug>`: prueft aktuelle Memory-Zeilen und passende Obsidian-Exportdateien
 - `agent-hub remember --project <slug> --type <type> --text <text>`: speichert eine gepruefte Erinnerung
 - `agent-hub relations --project <slug>`: listet den belegbaren Projektgraphen
@@ -463,13 +464,16 @@ Fuer einen besonders kompakten Agentenstart:
 ```bash
 agent-hub compile --project central-agent-data-hub
 agent-hub compile --project central-agent-data-hub --format json
+agent-hub compile --project central-agent-data-hub --since 24h --with-receipt-status --max-chars 4000
+agent-hub quality --project central-agent-data-hub
 ```
 
 ## Obsidian-Projektgraph
 
-`agent-hub export` erzeugt neben den normalen Memory-Dateien auch kompakte
-Projektuebersichten unter `Compiled/`. Bestehende Dateinamen bleiben stabil,
-damit Human Notes nicht gefaehrdet werden.
+`agent-hub export` erzeugt neben den normalen Memory-Dateien auch eine zentrale
+Startseite `Compiled/Agent Data Hub.md` und kompakte Projektuebersichten unter
+`Compiled/`. Bestehende Dateinamen bleiben stabil, damit Human Notes nicht
+gefaehrdet werden.
 
 Kuratierte Relations werden beim Export als Obsidian-Wikilinks in den Abschnitt
 `Linked Memory` geschrieben. Dadurch kann Obsidian Zusammenhaenge im Graphen

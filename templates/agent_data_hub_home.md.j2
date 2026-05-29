@@ -1,0 +1,58 @@
+---
+type: agent_data_hub_home
+db_id: "{{ id }}"
+source: "{{ source | default('database', true) }}"
+last_exported_at: "{{ last_exported_at | default('', true) }}"
+---
+
+# Agent Data Hub
+
+<!-- AUTO-GENERATED:START -->
+
+Verified memory for agentic work.
+
+## Active Project Contexts
+
+{% if projects %}
+{% for project in projects %}
+- {{ project.link }}{% if project.status %} [{{ project.status }}]{% endif %}{% if project.description %} - {{ project.description }}{% endif %}
+{% endfor %}
+{% else %}
+- none
+{% endif %}
+
+## Open Questions
+
+{% if open_questions %}
+{% for row in open_questions %}
+- [{{ row.status | default('unknown', true) }}] {{ row.question }}
+{% endfor %}
+{% else %}
+- none
+{% endif %}
+
+## Recent Reports
+
+{% if recent_reports %}
+{% for row in recent_reports %}
+- [{{ row.report_type | default('report', true) }}] {{ row.title }}{% if row.summary %}: {{ row.summary }}{% endif %}
+{% endfor %}
+{% else %}
+- none
+{% endif %}
+
+## Standard Agent Flow
+
+```bash
+scripts/agent_start.sh --project <project-slug> --query "<focus>" --review
+scripts/agent_finish.sh --project <project-slug> --review --export --backup
+scripts/memory_receipt.sh --project <project-slug> --since 24h
+```
+
+<!-- AUTO-GENERATED:END -->
+
+## Human Notes
+
+<!-- HUMAN-NOTES:START -->
+
+<!-- HUMAN-NOTES:END -->

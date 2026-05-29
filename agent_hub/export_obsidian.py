@@ -220,6 +220,11 @@ def relation_link_line(
     return f"- {source_link} --{relation_type}--> {target_link}"
 
 
+def append_unique(items: list[str], value: str) -> None:
+    if value not in items:
+        items.append(value)
+
+
 def fetch_relations(cur) -> list[dict[str, Any]]:
     cur.execute(
         """
@@ -273,6 +278,47 @@ def project_overview_context(
     }
 
 
+def hub_home_context(
+    export_dir: Path,
+    rows_by_table: dict[str, list[dict[str, Any]]],
+    last_exported_at: str,
+) -> dict[str, Any]:
+    projects = []
+    for project in rows_by_table.get("projects", []):
+        compiled_path = export_dir / "Compiled" / f"{slugify(str(project['slug']))}.md"
+        projects.append(
+            {
+                "name": project["name"],
+                "slug": project["slug"],
+                "status": project.get("status"),
+                "description": project.get("description"),
+                "link": wikilink(export_dir, compiled_path, str(project["name"])),
+            }
+        )
+
+    active_project_ids = {project["id"] for project in rows_by_table.get("projects", [])}
+    open_questions = [
+        row
+        for row in rows_by_table.get("open_questions", [])
+        if row.get("project_id") in active_project_ids
+        and row.get("status") not in ("answered", "closed", "archived")
+    ][:12]
+    recent_reports = [
+        row
+        for row in rows_by_table.get("reports", [])
+        if row.get("project_id") in active_project_ids
+        and row.get("status") != "archived"
+    ][:12]
+    return {
+        "id": "agent-data-hub",
+        "last_exported_at": last_exported_at,
+        "projects": projects,
+        "open_questions": open_questions,
+        "recent_reports": recent_reports,
+        "source": "database",
+    }
+
+
 def export_all() -> list[Path]:
     export_dir = get_export_dir()
     last_exported_at = datetime.now(timezone.utc).isoformat()
@@ -320,14 +366,17 @@ def export_all() -> list[Path]:
                     relation["relation_type"],
                     target,
                 )
-                source["row"].setdefault("linked_memory", []).append(line)
-                target["row"].setdefault("linked_memory", []).append(line)
+                append_unique(source["row"].setdefault("linked_memory", []), line)
+                append_unique(target["row"].setdefault("linked_memory", []), line)
                 for item in (source, target):
                     project_id = item["row"].get("project_id")
                     if not project_id and item["type"] == "project":
                         project_id = item["row"].get("id")
                     if project_id:
-                        project_relation_lines.setdefault(str(project_id), []).append(line)
+                        append_unique(
+                            project_relation_lines.setdefault(str(project_id), []),
+                            line,
+                        )
 
             for spec in EXPORTS:
                 for row in rows_by_table.get(str(spec["table"]), []):
@@ -347,6 +396,14 @@ def export_all() -> list[Path]:
                 path = export_dir / "Compiled" / f"{slugify(str(project['slug']))}.md"
                 write_markdown(path, rendered)
                 written.append(path)
+
+            rendered = render_markdown(
+                "agent_data_hub_home.md.j2",
+                hub_home_context(export_dir, rows_by_table, last_exported_at),
+            )
+            path = export_dir / "Compiled" / "Agent Data Hub.md"
+            write_markdown(path, rendered)
+            written.append(path)
 
     return written
 

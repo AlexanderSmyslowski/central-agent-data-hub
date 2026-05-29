@@ -40,6 +40,8 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
    - Use `agent-hub handoff` for session transfer between agents or days.
    - Use `agent-hub review` for decision/risk/question review from the project graph.
    - Use `agent-hub search` and `agent-hub context` before large changes instead of relying on raw recall.
+   - Use `agent-hub compile --since --with-receipt-status --max-chars` for token-efficient starts.
+   - Use `agent-hub quality` to spot thin, stale, or weak project memory.
    - Keep vector search and watch-mode automation out until simple retrieval is boringly useful.
 
 6. Automated tests
@@ -70,8 +72,14 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
 
 11. Obsidian projection hardening
    - Keep Human Notes stable across repeated exports.
+   - Keep `Compiled/Agent Data Hub.md` as the human-readable Hub start page.
    - Keep export filenames stable and build Wikilinks from the export index, never from guessed paths.
    - Add tests for template rendering and frontmatter once template shape changes again.
+
+12. Public explanation pack
+   - Keep anonymized public-facing docs under `docs/public/`.
+   - Avoid real project names, private paths, customer data, and deployment details.
+   - Use Agent Data Hub as the project name and "verified memory for agentic work" as the claim.
 
 ## Domain Profile: Websites
 

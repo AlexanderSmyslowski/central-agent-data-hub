@@ -42,6 +42,13 @@ current state, decisions, risks, open questions, important relations, useful
 reports, and suggested next steps into one short working brief. Use
 `agent-hub context` only when a specific focus query needs extra retrieval.
 
+Useful compile variants:
+
+```bash
+agent-hub compile --project <project-slug> --since 24h
+agent-hub compile --project <project-slug> --with-receipt-status --max-chars 4000
+```
+
 The lower-level project context helper remains available:
 
 ```bash
@@ -108,14 +115,15 @@ agent-hub handoff --project <project-slug> --since 7d
 agent-hub review --project <project-slug>
 agent-hub search --project <project-slug> --query "<topic>"
 agent-hub compile --project <project-slug>
+agent-hub quality --project <project-slug>
 ```
 
 ## Human Wiki Projection
 
 `agent-hub export` writes the human-readable Markdown projection. It keeps
-Human Notes stable, creates compact project overview files under `Compiled/`,
-and turns curated Hub relations into Obsidian Wikilinks in `Linked Memory`
-sections.
+Human Notes stable, creates `Compiled/Agent Data Hub.md` as a central start
+page, creates compact project overview files under `Compiled/`, and turns
+curated Hub relations into Obsidian Wikilinks in `Linked Memory` sections.
 
 Obsidian is for reading, review, graph navigation, and human notes. PostgreSQL
 remains the binding data source; structured changes flow back only through the

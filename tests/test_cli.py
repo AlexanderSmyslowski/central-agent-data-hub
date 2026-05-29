@@ -43,6 +43,20 @@ def test_truncate_keeps_short_text_and_shortens_long_text() -> None:
     assert cli.truncate("abcdefghijklmnopqrstuvwxyz", 10) == "abcdefg..."
 
 
+def test_limit_markdown_chars_adds_truncation_marker() -> None:
+    text = "a" * 120
+
+    limited = cli.limit_markdown_chars(text, 80)
+
+    assert len(limited) <= 80
+    assert "output truncated by --max-chars" in limited
+
+
+def test_positive_int_rejects_zero() -> None:
+    with pytest.raises(argparse.ArgumentTypeError):
+        cli.positive_int("0")
+
+
 def test_parse_since_accepts_duration_and_iso_date() -> None:
     assert cli.parse_since("24h") < datetime.now(cli.timezone.utc)
     parsed = cli.parse_since("2026-05-29")
@@ -112,6 +126,17 @@ def test_compile_without_database_url_has_clear_error(monkeypatch, capsys) -> No
     monkeypatch.delenv("DATABASE_URL", raising=False)
 
     code = cli.main(["compile", "--project", "central-agent-data-hub"])
+
+    captured = capsys.readouterr()
+    assert code == 2
+    assert "DATABASE_URL is not set" in captured.err
+    assert "Traceback" not in captured.err
+
+
+def test_quality_without_database_url_has_clear_error(monkeypatch, capsys) -> None:
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+
+    code = cli.main(["quality", "--project", "central-agent-data-hub"])
 
     captured = capsys.readouterr()
     assert code == 2
@@ -211,6 +236,37 @@ def test_obsidian_wikilink_uses_relative_path_without_suffix(tmp_path: Path) -> 
     link = export_obsidian.wikilink(tmp_path, path, "fact: Demo | Fact")
 
     assert link == "[[Facts/demo-fact-00000201|fact: Demo - Fact]]"
+
+
+def test_hub_home_context_links_compiled_project_pages(tmp_path: Path) -> None:
+    project_id = uuid.UUID("10000000-0000-4000-8000-000000000001")
+
+    context = export_obsidian.hub_home_context(
+        tmp_path,
+        {
+            "projects": [
+                {
+                    "id": str(project_id),
+                    "name": "Project A",
+                    "slug": "project-a",
+                    "status": "active",
+                    "description": "Demo project.",
+                }
+            ],
+            "open_questions": [
+                {
+                    "project_id": str(project_id),
+                    "question": "What remains open?",
+                    "status": "open",
+                }
+            ],
+            "reports": [],
+        },
+        "2026-05-29T00:00:00+00:00",
+    )
+
+    assert context["projects"][0]["link"] == "[[Compiled/project-a|Project A]]"
+    assert context["open_questions"][0]["question"] == "What remains open?"
 
 
 def test_relations_requires_object_type_and_id_together(monkeypatch, capsys) -> None:

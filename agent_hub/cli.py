@@ -1174,6 +1174,16 @@ def truncate(value: object, limit: int = 96) -> str:
     return text if len(text) <= limit else text[: limit - 3] + "..."
 
 
+def positive_int(value: str) -> int:
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("must be a positive integer") from exc
+    if parsed < 1:
+        raise argparse.ArgumentTypeError("must be a positive integer")
+    return parsed
+
+
 def parse_since(value: str | None, default: str = "24h") -> datetime:
     raw = value or default
     match = re.fullmatch(r"\s*(\d+)\s*([hdw])\s*", raw, flags=re.IGNORECASE)
@@ -1479,13 +1489,140 @@ def fetch_project_counts(cur, project_id: object) -> dict[str, int]:
     return dict(cur.fetchone())
 
 
+def fetch_project_quality(cur, project: dict[str, object]) -> dict[str, object]:
+    project_id = project["id"]
+    cur.execute(
+        """
+        SELECT id, 'fact' AS type, statement AS title, 'missing source' AS issue
+        FROM facts
+        WHERE project_id = %s
+          AND status <> 'archived'
+          AND NULLIF(BTRIM(COALESCE(source, '')), '') IS NULL
+        ORDER BY updated_at DESC, created_at DESC, id
+        """,
+        (project_id,),
+    )
+    facts_without_source = list(cur.fetchall())
+
+    cur.execute(
+        """
+        SELECT id, 'decision' AS type, decision AS title, 'missing rationale' AS issue
+        FROM decisions
+        WHERE project_id = %s
+          AND status <> 'archived'
+          AND NULLIF(BTRIM(COALESCE(rationale, '')), '') IS NULL
+        ORDER BY updated_at DESC, created_at DESC, id
+        """,
+        (project_id,),
+    )
+    decisions_without_rationale = list(cur.fetchall())
+
+    cur.execute(
+        """
+        SELECT id, 'risk' AS type, title, 'missing impact or mitigation' AS issue
+        FROM risks
+        WHERE project_id = %s
+          AND status NOT IN ('resolved', 'archived')
+          AND (
+            NULLIF(BTRIM(COALESCE(impact, '')), '') IS NULL
+            OR NULLIF(BTRIM(COALESCE(mitigation, '')), '') IS NULL
+          )
+        ORDER BY updated_at DESC, created_at DESC, id
+        """,
+        (project_id,),
+    )
+    risks_without_mitigation = list(cur.fetchall())
+
+    cur.execute(
+        """
+        SELECT id, question, status, updated_at
+        FROM open_questions
+        WHERE project_id = %s
+          AND status NOT IN ('answered', 'closed', 'archived')
+        ORDER BY updated_at DESC, created_at DESC, id
+        """,
+        (project_id,),
+    )
+    open_questions = list(cur.fetchall())
+
+    relations = fetch_project_relations(cur, project_id, limit=None)
+    counts = fetch_project_counts(cur, project_id)
+    memory_total = sum(
+        counts[key] for key in ("facts", "decisions", "risks", "open_questions", "reports")
+    )
+    quality_items = (
+        facts_without_source
+        + decisions_without_rationale
+        + risks_without_mitigation
+    )
+    relation_coverage = 0.0 if memory_total == 0 else min(1.0, len(relations) / memory_total)
+    score = 100
+    score -= min(40, len(quality_items) * 8)
+    score -= min(25, len(open_questions) * 4)
+    if memory_total >= 3 and not relations:
+        score -= 20
+    elif relation_coverage < 0.2 and memory_total >= 5:
+        score -= 10
+    score = max(0, score)
+
+    return {
+        "project": project,
+        "counts": counts,
+        "score": score,
+        "status": "healthy" if score >= 85 else "needs_review" if score >= 65 else "weak",
+        "facts_without_source": facts_without_source,
+        "decisions_without_rationale": decisions_without_rationale,
+        "risks_without_mitigation": risks_without_mitigation,
+        "open_questions": open_questions,
+        "relations": relations,
+        "relation_count": len(relations),
+        "relation_coverage": relation_coverage,
+    }
+
+
+def quality_markdown(payload: dict[str, object]) -> str:
+    project = payload["project"]
+    lines = [
+        f"# Memory Quality: {project['name']}",
+        "",
+        f"- project: {project['slug']}",
+        f"- score: {payload['score']}/100",
+        f"- status: {payload['status']}",
+        f"- relation_count: {payload['relation_count']}",
+        f"- relation_coverage: {payload['relation_coverage']:.2f}",
+        "",
+        "## Counts",
+    ]
+    for key, value in payload["counts"].items():
+        lines.append(f"- {key}: {value}")
+    lines.extend(
+        [
+            "",
+            "## Quality Gaps",
+            f"- facts_without_source: {len(payload['facts_without_source'])}",
+            f"- decisions_without_rationale: {len(payload['decisions_without_rationale'])}",
+            f"- risks_without_mitigation: {len(payload['risks_without_mitigation'])}",
+            f"- open_questions: {len(payload['open_questions'])}",
+            "",
+            "## Open Questions",
+            markdown_list(payload["open_questions"], "question"),
+            "",
+            "## Relations",
+            relations_markdown(payload["relations"]),
+        ]
+    )
+    return "\n".join(lines)
+
+
 def fetch_compiled_payload(
     cur,
     project: dict[str, object],
     limit: int,
+    since: datetime | None = None,
+    with_receipt_status: bool = False,
 ) -> dict[str, object]:
     project_id = project["id"]
-    return {
+    payload = {
         "project": project,
         "counts": fetch_project_counts(cur, project_id),
         "facts": fetch_brief_rows(
@@ -1530,6 +1667,39 @@ def fetch_compiled_payload(
         ),
         "relations": fetch_project_relations(cur, project_id, limit=limit),
     }
+    if since:
+        payload["since"] = since
+        payload["recent_changes"] = fetch_activity_snapshot(cur, project, since, limit)
+    if with_receipt_status:
+        export_dir = get_export_dir_or_none()
+        receipt_since = since or parse_since("24h")
+        rows = fetch_receipt_rows(cur, project, receipt_since, "all", limit, export_dir)
+        payload["receipt_status"] = {
+            "since": receipt_since,
+            "export_dir": str(export_dir) if export_dir else None,
+            "checked": len(rows),
+            "exported": sum(1 for row in rows if row["exported"]),
+            "missing_exports": [
+                {
+                    "type": row["type"],
+                    "id": row["id"],
+                    "title": row["title"],
+                    "updated_at": row["updated_at"],
+                }
+                for row in rows
+                if not row["exported"]
+            ],
+        }
+    return payload
+
+
+def limit_markdown_chars(text: str, max_chars: int | None) -> str:
+    if not max_chars or len(text) <= max_chars:
+        return text
+    suffix = "\n\n[output truncated by --max-chars]\n"
+    if max_chars <= len(suffix) + 20:
+        return text[:max_chars]
+    return text[: max_chars - len(suffix)].rstrip() + suffix
 
 
 def compiled_markdown(payload: dict[str, object]) -> str:
@@ -1566,6 +1736,36 @@ def compiled_markdown(payload: dict[str, object]) -> str:
             "## Recent Useful Reports",
             markdown_list(payload["reports"], "title", ("report_type", "summary")),
             "",
+        ]
+    )
+    if payload.get("since") and payload.get("recent_changes"):
+        recent = payload["recent_changes"]
+        lines.extend(
+            [
+                "## Recent Changes",
+                f"- since: {payload['since'].isoformat()}",
+                f"- facts: {len(recent['facts'])}",
+                f"- decisions: {len(recent['decisions'])}",
+                f"- risks: {len(recent['risks'])}",
+                f"- open_questions: {len(recent['open_questions'])}",
+                f"- reports: {len(recent['reports'])}",
+                f"- relations: {len(recent['relations'])}",
+                "",
+            ]
+        )
+    if payload.get("receipt_status"):
+        receipt = payload["receipt_status"]
+        lines.extend(
+            [
+                "## Receipt Status",
+                f"- checked: {receipt['checked']}",
+                f"- exported: {receipt['exported']}",
+                f"- missing_exports: {len(receipt['missing_exports'])}",
+                "",
+            ]
+        )
+    lines.extend(
+        [
             "## Suggested Next Steps",
             recommended_steps_markdown(payload),
         ]
@@ -1695,6 +1895,11 @@ def export_path_for_object(
         normalized,
         spec["title_fields"],
     )
+
+
+def get_export_dir_or_none() -> Path | None:
+    export_dir_env = os.environ.get("OBSIDIAN_EXPORT_DIR")
+    return Path(export_dir_env) if export_dir_env else None
 
 
 def receipt_title(row: dict[str, object]) -> str:
@@ -2417,6 +2622,7 @@ def run_compile(args: argparse.Namespace) -> int:
         return 2
 
     try:
+        since = parse_since(args.since) if args.since else None
         with connect() as conn:
             with conn.cursor() as cur:
                 project = fetch_project(cur, args.project)
@@ -2426,7 +2632,16 @@ def run_compile(args: argparse.Namespace) -> int:
                         file=sys.stderr,
                     )
                     return 2
-                payload = fetch_compiled_payload(cur, project, args.limit)
+                payload = fetch_compiled_payload(
+                    cur,
+                    project,
+                    args.limit,
+                    since=since,
+                    with_receipt_status=args.with_receipt_status,
+                )
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 2
     except Exception as exc:
         print(f"Error: {concise_error(exc)}", file=sys.stderr)
         return 1
@@ -2435,7 +2650,36 @@ def run_compile(args: argparse.Namespace) -> int:
         print(json.dumps(payload, indent=2, default=json_default, ensure_ascii=False))
         return 0
 
-    print(compiled_markdown(payload))
+    print(limit_markdown_chars(compiled_markdown(payload), args.max_chars))
+    return 0
+
+
+def run_quality(args: argparse.Namespace) -> int:
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        print("Error: DATABASE_URL is not set", file=sys.stderr)
+        return 2
+
+    try:
+        with connect() as conn:
+            with conn.cursor() as cur:
+                project = fetch_project(cur, args.project)
+                if not project:
+                    print(
+                        f"Error: project '{args.project}' not found",
+                        file=sys.stderr,
+                    )
+                    return 2
+                payload = fetch_project_quality(cur, project)
+    except Exception as exc:
+        print(f"Error: {concise_error(exc)}", file=sys.stderr)
+        return 1
+
+    if args.format == "json":
+        print(json.dumps(payload, indent=2, default=json_default, ensure_ascii=False))
+        return 0
+
+    print(quality_markdown(payload))
     return 0
 
 
@@ -3161,9 +3405,23 @@ def build_parser() -> argparse.ArgumentParser:
     compile_parser.add_argument("--project", required=True, help="Project slug.")
     compile_parser.add_argument(
         "--limit",
-        type=int,
+        type=positive_int,
         default=5,
         help="Maximum rows per compiled section.",
+    )
+    compile_parser.add_argument(
+        "--since",
+        help="Include a recent-change count since a duration like 24h, 7d, 2w or ISO date.",
+    )
+    compile_parser.add_argument(
+        "--with-receipt-status",
+        action="store_true",
+        help="Include recent memory export receipt counts.",
+    )
+    compile_parser.add_argument(
+        "--max-chars",
+        type=positive_int,
+        help="Maximum markdown characters to print. JSON output is unaffected.",
     )
     compile_parser.add_argument(
         "--format",
@@ -3172,6 +3430,19 @@ def build_parser() -> argparse.ArgumentParser:
         help="Output format.",
     )
     compile_parser.set_defaults(func=run_compile)
+
+    quality_parser = subparsers.add_parser(
+        "quality",
+        help="Show project memory quality, gaps, and relation coverage.",
+    )
+    quality_parser.add_argument("--project", required=True, help="Project slug.")
+    quality_parser.add_argument(
+        "--format",
+        choices=("text", "json", "markdown"),
+        default="text",
+        help="Output format.",
+    )
+    quality_parser.set_defaults(func=run_quality)
 
     receipt_parser = subparsers.add_parser(
         "receipt",
