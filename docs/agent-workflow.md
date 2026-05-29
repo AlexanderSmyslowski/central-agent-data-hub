@@ -9,7 +9,19 @@ decisions, open questions, risks, reports, and handoffs.
 
 ## Before Work
 
-Run the project context helper before changing or deciding anything meaningful:
+Run the start helper before changing or deciding anything meaningful:
+
+```bash
+scripts/agent_start.sh --project <project-slug> --query "<current work focus>"
+```
+
+If no focused query is known yet:
+
+```bash
+scripts/agent_start.sh --project <project-slug>
+```
+
+The lower-level project context helper remains available:
 
 ```bash
 scripts/project_context.sh --project <project-slug>
@@ -43,6 +55,9 @@ For focused work, use a context pack after the brief:
 agent-hub context --project <project-slug> --query "<current work focus>"
 ```
 
+See `docs/codex-memory-policy.md` for the reusable Codex/Hermes policy and
+`docs/repo-agent-memory-template.md` for per-repository agent instructions.
+
 ## During Work
 
 Keep project boundaries explicit. Do not let facts, decisions, risks, or open
@@ -74,6 +89,12 @@ agent-hub search --project <project-slug> --query "<topic>"
 ```
 
 ## After Work
+
+Run the finish helper to produce a final daily summary and handoff:
+
+```bash
+scripts/agent_finish.sh --project <project-slug>
+```
 
 Write back only reviewed, non-sensitive memory:
 

@@ -153,7 +153,16 @@ Der LaunchAgent ruft `scripts/db_backup.sh` lokal auf. Remote-Kopie passiert nur
 
 ## Agent Workflow
 
-Vor Projektarbeiten laden Agenten den passenden Projektkontext:
+Vor Projektarbeiten nutzen Agenten bevorzugt den Start-Wrapper:
+
+```bash
+scripts/agent_start.sh --project <project-slug>
+scripts/agent_start.sh --project <project-slug> --query "<aktueller arbeitsfokus>"
+```
+
+Der Start-Wrapper fuehrt Preflight, Projektbrief, Daily Activity und optional ein fokussiertes Kontextpaket aus.
+
+Die niedrigeren Bausteine bleiben verfuegbar:
 
 ```bash
 scripts/project_context.sh --project <project-slug>
@@ -164,7 +173,15 @@ scripts/project_context.sh --project the-one-catering
 scripts/project_context.sh --all-websites
 ```
 
-Nach abgeschlossener, gepruefter Arbeit schreiben Agenten nur nicht-sensitive Erinnerungen zurueck:
+Nach abgeschlossener Arbeit nutzen Agenten den Finish-Wrapper:
+
+```bash
+scripts/agent_finish.sh --project <project-slug>
+```
+
+Der Finish-Wrapper erzeugt Daily Summary und Handoff. Mit `--write-report` kann explizit ein Daily-Report in Postgres gespeichert werden.
+
+Gepruefte, nicht-sensitive Erinnerungen werden danach kontrolliert geschrieben:
 
 ```bash
 scripts/project_remember.sh \
@@ -175,6 +192,11 @@ scripts/project_remember.sh \
 ```
 
 `scripts/project_remember.sh` ist ein Schutzlayer um `agent-hub remember`: Es fuehrt Preflight und Safety-Scan aus, blockiert Projekterzeugung, verlangt Quellen fuer Fakten, erlaubt `--dry-run` und kann nach erfolgreichem Writeback optional direkt eine kuratierte Relation anlegen. Details und Beispiele stehen in `docs/agent-workflow.md`.
+
+Fuer Codex/Hermes-Policy und Repo-spezifische Startkarten:
+
+- `docs/codex-memory-policy.md`
+- `docs/repo-agent-memory-template.md`
 
 ## Disposable Demo Lokal Ausfuehren
 

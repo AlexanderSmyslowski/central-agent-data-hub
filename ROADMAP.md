@@ -10,9 +10,12 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
    - Treat missing local backup state as an operational blocker for writeback.
 
 2. Agentic work workflow
+   - Prefer `scripts/agent_start.sh` before substantial project work.
+   - Prefer `scripts/agent_finish.sh` after substantial project work.
    - Use `scripts/project_context.sh` before project work.
    - Use `scripts/project_remember.sh` for reviewed, non-sensitive writeback.
    - Keep each project context explicit; websites are only the first domain profile.
+   - Copy `docs/repo-agent-memory-template.md` into important project repos as `AGENTS.md` or equivalent.
 
 3. Schema evolution and project taxonomy
    - Track applied migrations in `schema_migrations`.
