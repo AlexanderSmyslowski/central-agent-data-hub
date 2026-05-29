@@ -14,6 +14,7 @@ VALUES
   'active',
   '{
     "domain": "commcats.de",
+    "local_path": "/Users/alexandersmyslowski/Documents/commcats.de",
     "memory_scope": "website",
     "project_type": "website",
     "site_state": "live-static-alfahosting",
@@ -29,6 +30,7 @@ VALUES
   'active',
   '{
     "domain": "the-one.catering",
+    "local_path": "/Users/alexandersmyslowski/Documents/commcats.de/the-one-static-v1",
     "memory_scope": "website",
     "project_type": "website",
     "site_state": "live-framer-site-with-static-migration-planned",
