@@ -20,6 +20,21 @@ VALUES
     "work_mode": "repo-memory-plus-central-hub-start-finish",
     "domain_profile": "catering-operations"
   }'::jsonb
+),
+(
+  '20000000-0000-4000-8000-000000000002',
+  'Central Agent Data Hub',
+  'central-agent-data-hub',
+  'Durable local Postgres-backed shared agentic work memory, export, import, backup, and operational governance.',
+  'active',
+  '{
+    "repo": "AlexanderSmyslowski/central-agent-data-hub",
+    "local_path": "/Users/alexandersmyslowski/Projects/central-agent-data-hub",
+    "memory_scope": "agentic-operations",
+    "project_type": "ops",
+    "work_mode": "durable-local-db-plus-curated-agent-writeback",
+    "domain_profile": "agent-memory-infrastructure"
+  }'::jsonb
 )
 ON CONFLICT (slug) DO UPDATE SET
   name = EXCLUDED.name,
@@ -35,6 +50,15 @@ VALUES
   'Codex',
   'codex',
   'Coding and implementation agent for the catering agents platform.',
+  'active',
+  '{"interface": "codex", "seed": "agentic_projects.sql"}'::jsonb
+),
+(
+  '20000000-0000-4000-8000-000000000012',
+  '20000000-0000-4000-8000-000000000002',
+  'Codex',
+  'codex',
+  'Coding and operations agent for the Central Agent Data Hub.',
   'active',
   '{"interface": "codex", "seed": "agentic_projects.sql"}'::jsonb
 )
@@ -72,6 +96,24 @@ VALUES
   0.900,
   'verified',
   '{"topic": "governance", "sensitive": false}'::jsonb
+),
+(
+  '20000000-0000-4000-8000-000000000204',
+  '20000000-0000-4000-8000-000000000002',
+  'The Central Agent Data Hub is the shared agentic work memory for Codex/Hermes: agents should run preflight, load project context, work project-bound, and write back only curated non-sensitive memory.',
+  '/Users/alexandersmyslowski/Projects/central-agent-data-hub/docs/agent-workflow.md',
+  0.950,
+  'verified',
+  '{"topic": "agent-workflow", "sensitive": false}'::jsonb
+),
+(
+  '20000000-0000-4000-8000-000000000205',
+  '20000000-0000-4000-8000-000000000002',
+  'The durable Hub database runs locally in Docker/Postgres with a persistent named volume and is backed up using scripts/db_backup.sh and scripts/db_verify_backup.sh.',
+  '/Users/alexandersmyslowski/Projects/central-agent-data-hub/README.md',
+  0.950,
+  'verified',
+  '{"topic": "durable-db", "sensitive": false}'::jsonb
 )
 ON CONFLICT (id) DO UPDATE SET
   statement = EXCLUDED.statement,
@@ -100,6 +142,15 @@ VALUES
   'Future agents must treat persistence or governance expansion as blocked until explicitly requested.',
   'accepted',
   '{"topic": "scope-control", "sensitive": false}'::jsonb
+),
+(
+  '20000000-0000-4000-8000-000000000303',
+  '20000000-0000-4000-8000-000000000002',
+  'Treat the Central Agent Data Hub as operational memory infrastructure, not as a raw chatlog or storage place for sensitive operational material.',
+  'The Hub is useful only if memories stay project-bound, reviewed, traceable, and safe for shared agent use.',
+  'Agents should prefer fewer high-quality facts, decisions, risks, open questions, and reports over broad transcript capture.',
+  'accepted',
+  '{"topic": "memory-quality", "sensitive": false}'::jsonb
 )
 ON CONFLICT (id) DO UPDATE SET
   decision = EXCLUDED.decision,
@@ -120,6 +171,16 @@ VALUES
   'Keep AGENTS.md pointing to agent_start/agent_finish, preserve memory.md as local detail memory, and write only curated cross-session facts back into the Hub.',
   'open',
   '{"topic": "memory-drift", "sensitive": false}'::jsonb
+),
+(
+  '20000000-0000-4000-8000-000000000502',
+  '20000000-0000-4000-8000-000000000002',
+  'Agent work can become less reliable if preflight, backups, or project context are skipped.',
+  'medium',
+  'Codex/Hermes may act on stale assumptions or lose important operational continuity.',
+  'Use scripts/agent_preflight.sh, scripts/agent_start.sh, scripts/agent_finish.sh, daily backup, and verified restores as the normal operating path.',
+  'open',
+  '{"topic": "operational-readiness", "sensitive": false}'::jsonb
 )
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
@@ -141,6 +202,16 @@ VALUES
   'Project slug: catering-agents-platform. The existing repo-local memory stack remains memory.md, AGENTS.md, HANDOFF_PROMPT.md, START_HERE.md, and docs/agent-memory/. The Hub is the cross-channel start/finish and curated writeback layer. The first integration keeps existing scope controls: no new persistence system, no Prisma, no expanded governance workflow, and no sensitive operational data in Hub memory.',
   'published',
   '{"topic": "hub-onboarding", "sensitive": false}'::jsonb
+),
+(
+  '20000000-0000-4000-8000-000000000602',
+  '20000000-0000-4000-8000-000000000002',
+  'Central Agent Data Hub Ops Memory Start',
+  'handoff',
+  'The Hub itself now has a dedicated ops project context for infrastructure, backup, memory workflow, and operational governance.',
+  'Project slug: central-agent-data-hub. This context is for the Hub infrastructure itself: durable local Postgres, migrations, backup/restore, CLI workflows, agent preflight, curated writeback, Obsidian export/import, and operational readiness. Keep website, catering platform, and other domain-specific memory in their own project contexts.',
+  'published',
+  '{"topic": "ops-project-onboarding", "sensitive": false}'::jsonb
 )
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
