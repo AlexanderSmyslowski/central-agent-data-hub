@@ -48,11 +48,7 @@ compose up -d "$DB_SERVICE"
 wait_for_postgres
 
 cd "$ROOT_DIR"
-if schema_exists; then
-  echo "Schema already exists; skipping migrations/001_init.sql."
-else
-  apply_sql_file "migrations/001_init.sql"
-fi
+run_agent_hub migrate --apply
 if [[ "$INCLUDE_DEMO" -eq 1 ]]; then
   apply_sql_file "seed/demo.sql"
 else

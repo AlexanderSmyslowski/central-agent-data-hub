@@ -50,7 +50,7 @@ echo "WARNING: this script applies migrations, seeds, and test imports. Use a di
 echo
 
 echo "== Applying migration and seeds =="
-apply_sql migrations/001_init.sql
+run_agent_hub migrate --apply
 apply_sql seed/demo.sql
 apply_sql seed/business_sites.sql
 

@@ -15,6 +15,7 @@ VALUES
   '{
     "domain": "commcats.de",
     "memory_scope": "website",
+    "project_type": "website",
     "site_state": "live-static-alfahosting",
     "work_mode": "edit-local-static-source-then-upload-after-approval",
     "hosting_state": "already-migrated-away-from-framer-for-current-live-site"
@@ -29,6 +30,7 @@ VALUES
   '{
     "domain": "the-one.catering",
     "memory_scope": "website",
+    "project_type": "website",
     "site_state": "live-framer-site-with-static-migration-planned",
     "work_mode": "keep-live-framer-site-stable-build-protected-static-prototype",
     "hosting_state": "not-yet-migrated"
@@ -40,7 +42,7 @@ VALUES
   'lamour',
   'Planned future web presence; strategic work not yet started in depth.',
   'active',
-  '{"memory_scope": "planned-website"}'::jsonb
+  '{"memory_scope": "planned-website", "project_type": "website"}'::jsonb
 )
 ON CONFLICT (slug) DO UPDATE SET
   name = EXCLUDED.name,

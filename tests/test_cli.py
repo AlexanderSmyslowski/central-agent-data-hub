@@ -94,6 +94,24 @@ def test_projects_without_database_url_has_clear_error(monkeypatch, capsys) -> N
     assert "Traceback" not in captured.err
 
 
+def test_migrate_without_database_url_has_clear_error(monkeypatch, capsys) -> None:
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+
+    code = cli.main(["migrate", "--status"])
+
+    captured = capsys.readouterr()
+    assert code == 2
+    assert "DATABASE_URL is not set" in captured.err
+    assert "Traceback" not in captured.err
+
+
+def test_migration_parts_reads_id_and_name() -> None:
+    migration_id, name = cli.migration_parts(cli.MIGRATIONS_DIR / "002_schema_migrations.sql")
+
+    assert migration_id == "002"
+    assert name == "schema_migrations"
+
+
 def test_sync_requires_plan_or_apply(monkeypatch, capsys) -> None:
     monkeypatch.setenv("DATABASE_URL", "postgresql://example.invalid/test")
 
@@ -257,6 +275,8 @@ def test_brief_json_output(monkeypatch, capsys) -> None:
 
 
 class FakeProjectsCursor:
+    last_params: object = None
+
     def __init__(self) -> None:
         self.results: list[dict[str, object]] = []
 
@@ -267,20 +287,21 @@ class FakeProjectsCursor:
         return None
 
     def execute(self, _query: str, _params: object = None) -> None:
+        FakeProjectsCursor.last_params = _params
         self.results = [
             {
                 "slug": "commcats-de",
                 "name": "CommCats",
                 "status": "active",
                 "description": "Static site work.",
-                "metadata": {"memory_scope": "website"},
+                "metadata": {"memory_scope": "website", "project_type": "website"},
             },
             {
                 "slug": "lamour",
                 "name": "L'Amour",
                 "status": "active",
                 "description": "Planned future project.",
-                "metadata": {},
+                "metadata": {"project_type": "website"},
             },
         ]
 
@@ -308,8 +329,8 @@ def test_projects_text_output(monkeypatch, capsys) -> None:
     captured = capsys.readouterr()
     assert code == 0
     assert "Active projects:" in captured.out
-    assert "commcats-de [active] CommCats" in captured.out
-    assert "lamour [active] L'Amour" in captured.out
+    assert "commcats-de [active] (website) CommCats" in captured.out
+    assert "lamour [active] (website) L'Amour" in captured.out
 
 
 def test_projects_json_output(monkeypatch, capsys) -> None:
@@ -322,3 +343,15 @@ def test_projects_json_output(monkeypatch, capsys) -> None:
     assert code == 0
     assert '"slug": "commcats-de"' in captured.out
     assert '"name": "L\'Amour"' in captured.out
+
+
+def test_projects_type_filter_passes_project_type(monkeypatch, capsys) -> None:
+    monkeypatch.setenv("DATABASE_URL", "postgresql://example.invalid/test")
+    monkeypatch.setattr(cli, "connect", lambda: FakeProjectsConnection())
+
+    code = cli.main(["projects", "--type", "website"])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Active projects:" in captured.out
+    assert FakeProjectsCursor.last_params == ("website",)

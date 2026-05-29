@@ -67,6 +67,16 @@ fi
 echo "Database: ok"
 
 echo
+echo "== Schema Migrations =="
+migration_status="$(run_agent_hub migrate --status)"
+echo "$migration_status"
+if echo "$migration_status" | grep -Eq ': (pending|failed|changed)$'; then
+  echo "Operational error: schema migrations are pending or failed." >&2
+  echo "Run scripts/db_start.sh or agent-hub migrate --apply before agent writeback." >&2
+  exit 2
+fi
+
+echo
 echo "== Latest Backup =="
 set +e
 "$ROOT_DIR/scripts/db_backup_latest.sh" --require
