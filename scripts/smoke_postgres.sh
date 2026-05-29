@@ -171,6 +171,43 @@ PY
 run_agent_hub sync --path "$TMP_DIR/notes" --allowlist "$TMP_DIR/import_allowlist.yml" --plan
 run_agent_hub sync --path "$TMP_DIR/notes" --allowlist "$TMP_DIR/import_allowlist.yml" --apply
 run_agent_hub sync --path "$TMP_DIR/notes" --allowlist "$TMP_DIR/import_allowlist.yml" --plan
+"$PYTHON_BIN" - <<PY
+import os
+from pathlib import Path
+
+import psycopg
+
+with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
+    conn.execute(
+        """
+        UPDATE facts
+        SET statement = 'Database-only smoke conflict value.'
+        WHERE metadata #>> '{agent_hub_import,import_key}' = 'smoke/commcats/static-context'
+        """
+    )
+
+path = Path("$TMP_DIR/notes/fact.md")
+text = path.read_text(encoding="utf-8")
+path.write_text(
+    text.replace(
+        "Smoke test confirms CommCats remains a static Alfahosting context after sync apply.",
+        "Markdown-only smoke conflict value.",
+    ),
+    encoding="utf-8",
+)
+PY
+if run_agent_hub sync --path "$TMP_DIR/notes" --allowlist "$TMP_DIR/import_allowlist.yml" --plan; then
+  echo "Error: conflict plan unexpectedly succeeded" >&2
+  exit 1
+else
+  echo "Conflict plan blocked as expected."
+fi
+if run_agent_hub sync --path "$TMP_DIR/notes" --allowlist "$TMP_DIR/import_allowlist.yml" --apply; then
+  echo "Error: conflict apply unexpectedly succeeded" >&2
+  exit 1
+else
+  echo "Conflict apply blocked as expected."
+fi
 
 echo
 echo "== Export and Human Notes retention =="

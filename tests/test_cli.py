@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from types import SimpleNamespace
 import uuid
 
 import pytest
@@ -90,6 +91,67 @@ def test_sync_requires_plan_or_apply(monkeypatch, capsys) -> None:
     captured = capsys.readouterr()
     assert code == 2
     assert "choose exactly one of --plan or --apply" in captured.err
+
+
+def test_sync_json_output_includes_diffs(monkeypatch, capsys) -> None:
+    monkeypatch.setenv("DATABASE_URL", "postgresql://example.invalid/test")
+
+    class SyncResult:
+        def __init__(self):
+            self.planned = [
+                {
+                    "action": "update",
+                    "path": "notes/fact.md",
+                    "project": "commcats-de",
+                    "type": "fact",
+                    "import_key": "fact-key",
+                    "diffs": [
+                        {
+                            "field": "statement",
+                            "database_value": "Old",
+                            "markdown_value": "New",
+                            "last_imported_value": "Old",
+                            "owner": "obsidian",
+                        }
+                    ],
+                }
+            ]
+            self.applied = []
+            self.errors = []
+
+        @property
+        def blocking_actions(self):
+            return []
+
+    class FakeConnectionContext:
+        def __enter__(self):
+            return SimpleNamespace()
+
+        def __exit__(self, *_args):
+            return None
+
+    monkeypatch.setattr(cli, "connect", lambda: FakeConnectionContext())
+    monkeypatch.setattr(
+        cli,
+        "sync_markdown",
+        lambda *_args, **_kwargs: SyncResult(),
+    )
+
+    code = cli.main(
+        [
+            "sync",
+            "--path",
+            "notes",
+            "--plan",
+            "--format",
+            "json",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert '"diffs"' in captured.out
+    assert '"field": "statement"' in captured.out
 
 
 class FakeCursor:
