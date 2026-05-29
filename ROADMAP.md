@@ -25,33 +25,40 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
    - Use `agent-hub relations` and `agent-hub brief --with-relations` for reviewable project graph context.
    - Keep relation types controlled in CLI/checks before hardening them into database constraints.
 
-5. Automated tests
+5. Daily workflow, handoff, review, and retrieval
+   - Use `agent-hub daily` before/after work to make new memory visible.
+   - Use `agent-hub handoff` for session transfer between agents or days.
+   - Use `agent-hub review` for decision/risk/question review from the project graph.
+   - Use `agent-hub search` and `agent-hub context` before large changes instead of relying on raw recall.
+   - Keep vector search and watch-mode automation out until simple retrieval is boringly useful.
+
+6. Automated tests
    - Keep fast unit tests for CLI helpers and non-database error paths.
    - Keep `scripts/smoke_postgres.sh` runnable against a disposable `DATABASE_URL`.
    - Do not require Docker Desktop for normal development.
 
-6. Durable local database operations
+7. Durable local database operations
    - Use Docker Compose for the local operational Postgres database.
    - Keep backups as local and optional remote dump files, not a live server sync.
    - Verify backups regularly before agents depend on writeback.
 
-7. Status and check improvements
+8. Status and check improvements
    - Keep `agent-hub status` fast and human-readable.
    - Extend `agent-hub check` only with checks that produce clear actions.
    - Treat broken relations and unreachable databases as errors.
 
-8. Safe import allowlist
+9. Safe import allowlist
    - Keep `agent-hub import` limited to allowlisted projects, paths, types, and fields.
    - Reject secrets, private customer data, raw invoice data, and deployment credentials.
    - Keep import identity based on `import_key`, optional `db_id`, and metadata hashes.
 
-9. Sync plan/apply
+10. Sync plan/apply
    - Keep `agent-hub sync --plan` as the default review path.
    - Keep field-level diffs visible for updates and conflicts.
    - Use `agent-hub sync --apply` only when the plan has no conflicts or rejected notes.
    - Keep `sync --watch` disabled until recovery and conflict handling are boring.
 
-10. Obsidian projection hardening
+11. Obsidian projection hardening
    - Keep Human Notes stable across repeated exports.
    - Add tests for template rendering and frontmatter once template shape changes again.
 

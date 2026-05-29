@@ -15,6 +15,12 @@ Run the project context helper before changing or deciding anything meaningful:
 scripts/project_context.sh --project <project-slug>
 ```
 
+To include the latest working activity in the same pre-work read:
+
+```bash
+scripts/project_context.sh --project <project-slug> --daily
+```
+
 For a full active-project orientation:
 
 ```bash
@@ -30,6 +36,12 @@ scripts/project_context.sh --all-websites
 The helper runs the operational preflight first. It requires the durable local
 database to be running, a verified local backup to exist, `agent-hub check` to
 have no errors, and the relevant project brief to be readable.
+
+For focused work, use a context pack after the brief:
+
+```bash
+agent-hub context --project <project-slug> --query "<current work focus>"
+```
 
 ## During Work
 
@@ -50,6 +62,16 @@ Write fewer memories, but make them useful:
 - Risks should include impact or mitigation when known.
 - Open questions should be real clarification needs, not a task list.
 - Reports are for compressed daily summaries, handoffs, audits, or review notes.
+
+Useful report and retrieval commands:
+
+```bash
+agent-hub daily --project <project-slug> --since 24h
+agent-hub daily --project <project-slug> --since 24h --write-report
+agent-hub handoff --project <project-slug> --since 7d
+agent-hub review --project <project-slug>
+agent-hub search --project <project-slug> --query "<topic>"
+```
 
 ## After Work
 
@@ -98,6 +120,22 @@ scripts/project_remember.sh \
 
 `project_remember.sh` never creates projects. If a project is missing, add it
 through reviewed seed or migration changes.
+
+When the new memory clearly supports, mitigates, answers, or references an
+existing object, the wrapper can write the memory and relation together:
+
+```bash
+scripts/project_remember.sh \
+  --project <project-slug> \
+  --type fact \
+  --text "Reviewed memory candidate." \
+  --source "review note" \
+  --relate-to decision:<decision-id> \
+  --relation supports
+```
+
+The relation is created only after the memory write succeeds. In `--dry-run`
+mode the wrapper shows the planned relation without writing anything.
 
 ## Relating Memory
 

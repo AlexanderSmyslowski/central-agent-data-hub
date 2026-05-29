@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, time, timedelta, timezone
 import hashlib
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -261,6 +263,7 @@ def fetch_project_relations(
     project_id: object,
     object_type: str | None = None,
     object_id: str | None = None,
+    since: datetime | None = None,
     limit: int | None = None,
 ) -> list[dict[str, object]]:
     project_where, params = relation_project_filter(project_id)
@@ -279,6 +282,10 @@ def fetch_project_relations(
         params["object_id"] = object_id
     elif object_type or object_id:
         raise RuntimeError("--object-type and --object-id must be used together")
+
+    if since:
+        clauses.append("r.updated_at >= %(since)s")
+        params["since"] = since
 
     limit_sql = ""
     if limit:
@@ -1014,6 +1021,404 @@ def truncate(value: object, limit: int = 96) -> str:
     return text if len(text) <= limit else text[: limit - 3] + "..."
 
 
+def parse_since(value: str | None, default: str = "24h") -> datetime:
+    raw = value or default
+    match = re.fullmatch(r"\s*(\d+)\s*([hdw])\s*", raw, flags=re.IGNORECASE)
+    if match:
+        amount = int(match.group(1))
+        unit = match.group(2).lower()
+        if unit == "h":
+            delta = timedelta(hours=amount)
+        elif unit == "d":
+            delta = timedelta(days=amount)
+        else:
+            delta = timedelta(weeks=amount)
+        return datetime.now(timezone.utc) - delta
+
+    try:
+        parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError(
+            "--since must be a duration like 24h, 7d, 2w or an ISO date"
+        ) from exc
+
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", raw):
+        parsed = datetime.combine(parsed.date(), time.min, tzinfo=parsed.tzinfo)
+    return parsed
+
+
+def fetch_recent_rows(
+    cur,
+    table: str,
+    project_id: object,
+    columns: str,
+    since: datetime,
+    limit: int,
+) -> list[dict[str, object]]:
+    cur.execute(
+        f"""
+        SELECT id, {columns}, status, created_at, updated_at
+        FROM {table}
+        WHERE project_id = %s
+          AND updated_at >= %s
+        ORDER BY updated_at DESC, created_at DESC, id DESC
+        LIMIT %s
+        """,
+        (project_id, since, limit),
+    )
+    return list(cur.fetchall())
+
+
+def fetch_recent_agent_actions(
+    cur, project_id: object, since: datetime, limit: int
+) -> list[dict[str, object]]:
+    cur.execute(
+        """
+        SELECT
+          aa.id,
+          aa.action,
+          aa.object_type,
+          aa.object_id,
+          aa.status,
+          aa.created_at,
+          aa.updated_at,
+          a.slug AS agent_slug
+        FROM agent_actions aa
+        LEFT JOIN agents a ON a.id = aa.agent_id
+        WHERE a.project_id = %s
+          AND aa.updated_at >= %s
+        ORDER BY aa.updated_at DESC, aa.created_at DESC, aa.id DESC
+        LIMIT %s
+        """,
+        (project_id, since, limit),
+    )
+    return list(cur.fetchall())
+
+
+def fetch_recent_sync_events(cur, since: datetime, limit: int) -> list[dict[str, object]]:
+    cur.execute(
+        """
+        SELECT id, source, direction, status, error, created_at, updated_at
+        FROM sync_events
+        WHERE updated_at >= %s
+        ORDER BY updated_at DESC, created_at DESC, id DESC
+        LIMIT %s
+        """,
+        (since, limit),
+    )
+    return list(cur.fetchall())
+
+
+def fetch_activity_snapshot(
+    cur,
+    project: dict[str, object],
+    since: datetime,
+    limit: int,
+) -> dict[str, object]:
+    project_id = project["id"]
+    return {
+        "project": project,
+        "since": since,
+        "facts": fetch_recent_rows(
+            cur,
+            "facts",
+            project_id,
+            "statement, source, confidence",
+            since,
+            limit,
+        ),
+        "decisions": fetch_recent_rows(
+            cur,
+            "decisions",
+            project_id,
+            "decision, rationale, consequences",
+            since,
+            limit,
+        ),
+        "risks": fetch_recent_rows(
+            cur,
+            "risks",
+            project_id,
+            "title, severity, impact, mitigation",
+            since,
+            limit,
+        ),
+        "open_questions": fetch_recent_rows(
+            cur,
+            "open_questions",
+            project_id,
+            "question, answer",
+            since,
+            limit,
+        ),
+        "reports": fetch_recent_rows(
+            cur,
+            "reports",
+            project_id,
+            "title, report_type, summary",
+            since,
+            limit,
+        ),
+        "relations": fetch_project_relations(
+            cur,
+            project_id,
+            since=since,
+            limit=limit,
+        ),
+        "agent_actions": fetch_recent_agent_actions(cur, project_id, since, limit),
+        "sync_events": fetch_recent_sync_events(cur, since, limit),
+    }
+
+
+def markdown_list(
+    rows: list[dict[str, object]],
+    primary_key: str,
+    extra_keys: tuple[str, ...] = (),
+) -> str:
+    if not rows:
+        return "- none"
+    lines = []
+    for row in rows:
+        status = row.get("status", "unknown")
+        lines.append(f"- [{status}] {truncate(row.get(primary_key) or '', 180)}")
+        extras = []
+        for key in extra_keys:
+            value = row.get(key)
+            if value not in (None, ""):
+                extras.append(f"{key}: {truncate(value, 100)}")
+        if extras:
+            lines.append("  " + "; ".join(extras))
+    return "\n".join(lines)
+
+
+def relations_markdown(rows: list[dict[str, object]]) -> str:
+    if not rows:
+        return "- none"
+    lines = []
+    for row in rows:
+        source = f"{row['source_type']}:{row['source_id']}"
+        target = f"{row['target_type']}:{row['target_id']}"
+        lines.append(f"- {source} --{row['relation_type']}--> {target}")
+        if row.get("source_summary") or row.get("target_summary"):
+            lines.append(
+                "  "
+                f"{truncate(row.get('source_summary') or '', 80)} -> "
+                f"{truncate(row.get('target_summary') or '', 80)}"
+            )
+    return "\n".join(lines)
+
+
+def actions_markdown(rows: list[dict[str, object]]) -> str:
+    if not rows:
+        return "- none"
+    return "\n".join(
+        f"- [{row['status']}] {row.get('agent_slug') or 'unknown'} "
+        f"{row['action']} {row.get('object_type') or ''}:{row.get('object_id') or ''}"
+        for row in rows
+    )
+
+
+def sync_events_markdown(rows: list[dict[str, object]]) -> str:
+    if not rows:
+        return "- none"
+    return "\n".join(
+        f"- [{row['status']}] {row['direction']} {row['source']}"
+        for row in rows
+    )
+
+
+def daily_markdown(payload: dict[str, object]) -> str:
+    project = payload["project"]
+    since = payload["since"]
+    return "\n".join(
+        [
+            f"# Daily: {project['name']}",
+            "",
+            f"- project: {project['slug']}",
+            f"- since: {since.isoformat()}",
+            "",
+            "## New Facts",
+            markdown_list(payload["facts"], "statement", ("source", "confidence")),
+            "",
+            "## Decisions",
+            markdown_list(payload["decisions"], "decision", ("rationale",)),
+            "",
+            "## Risks",
+            markdown_list(payload["risks"], "title", ("severity", "impact", "mitigation")),
+            "",
+            "## Open Questions",
+            markdown_list(payload["open_questions"], "question", ("answer",)),
+            "",
+            "## Reports",
+            markdown_list(payload["reports"], "title", ("report_type", "summary")),
+            "",
+            "## Relations",
+            relations_markdown(payload["relations"]),
+            "",
+            "## Agent Actions",
+            actions_markdown(payload["agent_actions"]),
+            "",
+            "## Sync Events",
+            sync_events_markdown(payload["sync_events"]),
+        ]
+    )
+
+
+def handoff_markdown(payload: dict[str, object]) -> str:
+    project = payload["project"]
+    since = payload["since"]
+    return "\n".join(
+        [
+            f"# Handoff: {project['name']}",
+            "",
+            f"- project: {project['slug']}",
+            f"- since: {since.isoformat()}",
+            "",
+            "## What Is Decided",
+            markdown_list(payload["decisions"], "decision", ("rationale", "consequences")),
+            "",
+            "## What Is Risky",
+            markdown_list(payload["risks"], "title", ("severity", "impact", "mitigation")),
+            "",
+            "## What Is Open",
+            markdown_list(payload["open_questions"], "question", ("answer",)),
+            "",
+            "## Evidence And Context",
+            markdown_list(payload["facts"], "statement", ("source", "confidence")),
+            "",
+            "## Do Not Confuse",
+            relations_markdown(payload["relations"]),
+            "",
+            "## Recommended Next Steps",
+            recommended_steps_markdown(payload),
+        ]
+    )
+
+
+def recommended_steps_markdown(payload: dict[str, object]) -> str:
+    steps = []
+    for row in payload["open_questions"][:3]:
+        steps.append(f"- resolve open question: {truncate(row['question'], 120)}")
+    for row in payload["risks"][:3]:
+        mitigation = row.get("mitigation")
+        if mitigation:
+            steps.append(f"- mitigate risk: {truncate(mitigation, 120)}")
+        else:
+            steps.append(f"- review risk: {truncate(row['title'], 120)}")
+    return "\n".join(steps) if steps else "- none"
+
+
+def write_daily_report(
+    cur,
+    project: dict[str, object],
+    payload: dict[str, object],
+    body: str,
+) -> dict[str, object]:
+    counts = {
+        key: len(payload[key])
+        for key in ("facts", "decisions", "risks", "open_questions", "relations")
+    }
+    summary = (
+        f"Daily summary: {counts['facts']} facts, {counts['decisions']} decisions, "
+        f"{counts['risks']} risks, {counts['open_questions']} open questions, "
+        f"{counts['relations']} relations."
+    )
+    cur.execute(
+        """
+        INSERT INTO reports (
+          project_id, title, report_type, summary, body, status, metadata
+        )
+        VALUES (%s, %s, 'daily', %s, %s, 'published', %s::jsonb)
+        RETURNING id, title, report_type, summary, status, created_at
+        """,
+        (
+            project["id"],
+            f"Daily Report - {project['name']} - {datetime.now(timezone.utc).date()}",
+            summary,
+            body,
+            json.dumps(
+                {
+                    "created_by": "agent-hub daily",
+                    "since": payload["since"].isoformat(),
+                    "counts": counts,
+                }
+            ),
+        ),
+    )
+    return cur.fetchone()
+
+
+def search_project_memory(
+    cur,
+    project_id: object,
+    query: str,
+    memory_type: str,
+    limit: int,
+) -> list[dict[str, object]]:
+    like = f"%{query}%"
+    specs = {
+        "fact": (
+            "facts",
+            "statement AS title, statement AS text",
+            "(statement ILIKE %s OR COALESCE(source, '') ILIKE %s)",
+        ),
+        "decision": (
+            "decisions",
+            "decision AS title, decision || COALESCE(E'\n' || rationale, '') AS text",
+            "(decision ILIKE %s OR COALESCE(rationale, '') ILIKE %s OR COALESCE(consequences, '') ILIKE %s)",
+        ),
+        "risk": (
+            "risks",
+            "title, title || COALESCE(E'\n' || impact, '') || COALESCE(E'\n' || mitigation, '') AS text",
+            "(title ILIKE %s OR COALESCE(impact, '') ILIKE %s OR COALESCE(mitigation, '') ILIKE %s)",
+        ),
+        "open_question": (
+            "open_questions",
+            "question AS title, question || COALESCE(E'\n' || answer, '') AS text",
+            "(question ILIKE %s OR COALESCE(answer, '') ILIKE %s)",
+        ),
+        "report": (
+            "reports",
+            "title, title || COALESCE(E'\n' || summary, '') || COALESCE(E'\n' || body, '') AS text",
+            "(title ILIKE %s OR COALESCE(summary, '') ILIKE %s OR COALESCE(body, '') ILIKE %s)",
+        ),
+    }
+    selected = specs.keys() if memory_type == "all" else (memory_type,)
+    results: list[dict[str, object]] = []
+    for item_type in selected:
+        table, select_expr, where_expr = specs[item_type]
+        param_count = where_expr.count("%s")
+        cur.execute(
+            f"""
+            SELECT id, %s AS type, {select_expr}, status, updated_at
+            FROM {table}
+            WHERE project_id = %s
+              AND {where_expr}
+            ORDER BY updated_at DESC, created_at DESC, id DESC
+            LIMIT %s
+            """,
+            (item_type, project_id, *([like] * param_count), limit),
+        )
+        results.extend(cur.fetchall())
+    results.sort(key=lambda row: row["updated_at"], reverse=True)
+    return results[:limit]
+
+
+def search_results_markdown(rows: list[dict[str, object]]) -> str:
+    if not rows:
+        return "- none"
+    lines = []
+    for row in rows:
+        lines.append(
+            f"- [{row['type']}/{row['status']}] "
+            f"{truncate(row.get('title') or row.get('text') or '', 140)}"
+        )
+        lines.append(f"  id: {row['id']}")
+    return "\n".join(lines)
+
+
 def run_check(_args: argparse.Namespace) -> int:
     errors: list[str] = []
     warnings: list[str] = []
@@ -1298,6 +1703,263 @@ def run_brief(args: argparse.Namespace) -> int:
         print("## Relations")
         print_relations(relations)
         print()
+    return 0
+
+
+def run_daily(args: argparse.Namespace) -> int:
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        print("Error: DATABASE_URL is not set", file=sys.stderr)
+        return 2
+
+    try:
+        since = parse_since(args.since)
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 2
+
+    try:
+        with connect() as conn:
+            with conn.cursor() as cur:
+                project = fetch_project(cur, args.project)
+                if not project:
+                    print(
+                        f"Error: project '{args.project}' not found",
+                        file=sys.stderr,
+                    )
+                    return 2
+                payload = fetch_activity_snapshot(cur, project, since, args.limit)
+                report = None
+                body = daily_markdown(payload)
+                if args.write_report:
+                    report = write_daily_report(cur, project, payload, body)
+                    payload["written_report"] = report
+    except Exception as exc:
+        print(f"Error: {concise_error(exc)}", file=sys.stderr)
+        return 1
+
+    if args.format == "json":
+        print(json.dumps(payload, indent=2, default=json_default, ensure_ascii=False))
+    else:
+        print(daily_markdown(payload))
+        if args.write_report and payload.get("written_report"):
+            print()
+            print(f"Written report: {payload['written_report']['id']}")
+    return 0
+
+
+def run_handoff(args: argparse.Namespace) -> int:
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        print("Error: DATABASE_URL is not set", file=sys.stderr)
+        return 2
+
+    try:
+        since = parse_since(args.since, default="7d")
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 2
+
+    try:
+        with connect() as conn:
+            with conn.cursor() as cur:
+                project = fetch_project(cur, args.project)
+                if not project:
+                    print(
+                        f"Error: project '{args.project}' not found",
+                        file=sys.stderr,
+                    )
+                    return 2
+                payload = fetch_activity_snapshot(cur, project, since, args.limit)
+    except Exception as exc:
+        print(f"Error: {concise_error(exc)}", file=sys.stderr)
+        return 1
+
+    if args.format == "json":
+        print(json.dumps(payload, indent=2, default=json_default, ensure_ascii=False))
+    else:
+        print(handoff_markdown(payload))
+    return 0
+
+
+def run_review(args: argparse.Namespace) -> int:
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        print("Error: DATABASE_URL is not set", file=sys.stderr)
+        return 2
+
+    try:
+        with connect() as conn:
+            with conn.cursor() as cur:
+                project = fetch_project(cur, args.project)
+                if not project:
+                    print(
+                        f"Error: project '{args.project}' not found",
+                        file=sys.stderr,
+                    )
+                    return 2
+                decisions = fetch_brief_rows(
+                    cur,
+                    "decisions",
+                    project["id"],
+                    "id, decision, rationale",
+                    excluded_statuses=("archived", "rejected"),
+                    limit=args.limit,
+                )
+                risks = fetch_brief_rows(
+                    cur,
+                    "risks",
+                    project["id"],
+                    "id, title, severity, impact, mitigation",
+                    excluded_statuses=("archived", "resolved"),
+                    limit=args.limit,
+                )
+                questions = fetch_brief_rows(
+                    cur,
+                    "open_questions",
+                    project["id"],
+                    "id, question, answer",
+                    excluded_statuses=("archived", "closed"),
+                    limit=args.limit,
+                )
+                relations = fetch_project_relations(cur, project["id"], limit=args.limit)
+    except Exception as exc:
+        print(f"Error: {concise_error(exc)}", file=sys.stderr)
+        return 1
+
+    payload = {
+        "project": project,
+        "decisions": decisions,
+        "risks": risks,
+        "open_questions": questions,
+        "relations": relations,
+    }
+    if args.format == "json":
+        print(json.dumps(payload, indent=2, default=json_default, ensure_ascii=False))
+        return 0
+
+    print(f"# Review: {project['name']}")
+    print()
+    print("## Decisions")
+    print(markdown_list(decisions, "decision", ("rationale",)))
+    print()
+    print("## Risks")
+    print(markdown_list(risks, "title", ("severity", "impact", "mitigation")))
+    print()
+    print("## Open Questions")
+    print(markdown_list(questions, "question", ("answer",)))
+    print()
+    print("## Relations")
+    print(relations_markdown(relations))
+    return 0
+
+
+def run_search(args: argparse.Namespace) -> int:
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        print("Error: DATABASE_URL is not set", file=sys.stderr)
+        return 2
+
+    try:
+        with connect() as conn:
+            with conn.cursor() as cur:
+                project = fetch_project(cur, args.project)
+                if not project:
+                    print(
+                        f"Error: project '{args.project}' not found",
+                        file=sys.stderr,
+                    )
+                    return 2
+                results = search_project_memory(
+                    cur,
+                    project["id"],
+                    args.query,
+                    args.memory_type,
+                    args.limit,
+                )
+    except Exception as exc:
+        print(f"Error: {concise_error(exc)}", file=sys.stderr)
+        return 1
+
+    payload = {"project": project, "query": args.query, "results": results}
+    if args.format == "json":
+        print(json.dumps(payload, indent=2, default=json_default, ensure_ascii=False))
+        return 0
+
+    print(f"Search results for {project['slug']}: {args.query}")
+    print(search_results_markdown(results))
+    return 0
+
+
+def run_context(args: argparse.Namespace) -> int:
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        print("Error: DATABASE_URL is not set", file=sys.stderr)
+        return 2
+
+    try:
+        since = parse_since(args.since, default="30d")
+        with connect() as conn:
+            with conn.cursor() as cur:
+                project = fetch_project(cur, args.project)
+                if not project:
+                    print(
+                        f"Error: project '{args.project}' not found",
+                        file=sys.stderr,
+                    )
+                    return 2
+                snapshot = fetch_activity_snapshot(cur, project, since, args.limit)
+                results = search_project_memory(
+                    cur,
+                    project["id"],
+                    args.query,
+                    "all",
+                    args.limit,
+                )
+                relations = fetch_project_relations(cur, project["id"], limit=args.limit)
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 2
+    except Exception as exc:
+        print(f"Error: {concise_error(exc)}", file=sys.stderr)
+        return 1
+
+    payload = {
+        "project": project,
+        "query": args.query,
+        "since": since,
+        "brief": snapshot,
+        "search_results": results,
+        "relations": relations,
+    }
+    if args.format == "json":
+        print(json.dumps(payload, indent=2, default=json_default, ensure_ascii=False))
+        return 0
+
+    print(f"# Context Pack: {project['name']}")
+    print()
+    print(f"- project: {project['slug']}")
+    print(f"- query: {args.query}")
+    print(f"- since: {since.isoformat()}")
+    print()
+    print("## Search Results")
+    print(search_results_markdown(results))
+    print()
+    print("## Recent Activity")
+    print("### Facts")
+    print(markdown_list(snapshot["facts"], "statement", ("source", "confidence")))
+    print()
+    print("### Decisions")
+    print(markdown_list(snapshot["decisions"], "decision", ("rationale",)))
+    print()
+    print("### Risks")
+    print(markdown_list(snapshot["risks"], "title", ("severity", "impact", "mitigation")))
+    print()
+    print("### Open Questions")
+    print(markdown_list(snapshot["open_questions"], "question", ("answer",)))
+    print()
+    print("### Relations")
+    print(relations_markdown(relations))
     return 0
 
 
@@ -1823,6 +2485,130 @@ def build_parser() -> argparse.ArgumentParser:
         help="Include relevant project relations in the brief.",
     )
     brief_parser.set_defaults(func=run_brief)
+
+    daily_parser = subparsers.add_parser(
+        "daily",
+        help="Summarize recent project memory for a daily working brief.",
+    )
+    daily_parser.add_argument("--project", required=True, help="Project slug.")
+    daily_parser.add_argument(
+        "--since",
+        default="24h",
+        help="Duration like 24h, 7d, 2w or ISO date. Default: 24h.",
+    )
+    daily_parser.add_argument(
+        "--limit",
+        type=int,
+        default=8,
+        help="Maximum rows per daily section.",
+    )
+    daily_parser.add_argument(
+        "--format",
+        choices=("text", "json", "markdown"),
+        default="text",
+        help="Output format.",
+    )
+    daily_parser.add_argument(
+        "--write-report",
+        action="store_true",
+        help="Store the daily summary as a published report row.",
+    )
+    daily_parser.set_defaults(func=run_daily)
+
+    handoff_parser = subparsers.add_parser(
+        "handoff",
+        help="Print a project handoff report for the next agent or session.",
+    )
+    handoff_parser.add_argument("--project", required=True, help="Project slug.")
+    handoff_parser.add_argument(
+        "--since",
+        default="7d",
+        help="Duration like 24h, 7d, 2w or ISO date. Default: 7d.",
+    )
+    handoff_parser.add_argument(
+        "--limit",
+        type=int,
+        default=8,
+        help="Maximum rows per handoff section.",
+    )
+    handoff_parser.add_argument(
+        "--format",
+        choices=("text", "json", "markdown"),
+        default="text",
+        help="Output format.",
+    )
+    handoff_parser.set_defaults(func=run_handoff)
+
+    review_parser = subparsers.add_parser(
+        "review",
+        help="Review decisions, risks, open questions, and relations.",
+    )
+    review_parser.add_argument("--project", required=True, help="Project slug.")
+    review_parser.add_argument(
+        "--limit",
+        type=int,
+        default=12,
+        help="Maximum rows per review section.",
+    )
+    review_parser.add_argument(
+        "--format",
+        choices=("text", "json", "markdown"),
+        default="text",
+        help="Output format.",
+    )
+    review_parser.set_defaults(func=run_review)
+
+    search_parser = subparsers.add_parser(
+        "search",
+        help="Search project memory with simple PostgreSQL text matching.",
+    )
+    search_parser.add_argument("--project", required=True, help="Project slug.")
+    search_parser.add_argument("--query", required=True, help="Text to search for.")
+    search_parser.add_argument(
+        "--type",
+        dest="memory_type",
+        choices=("all", "fact", "decision", "risk", "open_question", "report"),
+        default="all",
+        help="Memory type filter.",
+    )
+    search_parser.add_argument(
+        "--limit",
+        type=int,
+        default=10,
+        help="Maximum search results.",
+    )
+    search_parser.add_argument(
+        "--format",
+        choices=("text", "json"),
+        default="text",
+        help="Output format.",
+    )
+    search_parser.set_defaults(func=run_search)
+
+    context_parser = subparsers.add_parser(
+        "context",
+        help="Build a compact project context pack from brief, search, and relations.",
+    )
+    context_parser.add_argument("--project", required=True, help="Project slug.")
+    context_parser.add_argument("--query", required=True, help="Focus query.")
+    context_parser.add_argument(
+        "--since",
+        default="30d",
+        help="Recent activity window. Default: 30d.",
+    )
+    context_parser.add_argument(
+        "--limit",
+        type=int,
+        default=8,
+        help="Maximum rows per context section.",
+    )
+    context_parser.add_argument(
+        "--format",
+        choices=("markdown", "json"),
+        default="markdown",
+        help="Output format.",
+    )
+    context_parser.set_defaults(func=run_context)
 
     relations_parser = subparsers.add_parser(
         "relations",

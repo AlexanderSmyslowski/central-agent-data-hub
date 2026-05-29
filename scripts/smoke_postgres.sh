@@ -150,6 +150,11 @@ run_agent_hub status
 run_agent_hub check
 run_agent_hub brief --project commcats-de --limit 4
 run_agent_hub brief --project the-one-catering --limit 4
+run_agent_hub daily --project commcats-de --since 30d --limit 4 --write-report
+run_agent_hub handoff --project the-one-catering --since 30d --limit 4
+run_agent_hub review --project commcats-de --limit 4
+run_agent_hub search --project commcats-de --query Alfahosting --limit 4
+run_agent_hub context --project the-one-catering --query migration --limit 4
 
 echo
 echo "== Relation graph checks =="

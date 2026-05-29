@@ -10,7 +10,7 @@ PostgreSQL ist die operative Wahrheit: Hier liegen die normalisierten Daten, Rel
 - Demo-Seed ist vorhanden: `seed/demo.sql`
 - Obsidian-Jinja2-Templates sind vorhanden: `templates/`
 - Minimaler Obsidian-Exporter ist vorhanden: `agent_hub/export_obsidian.py`
-- CLI-Kommandos sind vorhanden: `agent-hub migrate`, `agent-hub export`, `agent-hub status`, `agent-hub check`, `agent-hub projects`, `agent-hub brief`, `agent-hub remember`, `agent-hub relations`, `agent-hub relate`, `agent-hub import`, `agent-hub sync`
+- CLI-Kommandos sind vorhanden: `agent-hub migrate`, `agent-hub export`, `agent-hub status`, `agent-hub check`, `agent-hub projects`, `agent-hub brief`, `agent-hub daily`, `agent-hub handoff`, `agent-hub review`, `agent-hub search`, `agent-hub context`, `agent-hub remember`, `agent-hub relations`, `agent-hub relate`, `agent-hub import`, `agent-hub sync`
 - CLI-Platzhalter sind vorhanden, aber noch nicht implementiert: `init`
 
 ## Voraussetzungen
@@ -157,6 +157,7 @@ Vor Projektarbeiten laden Agenten den passenden Projektkontext:
 
 ```bash
 scripts/project_context.sh --project <project-slug>
+scripts/project_context.sh --project <project-slug> --daily
 scripts/project_context.sh --all-projects
 scripts/project_context.sh --project commcats-de
 scripts/project_context.sh --project the-one-catering
@@ -173,7 +174,7 @@ scripts/project_remember.sh \
   --source "non-sensitive source or review note"
 ```
 
-`scripts/project_remember.sh` ist ein Schutzlayer um `agent-hub remember`: Es fuehrt Preflight und Safety-Scan aus, blockiert Projekterzeugung, verlangt Quellen fuer Fakten und erlaubt `--dry-run`. Details und Beispiele stehen in `docs/agent-workflow.md`.
+`scripts/project_remember.sh` ist ein Schutzlayer um `agent-hub remember`: Es fuehrt Preflight und Safety-Scan aus, blockiert Projekterzeugung, verlangt Quellen fuer Fakten, erlaubt `--dry-run` und kann nach erfolgreichem Writeback optional direkt eine kuratierte Relation anlegen. Details und Beispiele stehen in `docs/agent-workflow.md`.
 
 ## Disposable Demo Lokal Ausfuehren
 
@@ -267,6 +268,12 @@ Beim erneuten Export bleibt der Inhalt innerhalb des Human-Notes-Blocks erhalten
 - `agent-hub projects --type website`: filtert aktive Projekte nach `projects.metadata.project_type`
 - `agent-hub brief --project <slug>`: gibt einen kompakten Projektbrief fuer Agenten aus
 - `agent-hub brief --project <slug> --with-relations`: ergaenzt den Projektbrief um kuratierte Relations
+- `agent-hub daily --project <slug>`: zeigt neue Fakten, Entscheidungen, Risiken, Fragen, Relations, Agent Actions und Sync Events seit einem Zeitraum
+- `agent-hub daily --project <slug> --write-report`: speichert die Tagesverdichtung als `reports`-Zeile mit `report_type='daily'`
+- `agent-hub handoff --project <slug>`: erzeugt eine Uebergabe mit Entscheidungen, Risiken, offenen Punkten, Kontext und naechsten Schritten
+- `agent-hub review --project <slug>`: zeigt Entscheidungs-/Risiko-/Fragenuebersicht plus Relations-Graph
+- `agent-hub search --project <slug> --query <text>`: sucht projektgebunden in kuratierten Memory-Typen
+- `agent-hub context --project <slug> --query <text>`: baut ein kompaktes Kontextpaket aus Recent Activity, Suchtreffern und Relations
 - `agent-hub remember --project <slug> --type <type> --text <text>`: speichert eine gepruefte Erinnerung
 - `agent-hub relations --project <slug>`: listet den belegbaren Projektgraphen
 - `agent-hub relate --project <slug> ...`: verknuepft zwei existierende Hub-Objekte kuratiert
@@ -276,13 +283,15 @@ Beim erneuten Export bleibt der Inhalt innerhalb des Human-Notes-Blocks erhalten
 
 ## Codex-/Hermes-Gedaechtnis
 
-Die `projects`-, `brief`- und `remember`-Kommandos bilden den kleinen kontrollierten Zugriffspfad fuer Codex und Hermes.
+Die `projects`-, `brief`-, `daily`-, `handoff`-, `review`-, `search`-, `context`- und `remember`-Kommandos bilden den kontrollierten Zugriffspfad fuer Codex und Hermes: erst lesen und verdichten, dann nur kuratiert schreiben.
 
 Vor groesseren Arbeiten:
 
 ```bash
 agent-hub projects
 scripts/project_context.sh --project <project-slug>
+scripts/project_context.sh --project <project-slug> --daily
+agent-hub context --project <project-slug> --query "<aktueller arbeitsfokus>"
 ```
 
 Website ist das erste Domain-Profil im Hub. Diese Website-Projekte haben unterschiedliche Bearbeitungsstaende:
@@ -340,6 +349,29 @@ agent-hub brief --project commcats-de --with-relations
 
 Erlaubte Relationstypen sind `supports`, `contradicts`, `supersedes`, `mitigates`, `answers`, `raises`, `references`, `derived_from`, `blocks` und `depends_on`. Typische Muster: Fact supports Decision, Decision mitigates Risk, Report references Fact, Decision answers Open Question.
 
+Der sichere Wrapper kann eine neue Erinnerung auch direkt mit einem bestehenden Objekt verbinden:
+
+```bash
+scripts/project_remember.sh \
+  --project commcats-de \
+  --type fact \
+  --text "Reviewed project memory goes here." \
+  --source "review note" \
+  --relate-to decision:<decision-id> \
+  --relation supports
+```
+
+Fuer Tagesarbeit und Uebergaben:
+
+```bash
+agent-hub daily --project commcats-de --since 24h
+agent-hub daily --project commcats-de --since 24h --write-report
+agent-hub handoff --project the-one-catering --since 7d
+agent-hub review --project commcats-de
+agent-hub search --project commcats-de --query Alfahosting
+agent-hub context --project the-one-catering --query migration
+```
+
 Ein nicht-sensibler Start-Seed fuer die Website-Projekte liegt in:
 
 ```txt
@@ -392,6 +424,8 @@ python -m pytest
 agent-hub --help
 agent-hub brief --help
 agent-hub remember --help
+agent-hub daily --help
+agent-hub context --help
 ```
 
 PostgreSQL-Checks bleiben optional. Sie koennen gegen jede disposable Testdatenbank laufen, die ueber `DATABASE_URL` erreichbar ist. Docker ist dafuer praktisch, aber keine Pflicht fuer normale Entwicklung.

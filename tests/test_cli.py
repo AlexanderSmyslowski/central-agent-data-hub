@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime
 from types import SimpleNamespace
 import uuid
 
@@ -38,6 +39,17 @@ def test_parse_metadata_rejects_invalid_entries(value: str) -> None:
 def test_truncate_keeps_short_text_and_shortens_long_text() -> None:
     assert cli.truncate("short", 10) == "short"
     assert cli.truncate("abcdefghijklmnopqrstuvwxyz", 10) == "abcdefg..."
+
+
+def test_parse_since_accepts_duration_and_iso_date() -> None:
+    assert cli.parse_since("24h") < datetime.now(cli.timezone.utc)
+    parsed = cli.parse_since("2026-05-29")
+    assert parsed.isoformat() == "2026-05-29T00:00:00+00:00"
+
+
+def test_parse_since_rejects_invalid_value() -> None:
+    with pytest.raises(ValueError):
+        cli.parse_since("yesterday-ish")
 
 
 def test_brief_without_database_url_has_clear_error(monkeypatch, capsys) -> None:
@@ -136,6 +148,29 @@ def test_relate_without_database_url_has_clear_error(monkeypatch, capsys) -> Non
             "10000000-0000-4000-8000-000000000301",
         ]
     )
+
+    captured = capsys.readouterr()
+    assert code == 2
+    assert "DATABASE_URL is not set" in captured.err
+    assert "Traceback" not in captured.err
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        ["daily", "--project", "commcats-de"],
+        ["handoff", "--project", "commcats-de"],
+        ["review", "--project", "commcats-de"],
+        ["search", "--project", "commcats-de", "--query", "Alfahosting"],
+        ["context", "--project", "commcats-de", "--query", "Alfahosting"],
+    ],
+)
+def test_retrieval_commands_without_database_url_have_clear_error(
+    command: list[str], monkeypatch, capsys
+) -> None:
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+
+    code = cli.main(command)
 
     captured = capsys.readouterr()
     assert code == 2

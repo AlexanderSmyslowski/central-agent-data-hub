@@ -18,6 +18,7 @@ Options:
   --all-projects     Brief all active projects from the Hub database.
   --all-websites     Domain shortcut for commcats-de, the-one-catering, and lamour.
   --limit <n>        Maximum rows per brief section, default 8.
+  --daily            Also print the last 24h project activity summary.
 
 Exit codes:
   0  context loaded
@@ -30,6 +31,7 @@ PROJECT=""
 ALL_PROJECTS=0
 ALL_WEBSITES=0
 LIMIT=8
+DAILY=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -48,6 +50,10 @@ while [[ $# -gt 0 ]]; do
     --limit)
       LIMIT="${2:-}"
       shift 2
+      ;;
+    --daily)
+      DAILY=1
+      shift
       ;;
     -h|--help)
       usage
@@ -95,6 +101,14 @@ print_brief() {
   if ! run_agent_hub brief --project "$project_slug" --limit "$LIMIT"; then
     echo "Data error: project brief unavailable for '$project_slug'." >&2
     return 1
+  fi
+  if [[ "$DAILY" -eq 1 ]]; then
+    echo
+    echo "== Daily Activity: $project_slug =="
+    if ! run_agent_hub daily --project "$project_slug" --since 24h --limit "$LIMIT"; then
+      echo "Data error: project daily activity unavailable for '$project_slug'." >&2
+      return 1
+    fi
   fi
 }
 

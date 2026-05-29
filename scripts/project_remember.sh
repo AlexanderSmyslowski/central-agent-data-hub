@@ -31,6 +31,8 @@ Allowed options:
   --report-type <value>
   --summary <text>
   --body <text>
+  --relate-to <type:uuid>     Relate the new memory to an existing Hub object.
+  --relation <relation_type>  Relation type for --relate-to.
   --dry-run                  Preflight, safety-scan, and show planned write.
 
 Exit codes:
@@ -46,6 +48,8 @@ TEXT_VALUE=""
 DRY_RUN=0
 HAS_SOURCE=0
 HAS_RATIONALE=0
+RELATE_TO=""
+RELATION=""
 declare -a REMEMBER_ARGS=()
 declare -a SAFETY_VALUES=()
 declare -a FIELD_NAMES=()
@@ -82,6 +86,24 @@ while [[ $# -gt 0 ]]; do
       add_option "$1" "$2"
       shift 2
       ;;
+    --relate-to)
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: --relate-to requires a value." >&2
+        exit 2
+      fi
+      RELATE_TO="$2"
+      SAFETY_VALUES+=("$2")
+      shift 2
+      ;;
+    --relation)
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: --relation requires a value." >&2
+        exit 2
+      fi
+      RELATION="$2"
+      SAFETY_VALUES+=("$2")
+      shift 2
+      ;;
     --dry-run)
       DRY_RUN=1
       shift
@@ -116,6 +138,24 @@ case "$MEMORY_TYPE" in
     exit 2
     ;;
 esac
+
+if [[ -n "$RELATE_TO" || -n "$RELATION" ]]; then
+  if [[ -z "$RELATE_TO" || -z "$RELATION" ]]; then
+    echo "Error: --relate-to and --relation must be used together." >&2
+    exit 2
+  fi
+  if [[ ! "$RELATE_TO" =~ ^(project|agent|document|report|decision|fact|open_question|risk|agent_action):[0-9a-fA-F-]{36}$ ]]; then
+    echo "Error: --relate-to must use <type:uuid>, for example fact:00000000-0000-4000-8000-000000000000." >&2
+    exit 2
+  fi
+  case "$RELATION" in
+    supports|contradicts|supersedes|mitigates|answers|raises|references|derived_from|blocks|depends_on) ;;
+    *)
+      echo "Error: unsupported --relation '$RELATION'." >&2
+      exit 2
+      ;;
+  esac
+fi
 
 SAFETY_VALUES+=("$PROJECT" "$MEMORY_TYPE" "$TEXT_VALUE")
 
@@ -174,14 +214,55 @@ if [[ "$DRY_RUN" -eq 1 ]]; then
     echo "Forwarded option names:"
     printf -- "- %s\n" "${FIELD_NAMES[@]}"
   fi
+  if [[ -n "$RELATE_TO" ]]; then
+    echo "Planned relation:"
+    echo "- new $MEMORY_TYPE --$RELATION--> $RELATE_TO"
+  fi
   echo "Project remember result: dry-run ok"
   exit 0
 fi
 
-run_agent_hub remember \
-  --project "$PROJECT" \
-  --type "$MEMORY_TYPE" \
-  --text "$TEXT_VALUE" \
-  "${REMEMBER_ARGS[@]}"
+remember_output="$(
+  run_agent_hub remember \
+    --project "$PROJECT" \
+    --type "$MEMORY_TYPE" \
+    --text "$TEXT_VALUE" \
+    "${REMEMBER_ARGS[@]}" \
+    --format json
+)"
 
+object_type="$(
+  printf '%s\n' "$remember_output" | "$PYTHON_BIN" -c '
+import json
+import sys
+
+payload = json.load(sys.stdin)
+print(payload["type"])
+'
+)"
+object_id="$(
+  printf '%s\n' "$remember_output" | "$PYTHON_BIN" -c '
+import json
+import sys
+
+payload = json.load(sys.stdin)
+print(payload["object"]["id"])
+'
+)"
+
+echo "Remembered $object_type for project '$PROJECT': $object_id"
 echo "Project remember result: wrote reviewed memory"
+
+if [[ -n "$RELATE_TO" ]]; then
+  target_type="${RELATE_TO%%:*}"
+  target_id="${RELATE_TO#*:}"
+  run_agent_hub relate \
+    --project "$PROJECT" \
+    --source-type "$object_type" \
+    --source-id "$object_id" \
+    --relation "$RELATION" \
+    --target-type "$target_type" \
+    --target-id "$target_id" \
+    --metadata created_by=project_remember.sh
+  echo "Project remember relation result: wrote curated relation"
+fi
