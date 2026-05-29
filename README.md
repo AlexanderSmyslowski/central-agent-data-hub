@@ -10,7 +10,7 @@ PostgreSQL ist die operative Wahrheit: Hier liegen die normalisierten Daten, Rel
 - Demo-Seed ist vorhanden: `seed/demo.sql`
 - Obsidian-Jinja2-Templates sind vorhanden: `templates/`
 - Minimaler Obsidian-Exporter ist vorhanden: `agent_hub/export_obsidian.py`
-- CLI-Kommandos sind vorhanden: `agent-hub migrate`, `agent-hub export`, `agent-hub status`, `agent-hub check`, `agent-hub projects`, `agent-hub brief`, `agent-hub daily`, `agent-hub handoff`, `agent-hub review`, `agent-hub search`, `agent-hub context`, `agent-hub remember`, `agent-hub relations`, `agent-hub relate`, `agent-hub import`, `agent-hub sync`
+- CLI-Kommandos sind vorhanden: `agent-hub migrate`, `agent-hub export`, `agent-hub status`, `agent-hub check`, `agent-hub projects`, `agent-hub brief`, `agent-hub daily`, `agent-hub handoff`, `agent-hub review`, `agent-hub search`, `agent-hub context`, `agent-hub receipt`, `agent-hub remember`, `agent-hub relations`, `agent-hub relate`, `agent-hub import`, `agent-hub sync`
 - CLI-Platzhalter sind vorhanden, aber noch nicht implementiert: `init`
 
 ## Voraussetzungen
@@ -196,6 +196,19 @@ Der Finish-Wrapper erzeugt Daily Summary und Handoff. Mit `--review` zeigt er di
 
 Der Finish-Wrapper ist zugleich eine Memory-Triage: Er unterscheidet Facts, Decisions, Risks, Open Questions und Reports von temporaerem Arbeitsrauschen. Dadurch soll der Hub taeglich nuetzlicher werden, ohne zum Roh-Chatlog zu werden.
 
+Wenn ein anderer Channel oder Agent meldet, dass er kuratierte Memory
+geschrieben und nach Obsidian exportiert hat, kann das mit einem Receipt
+geprueft werden:
+
+```bash
+scripts/memory_receipt.sh --project <project-slug> --type report --since 24h
+agent-hub receipt --project <project-slug> --type report --since 24h
+```
+
+Der Receipt prueft aktuelle Hub-Zeilen und die dazugehoerigen Markdown-Dateien
+im Obsidian-Export. Standardmaessig liefert `scripts/memory_receipt.sh` einen
+Fehler, wenn keine passende Memory gefunden wird oder der Export fehlt.
+
 Gepruefte, nicht-sensitive Erinnerungen werden danach kontrolliert geschrieben:
 
 ```bash
@@ -341,6 +354,7 @@ Beim erneuten Export bleibt der Inhalt innerhalb des Human-Notes-Blocks erhalten
 - `agent-hub review --project <slug>`: zeigt Entscheidungs-/Risiko-/Fragenuebersicht plus Relations-Graph
 - `agent-hub search --project <slug> --query <text>`: sucht projektgebunden in kuratierten Memory-Typen
 - `agent-hub context --project <slug> --query <text>`: baut ein kompaktes Kontextpaket aus Recent Activity, Suchtreffern und Relations
+- `agent-hub receipt --project <slug>`: prueft aktuelle Memory-Zeilen und passende Obsidian-Exportdateien
 - `agent-hub remember --project <slug> --type <type> --text <text>`: speichert eine gepruefte Erinnerung
 - `agent-hub relations --project <slug>`: listet den belegbaren Projektgraphen
 - `agent-hub relate --project <slug> ...`: verknuepft zwei existierende Hub-Objekte kuratiert

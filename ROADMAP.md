@@ -14,6 +14,7 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
    - Prefer `scripts/agent_finish.sh` after substantial project work.
    - Use `scripts/agent_start.sh --review` for longer or riskier work.
    - Use `scripts/agent_finish.sh --review --export --backup` when a session should end with human-readable projection and verified backup.
+   - Use `scripts/memory_receipt.sh` when another agent/channel claims that reviewed memory was written and exported.
    - Use `scripts/project_context.sh` before project work.
    - Use `scripts/project_remember.sh` for reviewed, non-sensitive writeback.
    - Keep each project context explicit; websites are only the first domain profile.

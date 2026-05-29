@@ -116,6 +116,22 @@ The finish helper prints a memory triage before any manual writeback. It should
 help the agent decide whether the outcome is a fact, decision, risk, open
 question, report, or just temporary working noise that should not be stored.
 
+When another channel claims that it wrote curated memory and exported it, verify
+the claim with a receipt:
+
+```bash
+scripts/memory_receipt.sh --project <project-slug> --type report --since 24h
+```
+
+For direct CLI use:
+
+```bash
+agent-hub receipt --project <project-slug> --type report --since 24h
+```
+
+The receipt checks recent Hub rows and the matching Obsidian Markdown files. It
+is meant as a lightweight audit trail between channels and agents.
+
 Write back only reviewed, non-sensitive memory:
 
 ```bash

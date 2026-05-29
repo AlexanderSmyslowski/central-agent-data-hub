@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 from agent_hub.db import connect
-from agent_hub.export_obsidian import export_all
+from agent_hub.export_obsidian import EXPORTS, export_all, filename_for, normalize_row
 from agent_hub.import_obsidian import import_markdown, sync_markdown
 
 CORE_TABLES = (
@@ -37,6 +37,16 @@ REMEMBER_TYPES = (
     "open-question",
     "risk",
     "report",
+)
+
+RECEIPT_TYPES = (
+    "all",
+    "fact",
+    "decision",
+    "risk",
+    "open_question",
+    "report",
+    "agent_action",
 )
 
 PROJECT_SCOPED_TABLES = (
@@ -84,6 +94,17 @@ RELATION_SUMMARY_COLUMNS = {
     "open_question": "question",
     "risk": "title",
     "agent_action": "action",
+}
+
+EXPORT_SPECS_BY_TYPE = {
+    "project": next(spec for spec in EXPORTS if spec["table"] == "projects"),
+    "document": next(spec for spec in EXPORTS if spec["table"] == "documents"),
+    "report": next(spec for spec in EXPORTS if spec["table"] == "reports"),
+    "decision": next(spec for spec in EXPORTS if spec["table"] == "decisions"),
+    "fact": next(spec for spec in EXPORTS if spec["table"] == "facts"),
+    "open_question": next(spec for spec in EXPORTS if spec["table"] == "open_questions"),
+    "risk": next(spec for spec in EXPORTS if spec["table"] == "risks"),
+    "agent_action": next(spec for spec in EXPORTS if spec["table"] == "agent_actions"),
 }
 
 
@@ -1488,6 +1509,175 @@ def search_results_markdown(rows: list[dict[str, object]]) -> str:
     return "\n".join(lines)
 
 
+def export_path_for_object(
+    export_dir: Path | None,
+    memory_type: str,
+    row: dict[str, object],
+) -> Path | None:
+    if export_dir is None:
+        return None
+    spec = EXPORT_SPECS_BY_TYPE[memory_type]
+    normalized = normalize_row(dict(row))
+    return export_dir / str(spec["folder"]) / filename_for(
+        normalized,
+        spec["title_fields"],
+    )
+
+
+def receipt_title(row: dict[str, object]) -> str:
+    for key in (
+        "title",
+        "statement",
+        "decision",
+        "question",
+        "action",
+    ):
+        value = row.get(key)
+        if value:
+            return str(value)
+    return str(row.get("id", "untitled"))
+
+
+def fetch_receipt_rows(
+    cur,
+    project: dict[str, object],
+    since: datetime,
+    memory_type: str,
+    limit: int,
+    export_dir: Path | None,
+) -> list[dict[str, object]]:
+    project_id = project["id"]
+    specs = {
+        "fact": (
+            """
+            SELECT id, statement, source, confidence, status, metadata, created_at, updated_at
+            FROM facts
+            WHERE project_id = %s AND updated_at >= %s
+            ORDER BY updated_at DESC, created_at DESC, id DESC
+            LIMIT %s
+            """,
+            "statement",
+        ),
+        "decision": (
+            """
+            SELECT id, decision, rationale, consequences, status, metadata, created_at, updated_at
+            FROM decisions
+            WHERE project_id = %s AND updated_at >= %s
+            ORDER BY updated_at DESC, created_at DESC, id DESC
+            LIMIT %s
+            """,
+            "decision",
+        ),
+        "risk": (
+            """
+            SELECT id, title, severity, impact, mitigation, status, metadata, created_at, updated_at
+            FROM risks
+            WHERE project_id = %s AND updated_at >= %s
+            ORDER BY updated_at DESC, created_at DESC, id DESC
+            LIMIT %s
+            """,
+            "title",
+        ),
+        "open_question": (
+            """
+            SELECT id, question, answer, status, metadata, created_at, updated_at
+            FROM open_questions
+            WHERE project_id = %s AND updated_at >= %s
+            ORDER BY updated_at DESC, created_at DESC, id DESC
+            LIMIT %s
+            """,
+            "question",
+        ),
+        "report": (
+            """
+            SELECT id, title, report_type, summary, body, status, metadata, created_at, updated_at
+            FROM reports
+            WHERE project_id = %s AND updated_at >= %s
+            ORDER BY updated_at DESC, created_at DESC, id DESC
+            LIMIT %s
+            """,
+            "title",
+        ),
+    }
+    selected = (
+        ("fact", "decision", "risk", "open_question", "report", "agent_action")
+        if memory_type == "all"
+        else (memory_type,)
+    )
+    rows: list[dict[str, object]] = []
+    for item_type in selected:
+        if item_type == "agent_action":
+            cur.execute(
+                """
+                SELECT aa.id, aa.action, aa.object_type, aa.object_id, aa.status,
+                       aa.metadata, aa.created_at, aa.updated_at,
+                       a.slug AS agent_slug
+                FROM agent_actions aa
+                JOIN agents a ON a.id = aa.agent_id
+                WHERE a.project_id = %s AND aa.updated_at >= %s
+                ORDER BY aa.updated_at DESC, aa.created_at DESC, aa.id DESC
+                LIMIT %s
+                """,
+                (project_id, since, limit),
+            )
+            fetched = list(cur.fetchall())
+        else:
+            query, _title_key = specs[item_type]
+            cur.execute(query, (project_id, since, limit))
+            fetched = list(cur.fetchall())
+
+        for raw in fetched:
+            row = dict(raw)
+            path = export_path_for_object(export_dir, item_type, row)
+            rows.append(
+                {
+                    "type": item_type,
+                    "id": row["id"],
+                    "title": receipt_title(row),
+                    "status": row.get("status"),
+                    "updated_at": row.get("updated_at"),
+                    "created_at": row.get("created_at"),
+                    "export_path": str(path) if path else None,
+                    "exported": bool(path and path.exists()),
+                    "object": row,
+                }
+            )
+    rows.sort(key=lambda row: row["updated_at"], reverse=True)
+    return rows[:limit]
+
+
+def receipt_markdown(payload: dict[str, object]) -> str:
+    project = payload["project"]
+    rows = payload["rows"]
+    lines = [
+        f"# Memory Receipt: {project['name']}",
+        "",
+        f"- project: {project['slug']}",
+        f"- since: {payload['since'].isoformat()}",
+        f"- type: {payload['type']}",
+        f"- export_dir: {payload.get('export_dir') or 'not configured'}",
+        f"- result: {payload['result']}",
+        "",
+        "## Recent Memory",
+    ]
+    if not rows:
+        lines.append("- none")
+        return "\n".join(lines)
+
+    for row in rows:
+        export_state = "yes" if row["exported"] else "no"
+        lines.append(
+            f"- [{row['type']}/{row.get('status') or 'unknown'}] "
+            f"{truncate(row['title'], 140)}"
+        )
+        lines.append(f"  id: {row['id']}")
+        lines.append(f"  updated_at: {row['updated_at']}")
+        lines.append(f"  exported: {export_state}")
+        if row.get("export_path"):
+            lines.append(f"  export_path: {row['export_path']}")
+    return "\n".join(lines)
+
+
 def run_check(_args: argparse.Namespace) -> int:
     errors: list[str] = []
     warnings: list[str] = []
@@ -2045,6 +2235,74 @@ def run_context(args: argparse.Namespace) -> int:
     print("### Relations")
     print(relations_markdown(relations))
     return 0
+
+
+def run_receipt(args: argparse.Namespace) -> int:
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        print("Error: DATABASE_URL is not set", file=sys.stderr)
+        return 2
+
+    try:
+        since = parse_since(args.since)
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 2
+
+    export_dir_env = os.environ.get("OBSIDIAN_EXPORT_DIR")
+    export_dir = Path(export_dir_env) if export_dir_env else None
+
+    try:
+        with connect() as conn:
+            with conn.cursor() as cur:
+                project = fetch_project(cur, args.project)
+                if not project:
+                    print(
+                        f"Error: project '{args.project}' not found",
+                        file=sys.stderr,
+                    )
+                    return 2
+                rows = fetch_receipt_rows(
+                    cur,
+                    project,
+                    since,
+                    args.memory_type,
+                    args.limit,
+                    export_dir,
+                )
+    except Exception as exc:
+        print(f"Error: {concise_error(exc)}", file=sys.stderr)
+        return 1
+
+    missing_export_count = sum(1 for row in rows if not row["exported"])
+    result = "ok"
+    exit_code = 0
+    if args.require_results and not rows:
+        result = "missing"
+        exit_code = 1
+    elif args.require_exported and (not export_dir or missing_export_count):
+        result = "export-missing"
+        exit_code = 1
+
+    payload = {
+        "project": project,
+        "since": since,
+        "type": args.memory_type,
+        "export_dir": str(export_dir) if export_dir else None,
+        "rows": rows,
+        "counts": {
+            "rows": len(rows),
+            "missing_exports": missing_export_count,
+        },
+        "result": result,
+    }
+
+    if args.format == "json":
+        print(json.dumps(payload, indent=2, default=json_default, ensure_ascii=False))
+        return exit_code
+
+    print(receipt_markdown(payload))
+    return exit_code
 
 
 def insert_fact(
@@ -2693,6 +2951,47 @@ def build_parser() -> argparse.ArgumentParser:
         help="Output format.",
     )
     context_parser.set_defaults(func=run_context)
+
+    receipt_parser = subparsers.add_parser(
+        "receipt",
+        help="Verify recent project memory writes and Obsidian export files.",
+    )
+    receipt_parser.add_argument("--project", required=True, help="Project slug.")
+    receipt_parser.add_argument(
+        "--since",
+        default="24h",
+        help="Duration like 24h, 7d, 2w or ISO date. Default: 24h.",
+    )
+    receipt_parser.add_argument(
+        "--type",
+        dest="memory_type",
+        choices=RECEIPT_TYPES,
+        default="all",
+        help="Memory type to verify.",
+    )
+    receipt_parser.add_argument(
+        "--limit",
+        type=int,
+        default=12,
+        help="Maximum receipt rows.",
+    )
+    receipt_parser.add_argument(
+        "--format",
+        choices=("text", "json", "markdown"),
+        default="text",
+        help="Output format.",
+    )
+    receipt_parser.add_argument(
+        "--require-results",
+        action="store_true",
+        help="Exit 1 if no matching memory rows are found.",
+    )
+    receipt_parser.add_argument(
+        "--require-exported",
+        action="store_true",
+        help="Exit 1 if matching rows do not have exported Markdown files.",
+    )
+    receipt_parser.set_defaults(func=run_receipt)
 
     relations_parser = subparsers.add_parser(
         "relations",

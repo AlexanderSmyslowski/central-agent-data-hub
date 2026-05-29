@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime
+from pathlib import Path
 from types import SimpleNamespace
 import uuid
 
@@ -163,6 +164,7 @@ def test_relate_without_database_url_has_clear_error(monkeypatch, capsys) -> Non
         ["review", "--project", "commcats-de"],
         ["search", "--project", "commcats-de", "--query", "Alfahosting"],
         ["context", "--project", "commcats-de", "--query", "Alfahosting"],
+        ["receipt", "--project", "commcats-de"],
     ],
 )
 def test_retrieval_commands_without_database_url_have_clear_error(
@@ -176,6 +178,19 @@ def test_retrieval_commands_without_database_url_have_clear_error(
     assert code == 2
     assert "DATABASE_URL is not set" in captured.err
     assert "Traceback" not in captured.err
+
+
+def test_receipt_export_path_uses_obsidian_filename(tmp_path: Path) -> None:
+    path = cli.export_path_for_object(
+        tmp_path,
+        "report",
+        {
+            "id": uuid.UUID("10000000-0000-4000-8000-000000000601"),
+            "title": "Demo Report",
+        },
+    )
+
+    assert path == tmp_path / "Reports" / "demo-report-00000601.md"
 
 
 def test_relations_requires_object_type_and_id_together(monkeypatch, capsys) -> None:
