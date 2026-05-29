@@ -16,19 +16,91 @@ PostgreSQL ist die operative Wahrheit: Hier liegen die normalisierten Daten, Rel
 ## Voraussetzungen
 
 - Python 3.11 oder neuer
-- PostgreSQL 16 oder Docker
+- PostgreSQL 16 oder Docker/Docker Compose
 - Umgebungsvariablen:
   - `DATABASE_URL`
   - `OBSIDIAN_EXPORT_DIR`
+  - optional `AGENT_HUB_BACKUP_DIR`
+  - optional `AGENT_HUB_BACKUP_REMOTE`
 
-Beispielwerte fuer lokale Tests:
+Beispielwerte fuer die dauerhafte lokale Hub-DB:
 
 ```bash
-export DATABASE_URL="postgresql://postgres@localhost:55432/agent_hub_test"
-export OBSIDIAN_EXPORT_DIR="/tmp/agent-hub-obsidian"
+export DATABASE_URL="postgresql://postgres@localhost:55432/agent_hub"
+export OBSIDIAN_EXPORT_DIR=".local/obsidian-export"
 ```
 
-## Demo Lokal Ausfuehren
+Eine Vorlage fuer lokale Konfiguration liegt in `.env.example`. Eine echte `.env` bleibt lokal und wird nicht committed.
+
+## Durable Local Hub Database
+
+Fuer den normalen Agentenbetrieb gibt es eine dauerhafte lokale PostgreSQL-DB per Docker Compose. Sie nutzt ein persistentes Docker-Volume, startet mit `restart: unless-stopped` wieder und bleibt erhalten, auch wenn der Container neu erstellt wird.
+
+Feste lokale Namen:
+
+- Container: `central-agent-data-hub-postgres`
+- Volume: `central-agent-data-hub-pgdata`
+- Datenbank: `agent_hub`
+- Port: `55432`
+- URL: `postgresql://postgres@localhost:55432/agent_hub`
+
+Starten und initialisieren:
+
+```bash
+scripts/db_start.sh
+```
+
+Das Skript startet die Compose-DB, wartet auf den Healthcheck, legt das Schema an, falls es noch fehlt, und spielt den nicht-sensiblen Business-Sites-Seed ein. `seed/demo.sql` wird bewusst nur auf Wunsch geladen:
+
+```bash
+scripts/db_start.sh --demo
+```
+
+Status und Readiness pruefen:
+
+```bash
+scripts/db_status.sh
+```
+
+Das zeigt Container, Volume, Port, Healthcheck, `agent-hub status` und einen kurzen `commcats-de`-Brief.
+
+Backup erstellen:
+
+```bash
+scripts/db_backup.sh
+```
+
+Standardziel ist `.local/backups/`. Das Skript nutzt `pg_dump` im Postgres-Container, erzeugt einen Custom-Format-Dump und schreibt eine SHA256-Datei. Wenn `AGENT_HUB_BACKUP_REMOTE` gesetzt ist, kopiert es Dump und Checksumme zusaetzlich per `rsync` auf den Server:
+
+```bash
+export AGENT_HUB_BACKUP_REMOTE="user@example.com:/path/to/agent-hub-backups/"
+scripts/db_backup.sh
+```
+
+Backup verifizieren:
+
+```bash
+scripts/db_verify_backup.sh
+```
+
+Das Skript restored den neuesten Dump in einen temporaeren Postgres-Container auf Port `55433`, fuehrt `agent-hub check` und einen Projektbrief aus und entfernt den Test-Container danach wieder.
+
+Restore in die lokale Betriebs-DB:
+
+```bash
+scripts/db_restore.sh --confirm .local/backups/agent_hub-YYYYMMDD-HHMMSS.dump
+```
+
+Restore ist absichtlich explizit: Das Skript ersetzt den Inhalt der lokalen `agent_hub`-Datenbank und verlangt deshalb `--confirm`.
+
+Rollen der Speicherorte:
+
+- GitHub enthaelt Code, Schema, Seeds, Templates, Doku und Tests.
+- Die lokale Postgres-DB ist die operative Wahrheit fuer Agenten-Gedaechtnis.
+- Obsidian ist Projektion und kontrollierter Importkanal, nicht die alleinige Wahrheit.
+- Server-Backups sind Wiederherstellungspunkte als Dump-Dateien, kein Live-DB-Sync.
+
+## Disposable Demo Lokal Ausfuehren
 
 Eine frische PostgreSQL-16-Testdatenbank per Docker starten:
 
@@ -272,6 +344,8 @@ Das Skript spielt Migration und Seeds ein, prueft `status`, `check`, `brief`, `i
 - `templates/`: Jinja2-Templates fuer Obsidian-Markdown
 - `agent_hub/`: Python-Code fuer Datenbankzugriff, Markdown-Rendering, Exporter und CLI
 - `scripts/`: lokale Smoke- und Wartungsskripte
+- `docker-compose.yml`: dauerhafte lokale PostgreSQL-Betriebsdatenbank
+- `.env.example`: Vorlage fuer lokale, nicht committete Konfiguration
 - `tests/`: schnelle lokale Unit-Tests
 - `ROADMAP.md`: priorisierte v0-Folgearbeiten
 - `import_allowlist.example.yml`: Beispiel-Allowlist fuer sicheren Import
