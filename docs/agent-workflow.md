@@ -99,6 +99,24 @@ scripts/project_remember.sh \
 `project_remember.sh` never creates projects. If a project is missing, add it
 through reviewed seed or migration changes.
 
+## Relating Memory
+
+Use relations when a reviewed memory should become part of the project graph:
+
+```bash
+agent-hub relate \
+  --project <project-slug> \
+  --source-type fact \
+  --source-id <fact-id> \
+  --relation supports \
+  --target-type decision \
+  --target-id <decision-id>
+```
+
+Relations are explicit CLI actions, not automatic guesses. Prefer them for
+useful review links: facts supporting decisions, decisions mitigating risks,
+reports referencing facts, or decisions answering open questions.
+
 ## Domain Profile: Websites
 
 The current website project set can be loaded with:

@@ -6,11 +6,11 @@ PostgreSQL ist die operative Wahrheit: Hier liegen die normalisierten Daten, Rel
 
 ## Aktueller v0-Status
 
-- PostgreSQL-Schema und Migrationstracking sind vorhanden: `migrations/001_init.sql`, `migrations/002_schema_migrations.sql`
+- PostgreSQL-Schema, Migrationstracking und Relations-Erweiterung sind vorhanden: `migrations/001_init.sql`, `migrations/002_schema_migrations.sql`, `migrations/003_relation_agent_actions.sql`
 - Demo-Seed ist vorhanden: `seed/demo.sql`
 - Obsidian-Jinja2-Templates sind vorhanden: `templates/`
 - Minimaler Obsidian-Exporter ist vorhanden: `agent_hub/export_obsidian.py`
-- CLI-Kommandos sind vorhanden: `agent-hub migrate`, `agent-hub export`, `agent-hub status`, `agent-hub check`, `agent-hub projects`, `agent-hub brief`, `agent-hub remember`, `agent-hub import`, `agent-hub sync`
+- CLI-Kommandos sind vorhanden: `agent-hub migrate`, `agent-hub export`, `agent-hub status`, `agent-hub check`, `agent-hub projects`, `agent-hub brief`, `agent-hub remember`, `agent-hub relations`, `agent-hub relate`, `agent-hub import`, `agent-hub sync`
 - CLI-Platzhalter sind vorhanden, aber noch nicht implementiert: `init`
 
 ## Voraussetzungen
@@ -121,7 +121,7 @@ scripts/agent_preflight.sh
 
 ## Schema-Migrationen
 
-Migrationen liegen in `migrations/` und werden in Dateireihenfolge angewendet. `migrations/001_init.sql` bleibt die unveraenderte Baseline; `migrations/002_schema_migrations.sql` fuehrt die Tabelle `schema_migrations` ein.
+Migrationen liegen in `migrations/` und werden in Dateireihenfolge angewendet. `migrations/001_init.sql` bleibt die unveraenderte Baseline; `migrations/002_schema_migrations.sql` fuehrt die Tabelle `schema_migrations` ein; `migrations/003_relation_agent_actions.sql` erlaubt Relations auf Agenten-Auditzeilen.
 
 Status anzeigen:
 
@@ -266,8 +266,12 @@ Beim erneuten Export bleibt der Inhalt innerhalb des Human-Notes-Blocks erhalten
 - `agent-hub projects`: listet aktive Projekte fuer agentische Arbeit
 - `agent-hub projects --type website`: filtert aktive Projekte nach `projects.metadata.project_type`
 - `agent-hub brief --project <slug>`: gibt einen kompakten Projektbrief fuer Agenten aus
+- `agent-hub brief --project <slug> --with-relations`: ergaenzt den Projektbrief um kuratierte Relations
 - `agent-hub remember --project <slug> --type <type> --text <text>`: speichert eine gepruefte Erinnerung
+- `agent-hub relations --project <slug>`: listet den belegbaren Projektgraphen
+- `agent-hub relate --project <slug> ...`: verknuepft zwei existierende Hub-Objekte kuratiert
 - `agent-hub import --path <file-or-directory>`: importiert allowlisted Obsidian-Markdown nach Postgres
+- `agent-hub sync --path <file-or-directory> --plan|--apply`: plant oder wendet allowlisted Obsidian-Sync an
 - `agent-hub init`: noch nicht implementiert
 
 ## Codex-/Hermes-Gedaechtnis
@@ -319,6 +323,23 @@ Erlaubte Typen fuer `remember`:
 
 Wichtig: Erinnerungen sind fuer kuratierte, nicht-sensitive Projektarbeit gedacht. Passwoerter, rohe Rechnungsdaten, private Kundendaten und ungepruefte Behauptungen gehoeren nicht in den Hub.
 
+Relations machen daraus einen belegbaren Projektgraphen. Sie bleiben explizite, kuratierte CLI-Aktionen und werden nicht automatisch geraten:
+
+```bash
+agent-hub relate \
+  --project commcats-de \
+  --source-type fact \
+  --source-id <fact-id> \
+  --relation supports \
+  --target-type decision \
+  --target-id <decision-id>
+
+agent-hub relations --project commcats-de
+agent-hub brief --project commcats-de --with-relations
+```
+
+Erlaubte Relationstypen sind `supports`, `contradicts`, `supersedes`, `mitigates`, `answers`, `raises`, `references`, `derived_from`, `blocks` und `depends_on`. Typische Muster: Fact supports Decision, Decision mitigates Risk, Report references Fact, Decision answers Open Question.
+
 Ein nicht-sensibler Start-Seed fuer die Website-Projekte liegt in:
 
 ```txt
@@ -357,6 +378,7 @@ Bewertung:
 - offene Fragen sind eine Warning
 - offene Migrationen sind eine Warning
 - kaputte polymorphe Relationen sind ein Error
+- unbekannte Relationstypen sind eine Warning
 - fehlgeschlagene oder veraenderte Migrationen sind ein Error
 - eine nicht erreichbare Datenbank ist ein Error
 
@@ -445,5 +467,6 @@ Das Skript spielt Migration und Seeds ein, prueft `status`, `check`, `brief`, `i
 ## Naechste Sinnvolle Schritte
 
 - Konfliktauflösung nach Review fuer `agent-hub sync`
+- bessere Reports auf Basis des Projektgraphs, z. B. Tagesreport, Uebergabereport und Entscheidungs-/Risikoueberblick
 - defensiver Watch-/Cron-Modus nach stabiler Plan-/Apply-Nutzung
 - Template-/Frontmatter-Tests erweitern

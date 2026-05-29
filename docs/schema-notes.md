@@ -18,7 +18,7 @@
 
 ## Migration-Modell
 
-`migrations/001_init.sql` bleibt die Baseline und wird nicht nachtraeglich veraendert. `migrations/002_schema_migrations.sql` fuehrt `schema_migrations` ein, damit spaetere Schemaaenderungen nachvollziehbar in Dateireihenfolge angewendet werden koennen.
+`migrations/001_init.sql` bleibt die Baseline und wird nicht nachtraeglich veraendert. `migrations/002_schema_migrations.sql` fuehrt `schema_migrations` ein, damit spaetere Schemaaenderungen nachvollziehbar in Dateireihenfolge angewendet werden koennen. `migrations/003_relation_agent_actions.sql` erweitert die Relations-Constraints um `agent_action`, damit Auditzeilen im Projektgraph referenzierbar sind.
 
 Der CLI-Runner `agent-hub migrate --apply` registriert bestehende Datenbanken nachtraeglich: Wenn das Basisschema bereits existiert, wird `001_init.sql` als angewendet eingetragen und nur das Tracking ergaenzt. `agent-hub migrate --status`, `agent-hub status` und `agent-hub check` zeigen offene, fehlgeschlagene oder checksum-geaenderte Migrationen an.
 
@@ -48,8 +48,24 @@ V1 nutzt bewusst keine neue Spalte fuer Projekttypen. Der Typ liegt in `projects
 - `open_question`
 - `risk`
 - `report`
+- `agent_action`
 
 Die Kombination aus `source_type`, `source_id`, `relation_type`, `target_type`, `target_id` ist eindeutig. Dadurch können z. B. Dokumente Fakten belegen, Entscheidungen Risiken entschärfen oder Reports offene Fragen zusammenfassen, ohne für jede Beziehung eine eigene Join-Tabelle anzulegen.
+
+V1.3 nutzt ein kontrolliertes, aber noch nicht als DB-Constraint festgeschriebenes Relationstyp-Vokabular:
+
+- `supports`
+- `contradicts`
+- `supersedes`
+- `mitigates`
+- `answers`
+- `raises`
+- `references`
+- `derived_from`
+- `blocks`
+- `depends_on`
+
+`agent-hub relate` validiert Objekttypen, Relationstypen, Objekt-Existenz und Projektzuordnung vor dem Write. `agent-hub relations` und `agent-hub brief --with-relations` machen den Projektgraphen lesbar. `agent-hub check` bleibt hart bei gebrochenen Objektverweisen und warnt bei Relationstypen ausserhalb des kontrollierten Vokabulars.
 
 ## Audit-Modell
 
