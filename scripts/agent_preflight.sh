@@ -77,17 +77,17 @@ if echo "$migration_status" | grep -Eq ': (pending|failed|changed)$'; then
 fi
 
 echo
-echo "== Latest Backup =="
+echo "== Backup Health =="
 set +e
-"$ROOT_DIR/scripts/db_backup_latest.sh" --require
+"$ROOT_DIR/scripts/db_backup_health.sh" --require
 backup_code=$?
 set -e
 if [[ "$backup_code" -ne 0 ]]; then
   if [[ "$backup_code" -eq 1 ]]; then
-    echo "Data error: latest backup checksum failed." >&2
+    echo "Data error: backup checksum or remote parity failed." >&2
     exit 1
   fi
-  echo "Operational error: no verified local backup is available." >&2
+  echo "Operational error: backup health is not ready." >&2
   exit 2
 fi
 

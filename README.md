@@ -21,6 +21,7 @@ PostgreSQL ist die operative Wahrheit: Hier liegen die normalisierten Daten, Rel
   - `DATABASE_URL`
   - `OBSIDIAN_EXPORT_DIR`
   - optional `AGENT_HUB_BACKUP_DIR`
+  - optional `AGENT_HUB_BACKUP_MAX_AGE_HOURS`
   - optional `AGENT_HUB_BACKUP_REMOTE`
 
 Beispielwerte fuer die dauerhafte lokale Hub-DB:
@@ -63,7 +64,7 @@ Status und Readiness pruefen:
 scripts/db_status.sh
 ```
 
-Das zeigt Container, Volume, Port, Healthcheck, den neuesten lokalen Backup-Stand, `agent-hub status` und einen kurzen `commcats-de`-Brief.
+Das zeigt Container, Volume, Port, Healthcheck, Backup-Health, `agent-hub status` und einen kurzen `commcats-de`-Brief.
 
 Backup erstellen:
 
@@ -83,6 +84,14 @@ Neuesten lokalen Backup-Stand anzeigen:
 ```bash
 scripts/db_backup_latest.sh
 ```
+
+Backup-Health pruefen:
+
+```bash
+scripts/db_backup_health.sh
+```
+
+Der Healthcheck prueft den neuesten lokalen Dump, SHA256, Backup-Alter, den macOS LaunchAgent-Status und, wenn `AGENT_HUB_BACKUP_REMOTE` gesetzt ist, ob der gleiche Dump auf dem Remote-Ziel liegt und dieselbe Pruefsumme hat. Standardmaessig gelten Backups nach 36 Stunden als stale; lokal kann das mit `AGENT_HUB_BACKUP_MAX_AGE_HOURS` geaendert werden.
 
 Backup verifizieren:
 
@@ -118,7 +127,7 @@ scripts/db_verify_backup.sh
 scripts/agent_preflight.sh
 ```
 
-`scripts/agent_preflight.sh` ist read-only. Es prueft Docker/Compose, den laufenden Durable-DB-Container, offene oder fehlgeschlagene Migrationen, einen verifizierten lokalen Backup-Stand, `agent-hub status`, `agent-hub check` und Baseline-Projekt-Briefs.
+`scripts/agent_preflight.sh` ist read-only. Es prueft Docker/Compose, den laufenden Durable-DB-Container, offene oder fehlgeschlagene Migrationen, Backup-Health mit Remote-Paritaet, `agent-hub status`, `agent-hub check` und Baseline-Projekt-Briefs.
 
 ## Schema-Migrationen
 
