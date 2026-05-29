@@ -15,7 +15,8 @@ Load operational readiness, project memory, daily activity, and focused context:
 ```bash
 /Users/alexandersmyslowski/Projects/central-agent-data-hub/scripts/agent_start.sh \
   --project <project-slug> \
-  --query "<current work focus>"
+  --query "<current work focus>" \
+  --review
 ```
 
 If there is no focused query yet:
@@ -31,7 +32,8 @@ Produce a finish summary and handoff:
 
 ```bash
 /Users/alexandersmyslowski/Projects/central-agent-data-hub/scripts/agent_finish.sh \
-  --project <project-slug>
+  --project <project-slug> \
+  --review
 ```
 
 For a reviewed memory candidate, dry-run first:

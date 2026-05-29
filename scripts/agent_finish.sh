@@ -6,10 +6,11 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/db_common.sh"
 
 usage() {
   cat <<'EOF'
-Usage: scripts/agent_finish.sh --project <slug> [--since <duration|date>] [--write-report] [--limit <n>]
+Usage: scripts/agent_finish.sh --project <slug> [--since <duration|date>] [--write-report] [--limit <n>] [--review] [--export] [--backup]
 
 Finish wrapper for Codex/Hermes work. It runs read-only operational preflight,
-prints a daily summary and handoff, and optionally stores a daily report.
+prints a daily summary and handoff, and optionally stores a daily report,
+exports Obsidian Markdown, and creates a verified backup.
 
 This script does not write facts, decisions, risks, or questions. Use
 scripts/project_remember.sh for reviewed, non-sensitive memory writeback.
@@ -19,6 +20,9 @@ Options:
   --since <value>    Duration like 24h, 7d, 2w or ISO date. Default: 24h.
   --write-report     Store the daily summary as a published report row.
   --limit <n>        Maximum rows per section, default 8.
+  --review           Also print decision/risk/open-question review.
+  --export           Export current Hub memory to Obsidian Markdown after finish.
+  --backup           Create local/remote DB backup after finish.
 
 Exit codes:
   0  finish summary completed
@@ -31,6 +35,9 @@ PROJECT=""
 SINCE="24h"
 WRITE_REPORT=0
 LIMIT=8
+REVIEW=0
+EXPORT=0
+BACKUP=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -44,6 +51,18 @@ while [[ $# -gt 0 ]]; do
       ;;
     --write-report)
       WRITE_REPORT=1
+      shift
+      ;;
+    --review)
+      REVIEW=1
+      shift
+      ;;
+    --export)
+      EXPORT=1
+      shift
+      ;;
+    --backup)
+      BACKUP=1
       shift
       ;;
     --limit)
@@ -96,11 +115,51 @@ if ! run_agent_hub handoff --project "$PROJECT" --since "$SINCE" --limit "$LIMIT
   exit 1
 fi
 
+if [[ "$REVIEW" -eq 1 ]]; then
+  echo
+  echo "== Review: $PROJECT =="
+  if ! run_agent_hub review --project "$PROJECT" --limit "$LIMIT"; then
+    echo "Data error: review failed for '$PROJECT'." >&2
+    exit 1
+  fi
+fi
+
 echo
-echo "Memory writeback reminder:"
-echo "- Store only reviewed, non-sensitive memory."
-echo "- Facts require --source."
-echo "- Prefer dry-run when unsure:"
-echo "  scripts/project_remember.sh --project $PROJECT --type fact --text '<reviewed memory>' --source '<source>' --dry-run"
+echo "== Memory Triage =="
+echo "Store less, but better. Write back only reviewed memory that will help a later agent."
+echo
+echo "Usually worth remembering:"
+echo "- Fact: stable, checked information with source and confidence."
+echo "- Decision: chosen direction with rationale or tradeoff."
+echo "- Risk: active risk with impact or mitigation."
+echo "- Open question: real blocker or unknown that needs a later answer."
+echo "- Report: compact handoff, audit, daily summary, or review note."
+echo
+echo "Usually not worth remembering:"
+echo "- Raw chat history, temporary guesses, transient todo noise, private data, credentials, raw invoices."
+echo
+echo "Suggested dry-runs:"
+echo "  scripts/project_remember.sh --project $PROJECT --type fact --text '<reviewed fact>' --source '<source>' --confidence 0.9 --dry-run"
+echo "  scripts/project_remember.sh --project $PROJECT --type decision --text '<decision>' --rationale '<why>' --dry-run"
+echo "  scripts/project_remember.sh --project $PROJECT --type open-question --text '<question>' --dry-run"
+
+if [[ "$EXPORT" -eq 1 ]]; then
+  echo
+  echo "== Obsidian Export =="
+  if ! run_agent_hub export; then
+    echo "Operational error: Obsidian export failed." >&2
+    exit 2
+  fi
+fi
+
+if [[ "$BACKUP" -eq 1 ]]; then
+  echo
+  echo "== Database Backup =="
+  if ! "$ROOT_DIR/scripts/db_backup.sh"; then
+    echo "Operational error: database backup failed." >&2
+    exit 2
+  fi
+fi
+
 echo
 echo "Agent finish result: ready for reviewed writeback or handoff"

@@ -6,13 +6,13 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/db_common.sh"
 
 usage() {
   cat <<'EOF'
-Usage: scripts/agent_start.sh --project <slug> [--query <focus>] [--limit <n>]
+Usage: scripts/agent_start.sh --project <slug> [--query <focus>] [--limit <n>] [--review]
        scripts/agent_start.sh --all-projects [--limit <n>]
        scripts/agent_start.sh --all-websites [--limit <n>]
 
 Read-only start wrapper for Codex/Hermes work. It runs the operational
 preflight through project_context.sh, loads the daily project context, and
-optionally prints a focused context pack.
+optionally prints a focused context pack and project review.
 
 Options:
   --project <slug>   Project slug to load.
@@ -20,6 +20,7 @@ Options:
   --all-projects     Load all active projects.
   --all-websites     Domain shortcut for commcats-de, the-one-catering, lamour.
   --limit <n>        Maximum rows per section, default 8.
+  --review           Also print the decision/risk/open-question review.
 
 Exit codes:
   0  start context loaded
@@ -33,6 +34,7 @@ QUERY=""
 ALL_PROJECTS=0
 ALL_WEBSITES=0
 LIMIT=8
+REVIEW=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -55,6 +57,10 @@ while [[ $# -gt 0 ]]; do
     --limit)
       LIMIT="${2:-}"
       shift 2
+      ;;
+    --review)
+      REVIEW=1
+      shift
       ;;
     -h|--help)
       usage
@@ -90,6 +96,11 @@ if [[ -n "$QUERY" && -z "$PROJECT" ]]; then
   exit 2
 fi
 
+if [[ "$REVIEW" -eq 1 && -z "$PROJECT" ]]; then
+  echo "Error: --review requires --project." >&2
+  exit 2
+fi
+
 if ! [[ "$LIMIT" =~ ^[0-9]+$ ]] || (( LIMIT < 1 )); then
   echo "Error: --limit must be a positive integer." >&2
   exit 2
@@ -112,9 +123,23 @@ if [[ -n "$QUERY" ]]; then
   run_agent_hub context --project "$PROJECT" --query "$QUERY" --limit "$LIMIT"
 fi
 
+if [[ "$REVIEW" -eq 1 ]]; then
+  echo
+  echo "== Project Review: $PROJECT =="
+  run_agent_hub review --project "$PROJECT" --limit "$LIMIT"
+fi
+
+echo
+echo "== Agent Working Contract =="
+echo "- Work only inside the selected project context."
+echo "- Do not transfer assumptions from another project without explicit evidence."
+echo "- Do not store secrets, credentials, private customer data, or raw invoice data."
+echo "- Treat uncertain information as an open question, not as a fact."
+echo "- Prefer one focused task, one reviewed outcome, and one clean handoff."
+
 echo
 echo "Agent start result: ready"
 if [[ -n "$PROJECT" ]]; then
   echo "Recommended finish:"
-  echo "  scripts/agent_finish.sh --project $PROJECT"
+  echo "  scripts/agent_finish.sh --project $PROJECT --review"
 fi

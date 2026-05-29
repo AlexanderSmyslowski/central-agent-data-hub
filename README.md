@@ -168,9 +168,10 @@ Vor Projektarbeiten nutzen Agenten bevorzugt den Start-Wrapper:
 ```bash
 scripts/agent_start.sh --project <project-slug>
 scripts/agent_start.sh --project <project-slug> --query "<aktueller arbeitsfokus>"
+scripts/agent_start.sh --project <project-slug> --query "<aktueller arbeitsfokus>" --review
 ```
 
-Der Start-Wrapper fuehrt Preflight, Projektbrief, Daily Activity und optional ein fokussiertes Kontextpaket aus.
+Der Start-Wrapper fuehrt Preflight, Projektbrief, Daily Activity und optional ein fokussiertes Kontextpaket aus. Mit `--review` zeigt er zusaetzlich die Entscheidungs-/Risiko-/Fragenuebersicht. Am Ende druckt er den verbindlichen Arbeitsvertrag: Projektkontext nicht vermischen, keine sensiblen Daten speichern, Unsicherheit als offene Frage behandeln.
 
 Die niedrigeren Bausteine bleiben verfuegbar:
 
@@ -187,9 +188,13 @@ Nach abgeschlossener Arbeit nutzen Agenten den Finish-Wrapper:
 
 ```bash
 scripts/agent_finish.sh --project <project-slug>
+scripts/agent_finish.sh --project <project-slug> --review
+scripts/agent_finish.sh --project <project-slug> --review --export --backup
 ```
 
-Der Finish-Wrapper erzeugt Daily Summary und Handoff. Mit `--write-report` kann explizit ein Daily-Report in Postgres gespeichert werden.
+Der Finish-Wrapper erzeugt Daily Summary und Handoff. Mit `--review` zeigt er die Abschlussuebersicht fuer Entscheidungen, Risiken und offene Fragen. Mit `--write-report` kann explizit ein Daily-Report in Postgres gespeichert werden. Mit `--export` und `--backup` werden die menschenlesbare Obsidian-Projektion und ein lokales/remote Backup nachgezogen.
+
+Der Finish-Wrapper ist zugleich eine Memory-Triage: Er unterscheidet Facts, Decisions, Risks, Open Questions und Reports von temporaerem Arbeitsrauschen. Dadurch soll der Hub taeglich nuetzlicher werden, ohne zum Roh-Chatlog zu werden.
 
 Gepruefte, nicht-sensitive Erinnerungen werden danach kontrolliert geschrieben:
 

@@ -8,7 +8,8 @@ Use the shared Hub before and after substantial project work:
 
 ```bash
 /Users/alexandersmyslowski/Projects/central-agent-data-hub/scripts/agent_start.sh --project central-agent-data-hub --query "<current focus>"
-/Users/alexandersmyslowski/Projects/central-agent-data-hub/scripts/agent_finish.sh --project central-agent-data-hub
+/Users/alexandersmyslowski/Projects/central-agent-data-hub/scripts/agent_start.sh --project central-agent-data-hub --query "<current focus>" --review
+/Users/alexandersmyslowski/Projects/central-agent-data-hub/scripts/agent_finish.sh --project central-agent-data-hub --review
 ```
 
 For reviewed, non-sensitive memory candidates, dry-run first:

@@ -21,6 +21,16 @@ If no focused query is known yet:
 scripts/agent_start.sh --project <project-slug>
 ```
 
+For higher-risk or longer work, include the project review:
+
+```bash
+scripts/agent_start.sh --project <project-slug> --query "<current work focus>" --review
+```
+
+The start helper prints the working contract after loading context: keep the
+project boundary explicit, do not transfer assumptions between projects, do not
+store sensitive data, and treat uncertainty as an open question.
+
 The lower-level project context helper remains available:
 
 ```bash
@@ -95,6 +105,16 @@ Run the finish helper to produce a final daily summary and handoff:
 ```bash
 scripts/agent_finish.sh --project <project-slug>
 ```
+
+For stronger closure, include review, export, and backup:
+
+```bash
+scripts/agent_finish.sh --project <project-slug> --review --export --backup
+```
+
+The finish helper prints a memory triage before any manual writeback. It should
+help the agent decide whether the outcome is a fact, decision, risk, open
+question, report, or just temporary working noise that should not be stored.
 
 Write back only reviewed, non-sensitive memory:
 

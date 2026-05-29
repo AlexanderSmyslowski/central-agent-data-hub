@@ -108,7 +108,8 @@ Use the shared Hub before and after substantial project work:
 
 \`\`\`bash
 $ROOT_DIR/scripts/agent_start.sh --project $PROJECT --query "<current focus>"
-$ROOT_DIR/scripts/agent_finish.sh --project $PROJECT
+$ROOT_DIR/scripts/agent_start.sh --project $PROJECT --query "<current focus>" --review
+$ROOT_DIR/scripts/agent_finish.sh --project $PROJECT --review
 \`\`\`
 
 For reviewed, non-sensitive memory candidates, dry-run first:
