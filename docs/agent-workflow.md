@@ -31,6 +31,17 @@ The start helper prints the working contract after loading context: keep the
 project boundary explicit, do not transfer assumptions between projects, do not
 store sensitive data, and treat uncertainty as an open question.
 
+For a single-project start, the helper now prefers the compiled memory:
+
+```bash
+agent-hub compile --project <project-slug>
+```
+
+Compiled memory is the token-efficient entrypoint for agents. It compresses the
+current state, decisions, risks, open questions, important relations, useful
+reports, and suggested next steps into one short working brief. Use
+`agent-hub context` only when a specific focus query needs extra retrieval.
+
 The lower-level project context helper remains available:
 
 ```bash
@@ -96,7 +107,19 @@ agent-hub daily --project <project-slug> --since 24h --write-report
 agent-hub handoff --project <project-slug> --since 7d
 agent-hub review --project <project-slug>
 agent-hub search --project <project-slug> --query "<topic>"
+agent-hub compile --project <project-slug>
 ```
+
+## Human Wiki Projection
+
+`agent-hub export` writes the human-readable Markdown projection. It keeps
+Human Notes stable, creates compact project overview files under `Compiled/`,
+and turns curated Hub relations into Obsidian Wikilinks in `Linked Memory`
+sections.
+
+Obsidian is for reading, review, graph navigation, and human notes. PostgreSQL
+remains the binding data source; structured changes flow back only through the
+controlled import or writeback paths.
 
 ## After Work
 

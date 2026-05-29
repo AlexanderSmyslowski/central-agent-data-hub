@@ -11,6 +11,7 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
 
 2. Agentic work workflow
    - Prefer `scripts/agent_start.sh` before substantial project work.
+   - Prefer compact `agent-hub compile` output as the first agent context for single-project work.
    - Prefer `scripts/agent_finish.sh` after substantial project work.
    - Use `scripts/agent_start.sh --review` for longer or riskier work.
    - Use `scripts/agent_finish.sh --review --export --backup` when a session should end with human-readable projection and verified backup.
@@ -31,6 +32,7 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
 4. Relations workflow and project graph
    - Use `agent-hub relate` for curated links between facts, decisions, risks, questions, reports, and audit actions.
    - Use `agent-hub relations` and `agent-hub brief --with-relations` for reviewable project graph context.
+   - Use Obsidian `Linked Memory` sections and `Compiled/` project pages as the human-readable graph projection.
    - Keep relation types controlled in CLI/checks before hardening them into database constraints.
 
 5. Daily workflow, handoff, review, and retrieval
@@ -68,6 +70,7 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
 
 11. Obsidian projection hardening
    - Keep Human Notes stable across repeated exports.
+   - Keep export filenames stable and build Wikilinks from the export index, never from guessed paths.
    - Add tests for template rendering and frontmatter once template shape changes again.
 
 ## Domain Profile: Websites

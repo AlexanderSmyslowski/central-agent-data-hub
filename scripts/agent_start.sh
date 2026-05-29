@@ -11,8 +11,8 @@ Usage: scripts/agent_start.sh --project <slug> [--query <focus>] [--limit <n>] [
        scripts/agent_start.sh --all-websites [--limit <n>]
 
 Read-only start wrapper for Codex/Hermes work. It runs the operational
-preflight through project_context.sh, loads the daily project context, and
-optionally prints a focused context pack and project review.
+preflight through project_context.sh, then prefers a compact compiled project
+memory before optional focused context and project review.
 
 Options:
   --project <slug>   Project slug to load.
@@ -106,16 +106,20 @@ if ! [[ "$LIMIT" =~ ^[0-9]+$ ]] || (( LIMIT < 1 )); then
   exit 2
 fi
 
-context_args=(--limit "$LIMIT" --daily)
 if [[ -n "$PROJECT" ]]; then
-  context_args=(--project "$PROJECT" "${context_args[@]}")
+  "$ROOT_DIR/scripts/agent_preflight.sh"
+  echo
+  echo "== Compiled Project Memory: $PROJECT =="
+  run_agent_hub compile --project "$PROJECT" --limit "$LIMIT"
 elif [[ "$ALL_PROJECTS" -eq 1 ]]; then
+  context_args=(--limit "$LIMIT")
   context_args=(--all-projects "${context_args[@]}")
+  "$ROOT_DIR/scripts/project_context.sh" "${context_args[@]}"
 else
+  context_args=(--limit "$LIMIT")
   context_args=(--all-websites "${context_args[@]}")
+  "$ROOT_DIR/scripts/project_context.sh" "${context_args[@]}"
 fi
-
-"$ROOT_DIR/scripts/project_context.sh" "${context_args[@]}"
 
 if [[ -n "$QUERY" ]]; then
   echo

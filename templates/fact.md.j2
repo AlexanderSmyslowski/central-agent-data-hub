@@ -29,6 +29,14 @@ _No fact statement exported._
 ```
 {% endif %}
 
+{% if linked_memory is defined and linked_memory %}
+## Linked Memory
+
+{% for link in linked_memory %}
+{{ link }}
+{% endfor %}
+{% endif %}
+
 <!-- AUTO-GENERATED:END -->
 
 ## Human Notes

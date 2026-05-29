@@ -348,6 +348,7 @@ Beim erneuten Export bleibt der Inhalt innerhalb des Human-Notes-Blocks erhalten
 - `agent-hub projects --type website`: filtert aktive Projekte nach `projects.metadata.project_type`
 - `agent-hub brief --project <slug>`: gibt einen kompakten Projektbrief fuer Agenten aus
 - `agent-hub brief --project <slug> --with-relations`: ergaenzt den Projektbrief um kuratierte Relations
+- `agent-hub compile --project <slug>`: erzeugt einen sehr kompakten, token-sparenden Arbeitsstand fuer Agentenstarts
 - `agent-hub daily --project <slug>`: zeigt neue Fakten, Entscheidungen, Risiken, Fragen, Relations, Agent Actions und Sync Events seit einem Zeitraum
 - `agent-hub daily --project <slug> --write-report`: speichert die Tagesverdichtung als `reports`-Zeile mit `report_type='daily'`
 - `agent-hub handoff --project <slug>`: erzeugt eine Uebergabe mit Entscheidungen, Risiken, offenen Punkten, Kontext und naechsten Schritten
@@ -364,16 +365,20 @@ Beim erneuten Export bleibt der Inhalt innerhalb des Human-Notes-Blocks erhalten
 
 ## Codex-/Hermes-Gedaechtnis
 
-Die `projects`-, `brief`-, `daily`-, `handoff`-, `review`-, `search`-, `context`- und `remember`-Kommandos bilden den kontrollierten Zugriffspfad fuer Codex und Hermes: erst lesen und verdichten, dann nur kuratiert schreiben.
+Die `projects`-, `brief`-, `compile`-, `daily`-, `handoff`-, `review`-, `search`-, `context`- und `remember`-Kommandos bilden den kontrollierten Zugriffspfad fuer Codex und Hermes: erst lesen und verdichten, dann nur kuratiert schreiben.
 
 Vor groesseren Arbeiten:
 
 ```bash
 agent-hub projects
-scripts/project_context.sh --project <project-slug>
-scripts/project_context.sh --project <project-slug> --daily
-agent-hub context --project <project-slug> --query "<aktueller arbeitsfokus>"
+scripts/agent_start.sh --project <project-slug> --query "<aktueller arbeitsfokus>" --review
 ```
+
+`agent_start.sh` fuehrt zuerst den Preflight aus und zeigt dann bevorzugt
+`agent-hub compile`: einen kompakten Arbeitsstand mit aktuellem Zustand,
+Entscheidungen, Risiken, offenen Fragen, wichtigen Relations und naechsten
+Schritten. Bei einer Fokusfrage wird danach zusaetzlich `agent-hub context`
+ausgegeben.
 
 Website ist das erste Domain-Profil im Hub. Diese Website-Projekte haben unterschiedliche Bearbeitungsstaende:
 
@@ -452,6 +457,26 @@ agent-hub review --project commcats-de
 agent-hub search --project commcats-de --query Alfahosting
 agent-hub context --project the-one-catering --query migration
 ```
+
+Fuer einen besonders kompakten Agentenstart:
+
+```bash
+agent-hub compile --project central-agent-data-hub
+agent-hub compile --project central-agent-data-hub --format json
+```
+
+## Obsidian-Projektgraph
+
+`agent-hub export` erzeugt neben den normalen Memory-Dateien auch kompakte
+Projektuebersichten unter `Compiled/`. Bestehende Dateinamen bleiben stabil,
+damit Human Notes nicht gefaehrdet werden.
+
+Kuratierte Relations werden beim Export als Obsidian-Wikilinks in den Abschnitt
+`Linked Memory` geschrieben. Dadurch kann Obsidian Zusammenhaenge im Graphen
+anzeigen, waehrend PostgreSQL weiterhin der verbindliche Datenstand bleibt.
+
+Wichtig: Links werden aus dem aktuellen Export-Index gebaut. Der Export raet
+keine Dateinamen und erfindet keine Relations.
 
 Ein nicht-sensibler Start-Seed fuer die Website-Projekte liegt in:
 

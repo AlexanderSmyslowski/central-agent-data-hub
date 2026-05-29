@@ -1091,6 +1091,69 @@ def fetch_memory_quality_warnings(cur) -> list[dict[str, object]]:
     )
     warnings.extend(cur.fetchall())
 
+    long_text_checks = (
+        ("fact", "facts", "statement", "statement"),
+        ("decision", "decisions", "decision", "decision"),
+        ("risk", "risks", "title", "title"),
+        ("open_question", "open_questions", "question", "question"),
+        ("report", "reports", "title", "title"),
+    )
+    for memory_type, table, text_column, title_column in long_text_checks:
+        cur.execute(
+            f"""
+            SELECT id, %s AS type, {title_column} AS title,
+                   'very long memory entry; consider distilling' AS issue
+            FROM {table}
+            WHERE status <> 'archived'
+              AND length(COALESCE({text_column}, '')) > 1200
+            ORDER BY updated_at DESC, created_at DESC, id
+            LIMIT 20
+            """,
+            (memory_type,),
+        )
+        warnings.extend(cur.fetchall())
+
+    cur.execute(
+        """
+        SELECT id, 'fact' AS type, statement AS title,
+               'possible duplicate fact' AS issue
+        FROM facts
+        WHERE status <> 'archived'
+          AND lower(BTRIM(statement)) IN (
+            SELECT lower(BTRIM(statement))
+            FROM facts
+            WHERE status <> 'archived'
+            GROUP BY lower(BTRIM(statement))
+            HAVING count(*) > 1
+          )
+        ORDER BY updated_at DESC, created_at DESC, id
+        LIMIT 20
+        """
+    )
+    warnings.extend(cur.fetchall())
+
+    cur.execute(
+        """
+        SELECT oq.id, 'open_question' AS type, oq.question AS title,
+               'possibly answered by a decision' AS issue
+        FROM open_questions oq
+        WHERE oq.status NOT IN ('answered', 'closed', 'archived')
+          AND EXISTS (
+            SELECT 1
+            FROM relations r
+            WHERE r.relation_type = 'answers'
+              AND (
+                (r.source_type = 'decision' AND r.target_type = 'open_question' AND r.target_id = oq.id)
+                OR
+                (r.target_type = 'decision' AND r.source_type = 'open_question' AND r.source_id = oq.id)
+              )
+          )
+        ORDER BY oq.updated_at DESC, oq.created_at DESC, oq.id
+        LIMIT 20
+        """
+    )
+    warnings.extend(cur.fetchall())
+
     return warnings
 
 
@@ -1398,6 +1461,116 @@ def recommended_steps_markdown(payload: dict[str, object]) -> str:
         else:
             steps.append(f"- review risk: {truncate(row['title'], 120)}")
     return "\n".join(steps) if steps else "- none"
+
+
+def fetch_project_counts(cur, project_id: object) -> dict[str, int]:
+    cur.execute(
+        """
+        SELECT
+          (SELECT count(*) FROM documents WHERE project_id = %(project_id)s) AS documents,
+          (SELECT count(*) FROM facts WHERE project_id = %(project_id)s AND status <> 'archived') AS facts,
+          (SELECT count(*) FROM decisions WHERE project_id = %(project_id)s AND status <> 'archived') AS decisions,
+          (SELECT count(*) FROM open_questions WHERE project_id = %(project_id)s AND status NOT IN ('closed', 'archived')) AS open_questions,
+          (SELECT count(*) FROM risks WHERE project_id = %(project_id)s AND status NOT IN ('resolved', 'archived')) AS risks,
+          (SELECT count(*) FROM reports WHERE project_id = %(project_id)s AND status <> 'archived') AS reports
+        """,
+        {"project_id": project_id},
+    )
+    return dict(cur.fetchone())
+
+
+def fetch_compiled_payload(
+    cur,
+    project: dict[str, object],
+    limit: int,
+) -> dict[str, object]:
+    project_id = project["id"]
+    return {
+        "project": project,
+        "counts": fetch_project_counts(cur, project_id),
+        "facts": fetch_brief_rows(
+            cur,
+            "facts",
+            project_id,
+            "id, statement, source, confidence",
+            excluded_statuses=("archived", "deprecated"),
+            limit=limit,
+        ),
+        "decisions": fetch_brief_rows(
+            cur,
+            "decisions",
+            project_id,
+            "id, decision, rationale, consequences",
+            excluded_statuses=("archived", "rejected"),
+            limit=limit,
+        ),
+        "risks": fetch_brief_rows(
+            cur,
+            "risks",
+            project_id,
+            "id, title, severity, impact, mitigation",
+            excluded_statuses=("archived", "resolved"),
+            limit=limit,
+        ),
+        "open_questions": fetch_brief_rows(
+            cur,
+            "open_questions",
+            project_id,
+            "id, question, answer",
+            excluded_statuses=("archived", "closed"),
+            limit=limit,
+        ),
+        "reports": fetch_brief_rows(
+            cur,
+            "reports",
+            project_id,
+            "id, title, report_type, summary",
+            excluded_statuses=("archived",),
+            limit=max(3, min(limit, 5)),
+        ),
+        "relations": fetch_project_relations(cur, project_id, limit=limit),
+    }
+
+
+def compiled_markdown(payload: dict[str, object]) -> str:
+    project = payload["project"]
+    counts = payload["counts"]
+    lines = [
+        f"# Compiled Project Memory: {project['name']}",
+        "",
+        f"- project: {project['slug']}",
+        f"- status: {project['status']}",
+    ]
+    if project.get("description"):
+        lines.append(f"- current_state: {truncate(project['description'], 220)}")
+    lines.extend(
+        [
+            "- memory_counts: "
+            + ", ".join(f"{key}={value}" for key, value in counts.items()),
+            "",
+            "## What Is Decided",
+            markdown_list(payload["decisions"], "decision", ("rationale",)),
+            "",
+            "## What Is Risky",
+            markdown_list(payload["risks"], "title", ("severity", "impact", "mitigation")),
+            "",
+            "## What Is Open",
+            markdown_list(payload["open_questions"], "question", ("answer",)),
+            "",
+            "## Evidence To Keep In Mind",
+            markdown_list(payload["facts"], "statement", ("source", "confidence")),
+            "",
+            "## Do Not Confuse / Important Links",
+            relations_markdown(payload["relations"]),
+            "",
+            "## Recent Useful Reports",
+            markdown_list(payload["reports"], "title", ("report_type", "summary")),
+            "",
+            "## Suggested Next Steps",
+            recommended_steps_markdown(payload),
+        ]
+    )
+    return "\n".join(lines)
 
 
 def write_daily_report(
@@ -2237,6 +2410,35 @@ def run_context(args: argparse.Namespace) -> int:
     return 0
 
 
+def run_compile(args: argparse.Namespace) -> int:
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        print("Error: DATABASE_URL is not set", file=sys.stderr)
+        return 2
+
+    try:
+        with connect() as conn:
+            with conn.cursor() as cur:
+                project = fetch_project(cur, args.project)
+                if not project:
+                    print(
+                        f"Error: project '{args.project}' not found",
+                        file=sys.stderr,
+                    )
+                    return 2
+                payload = fetch_compiled_payload(cur, project, args.limit)
+    except Exception as exc:
+        print(f"Error: {concise_error(exc)}", file=sys.stderr)
+        return 1
+
+    if args.format == "json":
+        print(json.dumps(payload, indent=2, default=json_default, ensure_ascii=False))
+        return 0
+
+    print(compiled_markdown(payload))
+    return 0
+
+
 def run_receipt(args: argparse.Namespace) -> int:
     database_url = os.environ.get("DATABASE_URL")
     if not database_url:
@@ -2951,6 +3153,25 @@ def build_parser() -> argparse.ArgumentParser:
         help="Output format.",
     )
     context_parser.set_defaults(func=run_context)
+
+    compile_parser = subparsers.add_parser(
+        "compile",
+        help="Build a compact token-efficient project memory for agent starts.",
+    )
+    compile_parser.add_argument("--project", required=True, help="Project slug.")
+    compile_parser.add_argument(
+        "--limit",
+        type=int,
+        default=5,
+        help="Maximum rows per compiled section.",
+    )
+    compile_parser.add_argument(
+        "--format",
+        choices=("markdown", "json"),
+        default="markdown",
+        help="Output format.",
+    )
+    compile_parser.set_defaults(func=run_compile)
 
     receipt_parser = subparsers.add_parser(
         "receipt",

@@ -9,6 +9,7 @@ import uuid
 import pytest
 
 from agent_hub import cli
+from agent_hub import export_obsidian
 
 
 def test_confidence_value_accepts_range_edges() -> None:
@@ -107,6 +108,17 @@ def test_projects_without_database_url_has_clear_error(monkeypatch, capsys) -> N
     assert "Traceback" not in captured.err
 
 
+def test_compile_without_database_url_has_clear_error(monkeypatch, capsys) -> None:
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+
+    code = cli.main(["compile", "--project", "central-agent-data-hub"])
+
+    captured = capsys.readouterr()
+    assert code == 2
+    assert "DATABASE_URL is not set" in captured.err
+    assert "Traceback" not in captured.err
+
+
 def test_migrate_without_database_url_has_clear_error(monkeypatch, capsys) -> None:
     monkeypatch.delenv("DATABASE_URL", raising=False)
 
@@ -191,6 +203,14 @@ def test_receipt_export_path_uses_obsidian_filename(tmp_path: Path) -> None:
     )
 
     assert path == tmp_path / "Reports" / "demo-report-00000601.md"
+
+
+def test_obsidian_wikilink_uses_relative_path_without_suffix(tmp_path: Path) -> None:
+    path = tmp_path / "Facts" / "demo-fact-00000201.md"
+
+    link = export_obsidian.wikilink(tmp_path, path, "fact: Demo | Fact")
+
+    assert link == "[[Facts/demo-fact-00000201|fact: Demo - Fact]]"
 
 
 def test_relations_requires_object_type_and_id_together(monkeypatch, capsys) -> None:

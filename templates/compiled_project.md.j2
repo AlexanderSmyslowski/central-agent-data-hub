@@ -1,0 +1,93 @@
+---
+type: compiled_project
+db_id: "{{ id | default('', true) }}"
+slug: "{{ slug }}"
+status: "{{ status | default('unknown', true) }}"
+source: "{{ source | default('database', true) }}"
+last_exported_at: "{{ last_exported_at | default('', true) }}"
+---
+
+# Compiled Project Memory: {{ name | default(slug | default('Untitled Project', true), true) }}
+
+<!-- AUTO-GENERATED:START -->
+
+{% if description is defined and description %}
+{{ description }}
+
+{% endif %}
+## Current Shape
+
+- status: {{ status | default('unknown', true) }}
+- facts: {{ facts | length }}
+- decisions: {{ decisions | length }}
+- risks: {{ risks | length }}
+- open questions: {{ open_questions | length }}
+- reports: {{ reports | length }}
+
+## What Is Decided
+
+{% if decisions %}
+{% for row in decisions %}
+- [{{ row.status | default('unknown', true) }}] {{ row.decision }}
+{% endfor %}
+{% else %}
+- none
+{% endif %}
+
+## What Is Risky
+
+{% if risks %}
+{% for row in risks %}
+- [{{ row.status | default('unknown', true) }}{% if row.severity %}/{{ row.severity }}{% endif %}] {{ row.title }}
+{% endfor %}
+{% else %}
+- none
+{% endif %}
+
+## What Is Open
+
+{% if open_questions %}
+{% for row in open_questions %}
+- [{{ row.status | default('unknown', true) }}] {{ row.question }}
+{% endfor %}
+{% else %}
+- none
+{% endif %}
+
+## Evidence To Keep In Mind
+
+{% if facts %}
+{% for row in facts %}
+- [{{ row.status | default('unknown', true) }}] {{ row.statement }}{% if row.source %} (source: {{ row.source }}){% endif %}
+{% endfor %}
+{% else %}
+- none
+{% endif %}
+
+## Recent Reports
+
+{% if reports %}
+{% for row in reports %}
+- [{{ row.report_type | default('report', true) }}] {{ row.title }}{% if row.summary %}: {{ row.summary }}{% endif %}
+{% endfor %}
+{% else %}
+- none
+{% endif %}
+
+## Linked Memory
+
+{% if linked_memory %}
+{% for link in linked_memory %}
+{{ link }}
+{% endfor %}
+{% else %}
+- none
+{% endif %}
+
+<!-- AUTO-GENERATED:END -->
+
+## Human Notes
+
+<!-- HUMAN-NOTES:START -->
+
+<!-- HUMAN-NOTES:END -->
