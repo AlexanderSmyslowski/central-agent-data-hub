@@ -44,6 +44,8 @@ PROJECT=""
 MEMORY_TYPE=""
 TEXT_VALUE=""
 DRY_RUN=0
+HAS_SOURCE=0
+HAS_RATIONALE=0
 declare -a REMEMBER_ARGS=()
 declare -a SAFETY_VALUES=()
 declare -a FIELD_NAMES=()
@@ -75,6 +77,8 @@ while [[ $# -gt 0 ]]; do
         echo "Error: $1 requires a value." >&2
         exit 2
       fi
+      [[ "$1" == "--source" ]] && HAS_SOURCE=1
+      [[ "$1" == "--rationale" ]] && HAS_RATIONALE=1
       add_option "$1" "$2"
       shift 2
       ;;
@@ -114,7 +118,6 @@ case "$MEMORY_TYPE" in
 esac
 
 SAFETY_VALUES+=("$PROJECT" "$MEMORY_TYPE" "$TEXT_VALUE")
-FIELD_NAMES+=("--project" "--type" "--text")
 
 safety_pattern='password|secret|token|api[_-]?key|BEGIN [A-Z ]*PRIVATE KEY|ftp://|ftp[[:space:]_-]*(credentials?|user|password|pass|host)|raw invoice data|private customer data|private kundendaten|private kunden|rechnungsdaten'
 
@@ -127,6 +130,17 @@ for value in "${SAFETY_VALUES[@]}"; do
   fi
 done
 shopt -u nocasematch
+
+if [[ "$MEMORY_TYPE" == "fact" && "$HAS_SOURCE" -eq 0 ]]; then
+  echo "Quality error: facts require --source for traceability." >&2
+  exit 2
+fi
+
+DECISION_RATIONALE_WARNING=0
+if [[ "$MEMORY_TYPE" == "decision" && "$HAS_RATIONALE" -eq 0 ]]; then
+  DECISION_RATIONALE_WARNING=1
+  echo "Quality warning: decisions should include --rationale." >&2
+fi
 
 if ! "$ROOT_DIR/scripts/agent_preflight.sh"; then
   echo "Operational error: agent preflight failed." >&2
@@ -143,10 +157,22 @@ fi
 if [[ "$DRY_RUN" -eq 1 ]]; then
   echo
   echo "Dry run: writeback was not executed."
+  echo "Project: $PROJECT"
+  echo "Type:    $MEMORY_TYPE"
   echo "Planned command: agent-hub remember --project '$PROJECT' --type '$MEMORY_TYPE' --text '<provided text>'"
-  if [[ "${#FIELD_NAMES[@]}" -gt 3 ]]; then
+  echo "Quality gates:"
+  if [[ "$MEMORY_TYPE" == "fact" ]]; then
+    echo "- source: ok"
+  fi
+  if [[ "$MEMORY_TYPE" == "decision" && "$DECISION_RATIONALE_WARNING" -eq 0 ]]; then
+    echo "- rationale: ok"
+  elif [[ "$MEMORY_TYPE" == "decision" ]]; then
+    echo "- rationale: warning"
+  fi
+  echo "- safety scan: ok"
+  if [[ "${#FIELD_NAMES[@]}" -gt 0 ]]; then
     echo "Forwarded option names:"
-    printf -- "- %s\n" "${FIELD_NAMES[@]:0:${#FIELD_NAMES[@]}-3}"
+    printf -- "- %s\n" "${FIELD_NAMES[@]}"
   fi
   echo "Project remember result: dry-run ok"
   exit 0
