@@ -31,6 +31,10 @@ The start helper prints the working contract after loading context: keep the
 project boundary explicit, do not transfer assumptions between projects, do not
 store sensitive data, and treat uncertainty as an open question.
 
+For single-project starts, it also prints a short "Start Decision". This
+confirms whether scoped work is ready, whether a concrete focus is missing, and
+whether review context should be loaded before risky changes.
+
 For a single-project start, the helper now prefers the compiled memory:
 
 ```bash

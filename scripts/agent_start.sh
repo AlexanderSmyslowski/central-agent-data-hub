@@ -141,6 +141,23 @@ echo "- Do not store secrets, credentials, private customer data, or raw invoice
 echo "- Treat uncertain information as an open question, not as a fact."
 echo "- Prefer one focused task, one reviewed outcome, and one clean handoff."
 
+if [[ -n "$PROJECT" ]]; then
+  echo
+  echo "== Start Decision =="
+  echo "- Status: ready for scoped project work."
+  if [[ -n "$QUERY" ]]; then
+    echo "- Focus: work on the requested query only unless the user expands scope."
+  else
+    echo "- Focus: no query was provided; ask for a concrete focus before substantial changes."
+  fi
+  if [[ "$REVIEW" -eq 1 ]]; then
+    echo "- Review loaded: treat visible risks and open questions as constraints."
+  else
+    echo "- Review not loaded: use --review before risky, broad, or write-heavy work."
+  fi
+  echo "- If the project context feels wrong or missing: stop and register or clarify the project first."
+fi
+
 echo
 echo "Agent start result: ready"
 if [[ -n "$PROJECT" ]]; then

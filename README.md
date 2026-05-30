@@ -222,7 +222,7 @@ scripts/agent_start.sh --project <project-slug> --query "<aktueller arbeitsfokus
 scripts/agent_start.sh --project <project-slug> --query "<aktueller arbeitsfokus>" --review
 ```
 
-Der Start-Wrapper fuehrt Preflight, Projektbrief, Daily Activity und optional ein fokussiertes Kontextpaket aus. Mit `--review` zeigt er zusaetzlich die Entscheidungs-/Risiko-/Fragenuebersicht. Am Ende druckt er den verbindlichen Arbeitsvertrag: Projektkontext nicht vermischen, keine sensiblen Daten speichern, Unsicherheit als offene Frage behandeln.
+Der Start-Wrapper fuehrt Preflight, Projektbrief, Daily Activity und optional ein fokussiertes Kontextpaket aus. Mit `--review` zeigt er zusaetzlich die Entscheidungs-/Risiko-/Fragenuebersicht. Am Ende druckt er den verbindlichen Arbeitsvertrag und eine kurze "Start Decision": bereit fuer scoped work, erst Fokus klaeren oder Review nachladen.
 
 Die niedrigeren Bausteine bleiben verfuegbar:
 
