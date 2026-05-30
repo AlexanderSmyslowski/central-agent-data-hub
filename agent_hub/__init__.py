@@ -6,6 +6,7 @@ __all__ = [
     "memory",
     "migrations",
     "quality",
+    "receipts",
     "relations",
     "retrieval",
     "rendering",
