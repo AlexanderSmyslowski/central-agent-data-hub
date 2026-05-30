@@ -1,7 +1,7 @@
 [project]
 name = "central-agent-data-hub"
 version = "0.1.0"
-description = "Minimal Obsidian exporter for the Central Agent Data Hub."
+description = "Verified project memory for agentic work."
 requires-python = ">=3.11"
 dependencies = [
   "jinja2",

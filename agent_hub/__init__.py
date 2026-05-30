@@ -1,3 +1,3 @@
-"""Central Agent Data Hub export helpers."""
+"""Agent Data Hub package."""
 
-__all__ = ["db", "markdown"]
+__all__ = ["db", "markdown", "rendering"]
