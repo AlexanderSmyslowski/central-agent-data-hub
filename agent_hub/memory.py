@@ -16,6 +16,12 @@ REMEMBER_TYPES = (
 )
 
 
+def json_default(value: object) -> str:
+    if hasattr(value, "isoformat"):
+        return value.isoformat()
+    return str(value)
+
+
 def ensure_project(cur, args: argparse.Namespace) -> dict[str, object]:
     cur.execute(
         """
@@ -103,7 +109,7 @@ def log_agent_action(
             object_type,
             object_id,
             json.dumps(input_payload),
-            json.dumps(output, default=str),
+            json.dumps(output, default=json_default),
             json.dumps({"created_by": "agent-hub remember"}),
         ),
     )
