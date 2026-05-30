@@ -1,8 +1,58 @@
-# Central Agent Data Hub
+# Agent Data Hub
 
-Central Agent Data Hub ist ein v0-Projekt fuer eine zentrale, agentenlesbare Daten- und Wissensbasis rund um Projekte, Agenten, Dokumente, Fakten, Entscheidungen, offene Fragen, Risiken, Berichte und Audit-/Sync-Ereignisse.
+Agent Data Hub ist verified memory for agentic work: eine lokale, Postgres-backed Shared-Memory-Schicht fuer Codex/Hermes-Agenten und Menschen.
 
-PostgreSQL ist die operative Wahrheit: Hier liegen die normalisierten Daten, Relationen und Audit-Spuren. Obsidian ist eine menschenlesbare Projektion daraus: Markdown-Dateien werden aus der Datenbank exportiert und koennen fuer Lesen, Review und manuelle Notizen genutzt werden.
+Der Hub speichert keine Roh-Chatlogs und keine Secrets. Er speichert kuratierte, projektgebundene Fakten, Entscheidungen, Risiken, offene Fragen, Reports, Relations und Agent Actions. PostgreSQL ist der verbindliche Datenstand; Obsidian ist die menschenlesbare Projektion fuer Review, Graph und Human Notes.
+
+Der technische Repo-Name bleibt `central-agent-data-hub`.
+
+## Quickstart
+
+Normale lokale Betriebs-DB starten:
+
+```bash
+scripts/db_start.sh
+```
+
+Vor substanzieller Projektarbeit:
+
+```bash
+scripts/agent_start.sh --project <project-slug> --query "<aktueller fokus>" --review
+```
+
+Nach substanzieller Projektarbeit:
+
+```bash
+scripts/agent_finish.sh --project <project-slug> --review --export --backup
+```
+
+Nur gepruefte, nicht-sensitive Memory schreiben:
+
+```bash
+scripts/project_remember.sh \
+  --project <project-slug> \
+  --type fact \
+  --text "Reviewed project memory goes here." \
+  --source "non-sensitive source or review note"
+```
+
+Menschenlesbare Projektion oeffnen:
+
+```text
+/Users/alexandersmyslowski/Projects/central-agent-data-hub/.local/obsidian-export/Compiled/Agent Data Hub.md
+```
+
+## Design Principles
+
+- Verified memory, not raw chat history.
+- Project boundaries before convenience.
+- Compact agent context, richer human projection.
+- Quality gates before writeback.
+- Receipts and backups over trust-me claims.
+- Repo-local rules and skill packs stay outside the Hub core.
+- No secrets, private customer data, raw invoice data, or deployment credentials.
+
+Before adding architecture, ask: does this make the Hub simpler, more reliable, or more useful in daily agent work?
 
 ## Aktueller v0-Status
 
@@ -12,6 +62,7 @@ PostgreSQL ist die operative Wahrheit: Hier liegen die normalisierten Daten, Rel
 - Minimaler Obsidian-Exporter ist vorhanden: `agent_hub/export_obsidian.py`
 - CLI-Kommandos sind vorhanden: `agent-hub migrate`, `agent-hub export`, `agent-hub status`, `agent-hub check`, `agent-hub projects`, `agent-hub brief`, `agent-hub compile`, `agent-hub daily`, `agent-hub handoff`, `agent-hub review`, `agent-hub search`, `agent-hub context`, `agent-hub quality`, `agent-hub receipt`, `agent-hub remember`, `agent-hub relations`, `agent-hub relate`, `agent-hub import`, `agent-hub sync`
 - CLI-Platzhalter sind vorhanden, aber noch nicht implementiert: `init`
+- Optionales Project Skill Manifest ist als repo-lokale Konvention dokumentiert: `docs/project-skill-manifest.md`
 
 ## Voraussetzungen
 
@@ -255,6 +306,33 @@ scripts/register_project.sh \
 ```
 
 Das setzt `projects.metadata.local_path`, legt einen Codex-Agenten an und installiert den markierten Hub-Block im Zielrepo. `--dry-run` zeigt die geplanten Schritte ohne DB- oder Dateischreibzugriff.
+
+## Project Skill Manifest
+
+Ein Project Skill Manifest ist optional und repo-lokal. Es zeigt Agenten, welche
+Fuehrungsdokumente, Skill-Packs, Quality Gates und Non-Goals fuer ein Projekt
+gelten, ohne lange technische Regeltexte in den Hub zu kopieren.
+
+Empfohlener Pfad im jeweiligen Projekt:
+
+```text
+.agent-data-hub/project-skill-manifest.yml
+```
+
+Die Konvention ist dokumentiert unter:
+
+```text
+/Users/alexandersmyslowski/Projects/central-agent-data-hub/docs/project-skill-manifest.md
+```
+
+Eine anonymisierte Vorlage liegt hier:
+
+```text
+/Users/alexandersmyslowski/Projects/central-agent-data-hub/docs/examples/project-skill-manifest.yml
+```
+
+Der Hub bleibt schlank: Er kann spaeter auf ein Manifest verweisen, aber er soll
+keine langen Skill- oder Framework-Regeln selbst speichern.
 
 ## Disposable Demo Lokal Ausfuehren
 

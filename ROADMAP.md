@@ -22,6 +22,7 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
    - Use `scripts/install_repo_agent_memory.sh` to install or update repo-local Hub instructions in important project repos.
    - Use `scripts/onboard_known_repos.sh` for dry-run/apply onboarding of active projects with explicit `metadata.local_path`.
    - Use `scripts/register_project.sh` as the first step for new project repos before substantial agent work.
+   - Keep project skill manifests as repo-local orientation maps, not Hub memory payloads.
 
 3. Schema evolution and project taxonomy
    - Track applied migrations in `schema_migrations`.
@@ -80,6 +81,12 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
    - Keep anonymized public-facing docs under `docs/public/`.
    - Avoid real project names, private paths, customer data, and deployment details.
    - Use Agent Data Hub as the project name and "verified memory for agentic work" as the claim.
+
+13. Product elegance
+   - Prefer fewer, sharper workflow entrypoints over many equal-seeming commands.
+   - Add features only when they reduce daily confusion, improve reviewability, or protect memory quality.
+   - Keep long technical rule text in repos or skill packs, not in the Hub core.
+   - Split new CLI logic into focused modules before `agent_hub/cli.py` grows further.
 
 ## Domain Profile: Websites
 

@@ -1,0 +1,40 @@
+project: project-a
+version: 1
+
+required_context:
+  - AGENTS.md
+  - PROJECT_STATUS.md
+  - TESTING.md
+
+recommended_skills:
+  - systematic-debugging
+  - test-driven-development
+  - postgres-migrations
+  - code-review-readiness
+
+quality_gates:
+  before_finish:
+    - run relevant tests
+    - inspect git diff scope
+    - verify no unrelated refactors
+    - verify no speculative memory writeback
+
+non_goals:
+  - no raw secrets
+  - no unrelated project mixing
+  - no scope expansion without approval
+  - no long technical rule text in Hub memory
+
+hub_policy:
+  belongs_in_hub:
+    - verified facts
+    - accepted decisions
+    - active risks
+    - real open questions
+    - compact handoff reports
+  does_not_belong_in_hub:
+    - raw chat logs
+    - copied framework documentation
+    - temporary task noise
+    - private customer data
+    - deployment credentials

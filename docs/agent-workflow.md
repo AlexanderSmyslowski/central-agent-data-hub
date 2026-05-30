@@ -86,6 +86,13 @@ agent-hub context --project <project-slug> --query "<current work focus>"
 See `docs/codex-memory-policy.md` for the reusable Codex/Hermes policy and
 `docs/repo-agent-memory-template.md` for per-repository agent instructions.
 
+Projects may also define a repo-local project skill manifest. This manifest is
+a small map of required context files, recommended skill packs, quality gates,
+and non-goals. It should point agents toward the right execution help without
+copying long technical rules into Hub memory.
+
+See `docs/project-skill-manifest.md`.
+
 ## During Work
 
 Keep project boundaries explicit. Do not let facts, decisions, risks, or open
@@ -93,6 +100,10 @@ questions drift from one project into another.
 
 Do not store secrets, FTP credentials, raw invoice data, private customer data,
 or deployment passwords in the Hub.
+
+Before adding a new workflow layer, ask whether it makes daily agent work
+simpler, more reliable, or easier to review. If it only adds another place to
+repeat rules, keep it out of the Hub.
 
 ## Memory Quality Rules
 
