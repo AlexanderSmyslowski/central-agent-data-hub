@@ -1,0 +1,142 @@
+"""Project graph command handlers."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+
+from agent_hub.commands.common import (
+    concise_error,
+    fetch_project,
+    json_default,
+    parse_metadata,
+    print_relations,
+)
+from agent_hub.db import connect
+from agent_hub.relations import (
+    fetch_project_relations,
+    fetch_relation_object,
+    validate_relation_object,
+)
+from agent_hub.rendering import truncate
+
+
+def run_relations(args: argparse.Namespace) -> int:
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        print("Error: DATABASE_URL is not set", file=sys.stderr)
+        return 2
+    if bool(args.object_type) != bool(args.object_id):
+        print(
+            "Error: --object-type and --object-id must be used together",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        with connect() as conn:
+            with conn.cursor() as cur:
+                project = fetch_project(cur, args.project)
+                if not project:
+                    print(
+                        f"Error: project '{args.project}' not found",
+                        file=sys.stderr,
+                    )
+                    return 2
+                rows = fetch_project_relations(
+                    cur,
+                    project["id"],
+                    object_type=args.object_type,
+                    object_id=args.object_id,
+                )
+    except Exception as exc:
+        print(f"Error: {concise_error(exc)}", file=sys.stderr)
+        return 1
+
+    payload = {"project": project, "relations": rows}
+    if args.format == "json":
+        print(json.dumps(payload, indent=2, default=json_default, ensure_ascii=False))
+        return 0
+
+    print(f"Relations for {project['slug']}:")
+    print_relations(rows)
+    return 0
+
+
+def run_relate(args: argparse.Namespace) -> int:
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        print("Error: DATABASE_URL is not set", file=sys.stderr)
+        return 2
+
+    try:
+        metadata = parse_metadata(args.metadata)
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 2
+
+    try:
+        with connect() as conn:
+            with conn.cursor() as cur:
+                project = fetch_project(cur, args.project)
+                if not project:
+                    print(
+                        f"Error: project '{args.project}' not found",
+                        file=sys.stderr,
+                    )
+                    return 2
+
+                source = fetch_relation_object(cur, args.source_type, args.source_id)
+                target = fetch_relation_object(cur, args.target_type, args.target_id)
+                validate_relation_object(args.source_type, source, project, "source")
+                validate_relation_object(args.target_type, target, project, "target")
+
+                cur.execute(
+                    """
+                    INSERT INTO relations (
+                      source_type, source_id, relation_type,
+                      target_type, target_id, metadata
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s::jsonb)
+                    ON CONFLICT (
+                      source_type, source_id, relation_type, target_type, target_id
+                    ) DO UPDATE SET
+                      metadata = relations.metadata || EXCLUDED.metadata
+                    RETURNING id, source_type, source_id, relation_type,
+                              target_type, target_id, metadata, created_at, updated_at
+                    """,
+                    (
+                        args.source_type,
+                        args.source_id,
+                        args.relation,
+                        args.target_type,
+                        args.target_id,
+                        json.dumps(metadata),
+                    ),
+                )
+                relation = cur.fetchone()
+    except Exception as exc:
+        print(f"Error: {concise_error(exc)}", file=sys.stderr)
+        return 1
+
+    payload = {
+        "project": project,
+        "relation": relation,
+        "source_summary": source["summary"],
+        "target_summary": target["summary"],
+    }
+    if args.format == "json":
+        print(json.dumps(payload, indent=2, default=json_default, ensure_ascii=False))
+        return 0
+
+    print("Relation stored:")
+    print(
+        f"- {relation['source_type']}:{relation['source_id']} "
+        f"({truncate(source['summary'], 72)}) "
+        f"--{relation['relation_type']}--> "
+        f"{relation['target_type']}:{relation['target_id']} "
+        f"({truncate(target['summary'], 72)})"
+    )
+    return 0

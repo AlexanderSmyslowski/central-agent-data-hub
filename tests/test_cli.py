@@ -9,6 +9,9 @@ import uuid
 import pytest
 
 from agent_hub import cli
+from agent_hub.commands import read as read_commands
+from agent_hub.commands import system as system_commands
+from agent_hub.commands import write as write_commands
 from agent_hub import export_obsidian
 
 
@@ -66,6 +69,26 @@ def test_parse_since_accepts_duration_and_iso_date() -> None:
 def test_parse_since_rejects_invalid_value() -> None:
     with pytest.raises(ValueError):
         cli.parse_since("yesterday-ish")
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        ["--help"],
+        ["brief", "--help"],
+        ["remember", "--help"],
+        ["sync", "--help"],
+        ["relations", "--help"],
+        ["compile", "--help"],
+    ],
+)
+def test_help_commands_exit_cleanly(command: list[str], capsys) -> None:
+    with pytest.raises(SystemExit) as excinfo:
+        cli.main(command)
+
+    captured = capsys.readouterr()
+    assert excinfo.value.code == 0
+    assert "usage:" in captured.out
 
 
 def test_brief_without_database_url_has_clear_error(monkeypatch, capsys) -> None:
@@ -365,9 +388,9 @@ def test_sync_json_output_includes_diffs(monkeypatch, capsys) -> None:
         def __exit__(self, *_args):
             return None
 
-    monkeypatch.setattr(cli, "connect", lambda: FakeConnectionContext())
+    monkeypatch.setattr(write_commands, "connect", lambda: FakeConnectionContext())
     monkeypatch.setattr(
-        cli,
+        write_commands,
         "sync_markdown",
         lambda *_args, **_kwargs: SyncResult(),
     )
@@ -491,7 +514,7 @@ class FakeConnection:
 
 def test_brief_json_output(monkeypatch, capsys) -> None:
     monkeypatch.setenv("DATABASE_URL", "postgresql://example.invalid/test")
-    monkeypatch.setattr(cli, "connect", lambda: FakeConnection())
+    monkeypatch.setattr(read_commands, "connect", lambda: FakeConnection())
 
     code = cli.main(["brief", "--project", "commcats-de", "--format", "json"])
 
@@ -550,7 +573,7 @@ class FakeProjectsConnection:
 
 def test_projects_text_output(monkeypatch, capsys) -> None:
     monkeypatch.setenv("DATABASE_URL", "postgresql://example.invalid/test")
-    monkeypatch.setattr(cli, "connect", lambda: FakeProjectsConnection())
+    monkeypatch.setattr(system_commands, "connect", lambda: FakeProjectsConnection())
 
     code = cli.main(["projects"])
 
@@ -563,7 +586,7 @@ def test_projects_text_output(monkeypatch, capsys) -> None:
 
 def test_projects_json_output(monkeypatch, capsys) -> None:
     monkeypatch.setenv("DATABASE_URL", "postgresql://example.invalid/test")
-    monkeypatch.setattr(cli, "connect", lambda: FakeProjectsConnection())
+    monkeypatch.setattr(system_commands, "connect", lambda: FakeProjectsConnection())
 
     code = cli.main(["projects", "--format", "json"])
 
@@ -575,7 +598,7 @@ def test_projects_json_output(monkeypatch, capsys) -> None:
 
 def test_projects_type_filter_passes_project_type(monkeypatch, capsys) -> None:
     monkeypatch.setenv("DATABASE_URL", "postgresql://example.invalid/test")
-    monkeypatch.setattr(cli, "connect", lambda: FakeProjectsConnection())
+    monkeypatch.setattr(system_commands, "connect", lambda: FakeProjectsConnection())
 
     code = cli.main(["projects", "--type", "website"])
 

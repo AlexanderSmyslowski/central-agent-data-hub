@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from agent_hub import cli
+from agent_hub.commands import write as write_commands
 from agent_hub.import_obsidian import (
     contains_secret,
     hash_payload,
@@ -754,7 +755,7 @@ def test_import_cli_missing_allowlist_has_clear_error(
         def __exit__(self, *_args):
             return None
 
-    monkeypatch.setattr(cli, "connect", lambda: FakeConnection())
+    monkeypatch.setattr(write_commands, "connect", lambda: FakeConnection())
 
     code = cli.main(
         [

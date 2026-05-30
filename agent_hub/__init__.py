@@ -2,6 +2,7 @@
 
 __all__ = [
     "db",
+    "commands",
     "markdown",
     "memory",
     "migrations",
