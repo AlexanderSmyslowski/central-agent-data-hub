@@ -11,6 +11,7 @@ from typing import Any, Iterable
 from uuid import UUID
 
 from agent_hub.db import connect
+from agent_hub.errors import ConfigurationError
 from agent_hub.markdown import render_markdown, write_markdown
 
 TYPE_BY_TABLE = {
@@ -126,7 +127,7 @@ EXPORTS = [
 def get_export_dir() -> Path:
     export_dir = os.environ.get("OBSIDIAN_EXPORT_DIR")
     if not export_dir:
-        raise RuntimeError(
+        raise ConfigurationError(
             "OBSIDIAN_EXPORT_DIR is required, for example /tmp/agent-hub-obsidian"
         )
     return Path(export_dir)

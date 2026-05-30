@@ -14,6 +14,8 @@ from uuid import UUID
 
 import yaml
 
+from agent_hub.errors import NotFoundError, SafetyError, ValidationError
+
 ALLOWED_TYPES = ("fact", "decision", "open_question", "risk", "report")
 SENSITIVE_PATTERN = re.compile(
     r"("
@@ -130,39 +132,39 @@ REQUIRED_FIELDS = {
 
 def load_allowlist(path: Path) -> ImportAllowlist:
     if not path.exists():
-        raise RuntimeError(f"Import allowlist not found: {path}")
+        raise ValidationError(f"Import allowlist not found: {path}")
 
     raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     if not isinstance(raw, dict):
-        raise RuntimeError("Import allowlist must be a YAML mapping")
+        raise ValidationError("Import allowlist must be a YAML mapping")
 
     projects = raw.get("projects")
     roots = raw.get("roots")
     types = raw.get("types")
     fields = raw.get("fields")
     if not isinstance(projects, list) or not all(isinstance(v, str) for v in projects):
-        raise RuntimeError("Import allowlist requires projects as a list of slugs")
+        raise ValidationError("Import allowlist requires projects as a list of slugs")
     if not isinstance(roots, list) or not all(isinstance(v, str) for v in roots):
-        raise RuntimeError("Import allowlist requires roots as a list of paths")
+        raise ValidationError("Import allowlist requires roots as a list of paths")
     if not isinstance(types, list) or not all(isinstance(v, str) for v in types):
-        raise RuntimeError("Import allowlist requires types as a list")
+        raise ValidationError("Import allowlist requires types as a list")
     if not isinstance(fields, dict):
-        raise RuntimeError("Import allowlist requires fields as a mapping")
+        raise ValidationError("Import allowlist requires fields as a mapping")
 
     type_set = set(types)
     unsupported = type_set - set(ALLOWED_TYPES)
     if unsupported:
-        raise RuntimeError(f"Unsupported allowlist type(s): {', '.join(sorted(unsupported))}")
+        raise ValidationError(f"Unsupported allowlist type(s): {', '.join(sorted(unsupported))}")
 
     normalized_fields: dict[str, set[str]] = {}
     for memory_type in type_set:
         values = fields.get(memory_type)
         if not isinstance(values, list) or not all(isinstance(v, str) for v in values):
-            raise RuntimeError(f"Import allowlist requires fields.{memory_type} as a list")
+            raise ValidationError(f"Import allowlist requires fields.{memory_type} as a list")
         allowed_fields = set(values)
         unsupported_fields = allowed_fields - TYPE_DEFAULT_FIELDS[memory_type]
         if unsupported_fields:
-            raise RuntimeError(
+            raise ValidationError(
                 f"Unsupported field(s) for {memory_type}: "
                 f"{', '.join(sorted(unsupported_fields))}"
             )
@@ -194,7 +196,7 @@ def is_relative_to(path: Path, root: Path) -> bool:
 def ensure_path_allowed(path: Path, allowlist: ImportAllowlist) -> Path:
     resolved = path.resolve()
     if not any(is_relative_to(resolved, root) for root in allowlist.roots):
-        raise RuntimeError(f"Path is outside allowlisted import roots: {path}")
+        raise ValidationError(f"Path is outside allowlisted import roots: {path}")
     return resolved
 
 
@@ -202,10 +204,10 @@ def iter_markdown_files(path: Path, allowlist: ImportAllowlist) -> list[Path]:
     resolved = ensure_path_allowed(path, allowlist)
     if resolved.is_file():
         if resolved.suffix.lower() != ".md":
-            raise RuntimeError(f"Import path is not a Markdown file: {path}")
+            raise ValidationError(f"Import path is not a Markdown file: {path}")
         return [resolved]
     if not resolved.is_dir():
-        raise RuntimeError(f"Import path not found: {path}")
+        raise ValidationError(f"Import path not found: {path}")
     return sorted(file for file in resolved.rglob("*.md") if file.is_file())
 
 
@@ -220,14 +222,14 @@ def relative_import_path(path: Path, allowlist: ImportAllowlist) -> str:
 def parse_markdown(path: Path) -> tuple[dict[str, Any], str]:
     text = path.read_text(encoding="utf-8")
     if not text.startswith("---\n"):
-        raise RuntimeError("Markdown file must start with YAML frontmatter")
+        raise ValidationError("Markdown file must start with YAML frontmatter")
     try:
         _, frontmatter_text, body = text.split("---", 2)
     except ValueError as exc:
-        raise RuntimeError("Markdown file is missing closing frontmatter delimiter") from exc
+        raise ValidationError("Markdown file is missing closing frontmatter delimiter") from exc
     frontmatter = yaml.safe_load(frontmatter_text)
     if not isinstance(frontmatter, dict):
-        raise RuntimeError("YAML frontmatter must be a mapping")
+        raise ValidationError("YAML frontmatter must be a mapping")
     return frontmatter, body.strip()
 
 
@@ -320,7 +322,7 @@ def derive_import_key(
     explicit = frontmatter.get("import_key")
     if explicit is not None:
         if not isinstance(explicit, str) or not explicit.strip():
-            raise RuntimeError("import_key must be a non-empty string")
+            raise ValidationError("import_key must be a non-empty string")
         return explicit.strip()
 
     db_id = frontmatter.get("db_id")
@@ -334,17 +336,17 @@ def derive_import_key(
 def normalize_import_item(path: Path, allowlist: ImportAllowlist) -> ImportItem:
     frontmatter, body = parse_markdown(path)
     if contains_secret(frontmatter, body):
-        raise RuntimeError("Potential secret detected; refusing import")
+        raise SafetyError("Potential secret detected; refusing import")
 
     memory_type = frontmatter.get("type")
     if memory_type not in allowlist.types:
-        raise RuntimeError(f"Unsupported or non-allowlisted type: {memory_type}")
+        raise ValidationError(f"Unsupported or non-allowlisted type: {memory_type}")
 
     project_slug = frontmatter.get("project_slug") or frontmatter.get("project")
     if not isinstance(project_slug, str) or not project_slug:
-        raise RuntimeError("Frontmatter requires project or project_slug")
+        raise ValidationError("Frontmatter requires project or project_slug")
     if project_slug not in allowlist.projects:
-        raise RuntimeError(f"Project is not allowlisted: {project_slug}")
+        raise ValidationError(f"Project is not allowlisted: {project_slug}")
 
     allowed_fields = allowlist.fields[memory_type]
     data = {
@@ -353,17 +355,17 @@ def normalize_import_item(path: Path, allowlist: ImportAllowlist) -> ImportItem:
         if key in allowed_fields and value is not None
     }
     if "metadata" in data and not isinstance(data["metadata"], dict):
-        raise RuntimeError("metadata must be a mapping")
+        raise ValidationError("metadata must be a mapping")
     if memory_type == "fact" and "confidence" in data:
         try:
             confidence = float(data["confidence"])
         except (TypeError, ValueError) as exc:
-            raise RuntimeError("confidence must be a number from 0 to 1") from exc
+            raise ValidationError("confidence must be a number from 0 to 1") from exc
         if confidence < 0 or confidence > 1:
-            raise RuntimeError("confidence must be between 0 and 1")
+            raise ValidationError("confidence must be between 0 and 1")
         data["confidence"] = confidence
     if "status" in data and data["status"] not in STATUS_VALUES[memory_type]:
-        raise RuntimeError(
+        raise ValidationError(
             f"Unsupported status for {memory_type}: {data['status']}"
         )
     if memory_type == "report" and "body" in allowed_fields and "body" not in data:
@@ -371,13 +373,13 @@ def normalize_import_item(path: Path, allowlist: ImportAllowlist) -> ImportItem:
 
     missing = REQUIRED_FIELDS[memory_type] - data.keys()
     if missing:
-        raise RuntimeError(
+        raise ValidationError(
             f"Missing required field(s) for {memory_type}: {', '.join(sorted(missing))}"
         )
 
     db_id = frontmatter.get("db_id")
     if db_id is not None and not isinstance(db_id, str):
-        raise RuntimeError("db_id must be a string when provided")
+        raise ValidationError("db_id must be a string when provided")
     import_key = derive_import_key(path, allowlist, frontmatter, memory_type, project_slug)
     content_hash = hash_payload(
         {
@@ -404,7 +406,7 @@ def fetch_project(cur, project_slug: str) -> dict[str, Any]:
     cur.execute("SELECT id, name, slug FROM projects WHERE slug = %s", (project_slug,))
     project = cur.fetchone()
     if not project:
-        raise RuntimeError(f"Project not found: {project_slug}")
+        raise NotFoundError(f"Project not found: {project_slug}")
     return project
 
 
@@ -557,7 +559,7 @@ def insert_import_item(cur, item: ImportItem) -> dict[str, Any]:
         )
         object_type = "report"
     else:
-        raise RuntimeError(f"Unsupported import type: {item.memory_type}")
+        raise ValidationError(f"Unsupported import type: {item.memory_type}")
 
     row = cur.fetchone()
     log_import_action(
@@ -593,7 +595,7 @@ def fetch_existing_import(cur, item: ImportItem, project_id: Any) -> dict[str, A
         )
         row = cur.fetchone()
         if not row:
-            raise RuntimeError(f"db_id not found for {item.memory_type}: {item.db_id}")
+            raise NotFoundError(f"db_id not found for {item.memory_type}: {item.db_id}")
         return row
 
     cur.execute(
@@ -608,7 +610,7 @@ def fetch_existing_import(cur, item: ImportItem, project_id: Any) -> dict[str, A
     )
     rows = cur.fetchall()
     if len(rows) > 1:
-        raise RuntimeError(f"Multiple rows found for import_key: {item.import_key}")
+        raise ValidationError(f"Multiple rows found for import_key: {item.import_key}")
     return rows[0] if rows else None
 
 
@@ -743,7 +745,7 @@ def update_import_item(
     agent = ensure_import_agent(cur, project["id"])
     existing = fetch_existing_import(cur, item, project["id"])
     if not existing:
-        raise RuntimeError(f"Import target disappeared: {item.import_key}")
+        raise NotFoundError(f"Import target disappeared: {item.import_key}")
 
     values = item_values(item)
     columns = list(values)

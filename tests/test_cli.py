@@ -9,6 +9,7 @@ import uuid
 import pytest
 
 from agent_hub import cli
+from agent_hub.errors import ValidationError
 from agent_hub.commands import briefs as brief_commands
 from agent_hub.commands import system as system_commands
 from agent_hub.commands import write as write_commands
@@ -330,7 +331,7 @@ def test_validate_relation_object_rejects_project_mismatch() -> None:
         "summary": "Wrong project fact",
     }
 
-    with pytest.raises(RuntimeError, match="does not belong to project demo"):
+    with pytest.raises(ValidationError, match="does not belong to project demo"):
         cli.validate_relation_object("fact", row, project, "source")
 
 

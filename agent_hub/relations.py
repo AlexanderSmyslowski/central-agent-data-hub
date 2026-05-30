@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from agent_hub.errors import NotFoundError, ValidationError
+
 RELATION_TARGETS = {
     "project": "projects",
     "agent": "agents",
@@ -79,13 +81,13 @@ def validate_relation_object(
     role: str,
 ) -> None:
     if not row:
-        raise RuntimeError(f"{role} {object_type} not found")
+        raise NotFoundError(f"{role} {object_type} not found")
 
     project_id = row.get("project_id")
     if object_type == "agent" and project_id is None:
         return
     if project_id != project["id"]:
-        raise RuntimeError(
+        raise ValidationError(
             f"{role} {object_type}:{row['id']} does not belong to project "
             f"{project['slug']}"
         )
@@ -186,7 +188,7 @@ def fetch_project_relations(
         params["object_type"] = object_type
         params["object_id"] = object_id
     elif object_type or object_id:
-        raise RuntimeError("--object-type and --object-id must be used together")
+        raise ValidationError("--object-type and --object-id must be used together")
 
     if since:
         clauses.append("r.updated_at >= %(since)s")

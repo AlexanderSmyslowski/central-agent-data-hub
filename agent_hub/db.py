@@ -7,12 +7,14 @@ import os
 import psycopg
 from psycopg.rows import dict_row
 
+from agent_hub.errors import ConfigurationError
+
 
 def get_database_url() -> str:
     """Return DATABASE_URL or raise a clear configuration error."""
     database_url = os.environ.get("DATABASE_URL")
     if not database_url:
-        raise RuntimeError(
+        raise ConfigurationError(
             "DATABASE_URL is required, for example "
             "postgresql://postgres:postgres@localhost:5432/agent_hub"
         )

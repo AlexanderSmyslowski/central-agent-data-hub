@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 
+from agent_hub.errors import NotFoundError
 from agent_hub.rendering import truncate
 
 REMEMBER_TYPES = (
@@ -35,7 +36,7 @@ def ensure_project(cur, args: argparse.Namespace) -> dict[str, object]:
     if project:
         return project
     if not getattr(args, "create_project", False):
-        raise RuntimeError(
+        raise NotFoundError(
             f"Project '{args.project}' not found. "
             "Use --create-project to create it explicitly."
         )

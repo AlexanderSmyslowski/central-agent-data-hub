@@ -6,6 +6,7 @@ import pytest
 
 from agent_hub import cli
 from agent_hub.commands import write as write_commands
+from agent_hub.errors import SafetyError, ValidationError
 from agent_hub.import_obsidian import (
     contains_secret,
     hash_payload,
@@ -65,7 +66,7 @@ def test_iter_markdown_files_blocks_paths_outside_roots(tmp_path: Path) -> None:
     outside = tmp_path / "outside.md"
     outside.write_text("---\ntype: fact\n---\n", encoding="utf-8")
 
-    with pytest.raises(RuntimeError, match="outside allowlisted"):
+    with pytest.raises(ValidationError, match="outside allowlisted"):
         iter_markdown_files(outside, allowlist)
 
 
@@ -73,7 +74,7 @@ def test_parse_markdown_requires_frontmatter(tmp_path: Path) -> None:
     note = tmp_path / "note.md"
     note.write_text("No frontmatter", encoding="utf-8")
 
-    with pytest.raises(RuntimeError, match="YAML frontmatter"):
+    with pytest.raises(ValidationError, match="YAML frontmatter"):
         parse_markdown(note)
 
 
@@ -111,7 +112,7 @@ source: smoke test
 """,
     )
 
-    with pytest.raises(RuntimeError, match="not allowlisted"):
+    with pytest.raises(ValidationError, match="not allowlisted"):
         normalize_import_item(note, allowlist)
 
 
@@ -126,7 +127,7 @@ title: Nope
 """,
     )
 
-    with pytest.raises(RuntimeError, match="Unsupported"):
+    with pytest.raises(ValidationError, match="Unsupported"):
         normalize_import_item(note, allowlist)
 
 
@@ -135,6 +136,23 @@ def test_secret_scan_blocks_sensitive_content() -> None:
     assert contains_secret({"note": "BEGIN RSA PRIVATE KEY"}, "")
     assert contains_secret({"note": "ftp credentials"}, "")
     assert contains_secret({"note": "raw invoice data"}, "")
+
+
+def test_normalize_import_item_rejects_sensitive_content(tmp_path: Path) -> None:
+    allowlist = load_allowlist(write_allowlist(tmp_path))
+    note = write_note(
+        tmp_path / "notes" / "fact.md",
+        """
+type: fact
+project: commcats-de
+statement: Do not store this.
+source: smoke test
+""",
+        "api_key = abc123",
+    )
+
+    with pytest.raises(SafetyError, match="Potential secret"):
+        normalize_import_item(note, allowlist)
 
 
 def test_dry_run_does_not_write(tmp_path: Path) -> None:
