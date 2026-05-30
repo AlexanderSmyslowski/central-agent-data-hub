@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 import sys
+from collections.abc import Callable
+from typing import Any
 
 from agent_hub.commands.common import confidence_value, positive_int
 from agent_hub.commands.graph import run_relate, run_relations
@@ -37,6 +39,87 @@ def not_implemented(args: argparse.Namespace) -> int:
     return 2
 
 
+def add_command(
+    subparsers: Any,
+    name: str,
+    help_text: str,
+    handler: Callable[[argparse.Namespace], int],
+) -> argparse.ArgumentParser:
+    command = subparsers.add_parser(name, help=help_text)
+    command.set_defaults(func=handler)
+    return command
+
+
+def add_project_argument(
+    parser: argparse.ArgumentParser,
+    help_text: str = "Project slug.",
+) -> None:
+    parser.add_argument("--project", required=True, help=help_text)
+
+
+def add_format_argument(
+    parser: argparse.ArgumentParser,
+    choices: tuple[str, ...],
+    default: str,
+) -> None:
+    parser.add_argument(
+        "--format",
+        choices=choices,
+        default=default,
+        help="Output format.",
+    )
+
+
+def add_limit_argument(
+    parser: argparse.ArgumentParser,
+    default: int,
+    help_text: str,
+    *,
+    arg_type=int,
+) -> None:
+    parser.add_argument(
+        "--limit",
+        type=arg_type,
+        default=default,
+        help=help_text,
+    )
+
+
+def add_since_argument(
+    parser: argparse.ArgumentParser,
+    default: str,
+    help_text: str | None = None,
+) -> None:
+    parser.add_argument(
+        "--since",
+        default=default,
+        help=help_text
+        or f"Duration like 24h, 7d, 2w or ISO date. Default: {default}.",
+    )
+
+
+def add_metadata_argument(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--metadata",
+        action="append",
+        default=[],
+        help="Additional metadata in key=value form; repeatable.",
+    )
+
+
+def add_markdown_source_arguments(parser: argparse.ArgumentParser, verb: str) -> None:
+    parser.add_argument(
+        "--path",
+        required=True,
+        help=f"Markdown file or directory to {verb}.",
+    )
+    parser.add_argument(
+        "--allowlist",
+        default="import_allowlist.yml",
+        help="YAML allowlist path. Defaults to import_allowlist.yml.",
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="agent-hub",
@@ -44,23 +127,24 @@ def build_parser() -> argparse.ArgumentParser:
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    export_parser = subparsers.add_parser(
+    add_command(
+        subparsers,
         "export",
-        help="Export database rows to Obsidian Markdown files.",
+        "Export database rows to Obsidian Markdown files.",
+        run_export,
     )
-    export_parser.set_defaults(func=run_export)
-
-    status_parser = subparsers.add_parser(
+    add_command(
+        subparsers,
         "status",
-        help="Show a quick database and export-directory diagnostic.",
+        "Show a quick database and export-directory diagnostic.",
+        run_status,
     )
-    status_parser.set_defaults(func=run_status)
-
-    check_parser = subparsers.add_parser(
+    add_command(
+        subparsers,
         "check",
-        help="Run consistency checks for export and review readiness.",
+        "Run consistency checks for export and review readiness.",
+        run_check,
     )
-    check_parser.set_defaults(func=run_check)
 
     migrate_parser = subparsers.add_parser(
         "migrate",
@@ -100,23 +184,12 @@ def build_parser() -> argparse.ArgumentParser:
         "brief",
         help="Print a concise project memory brief for agents.",
     )
-    brief_parser.add_argument(
-        "--project",
-        required=True,
-        help="Project slug to summarize, for example commcats-de.",
+    add_project_argument(
+        brief_parser,
+        "Project slug to summarize, for example commcats-de.",
     )
-    brief_parser.add_argument(
-        "--limit",
-        type=int,
-        default=8,
-        help="Maximum rows per memory section.",
-    )
-    brief_parser.add_argument(
-        "--format",
-        choices=("markdown", "json"),
-        default="markdown",
-        help="Output format.",
-    )
+    add_limit_argument(brief_parser, 8, "Maximum rows per memory section.")
+    add_format_argument(brief_parser, ("markdown", "json"), "markdown")
     brief_parser.add_argument(
         "--with-relations",
         action="store_true",
@@ -128,24 +201,10 @@ def build_parser() -> argparse.ArgumentParser:
         "daily",
         help="Summarize recent project memory for a daily working brief.",
     )
-    daily_parser.add_argument("--project", required=True, help="Project slug.")
-    daily_parser.add_argument(
-        "--since",
-        default="24h",
-        help="Duration like 24h, 7d, 2w or ISO date. Default: 24h.",
-    )
-    daily_parser.add_argument(
-        "--limit",
-        type=int,
-        default=8,
-        help="Maximum rows per daily section.",
-    )
-    daily_parser.add_argument(
-        "--format",
-        choices=("text", "json", "markdown"),
-        default="text",
-        help="Output format.",
-    )
+    add_project_argument(daily_parser)
+    add_since_argument(daily_parser, "24h")
+    add_limit_argument(daily_parser, 8, "Maximum rows per daily section.")
+    add_format_argument(daily_parser, ("text", "json", "markdown"), "text")
     daily_parser.add_argument(
         "--write-report",
         action="store_true",
@@ -157,50 +216,26 @@ def build_parser() -> argparse.ArgumentParser:
         "handoff",
         help="Print a project handoff report for the next agent or session.",
     )
-    handoff_parser.add_argument("--project", required=True, help="Project slug.")
-    handoff_parser.add_argument(
-        "--since",
-        default="7d",
-        help="Duration like 24h, 7d, 2w or ISO date. Default: 7d.",
-    )
-    handoff_parser.add_argument(
-        "--limit",
-        type=int,
-        default=8,
-        help="Maximum rows per handoff section.",
-    )
-    handoff_parser.add_argument(
-        "--format",
-        choices=("text", "json", "markdown"),
-        default="text",
-        help="Output format.",
-    )
+    add_project_argument(handoff_parser)
+    add_since_argument(handoff_parser, "7d")
+    add_limit_argument(handoff_parser, 8, "Maximum rows per handoff section.")
+    add_format_argument(handoff_parser, ("text", "json", "markdown"), "text")
     handoff_parser.set_defaults(func=run_handoff)
 
     review_parser = subparsers.add_parser(
         "review",
         help="Review decisions, risks, open questions, and relations.",
     )
-    review_parser.add_argument("--project", required=True, help="Project slug.")
-    review_parser.add_argument(
-        "--limit",
-        type=int,
-        default=12,
-        help="Maximum rows per review section.",
-    )
-    review_parser.add_argument(
-        "--format",
-        choices=("text", "json", "markdown"),
-        default="text",
-        help="Output format.",
-    )
+    add_project_argument(review_parser)
+    add_limit_argument(review_parser, 12, "Maximum rows per review section.")
+    add_format_argument(review_parser, ("text", "json", "markdown"), "text")
     review_parser.set_defaults(func=run_review)
 
     search_parser = subparsers.add_parser(
         "search",
         help="Search project memory with simple PostgreSQL text matching.",
     )
-    search_parser.add_argument("--project", required=True, help="Project slug.")
+    add_project_argument(search_parser)
     search_parser.add_argument("--query", required=True, help="Text to search for.")
     search_parser.add_argument(
         "--type",
@@ -209,55 +244,31 @@ def build_parser() -> argparse.ArgumentParser:
         default="all",
         help="Memory type filter.",
     )
-    search_parser.add_argument(
-        "--limit",
-        type=int,
-        default=10,
-        help="Maximum search results.",
-    )
-    search_parser.add_argument(
-        "--format",
-        choices=("text", "json"),
-        default="text",
-        help="Output format.",
-    )
+    add_limit_argument(search_parser, 10, "Maximum search results.")
+    add_format_argument(search_parser, ("text", "json"), "text")
     search_parser.set_defaults(func=run_search)
 
     context_parser = subparsers.add_parser(
         "context",
         help="Build a compact project context pack from brief, search, and relations.",
     )
-    context_parser.add_argument("--project", required=True, help="Project slug.")
+    add_project_argument(context_parser)
     context_parser.add_argument("--query", required=True, help="Focus query.")
-    context_parser.add_argument(
-        "--since",
-        default="30d",
-        help="Recent activity window. Default: 30d.",
-    )
-    context_parser.add_argument(
-        "--limit",
-        type=int,
-        default=8,
-        help="Maximum rows per context section.",
-    )
-    context_parser.add_argument(
-        "--format",
-        choices=("markdown", "json"),
-        default="markdown",
-        help="Output format.",
-    )
+    add_since_argument(context_parser, "30d", "Recent activity window. Default: 30d.")
+    add_limit_argument(context_parser, 8, "Maximum rows per context section.")
+    add_format_argument(context_parser, ("markdown", "json"), "markdown")
     context_parser.set_defaults(func=run_context)
 
     compile_parser = subparsers.add_parser(
         "compile",
         help="Build a compact token-efficient project memory for agent starts.",
     )
-    compile_parser.add_argument("--project", required=True, help="Project slug.")
-    compile_parser.add_argument(
-        "--limit",
-        type=positive_int,
-        default=5,
-        help="Maximum rows per compiled section.",
+    add_project_argument(compile_parser)
+    add_limit_argument(
+        compile_parser,
+        5,
+        "Maximum rows per compiled section.",
+        arg_type=positive_int,
     )
     compile_parser.add_argument(
         "--since",
@@ -273,37 +284,23 @@ def build_parser() -> argparse.ArgumentParser:
         type=positive_int,
         help="Maximum markdown characters to print. JSON output is unaffected.",
     )
-    compile_parser.add_argument(
-        "--format",
-        choices=("markdown", "json"),
-        default="markdown",
-        help="Output format.",
-    )
+    add_format_argument(compile_parser, ("markdown", "json"), "markdown")
     compile_parser.set_defaults(func=run_compile)
 
     quality_parser = subparsers.add_parser(
         "quality",
         help="Show project memory quality, gaps, and relation coverage.",
     )
-    quality_parser.add_argument("--project", required=True, help="Project slug.")
-    quality_parser.add_argument(
-        "--format",
-        choices=("text", "json", "markdown"),
-        default="text",
-        help="Output format.",
-    )
+    add_project_argument(quality_parser)
+    add_format_argument(quality_parser, ("text", "json", "markdown"), "text")
     quality_parser.set_defaults(func=run_quality)
 
     receipt_parser = subparsers.add_parser(
         "receipt",
         help="Verify recent project memory writes and Obsidian export files.",
     )
-    receipt_parser.add_argument("--project", required=True, help="Project slug.")
-    receipt_parser.add_argument(
-        "--since",
-        default="24h",
-        help="Duration like 24h, 7d, 2w or ISO date. Default: 24h.",
-    )
+    add_project_argument(receipt_parser)
+    add_since_argument(receipt_parser, "24h")
     receipt_parser.add_argument(
         "--type",
         dest="memory_type",
@@ -311,18 +308,8 @@ def build_parser() -> argparse.ArgumentParser:
         default="all",
         help="Memory type to verify.",
     )
-    receipt_parser.add_argument(
-        "--limit",
-        type=int,
-        default=12,
-        help="Maximum receipt rows.",
-    )
-    receipt_parser.add_argument(
-        "--format",
-        choices=("text", "json", "markdown"),
-        default="text",
-        help="Output format.",
-    )
+    add_limit_argument(receipt_parser, 12, "Maximum receipt rows.")
+    add_format_argument(receipt_parser, ("text", "json", "markdown"), "text")
     receipt_parser.add_argument(
         "--require-results",
         action="store_true",
@@ -339,35 +326,22 @@ def build_parser() -> argparse.ArgumentParser:
         "actions",
         help="List recent agent audit actions for a project.",
     )
-    actions_parser.add_argument("--project", required=True, help="Project slug.")
-    actions_parser.add_argument(
-        "--since",
-        default="7d",
-        help="Duration like 24h, 7d, 2w or ISO date. Default: 7d.",
+    add_project_argument(actions_parser)
+    add_since_argument(actions_parser, "7d")
+    add_limit_argument(
+        actions_parser,
+        12,
+        "Maximum agent action rows.",
+        arg_type=positive_int,
     )
-    actions_parser.add_argument(
-        "--limit",
-        type=positive_int,
-        default=12,
-        help="Maximum agent action rows.",
-    )
-    actions_parser.add_argument(
-        "--format",
-        choices=("text", "json", "markdown"),
-        default="text",
-        help="Output format.",
-    )
+    add_format_argument(actions_parser, ("text", "json", "markdown"), "text")
     actions_parser.set_defaults(func=run_actions)
 
     relations_parser = subparsers.add_parser(
         "relations",
         help="List curated relations for a project graph.",
     )
-    relations_parser.add_argument(
-        "--project",
-        required=True,
-        help="Project slug to inspect.",
-    )
+    add_project_argument(relations_parser, "Project slug to inspect.")
     relations_parser.add_argument(
         "--object-type",
         choices=tuple(RELATION_TARGETS),
@@ -377,23 +351,14 @@ def build_parser() -> argparse.ArgumentParser:
         "--object-id",
         help="Limit to relations touching this object id.",
     )
-    relations_parser.add_argument(
-        "--format",
-        choices=("text", "json"),
-        default="text",
-        help="Output format.",
-    )
+    add_format_argument(relations_parser, ("text", "json"), "text")
     relations_parser.set_defaults(func=run_relations)
 
     relate_parser = subparsers.add_parser(
         "relate",
         help="Create or update a curated relation between two Hub objects.",
     )
-    relate_parser.add_argument(
-        "--project",
-        required=True,
-        help="Project slug that owns the relation context.",
-    )
+    add_project_argument(relate_parser, "Project slug that owns the relation context.")
     relate_parser.add_argument(
         "--source-type",
         required=True,
@@ -422,28 +387,17 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="Target object UUID.",
     )
-    relate_parser.add_argument(
-        "--metadata",
-        action="append",
-        default=[],
-        help="Additional metadata in key=value form; repeatable.",
-    )
-    relate_parser.add_argument(
-        "--format",
-        choices=("text", "json"),
-        default="text",
-        help="Output format.",
-    )
+    add_metadata_argument(relate_parser)
+    add_format_argument(relate_parser, ("text", "json"), "text")
     relate_parser.set_defaults(func=run_relate)
 
     remember_parser = subparsers.add_parser(
         "remember",
         help="Store a reviewed fact, decision, question, risk, or report.",
     )
-    remember_parser.add_argument(
-        "--project",
-        required=True,
-        help="Project slug, for example the-one-catering.",
+    add_project_argument(
+        remember_parser,
+        "Project slug, for example the-one-catering.",
     )
     remember_parser.add_argument(
         "--create-project",
@@ -488,18 +442,8 @@ def build_parser() -> argparse.ArgumentParser:
         "--source",
         help="Source path, URL, or short provenance note.",
     )
-    remember_parser.add_argument(
-        "--metadata",
-        action="append",
-        default=[],
-        help="Additional metadata in key=value form; repeatable.",
-    )
-    remember_parser.add_argument(
-        "--format",
-        choices=("text", "json"),
-        default="text",
-        help="Output format.",
-    )
+    add_metadata_argument(remember_parser)
+    add_format_argument(remember_parser, ("text", "json"), "text")
     remember_parser.add_argument(
         "--confidence",
         type=confidence_value,
@@ -534,16 +478,7 @@ def build_parser() -> argparse.ArgumentParser:
         "import",
         help="Import allowlisted Obsidian Markdown notes into Postgres.",
     )
-    import_parser.add_argument(
-        "--path",
-        required=True,
-        help="Markdown file or directory to import.",
-    )
-    import_parser.add_argument(
-        "--allowlist",
-        default="import_allowlist.yml",
-        help="YAML allowlist path. Defaults to import_allowlist.yml.",
-    )
+    add_markdown_source_arguments(import_parser, "import")
     import_parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -555,28 +490,14 @@ def build_parser() -> argparse.ArgumentParser:
         default="skip",
         help="How to handle an existing import target. Defaults to skip.",
     )
-    import_parser.add_argument(
-        "--format",
-        choices=("text", "json"),
-        default="text",
-        help="Output format.",
-    )
+    add_format_argument(import_parser, ("text", "json"), "text")
     import_parser.set_defaults(func=run_import)
 
     sync_parser = subparsers.add_parser(
         "sync",
         help="Plan or apply allowlisted Obsidian-to-Postgres sync.",
     )
-    sync_parser.add_argument(
-        "--path",
-        required=True,
-        help="Markdown file or directory to sync.",
-    )
-    sync_parser.add_argument(
-        "--allowlist",
-        default="import_allowlist.yml",
-        help="YAML allowlist path. Defaults to import_allowlist.yml.",
-    )
+    add_markdown_source_arguments(sync_parser, "sync")
     sync_parser.add_argument(
         "--plan",
         action="store_true",
@@ -592,12 +513,7 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Reserved for a future defensive automation mode.",
     )
-    sync_parser.add_argument(
-        "--format",
-        choices=("text", "json"),
-        default="text",
-        help="Output format.",
-    )
+    add_format_argument(sync_parser, ("text", "json"), "text")
     sync_parser.set_defaults(func=run_sync)
 
     for name in ("init",):
