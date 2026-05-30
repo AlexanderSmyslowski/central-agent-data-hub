@@ -4,6 +4,7 @@ __all__ = [
     "db",
     "commands",
     "errors",
+    "exporting",
     "importing",
     "markdown",
     "memory",
