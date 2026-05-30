@@ -9,7 +9,7 @@ import uuid
 import pytest
 
 from agent_hub import cli
-from agent_hub.commands import read as read_commands
+from agent_hub.commands import briefs as brief_commands
 from agent_hub.commands import system as system_commands
 from agent_hub.commands import write as write_commands
 from agent_hub import export_obsidian
@@ -514,7 +514,7 @@ class FakeConnection:
 
 def test_brief_json_output(monkeypatch, capsys) -> None:
     monkeypatch.setenv("DATABASE_URL", "postgresql://example.invalid/test")
-    monkeypatch.setattr(read_commands, "connect", lambda: FakeConnection())
+    monkeypatch.setattr(brief_commands, "connect", lambda: FakeConnection())
 
     code = cli.main(["brief", "--project", "commcats-de", "--format", "json"])
 
