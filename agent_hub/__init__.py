@@ -1,3 +1,11 @@
 """Agent Data Hub package."""
 
-__all__ = ["db", "markdown", "migrations", "quality", "relations", "rendering"]
+__all__ = [
+    "db",
+    "markdown",
+    "memory",
+    "migrations",
+    "quality",
+    "relations",
+    "rendering",
+]
