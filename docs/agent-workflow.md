@@ -3,6 +3,8 @@
 This workflow is the working contract for Codex/Hermes project work that uses
 the Central Agent Data Hub.
 
+For the shortest copyable version, use `docs/agent-run-card.md`.
+
 The Hub is not a website-only memory. It is the operational project memory for
 agentic work across domains: implementation, operations, research, business
 decisions, open questions, risks, reports, and handoffs.

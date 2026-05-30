@@ -294,6 +294,7 @@ scripts/project_remember.sh \
 Fuer Codex/Hermes-Policy und Repo-spezifische Startkarten:
 
 - `docs/codex-memory-policy.md`
+- `docs/agent-run-card.md`
 - `docs/repo-agent-memory-template.md`
 
 Bestehende Repos koennen idempotent mit einem markierten Hub-Block verbunden werden:
