@@ -5,14 +5,15 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import sys
 
 from agent_hub.commands.common import (
-    concise_error,
+    exception_error,
     fetch_project,
     json_default,
+    missing_database_url,
     print_relations,
     print_rows,
+    project_not_found,
 )
 from agent_hub.db import connect
 from agent_hub.relations import fetch_project_relations
@@ -22,19 +23,14 @@ from agent_hub.retrieval import fetch_brief_rows
 def run_brief(args: argparse.Namespace) -> int:
     database_url = os.environ.get("DATABASE_URL")
     if not database_url:
-        print("Error: DATABASE_URL is not set", file=sys.stderr)
-        return 2
+        return missing_database_url()
 
     try:
         with connect() as conn:
             with conn.cursor() as cur:
                 project = fetch_project(cur, args.project)
                 if not project:
-                    print(
-                        f"Error: project '{args.project}' not found",
-                        file=sys.stderr,
-                    )
-                    return 2
+                    return project_not_found(args.project)
 
                 cur.execute(
                     """
@@ -110,8 +106,7 @@ def run_brief(args: argparse.Namespace) -> int:
             "relations": relations,
         }
     except Exception as exc:
-        print(f"Error: {concise_error(exc)}", file=sys.stderr)
-        return 1
+        return exception_error(exc)
 
     if args.format == "json":
         print(json.dumps(brief, indent=2, default=json_default, ensure_ascii=False))

@@ -8,7 +8,14 @@ import os
 import sys
 from pathlib import Path
 
-from agent_hub.commands.common import concise_error, json_default, truncate
+from agent_hub.commands.common import (
+    concise_error,
+    error,
+    exception_error,
+    json_default,
+    missing_database_url,
+    truncate,
+)
 from agent_hub.db import connect
 from agent_hub.export_obsidian import export_all
 from agent_hub.migrations import apply_migrations, describe_migrations, print_migration_report
@@ -46,8 +53,7 @@ def run_export(_args: argparse.Namespace) -> int:
     try:
         written = export_all()
     except RuntimeError as exc:
-        print(f"Error: {exc}", file=sys.stderr)
-        return 2
+        return error(exc, 2)
 
     print(f"Export complete: wrote {len(written)} Markdown files.")
     for path in written:
@@ -58,8 +64,7 @@ def run_export(_args: argparse.Namespace) -> int:
 def run_migrate(args: argparse.Namespace) -> int:
     database_url = os.environ.get("DATABASE_URL")
     if not database_url:
-        print("Error: DATABASE_URL is not set", file=sys.stderr)
-        return 2
+        return missing_database_url()
 
     try:
         with connect() as conn:
@@ -78,8 +83,7 @@ def run_migrate(args: argparse.Namespace) -> int:
             report = describe_migrations(conn)
             print_migration_report(report)
     except Exception as exc:
-        print(f"Error: {concise_error(exc)}", file=sys.stderr)
-        return 1
+        return exception_error(exc)
 
     return 0
 
@@ -130,8 +134,7 @@ def run_status(_args: argparse.Namespace) -> int:
 def run_projects(args: argparse.Namespace) -> int:
     database_url = os.environ.get("DATABASE_URL")
     if not database_url:
-        print("Error: DATABASE_URL is not set", file=sys.stderr)
-        return 2
+        return missing_database_url()
 
     try:
         with connect() as conn:
@@ -153,8 +156,7 @@ def run_projects(args: argparse.Namespace) -> int:
                 )
                 projects = list(cur.fetchall())
     except Exception as exc:
-        print(f"Error: {concise_error(exc)}", file=sys.stderr)
-        return 1
+        return exception_error(exc)
 
     if args.format == "json":
         print(json.dumps(projects, indent=2, default=json_default, ensure_ascii=False))

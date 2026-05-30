@@ -6,12 +6,30 @@ import argparse
 from datetime import datetime, time, timedelta, timezone
 import json
 import re
+import sys
 
 from agent_hub.rendering import truncate
 
 
 def concise_error(exc: Exception) -> str:
     return str(exc).splitlines()[0]
+
+
+def error(message: object, exit_code: int = 1) -> int:
+    print(f"Error: {message}", file=sys.stderr)
+    return exit_code
+
+
+def exception_error(exc: Exception, exit_code: int = 1) -> int:
+    return error(concise_error(exc), exit_code)
+
+
+def missing_database_url() -> int:
+    return error("DATABASE_URL is not set", 2)
+
+
+def project_not_found(slug: str) -> int:
+    return error(f"project '{slug}' not found", 2)
 
 
 def json_default(value: object) -> str:

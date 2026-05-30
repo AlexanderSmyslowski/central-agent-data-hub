@@ -5,12 +5,13 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import sys
 from pathlib import Path
 
 from agent_hub.commands.common import (
-    concise_error,
+    error,
+    exception_error,
     json_default,
+    missing_database_url,
     parse_metadata,
 )
 from agent_hub.db import connect
@@ -21,14 +22,12 @@ from agent_hub.memory import remember
 def run_remember(args: argparse.Namespace) -> int:
     database_url = os.environ.get("DATABASE_URL")
     if not database_url:
-        print("Error: DATABASE_URL is not set", file=sys.stderr)
-        return 2
+        return missing_database_url()
 
     try:
         metadata = parse_metadata(args.metadata)
     except ValueError as exc:
-        print(f"Error: {exc}", file=sys.stderr)
-        return 2
+        return error(exc, 2)
     metadata.setdefault("created_by", "agent-hub remember")
     if args.source:
         metadata.setdefault("source", args.source)
@@ -38,8 +37,7 @@ def run_remember(args: argparse.Namespace) -> int:
             with conn.cursor() as cur:
                 project, agent, object_type, row = remember(cur, args, metadata)
     except Exception as exc:
-        print(f"Error: {concise_error(exc)}", file=sys.stderr)
-        return 1
+        return exception_error(exc)
 
     result = {
         "project": {
@@ -70,8 +68,7 @@ def run_remember(args: argparse.Namespace) -> int:
 def run_import(args: argparse.Namespace) -> int:
     database_url = os.environ.get("DATABASE_URL")
     if not database_url:
-        print("Error: DATABASE_URL is not set", file=sys.stderr)
-        return 2
+        return missing_database_url()
 
     try:
         with connect() as conn:
@@ -83,8 +80,7 @@ def run_import(args: argparse.Namespace) -> int:
                 on_duplicate=args.on_duplicate,
             )
     except Exception as exc:
-        print(f"Error: {concise_error(exc)}", file=sys.stderr)
-        return 1
+        return exception_error(exc)
 
     if args.format == "json":
         print(json.dumps(result.__dict__, indent=2, default=json_default))
@@ -146,19 +142,16 @@ def print_sync_result(result) -> None:
 def run_sync(args: argparse.Namespace) -> int:
     database_url = os.environ.get("DATABASE_URL")
     if not database_url:
-        print("Error: DATABASE_URL is not set", file=sys.stderr)
-        return 2
+        return missing_database_url()
 
     if args.watch:
-        print(
-            "Error: sync --watch is intentionally not implemented yet. "
+        return error(
+            "sync --watch is intentionally not implemented yet. "
             "Use --plan or --apply first.",
-            file=sys.stderr,
+            2,
         )
-        return 2
     if args.plan == args.apply:
-        print("Error: choose exactly one of --plan or --apply", file=sys.stderr)
-        return 2
+        return error("choose exactly one of --plan or --apply", 2)
 
     try:
         with connect() as conn:
@@ -169,8 +162,7 @@ def run_sync(args: argparse.Namespace) -> int:
                 apply=args.apply,
             )
     except Exception as exc:
-        print(f"Error: {concise_error(exc)}", file=sys.stderr)
-        return 1
+        return exception_error(exc)
 
     if args.format == "json":
         print(json.dumps(result.__dict__, indent=2, default=json_default))

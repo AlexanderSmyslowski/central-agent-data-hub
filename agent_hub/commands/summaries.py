@@ -6,14 +6,16 @@ import argparse
 from datetime import datetime
 import json
 import os
-import sys
 from pathlib import Path
 
 from agent_hub.commands.common import (
-    concise_error,
+    error,
+    exception_error,
     fetch_project,
     json_default,
+    missing_database_url,
     parse_since,
+    project_not_found,
 )
 from agent_hub.db import connect
 from agent_hub.quality import fetch_project_counts
@@ -121,25 +123,19 @@ def get_export_dir_or_none() -> Path | None:
 def run_daily(args: argparse.Namespace) -> int:
     database_url = os.environ.get("DATABASE_URL")
     if not database_url:
-        print("Error: DATABASE_URL is not set", file=sys.stderr)
-        return 2
+        return missing_database_url()
 
     try:
         since = parse_since(args.since)
     except ValueError as exc:
-        print(f"Error: {exc}", file=sys.stderr)
-        return 2
+        return error(exc, 2)
 
     try:
         with connect() as conn:
             with conn.cursor() as cur:
                 project = fetch_project(cur, args.project)
                 if not project:
-                    print(
-                        f"Error: project '{args.project}' not found",
-                        file=sys.stderr,
-                    )
-                    return 2
+                    return project_not_found(args.project)
                 payload = fetch_activity_snapshot(cur, project, since, args.limit)
                 report = None
                 body = daily_markdown(payload)
@@ -147,8 +143,7 @@ def run_daily(args: argparse.Namespace) -> int:
                     report = write_daily_report(cur, project, payload, body)
                     payload["written_report"] = report
     except Exception as exc:
-        print(f"Error: {concise_error(exc)}", file=sys.stderr)
-        return 1
+        return exception_error(exc)
 
     if args.format == "json":
         print(json.dumps(payload, indent=2, default=json_default, ensure_ascii=False))
@@ -163,29 +158,22 @@ def run_daily(args: argparse.Namespace) -> int:
 def run_handoff(args: argparse.Namespace) -> int:
     database_url = os.environ.get("DATABASE_URL")
     if not database_url:
-        print("Error: DATABASE_URL is not set", file=sys.stderr)
-        return 2
+        return missing_database_url()
 
     try:
         since = parse_since(args.since, default="7d")
     except ValueError as exc:
-        print(f"Error: {exc}", file=sys.stderr)
-        return 2
+        return error(exc, 2)
 
     try:
         with connect() as conn:
             with conn.cursor() as cur:
                 project = fetch_project(cur, args.project)
                 if not project:
-                    print(
-                        f"Error: project '{args.project}' not found",
-                        file=sys.stderr,
-                    )
-                    return 2
+                    return project_not_found(args.project)
                 payload = fetch_activity_snapshot(cur, project, since, args.limit)
     except Exception as exc:
-        print(f"Error: {concise_error(exc)}", file=sys.stderr)
-        return 1
+        return exception_error(exc)
 
     if args.format == "json":
         print(json.dumps(payload, indent=2, default=json_default, ensure_ascii=False))
@@ -197,19 +185,14 @@ def run_handoff(args: argparse.Namespace) -> int:
 def run_review(args: argparse.Namespace) -> int:
     database_url = os.environ.get("DATABASE_URL")
     if not database_url:
-        print("Error: DATABASE_URL is not set", file=sys.stderr)
-        return 2
+        return missing_database_url()
 
     try:
         with connect() as conn:
             with conn.cursor() as cur:
                 project = fetch_project(cur, args.project)
                 if not project:
-                    print(
-                        f"Error: project '{args.project}' not found",
-                        file=sys.stderr,
-                    )
-                    return 2
+                    return project_not_found(args.project)
                 decisions = fetch_brief_rows(
                     cur,
                     "decisions",
@@ -236,8 +219,7 @@ def run_review(args: argparse.Namespace) -> int:
                 )
                 relations = fetch_project_relations(cur, project["id"], limit=args.limit)
     except Exception as exc:
-        print(f"Error: {concise_error(exc)}", file=sys.stderr)
-        return 1
+        return exception_error(exc)
 
     payload = {
         "project": project,
@@ -269,8 +251,7 @@ def run_review(args: argparse.Namespace) -> int:
 def run_compile(args: argparse.Namespace) -> int:
     database_url = os.environ.get("DATABASE_URL")
     if not database_url:
-        print("Error: DATABASE_URL is not set", file=sys.stderr)
-        return 2
+        return missing_database_url()
 
     try:
         since = parse_since(args.since) if args.since else None
@@ -278,11 +259,7 @@ def run_compile(args: argparse.Namespace) -> int:
             with conn.cursor() as cur:
                 project = fetch_project(cur, args.project)
                 if not project:
-                    print(
-                        f"Error: project '{args.project}' not found",
-                        file=sys.stderr,
-                    )
-                    return 2
+                    return project_not_found(args.project)
                 payload = fetch_compiled_payload(
                     cur,
                     project,
@@ -291,11 +268,9 @@ def run_compile(args: argparse.Namespace) -> int:
                     with_receipt_status=args.with_receipt_status,
                 )
     except ValueError as exc:
-        print(f"Error: {exc}", file=sys.stderr)
-        return 2
+        return error(exc, 2)
     except Exception as exc:
-        print(f"Error: {concise_error(exc)}", file=sys.stderr)
-        return 1
+        return exception_error(exc)
 
     if args.format == "json":
         print(json.dumps(payload, indent=2, default=json_default, ensure_ascii=False))

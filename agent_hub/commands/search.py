@@ -5,13 +5,15 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import sys
 
 from agent_hub.commands.common import (
-    concise_error,
+    error,
+    exception_error,
     fetch_project,
     json_default,
+    missing_database_url,
     parse_since,
+    project_not_found,
 )
 from agent_hub.db import connect
 from agent_hub.relations import fetch_project_relations
@@ -26,19 +28,14 @@ from agent_hub.rendering import (
 def run_search(args: argparse.Namespace) -> int:
     database_url = os.environ.get("DATABASE_URL")
     if not database_url:
-        print("Error: DATABASE_URL is not set", file=sys.stderr)
-        return 2
+        return missing_database_url()
 
     try:
         with connect() as conn:
             with conn.cursor() as cur:
                 project = fetch_project(cur, args.project)
                 if not project:
-                    print(
-                        f"Error: project '{args.project}' not found",
-                        file=sys.stderr,
-                    )
-                    return 2
+                    return project_not_found(args.project)
                 results = search_project_memory(
                     cur,
                     project["id"],
@@ -47,8 +44,7 @@ def run_search(args: argparse.Namespace) -> int:
                     args.limit,
                 )
     except Exception as exc:
-        print(f"Error: {concise_error(exc)}", file=sys.stderr)
-        return 1
+        return exception_error(exc)
 
     payload = {"project": project, "query": args.query, "results": results}
     if args.format == "json":
@@ -63,8 +59,7 @@ def run_search(args: argparse.Namespace) -> int:
 def run_context(args: argparse.Namespace) -> int:
     database_url = os.environ.get("DATABASE_URL")
     if not database_url:
-        print("Error: DATABASE_URL is not set", file=sys.stderr)
-        return 2
+        return missing_database_url()
 
     try:
         since = parse_since(args.since, default="30d")
@@ -72,11 +67,7 @@ def run_context(args: argparse.Namespace) -> int:
             with conn.cursor() as cur:
                 project = fetch_project(cur, args.project)
                 if not project:
-                    print(
-                        f"Error: project '{args.project}' not found",
-                        file=sys.stderr,
-                    )
-                    return 2
+                    return project_not_found(args.project)
                 snapshot = fetch_activity_snapshot(cur, project, since, args.limit)
                 results = search_project_memory(
                     cur,
@@ -87,11 +78,9 @@ def run_context(args: argparse.Namespace) -> int:
                 )
                 relations = fetch_project_relations(cur, project["id"], limit=args.limit)
     except ValueError as exc:
-        print(f"Error: {exc}", file=sys.stderr)
-        return 2
+        return error(exc, 2)
     except Exception as exc:
-        print(f"Error: {concise_error(exc)}", file=sys.stderr)
-        return 1
+        return exception_error(exc)
 
     payload = {
         "project": project,

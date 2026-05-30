@@ -5,14 +5,16 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import sys
 
 from agent_hub.commands.common import (
-    concise_error,
+    error,
+    exception_error,
     fetch_project,
     json_default,
+    missing_database_url,
     parse_metadata,
     print_relations,
+    project_not_found,
 )
 from agent_hub.db import connect
 from agent_hub.relations import (
@@ -26,25 +28,16 @@ from agent_hub.rendering import truncate
 def run_relations(args: argparse.Namespace) -> int:
     database_url = os.environ.get("DATABASE_URL")
     if not database_url:
-        print("Error: DATABASE_URL is not set", file=sys.stderr)
-        return 2
+        return missing_database_url()
     if bool(args.object_type) != bool(args.object_id):
-        print(
-            "Error: --object-type and --object-id must be used together",
-            file=sys.stderr,
-        )
-        return 2
+        return error("--object-type and --object-id must be used together", 2)
 
     try:
         with connect() as conn:
             with conn.cursor() as cur:
                 project = fetch_project(cur, args.project)
                 if not project:
-                    print(
-                        f"Error: project '{args.project}' not found",
-                        file=sys.stderr,
-                    )
-                    return 2
+                    return project_not_found(args.project)
                 rows = fetch_project_relations(
                     cur,
                     project["id"],
@@ -52,8 +45,7 @@ def run_relations(args: argparse.Namespace) -> int:
                     object_id=args.object_id,
                 )
     except Exception as exc:
-        print(f"Error: {concise_error(exc)}", file=sys.stderr)
-        return 1
+        return exception_error(exc)
 
     payload = {"project": project, "relations": rows}
     if args.format == "json":
@@ -68,25 +60,19 @@ def run_relations(args: argparse.Namespace) -> int:
 def run_relate(args: argparse.Namespace) -> int:
     database_url = os.environ.get("DATABASE_URL")
     if not database_url:
-        print("Error: DATABASE_URL is not set", file=sys.stderr)
-        return 2
+        return missing_database_url()
 
     try:
         metadata = parse_metadata(args.metadata)
     except ValueError as exc:
-        print(f"Error: {exc}", file=sys.stderr)
-        return 2
+        return error(exc, 2)
 
     try:
         with connect() as conn:
             with conn.cursor() as cur:
                 project = fetch_project(cur, args.project)
                 if not project:
-                    print(
-                        f"Error: project '{args.project}' not found",
-                        file=sys.stderr,
-                    )
-                    return 2
+                    return project_not_found(args.project)
 
                 source = fetch_relation_object(cur, args.source_type, args.source_id)
                 target = fetch_relation_object(cur, args.target_type, args.target_id)
@@ -118,8 +104,7 @@ def run_relate(args: argparse.Namespace) -> int:
                 )
                 relation = cur.fetchone()
     except Exception as exc:
-        print(f"Error: {concise_error(exc)}", file=sys.stderr)
-        return 1
+        return exception_error(exc)
 
     payload = {
         "project": project,
