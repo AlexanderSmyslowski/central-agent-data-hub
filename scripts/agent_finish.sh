@@ -143,6 +143,22 @@ echo "  scripts/project_remember.sh --project $PROJECT --type fact --text '<revi
 echo "  scripts/project_remember.sh --project $PROJECT --type decision --text '<decision>' --rationale '<why>' --dry-run"
 echo "  scripts/project_remember.sh --project $PROJECT --type open-question --text '<question>' --dry-run"
 
+echo
+echo "== Next Best Step =="
+echo "- If nothing durable changed: store no memory."
+echo "- If a useful fact, decision, risk, question, or report emerged: dry-run exactly 1-3 reviewed writebacks."
+if [[ "$WRITE_REPORT" -eq 1 ]]; then
+  echo "- Because --write-report was used: verify it with scripts/memory_receipt.sh --project $PROJECT --type report --since $SINCE."
+else
+  echo "- If this run needs a durable handoff: rerun with --write-report or store a reviewed report via scripts/project_remember.sh."
+fi
+if [[ "$EXPORT" -eq 0 ]]; then
+  echo "- If reviewed memory was written: run scripts/agent_finish.sh --project $PROJECT --review --export."
+fi
+if [[ "$BACKUP" -eq 0 ]]; then
+  echo "- If important memory was written: run scripts/db_backup.sh after export."
+fi
+
 if [[ "$EXPORT" -eq 1 ]]; then
   echo
   echo "== Obsidian Export =="

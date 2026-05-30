@@ -166,6 +166,10 @@ The finish helper also prints recent audited agent actions for the same project
 and time window. This makes the end of a run checkable without turning
 `agent_start.sh` or `agent_finish.sh` into hidden write paths.
 
+It also prints a short "Next Best Step" block. Treat it as guidance, not
+automation: store no memory when nothing durable changed, dry-run 1-3 reviewed
+writebacks when useful memory emerged, and export/backup after important writes.
+
 For stronger closure, include review, export, and backup:
 
 ```bash

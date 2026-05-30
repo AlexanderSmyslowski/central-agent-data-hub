@@ -252,6 +252,10 @@ ein lokales/remote Backup nachgezogen.
 
 Der Finish-Wrapper ist zugleich eine Memory-Triage: Er unterscheidet Facts, Decisions, Risks, Open Questions und Reports von temporaerem Arbeitsrauschen. Dadurch soll der Hub taeglich nuetzlicher werden, ohne zum Roh-Chatlog zu werden.
 
+Am Ende zeigt der Finish-Wrapper einen kurzen "Next Best Step": keine Memory
+speichern, 1-3 gepruefte Writebacks trocken testen, einen Report/Receipt
+nachziehen oder nach relevanten Writes Export und Backup ausfuehren.
+
 Wenn ein anderer Channel oder Agent meldet, dass er kuratierte Memory
 geschrieben und nach Obsidian exportiert hat, kann das mit einem Receipt
 geprueft werden:
