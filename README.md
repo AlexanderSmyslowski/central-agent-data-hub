@@ -243,7 +243,12 @@ scripts/agent_finish.sh --project <project-slug> --review
 scripts/agent_finish.sh --project <project-slug> --review --export --backup
 ```
 
-Der Finish-Wrapper erzeugt Daily Summary und Handoff. Mit `--review` zeigt er die Abschlussuebersicht fuer Entscheidungen, Risiken und offene Fragen. Mit `--write-report` kann explizit ein Daily-Report in Postgres gespeichert werden. Mit `--export` und `--backup` werden die menschenlesbare Obsidian-Projektion und ein lokales/remote Backup nachgezogen.
+Der Finish-Wrapper erzeugt Daily Summary und Handoff und zeigt am Ende die
+juengste Auditspur ueber `agent-hub actions`. Mit `--review` zeigt er die
+Abschlussuebersicht fuer Entscheidungen, Risiken und offene Fragen. Mit
+`--write-report` kann explizit ein Daily-Report in Postgres gespeichert werden.
+Mit `--export` und `--backup` werden die menschenlesbare Obsidian-Projektion und
+ein lokales/remote Backup nachgezogen.
 
 Der Finish-Wrapper ist zugleich eine Memory-Triage: Er unterscheidet Facts, Decisions, Risks, Open Questions und Reports von temporaerem Arbeitsrauschen. Dadurch soll der Hub taeglich nuetzlicher werden, ohne zum Roh-Chatlog zu werden.
 

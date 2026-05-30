@@ -162,6 +162,10 @@ Run the finish helper to produce a final daily summary and handoff:
 scripts/agent_finish.sh --project <project-slug>
 ```
 
+The finish helper also prints recent audited agent actions for the same project
+and time window. This makes the end of a run checkable without turning
+`agent_start.sh` or `agent_finish.sh` into hidden write paths.
+
 For stronger closure, include review, export, and backup:
 
 ```bash

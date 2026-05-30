@@ -9,8 +9,8 @@ usage() {
 Usage: scripts/agent_finish.sh --project <slug> [--since <duration|date>] [--write-report] [--limit <n>] [--review] [--export] [--backup]
 
 Finish wrapper for Codex/Hermes work. It runs read-only operational preflight,
-prints a daily summary and handoff, and optionally stores a daily report,
-exports Obsidian Markdown, and creates a verified backup.
+prints a daily summary, handoff, and recent audited agent actions, and optionally
+stores a daily report, exports Obsidian Markdown, and creates a verified backup.
 
 This script does not write facts, decisions, risks, or questions. Use
 scripts/project_remember.sh for reviewed, non-sensitive memory writeback.
@@ -159,6 +159,13 @@ if [[ "$BACKUP" -eq 1 ]]; then
     echo "Operational error: database backup failed." >&2
     exit 2
   fi
+fi
+
+echo
+echo "== Recent Agent Actions: $PROJECT =="
+if ! run_agent_hub actions --project "$PROJECT" --since "$SINCE" --limit "$LIMIT"; then
+  echo "Data error: recent agent actions failed for '$PROJECT'." >&2
+  exit 1
 fi
 
 echo
