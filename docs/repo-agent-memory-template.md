@@ -8,6 +8,16 @@ Central Agent Data Hub:
 /Users/alexandersmyslowski/Projects/central-agent-data-hub
 ```
 
+Run card:
+
+```txt
+/Users/alexandersmyslowski/Projects/central-agent-data-hub/docs/agent-run-card.md
+```
+
+Use the Run Card rhythm for substantial work: start with Hub context, work inside
+one project boundary, finish with review, and write back only reviewed,
+non-sensitive memory.
+
 ## Before Work
 
 Load operational readiness, project memory, daily activity, and focused context:

@@ -306,6 +306,8 @@ scripts/install_repo_agent_memory.sh \
 ```
 
 Das Skript ergaenzt oder aktualisiert einen `CENTRAL-AGENT-DATA-HUB`-Block in `AGENTS.md`, ohne vorhandene Projektanweisungen zu ersetzen. Mit `--dry-run` zeigt es den geplanten Block ohne Schreibzugriff.
+Der Block verweist auf `docs/agent-run-card.md`, damit Codex/Hermes in jedem
+angeschlossenen Repo denselben Start/Work/Finish/Remember-Rhythmus nutzen.
 
 Bekannte Hub-Projekte mit explizitem `projects.metadata.local_path` koennen gesammelt geprueft oder angeschlossen werden:
 

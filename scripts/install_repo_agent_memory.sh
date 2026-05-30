@@ -104,6 +104,13 @@ block="$(
 
 Project slug: \`$PROJECT\`
 
+Run Card:
+\`$ROOT_DIR/docs/agent-run-card.md\`
+
+Use the Run Card rhythm for substantial work: start with Hub context, work inside
+one project boundary, finish with review, and write back only reviewed,
+non-sensitive memory.
+
 Use the shared Hub before and after substantial project work:
 
 \`\`\`bash
