@@ -13,7 +13,7 @@ from agent_hub.commands.common import (
     exception_error,
     fetch_project,
     json_default,
-    missing_database_url,
+    require_database_url,
     parse_since,
     project_not_found,
 )
@@ -121,9 +121,8 @@ def get_export_dir_or_none() -> Path | None:
 
 
 def run_daily(args: argparse.Namespace) -> int:
-    database_url = os.environ.get("DATABASE_URL")
-    if not database_url:
-        return missing_database_url()
+    if error_code := require_database_url():
+        return error_code
 
     try:
         since = parse_since(args.since)
@@ -156,9 +155,8 @@ def run_daily(args: argparse.Namespace) -> int:
 
 
 def run_handoff(args: argparse.Namespace) -> int:
-    database_url = os.environ.get("DATABASE_URL")
-    if not database_url:
-        return missing_database_url()
+    if error_code := require_database_url():
+        return error_code
 
     try:
         since = parse_since(args.since, default="7d")
@@ -183,9 +181,8 @@ def run_handoff(args: argparse.Namespace) -> int:
 
 
 def run_review(args: argparse.Namespace) -> int:
-    database_url = os.environ.get("DATABASE_URL")
-    if not database_url:
-        return missing_database_url()
+    if error_code := require_database_url():
+        return error_code
 
     try:
         with connect() as conn:
@@ -249,9 +246,8 @@ def run_review(args: argparse.Namespace) -> int:
 
 
 def run_compile(args: argparse.Namespace) -> int:
-    database_url = os.environ.get("DATABASE_URL")
-    if not database_url:
-        return missing_database_url()
+    if error_code := require_database_url():
+        return error_code
 
     try:
         since = parse_since(args.since) if args.since else None

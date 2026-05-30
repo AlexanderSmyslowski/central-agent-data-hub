@@ -4,14 +4,13 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 from pathlib import Path
 
 from agent_hub.commands.common import (
     error,
     exception_error,
     json_default,
-    missing_database_url,
+    require_database_url,
     parse_metadata,
 )
 from agent_hub.db import connect
@@ -20,9 +19,8 @@ from agent_hub.memory import remember
 
 
 def run_remember(args: argparse.Namespace) -> int:
-    database_url = os.environ.get("DATABASE_URL")
-    if not database_url:
-        return missing_database_url()
+    if error_code := require_database_url():
+        return error_code
 
     try:
         metadata = parse_metadata(args.metadata)
@@ -66,9 +64,8 @@ def run_remember(args: argparse.Namespace) -> int:
 
 
 def run_import(args: argparse.Namespace) -> int:
-    database_url = os.environ.get("DATABASE_URL")
-    if not database_url:
-        return missing_database_url()
+    if error_code := require_database_url():
+        return error_code
 
     try:
         with connect() as conn:
@@ -140,9 +137,8 @@ def print_sync_result(result) -> None:
 
 
 def run_sync(args: argparse.Namespace) -> int:
-    database_url = os.environ.get("DATABASE_URL")
-    if not database_url:
-        return missing_database_url()
+    if error_code := require_database_url():
+        return error_code
 
     if args.watch:
         return error(

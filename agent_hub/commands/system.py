@@ -13,7 +13,7 @@ from agent_hub.commands.common import (
     error,
     exception_error,
     json_default,
-    missing_database_url,
+    require_database_url,
     truncate,
 )
 from agent_hub.db import connect
@@ -62,9 +62,8 @@ def run_export(_args: argparse.Namespace) -> int:
 
 
 def run_migrate(args: argparse.Namespace) -> int:
-    database_url = os.environ.get("DATABASE_URL")
-    if not database_url:
-        return missing_database_url()
+    if error_code := require_database_url():
+        return error_code
 
     try:
         with connect() as conn:
@@ -132,9 +131,8 @@ def run_status(_args: argparse.Namespace) -> int:
 
 
 def run_projects(args: argparse.Namespace) -> int:
-    database_url = os.environ.get("DATABASE_URL")
-    if not database_url:
-        return missing_database_url()
+    if error_code := require_database_url():
+        return error_code
 
     try:
         with connect() as conn:

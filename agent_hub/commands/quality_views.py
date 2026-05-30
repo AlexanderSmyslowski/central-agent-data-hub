@@ -12,7 +12,7 @@ from agent_hub.commands.common import (
     exception_error,
     fetch_project,
     json_default,
-    missing_database_url,
+    require_database_url,
     parse_since,
     project_not_found,
 )
@@ -28,9 +28,8 @@ from agent_hub.rendering import (
 
 
 def run_quality(args: argparse.Namespace) -> int:
-    database_url = os.environ.get("DATABASE_URL")
-    if not database_url:
-        return missing_database_url()
+    if error_code := require_database_url():
+        return error_code
 
     try:
         with connect() as conn:
@@ -51,9 +50,8 @@ def run_quality(args: argparse.Namespace) -> int:
 
 
 def run_receipt(args: argparse.Namespace) -> int:
-    database_url = os.environ.get("DATABASE_URL")
-    if not database_url:
-        return missing_database_url()
+    if error_code := require_database_url():
+        return error_code
 
     try:
         since = parse_since(args.since)
@@ -112,9 +110,8 @@ def run_receipt(args: argparse.Namespace) -> int:
 
 
 def run_actions(args: argparse.Namespace) -> int:
-    database_url = os.environ.get("DATABASE_URL")
-    if not database_url:
-        return missing_database_url()
+    if error_code := require_database_url():
+        return error_code
 
     try:
         since = parse_since(args.since, default="7d")

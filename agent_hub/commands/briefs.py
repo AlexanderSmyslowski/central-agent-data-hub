@@ -4,13 +4,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 
 from agent_hub.commands.common import (
     exception_error,
     fetch_project,
     json_default,
-    missing_database_url,
+    require_database_url,
     print_relations,
     print_rows,
     project_not_found,
@@ -21,9 +20,8 @@ from agent_hub.retrieval import fetch_brief_rows
 
 
 def run_brief(args: argparse.Namespace) -> int:
-    database_url = os.environ.get("DATABASE_URL")
-    if not database_url:
-        return missing_database_url()
+    if error_code := require_database_url():
+        return error_code
 
     try:
         with connect() as conn:

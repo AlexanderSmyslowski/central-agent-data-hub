@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, time, timedelta, timezone
 import json
+import os
 import re
 import sys
 
@@ -26,6 +27,12 @@ def exception_error(exc: Exception, exit_code: int = 1) -> int:
 
 def missing_database_url() -> int:
     return error("DATABASE_URL is not set", 2)
+
+
+def require_database_url() -> int | None:
+    if not os.environ.get("DATABASE_URL"):
+        return missing_database_url()
+    return None
 
 
 def project_not_found(slug: str) -> int:

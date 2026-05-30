@@ -4,14 +4,13 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 
 from agent_hub.commands.common import (
     error,
     exception_error,
     fetch_project,
     json_default,
-    missing_database_url,
+    require_database_url,
     parse_metadata,
     print_relations,
     project_not_found,
@@ -26,9 +25,8 @@ from agent_hub.rendering import truncate
 
 
 def run_relations(args: argparse.Namespace) -> int:
-    database_url = os.environ.get("DATABASE_URL")
-    if not database_url:
-        return missing_database_url()
+    if error_code := require_database_url():
+        return error_code
     if bool(args.object_type) != bool(args.object_id):
         return error("--object-type and --object-id must be used together", 2)
 
@@ -58,9 +56,8 @@ def run_relations(args: argparse.Namespace) -> int:
 
 
 def run_relate(args: argparse.Namespace) -> int:
-    database_url = os.environ.get("DATABASE_URL")
-    if not database_url:
-        return missing_database_url()
+    if error_code := require_database_url():
+        return error_code
 
     try:
         metadata = parse_metadata(args.metadata)
