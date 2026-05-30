@@ -7,5 +7,6 @@ __all__ = [
     "migrations",
     "quality",
     "relations",
+    "retrieval",
     "rendering",
 ]
