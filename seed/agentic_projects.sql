@@ -35,6 +35,21 @@ VALUES
     "work_mode": "durable-local-db-plus-curated-agent-writeback",
     "domain_profile": "agent-memory-infrastructure"
   }'::jsonb
+),
+(
+  '20000000-0000-4000-8000-000000000003',
+  'Zeiterfassung Tool',
+  'zeiterfassung-tool',
+  'Single-tenant time tracking app for catering, event, hospitality, and shift-based operations.',
+  'active',
+  '{
+    "repo": "AlexanderSmyslowski/zeiterfassung-tool",
+    "local_path": "/Users/alexandersmyslowski/Projects/zeiterfassung-tool",
+    "memory_scope": "product-platform",
+    "project_type": "product",
+    "work_mode": "central-hub-start-finish",
+    "domain_profile": "time-tracking"
+  }'::jsonb
 )
 ON CONFLICT (slug) DO UPDATE SET
   name = EXCLUDED.name,
@@ -59,6 +74,15 @@ VALUES
   'Codex',
   'codex',
   'Coding and operations agent for the Central Agent Data Hub.',
+  'active',
+  '{"interface": "codex", "seed": "agentic_projects.sql"}'::jsonb
+),
+(
+  '20000000-0000-4000-8000-000000000013',
+  (SELECT id FROM projects WHERE slug = 'zeiterfassung-tool'),
+  'Codex',
+  'codex',
+  'Coding and implementation agent for the Zeiterfassung Tool.',
   'active',
   '{"interface": "codex", "seed": "agentic_projects.sql"}'::jsonb
 )
@@ -114,6 +138,24 @@ VALUES
   0.950,
   'verified',
   '{"topic": "durable-db", "sensitive": false}'::jsonb
+),
+(
+  '20000000-0000-4000-8000-000000000206',
+  (SELECT id FROM projects WHERE slug = 'zeiterfassung-tool'),
+  'The Zeiterfassung Tool repo is located at /Users/alexandersmyslowski/Projects/zeiterfassung-tool and is backed by GitHub repo AlexanderSmyslowski/zeiterfassung-tool.',
+  '/Users/alexandersmyslowski/Projects/zeiterfassung-tool/PROJECT_STATUS.md',
+  0.950,
+  'verified',
+  '{"topic": "repo-location", "sensitive": false}'::jsonb
+),
+(
+  '20000000-0000-4000-8000-000000000207',
+  (SELECT id FROM projects WHERE slug = 'zeiterfassung-tool'),
+  'The Zeiterfassung Tool is currently in internal stabilization and pilot/operational readiness for a single-tenant time tracking app per instance.',
+  '/Users/alexandersmyslowski/Projects/zeiterfassung-tool/PROJECT_STATUS.md',
+  0.900,
+  'verified',
+  '{"topic": "project-state", "sensitive": false}'::jsonb
 )
 ON CONFLICT (id) DO UPDATE SET
   statement = EXCLUDED.statement,
@@ -151,6 +193,15 @@ VALUES
   'Agents should prefer fewer high-quality facts, decisions, risks, open questions, and reports over broad transcript capture.',
   'accepted',
   '{"topic": "memory-quality", "sensitive": false}'::jsonb
+),
+(
+  '20000000-0000-4000-8000-000000000304',
+  (SELECT id FROM projects WHERE slug = 'zeiterfassung-tool'),
+  'Keep Zeiterfassung Tool work focused on pilot hardening and operational readiness unless the user explicitly approves platform, multi-tenancy, or white-label expansion.',
+  'AGENTS.md and PROJECT_STATUS.md define the current phase as pilot hardening of the existing single-tenant product.',
+  'Future agents must treat platform expansion, multi-tenancy, and broad architecture changes as out of scope unless explicitly requested.',
+  'accepted',
+  '{"topic": "scope-control", "sensitive": false}'::jsonb
 )
 ON CONFLICT (id) DO UPDATE SET
   decision = EXCLUDED.decision,
@@ -181,6 +232,16 @@ VALUES
   'Use scripts/agent_preflight.sh, scripts/agent_start.sh, scripts/agent_finish.sh, daily backup, and verified restores as the normal operating path.',
   'open',
   '{"topic": "operational-readiness", "sensitive": false}'::jsonb
+),
+(
+  '20000000-0000-4000-8000-000000000503',
+  (SELECT id FROM projects WHERE slug = 'zeiterfassung-tool'),
+  'Zeiterfassung Tool agents can confuse future platform documents with the current pilot-ready single-tenant product scope.',
+  'medium',
+  'Agents may overbuild multi-tenancy, white-label, or platform features before the current pilot hardening path is intentionally changed.',
+  'Start from AGENTS.md, PROJECT_STATUS.md, and Hub context; classify future-path documents separately from current implementation state.',
+  'open',
+  '{"topic": "scope-drift", "sensitive": false}'::jsonb
 )
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
@@ -212,6 +273,16 @@ VALUES
   'Project slug: central-agent-data-hub. This context is for the Hub infrastructure itself: durable local Postgres, migrations, backup/restore, CLI workflows, agent preflight, curated writeback, Obsidian export/import, and operational readiness. Keep website, catering platform, and other domain-specific memory in their own project contexts.',
   'published',
   '{"topic": "ops-project-onboarding", "sensitive": false}'::jsonb
+),
+(
+  '20000000-0000-4000-8000-000000000603',
+  (SELECT id FROM projects WHERE slug = 'zeiterfassung-tool'),
+  'Zeiterfassung Tool Hub Onboarding',
+  'handoff',
+  'The Zeiterfassung Tool is now represented in the Central Agent Data Hub with a dedicated project slug and start/finish workflow.',
+  'Project slug: zeiterfassung-tool. The current leading repository is /Users/alexandersmyslowski/Projects/zeiterfassung-tool. The current work focus is pilot hardening and operational readiness for a single-tenant time tracking app; platform, multi-tenancy, white-label expansion, external customer rollout, and unreviewed compliance claims remain out of scope unless explicitly approved.',
+  'published',
+  '{"topic": "hub-onboarding", "sensitive": false}'::jsonb
 )
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
