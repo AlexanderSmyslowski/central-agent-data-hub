@@ -23,6 +23,8 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
    - Use `scripts/onboard_known_repos.sh` for dry-run/apply onboarding of active projects with explicit `metadata.local_path`.
    - Use `scripts/register_project.sh` as the first step for new project repos before substantial agent work.
    - Keep project skill manifests as repo-local orientation maps, not Hub memory payloads.
+   - Use `agent-hub actions` to inspect recent audited agent activity before adding any heavier work-session model.
+   - Keep thread/worktree self-management as a reviewed workflow layer, not automatic memory capture.
 
 3. Schema evolution and project taxonomy
    - Track applied migrations in `schema_migrations`.

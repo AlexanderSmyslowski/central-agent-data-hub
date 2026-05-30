@@ -60,7 +60,7 @@ Before adding architecture, ask: does this make the Hub simpler, more reliable, 
 - Demo-Seed ist vorhanden: `seed/demo.sql`
 - Obsidian-Jinja2-Templates sind vorhanden: `templates/`
 - Minimaler Obsidian-Exporter ist vorhanden: `agent_hub/export_obsidian.py`
-- CLI-Kommandos sind vorhanden: `agent-hub migrate`, `agent-hub export`, `agent-hub status`, `agent-hub check`, `agent-hub projects`, `agent-hub brief`, `agent-hub compile`, `agent-hub daily`, `agent-hub handoff`, `agent-hub review`, `agent-hub search`, `agent-hub context`, `agent-hub quality`, `agent-hub receipt`, `agent-hub remember`, `agent-hub relations`, `agent-hub relate`, `agent-hub import`, `agent-hub sync`
+- CLI-Kommandos sind vorhanden: `agent-hub migrate`, `agent-hub export`, `agent-hub status`, `agent-hub check`, `agent-hub projects`, `agent-hub brief`, `agent-hub compile`, `agent-hub daily`, `agent-hub handoff`, `agent-hub review`, `agent-hub search`, `agent-hub context`, `agent-hub quality`, `agent-hub receipt`, `agent-hub actions`, `agent-hub remember`, `agent-hub relations`, `agent-hub relate`, `agent-hub import`, `agent-hub sync`
 - CLI-Platzhalter sind vorhanden, aber noch nicht implementiert: `init`
 - Optionales Project Skill Manifest ist als repo-lokale Konvention dokumentiert: `docs/project-skill-manifest.md`
 
@@ -260,6 +260,16 @@ Der Receipt prueft aktuelle Hub-Zeilen und die dazugehoerigen Markdown-Dateien
 im Obsidian-Export. Standardmaessig liefert `scripts/memory_receipt.sh` einen
 Fehler, wenn keine passende Memory gefunden wird oder der Export fehlt.
 
+Fuer eine schnelle Sicht auf die vorhandene Auditspur:
+
+```bash
+agent-hub actions --project <project-slug> --since 7d
+```
+
+Das ist bewusst read-only. Agentenstarts und Abschluesse schreiben nicht
+automatisch neue Run-Zeilen; relevante Ergebnisse werden weiter ueber
+`project_remember.sh`, Reports, Relations und Receipts kuratiert.
+
 Gepruefte, nicht-sensitive Erinnerungen werden danach kontrolliert geschrieben:
 
 ```bash
@@ -435,6 +445,7 @@ Beim erneuten Export bleibt der Inhalt innerhalb des Human-Notes-Blocks erhalten
 - `agent-hub context --project <slug> --query <text>`: baut ein kompaktes Kontextpaket aus Recent Activity, Suchtreffern und Relations
 - `agent-hub quality --project <slug>`: zeigt Memory-Qualitaet, offene Luecken und Relations-Abdeckung
 - `agent-hub receipt --project <slug>`: prueft aktuelle Memory-Zeilen und passende Obsidian-Exportdateien
+- `agent-hub actions --project <slug>`: listet aktuelle Agenten-Auditaktionen fuer einen Projektkontext
 - `agent-hub remember --project <slug> --type <type> --text <text>`: speichert eine gepruefte Erinnerung
 - `agent-hub relations --project <slug>`: listet den belegbaren Projektgraphen
 - `agent-hub relate --project <slug> ...`: verknuepft zwei existierende Hub-Objekte kuratiert

@@ -42,6 +42,7 @@ from agent_hub.relations import (
 from agent_hub.retrieval import (
     fetch_activity_snapshot,
     fetch_brief_rows,
+    fetch_recent_agent_actions,
     search_project_memory,
     write_daily_report,
 )
@@ -63,7 +64,7 @@ from agent_hub.receipts import (
     fetch_receipt_rows,
 )
 from agent_hub.rendering import (
-    actions_markdown,
+    agent_actions_markdown,
     compiled_markdown,
     daily_markdown,
     handoff_markdown,
@@ -1113,6 +1114,40 @@ def run_receipt(args: argparse.Namespace) -> int:
     return exit_code
 
 
+def run_actions(args: argparse.Namespace) -> int:
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        print("Error: DATABASE_URL is not set", file=sys.stderr)
+        return 2
+
+    try:
+        since = parse_since(args.since, default="7d")
+        with connect() as conn:
+            with conn.cursor() as cur:
+                project = fetch_project(cur, args.project)
+                if not project:
+                    print(
+                        f"Error: project '{args.project}' not found",
+                        file=sys.stderr,
+                    )
+                    return 2
+                rows = fetch_recent_agent_actions(cur, project["id"], since, args.limit)
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 2
+    except Exception as exc:
+        print(f"Error: {concise_error(exc)}", file=sys.stderr)
+        return 1
+
+    payload = {"project": project, "since": since, "agent_actions": rows}
+    if args.format == "json":
+        print(json.dumps(payload, indent=2, default=json_default, ensure_ascii=False))
+        return 0
+
+    print(agent_actions_markdown(payload))
+    return 0
+
+
 def run_remember(args: argparse.Namespace) -> int:
     database_url = os.environ.get("DATABASE_URL")
     if not database_url:
@@ -1699,6 +1734,30 @@ def build_parser() -> argparse.ArgumentParser:
         help="Exit 1 if matching rows do not have exported Markdown files.",
     )
     receipt_parser.set_defaults(func=run_receipt)
+
+    actions_parser = subparsers.add_parser(
+        "actions",
+        help="List recent agent audit actions for a project.",
+    )
+    actions_parser.add_argument("--project", required=True, help="Project slug.")
+    actions_parser.add_argument(
+        "--since",
+        default="7d",
+        help="Duration like 24h, 7d, 2w or ISO date. Default: 7d.",
+    )
+    actions_parser.add_argument(
+        "--limit",
+        type=positive_int,
+        default=12,
+        help="Maximum agent action rows.",
+    )
+    actions_parser.add_argument(
+        "--format",
+        choices=("text", "json", "markdown"),
+        default="text",
+        help="Output format.",
+    )
+    actions_parser.set_defaults(func=run_actions)
 
     relations_parser = subparsers.add_parser(
         "relations",

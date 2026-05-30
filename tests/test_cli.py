@@ -202,6 +202,7 @@ def test_relate_without_database_url_has_clear_error(monkeypatch, capsys) -> Non
         ["search", "--project", "commcats-de", "--query", "Alfahosting"],
         ["context", "--project", "commcats-de", "--query", "Alfahosting"],
         ["receipt", "--project", "commcats-de"],
+        ["actions", "--project", "commcats-de"],
     ],
 )
 def test_retrieval_commands_without_database_url_have_clear_error(
@@ -386,6 +387,28 @@ def test_sync_json_output_includes_diffs(monkeypatch, capsys) -> None:
     assert code == 0
     assert '"diffs"' in captured.out
     assert '"field": "statement"' in captured.out
+
+
+def test_agent_actions_markdown_is_project_scoped() -> None:
+    payload = {
+        "project": {"name": "Project A", "slug": "project-a"},
+        "since": datetime.fromisoformat("2026-05-30T00:00:00+00:00"),
+        "agent_actions": [
+            {
+                "status": "succeeded",
+                "agent_slug": "codex",
+                "action": "remember_fact",
+                "object_type": "fact",
+                "object_id": "10000000-0000-4000-8000-000000000201",
+            }
+        ],
+    }
+
+    rendered = cli.agent_actions_markdown(payload)
+
+    assert "# Agent Actions: Project A" in rendered
+    assert "- project: project-a" in rendered
+    assert "[succeeded] codex remember_fact fact:" in rendered
 
 
 class FakeCursor:

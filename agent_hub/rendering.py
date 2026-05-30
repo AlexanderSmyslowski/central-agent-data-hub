@@ -56,6 +56,21 @@ def actions_markdown(rows: list[dict[str, object]]) -> str:
     )
 
 
+def agent_actions_markdown(payload: dict[str, object]) -> str:
+    project = payload["project"]
+    return "\n".join(
+        [
+            f"# Agent Actions: {project['name']}",
+            "",
+            f"- project: {project['slug']}",
+            f"- since: {payload['since'].isoformat()}",
+            "",
+            "## Actions",
+            actions_markdown(payload["agent_actions"]),
+        ]
+    )
+
+
 def sync_events_markdown(rows: list[dict[str, object]]) -> str:
     if not rows:
         return "- none"

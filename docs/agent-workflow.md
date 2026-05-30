@@ -105,6 +105,20 @@ Before adding a new workflow layer, ask whether it makes daily agent work
 simpler, more reliable, or easier to review. If it only adds another place to
 repeat rules, keep it out of the Hub.
 
+## Agent Run Loop
+
+The preferred unit of work is one reviewed run: one project, one focus, one
+handoff. Agent starts and finishes are intentionally not hidden write paths.
+Use the existing audit trail to inspect recent actions:
+
+```bash
+agent-hub actions --project <project-slug> --since 7d
+```
+
+If stronger run tracking becomes necessary, design it as a small coordination
+layer. Do not turn it into a chat transcript store. See
+`docs/agent-run-loop.md`.
+
 ## Memory Quality Rules
 
 Write fewer memories, but make them useful:
