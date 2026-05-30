@@ -30,7 +30,7 @@ VALUES
   'active',
   '{
     "domain": "the-one.catering",
-    "local_path": "/Users/alexandersmyslowski/Documents/commcats.de/the-one-static-v1",
+    "local_path": "/Users/alexandersmyslowski/Documents/the-one-catering",
     "memory_scope": "website",
     "project_type": "website",
     "site_state": "live-framer-site-with-static-migration-planned",
@@ -111,7 +111,7 @@ VALUES
   '10000000-0000-4000-8000-000000000203',
   '10000000-0000-4000-8000-000000000002',
   'the-one.catering remains live on Framer while SEO metadata, JSON-LD, H1 cleanup, Search Console verification, and sitemap submission have been completed.',
-  '/Users/alexandersmyslowski/Documents/commcats.de/THE-ONE-SEO-AUDIT.md',
+  '/Users/alexandersmyslowski/Documents/the-one-catering/framer-prep/legacy-root-notes/THE-ONE-SEO-AUDIT.md',
   0.950,
   'verified',
   '{"topic": "seo", "sensitive": false}'::jsonb
@@ -138,7 +138,7 @@ VALUES
   '10000000-0000-4000-8000-000000000204',
   '10000000-0000-4000-8000-000000000002',
   'A THE ONE SEO/AI and Alfahosting migration plan exists and recommends a static prototype before any live migration.',
-  '/Users/alexandersmyslowski/Documents/commcats.de/THE-ONE-MIGRATION-SEO-PLAN.md',
+  '/Users/alexandersmyslowski/Documents/the-one-catering/framer-prep/legacy-root-notes/THE-ONE-MIGRATION-SEO-PLAN.md',
   0.950,
   'verified',
   '{"topic": "migration", "sensitive": false}'::jsonb
@@ -201,18 +201,18 @@ VALUES
   '10000000-0000-4000-8000-000000000401',
   '10000000-0000-4000-8000-000000000002',
   'Which exact staging subdomain should be used for the future THE ONE static prototype?',
-  NULL,
-  'open',
-  NULL,
+  'Use staging.the-one.catering as the protected Alfahosting staging subdomain for the future static THE ONE prototype.',
+  'answered',
+  now(),
   '{"topic": "staging", "sensitive": false}'::jsonb
 ),
 (
   '10000000-0000-4000-8000-000000000402',
   '10000000-0000-4000-8000-000000000002',
   'Which official THE ONE address should be used for schema.org, legal pages, and contact metadata?',
-  NULL,
-  'open',
-  NULL,
+  'Official THE ONE e.K. address for schema.org, legal pages, and contact metadata: Nadlerstraße 12, 69117 Heidelberg.',
+  'answered',
+  now(),
   '{"topic": "legal", "sensitive": false}'::jsonb
 )
 ON CONFLICT (id) DO UPDATE SET

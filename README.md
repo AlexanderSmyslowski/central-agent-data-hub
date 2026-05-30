@@ -293,6 +293,7 @@ scripts/project_remember.sh \
 
 Fuer Codex/Hermes-Policy und Repo-spezifische Startkarten:
 
+- `docs/active-projects.md`
 - `docs/codex-memory-policy.md`
 - `docs/agent-run-card.md`
 - `docs/repo-agent-memory-template.md`
