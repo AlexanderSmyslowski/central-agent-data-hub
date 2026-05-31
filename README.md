@@ -62,6 +62,7 @@ Before adding architecture, ask: does this make the Hub simpler, more reliable, 
 - Minimaler Obsidian-Exporter ist vorhanden: `agent_hub/export_obsidian.py`
 - CLI-Kommandos sind vorhanden: `agent-hub migrate`, `agent-hub export`, `agent-hub status`, `agent-hub check`, `agent-hub projects`, `agent-hub brief`, `agent-hub compile`, `agent-hub daily`, `agent-hub handoff`, `agent-hub review`, `agent-hub search`, `agent-hub context`, `agent-hub quality`, `agent-hub receipt`, `agent-hub actions`, `agent-hub remember`, `agent-hub relations`, `agent-hub relate`, `agent-hub import`, `agent-hub sync`
 - CLI-Platzhalter sind vorhanden, aber noch nicht implementiert: `init`
+- Code-Modulgrenzen sind dokumentiert: `docs/code-architecture.md`
 - Optionales Project Skill Manifest ist als repo-lokale Konvention dokumentiert: `docs/project-skill-manifest.md`
 
 ## Voraussetzungen
