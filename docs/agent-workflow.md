@@ -33,6 +33,11 @@ The start helper prints the working contract after loading context: keep the
 project boundary explicit, do not transfer assumptions between projects, do not
 store sensitive data, and treat uncertainty as an open question.
 
+For single-project work, the start helper also creates a local working-tree run
+lock. This protects against two write-capable agents using the same checkout at
+the same time. The finish helper releases the lock. For parallel work, create a
+separate git worktree instead of sharing one working tree.
+
 For single-project starts, it also prints a short "Start Decision". This
 confirms whether scoped work is ready, whether a concrete focus is missing, and
 whether review context should be loaded before risky changes.

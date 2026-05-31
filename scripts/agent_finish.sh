@@ -3,10 +3,12 @@ set -euo pipefail
 
 # shellcheck disable=SC1091
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/db_common.sh"
+# shellcheck disable=SC1091
+source "$ROOT_DIR/scripts/agent_run_lock.sh"
 
 usage() {
   cat <<'EOF'
-Usage: scripts/agent_finish.sh --project <slug> [--since <duration|date>] [--write-report] [--limit <n>] [--review] [--export] [--backup]
+Usage: scripts/agent_finish.sh --project <slug> [--since <duration|date>] [--write-report] [--limit <n>] [--review] [--export] [--backup] [--no-lock]
 
 Finish wrapper for Codex/Hermes work. It runs read-only operational preflight,
 prints a daily summary, handoff, and recent audited agent actions, and optionally
@@ -23,6 +25,7 @@ Options:
   --review           Also print decision/risk/open-question review.
   --export           Export current Hub memory to Obsidian Markdown after finish.
   --backup           Create local/remote DB backup after finish.
+  --no-lock          Do not release a local working-tree run lock.
 
 Exit codes:
   0  finish summary completed
@@ -38,6 +41,7 @@ LIMIT=8
 REVIEW=0
 EXPORT=0
 BACKUP=0
+NO_LOCK=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -63,6 +67,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --backup)
       BACKUP=1
+      shift
+      ;;
+    --no-lock)
+      NO_LOCK=1
       shift
       ;;
     --limit)
@@ -182,6 +190,12 @@ echo "== Recent Agent Actions: $PROJECT =="
 if ! run_agent_hub actions --project "$PROJECT" --since "$SINCE" --limit "$LIMIT"; then
   echo "Data error: recent agent actions failed for '$PROJECT'." >&2
   exit 1
+fi
+
+if [[ "$NO_LOCK" -eq 0 ]]; then
+  echo
+  echo "== Run Lock =="
+  agent_run_lock_release "$PROJECT"
 fi
 
 echo

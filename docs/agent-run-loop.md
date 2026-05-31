@@ -22,11 +22,20 @@ agent-hub actions --project <project-slug> --since 7d
 This reads the existing `agent_actions` table. It does not create a new session
 table and it does not make `agent_start.sh` write to the database.
 
+For single-project work, `agent_start.sh` also creates a local working-tree run
+lock under `.local/run-locks/`. `agent_finish.sh` releases it. The lock is local
+coordination only: it prevents two agent sessions from writing in the same repo
+checkout by accident, but it does not create Hub memory or database rows.
+
+If parallel work is needed, use a separate git worktree. If a lock is stale,
+rerun `agent_start.sh` with `--force-lock`.
+
 ## Design Rules
 
 - Do not store raw chat logs.
 - Do not make start/finish wrappers write by default.
 - Keep work runs project-bound.
+- Do not let two write-capable agents share one working tree.
 - Record durable outcomes through reports, facts, decisions, risks, questions,
   relations, and receipts.
 - Add schema only when the existing audit trail is too weak for daily use.

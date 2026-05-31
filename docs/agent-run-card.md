@@ -11,9 +11,14 @@ scripts/agent_start.sh --project <project-slug> --query "<current focus>" --revi
 Read the compiled memory, focused context, review, working contract, and Start
 Decision before changing anything meaningful.
 
+For single-project work this also creates a local working-tree run lock. If the
+lock blocks, another agent is already using this checkout. Finish that run or
+create a separate git worktree for parallel work.
+
 ## 2. Work
 
 - Stay inside the selected project context.
+- Use one write-capable agent per working tree.
 - Do not transfer assumptions from another project.
 - Do not store secrets, credentials, private customer data, or raw invoice data.
 - Treat uncertainty as an open question, not as a fact.

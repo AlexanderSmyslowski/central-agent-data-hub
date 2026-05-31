@@ -3,10 +3,12 @@ set -euo pipefail
 
 # shellcheck disable=SC1091
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/db_common.sh"
+# shellcheck disable=SC1091
+source "$ROOT_DIR/scripts/agent_run_lock.sh"
 
 usage() {
   cat <<'EOF'
-Usage: scripts/agent_start.sh --project <slug> [--query <focus>] [--limit <n>] [--review]
+Usage: scripts/agent_start.sh --project <slug> [--query <focus>] [--limit <n>] [--review] [--no-lock] [--force-lock]
        scripts/agent_start.sh --all-projects [--limit <n>]
        scripts/agent_start.sh --all-websites [--limit <n>]
 
@@ -21,6 +23,8 @@ Options:
   --all-websites     Domain shortcut for commcats-de, the-one-catering, lamour.
   --limit <n>        Maximum rows per section, default 8.
   --review           Also print the decision/risk/open-question review.
+  --no-lock          Skip the local working-tree run lock.
+  --force-lock       Replace an existing local working-tree run lock.
 
 Exit codes:
   0  start context loaded
@@ -35,6 +39,19 @@ ALL_PROJECTS=0
 ALL_WEBSITES=0
 LIMIT=8
 REVIEW=0
+NO_LOCK=0
+FORCE_LOCK=0
+LOCK_ACQUIRED=0
+
+cleanup_start_lock_on_error() {
+  local exit_code=$?
+  if [[ "$exit_code" -ne 0 && "$LOCK_ACQUIRED" -eq 1 ]]; then
+    agent_run_lock_release "$PROJECT" >/dev/null 2>&1 || true
+  fi
+  exit "$exit_code"
+}
+
+trap cleanup_start_lock_on_error EXIT
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -60,6 +77,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --review)
       REVIEW=1
+      shift
+      ;;
+    --no-lock)
+      NO_LOCK=1
+      shift
+      ;;
+    --force-lock)
+      FORCE_LOCK=1
       shift
       ;;
     -h|--help)
@@ -104,6 +129,20 @@ fi
 if ! [[ "$LIMIT" =~ ^[0-9]+$ ]] || (( LIMIT < 1 )); then
   echo "Error: --limit must be a positive integer." >&2
   exit 2
+fi
+
+if [[ "$NO_LOCK" -eq 1 && "$FORCE_LOCK" -eq 1 ]]; then
+  echo "Error: --no-lock and --force-lock cannot be combined." >&2
+  exit 2
+fi
+
+if [[ -n "$PROJECT" && "$NO_LOCK" -eq 0 ]]; then
+  echo "== Run Lock =="
+  if ! agent_run_lock_acquire "$PROJECT" "$FORCE_LOCK"; then
+    exit 2
+  fi
+  LOCK_ACQUIRED=1
+  echo
 fi
 
 if [[ -n "$PROJECT" ]]; then
