@@ -291,7 +291,7 @@ def run_check(_args: argparse.Namespace) -> int:
                 print()
 
                 questions = fetch_open_questions(cur)
-                print("Open questions (status != resolved):")
+                print("Unresolved open questions:")
                 if questions:
                     for question in questions:
                         message = (

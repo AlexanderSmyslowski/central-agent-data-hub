@@ -17,6 +17,7 @@ from agent_hub.commands.common import (
 from agent_hub.db import connect
 from agent_hub.relations import fetch_project_relations
 from agent_hub.retrieval import fetch_brief_rows
+from agent_hub.statuses import INACTIVE_OPEN_QUESTION_STATUSES
 
 
 def run_brief(args: argparse.Namespace) -> int:
@@ -67,7 +68,7 @@ def run_brief(args: argparse.Namespace) -> int:
                     "open_questions",
                     project["id"],
                     "id, question, answer",
-                    excluded_statuses=("archived", "closed"),
+                    excluded_statuses=INACTIVE_OPEN_QUESTION_STATUSES,
                     limit=args.limit,
                 )
                 risks = fetch_brief_rows(

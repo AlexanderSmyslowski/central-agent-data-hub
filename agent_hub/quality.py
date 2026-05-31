@@ -127,7 +127,7 @@ def fetch_open_questions(cur) -> list[dict[str, object]]:
         """
         SELECT id, question, status
         FROM open_questions
-        WHERE status NOT IN ('answered', 'closed', 'archived')
+        WHERE status NOT IN ('answered', 'closed', 'resolved', 'archived')
         ORDER BY created_at, id
         """
     )
@@ -289,7 +289,12 @@ def fetch_project_counts(cur, project_id: object) -> dict[str, int]:
           (SELECT count(*) FROM documents WHERE project_id = %(project_id)s) AS documents,
           (SELECT count(*) FROM facts WHERE project_id = %(project_id)s AND status <> 'archived') AS facts,
           (SELECT count(*) FROM decisions WHERE project_id = %(project_id)s AND status <> 'archived') AS decisions,
-          (SELECT count(*) FROM open_questions WHERE project_id = %(project_id)s AND status NOT IN ('closed', 'archived')) AS open_questions,
+          (
+            SELECT count(*)
+            FROM open_questions
+            WHERE project_id = %(project_id)s
+              AND status NOT IN ('answered', 'closed', 'resolved', 'archived')
+          ) AS open_questions,
           (SELECT count(*) FROM risks WHERE project_id = %(project_id)s AND status NOT IN ('resolved', 'archived')) AS risks,
           (SELECT count(*) FROM reports WHERE project_id = %(project_id)s AND status <> 'archived') AS reports
         """,

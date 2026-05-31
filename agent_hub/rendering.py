@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from agent_hub.statuses import unresolved_open_questions
+
 
 def truncate(value: object, limit: int = 96) -> str:
     text = str(value)
@@ -82,7 +84,7 @@ def sync_events_markdown(rows: list[dict[str, object]]) -> str:
 
 def recommended_steps_markdown(payload: dict[str, object]) -> str:
     steps = []
-    for row in payload["open_questions"][:3]:
+    for row in unresolved_open_questions(payload["open_questions"])[:3]:
         steps.append(f"- resolve open question: {truncate(row['question'], 120)}")
     for row in payload["risks"][:3]:
         mitigation = row.get("mitigation")
@@ -113,7 +115,11 @@ def daily_markdown(payload: dict[str, object]) -> str:
             markdown_list(payload["risks"], "title", ("severity", "impact", "mitigation")),
             "",
             "## Open Questions",
-            markdown_list(payload["open_questions"], "question", ("answer",)),
+            markdown_list(
+                unresolved_open_questions(payload["open_questions"]),
+                "question",
+                ("answer",),
+            ),
             "",
             "## Reports",
             markdown_list(payload["reports"], "title", ("report_type", "summary")),
@@ -147,7 +153,11 @@ def handoff_markdown(payload: dict[str, object]) -> str:
             markdown_list(payload["risks"], "title", ("severity", "impact", "mitigation")),
             "",
             "## What Is Open",
-            markdown_list(payload["open_questions"], "question", ("answer",)),
+            markdown_list(
+                unresolved_open_questions(payload["open_questions"]),
+                "question",
+                ("answer",),
+            ),
             "",
             "## Evidence And Context",
             markdown_list(payload["facts"], "statement", ("source", "confidence")),
@@ -227,7 +237,11 @@ def compiled_markdown(payload: dict[str, object]) -> str:
             markdown_list(payload["risks"], "title", ("severity", "impact", "mitigation")),
             "",
             "## What Is Open",
-            markdown_list(payload["open_questions"], "question", ("answer",)),
+            markdown_list(
+                unresolved_open_questions(payload["open_questions"]),
+                "question",
+                ("answer",),
+            ),
             "",
             "## Evidence To Keep In Mind",
             markdown_list(payload["facts"], "statement", ("source", "confidence")),

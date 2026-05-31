@@ -26,6 +26,7 @@ from agent_hub.retrieval import (
     fetch_brief_rows,
     write_daily_report,
 )
+from agent_hub.statuses import INACTIVE_OPEN_QUESTION_STATUSES
 from agent_hub.rendering import (
     compiled_markdown,
     daily_markdown,
@@ -76,7 +77,7 @@ def fetch_compiled_payload(
             "open_questions",
             project_id,
             "id, question, answer",
-            excluded_statuses=("archived", "closed"),
+            excluded_statuses=INACTIVE_OPEN_QUESTION_STATUSES,
             limit=limit,
         ),
         "reports": fetch_brief_rows(
@@ -211,7 +212,7 @@ def run_review(args: argparse.Namespace) -> int:
                     "open_questions",
                     project["id"],
                     "id, question, answer",
-                    excluded_statuses=("archived", "closed"),
+                    excluded_statuses=INACTIVE_OPEN_QUESTION_STATUSES,
                     limit=args.limit,
                 )
                 relations = fetch_project_relations(cur, project["id"], limit=args.limit)
