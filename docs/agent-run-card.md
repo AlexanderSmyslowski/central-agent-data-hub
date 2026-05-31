@@ -22,6 +22,18 @@ scripts/agent_lock_status.sh --repo /path/to/project
 scripts/agent_lock_status.sh --all
 ```
 
+For parallel write-capable work, create a separate worktree first:
+
+```bash
+scripts/agent_worktree.sh \
+  --repo /path/to/project \
+  --branch codex/focused-task \
+  --project <project-slug> \
+  --start \
+  --query "<current focus>" \
+  --review
+```
+
 ## 2. Work
 
 - Stay inside the selected project context.

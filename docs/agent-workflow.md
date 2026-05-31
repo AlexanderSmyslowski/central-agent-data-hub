@@ -42,6 +42,18 @@ Use `scripts/agent_lock_status.sh --repo /path/to/project` or
 `scripts/agent_lock_status.sh --all` when a start is blocked and you need to see
 which checkout is locked.
 
+If the next step is parallel write-capable work, prepare a separate checkout:
+
+```bash
+scripts/agent_worktree.sh \
+  --repo /path/to/project \
+  --branch codex/focused-task \
+  --project <project-slug> \
+  --start \
+  --query "<current focus>" \
+  --review
+```
+
 For single-project starts, it also prints a short "Start Decision". This
 confirms whether scoped work is ready, whether a concrete focus is missing, and
 whether review context should be loaded before risky changes.

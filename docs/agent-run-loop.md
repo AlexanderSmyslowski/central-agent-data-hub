@@ -37,6 +37,22 @@ scripts/agent_lock_status.sh --repo /path/to/project
 scripts/agent_lock_status.sh --all
 ```
 
+Prepare parallel work without sharing a checkout:
+
+```bash
+scripts/agent_worktree.sh \
+  --repo /path/to/project \
+  --branch codex/focused-task \
+  --project <project-slug> \
+  --start \
+  --query "<focus>" \
+  --review
+```
+
+The helper refuses to overwrite existing paths and refuses branches that are
+already checked out in another worktree. Its default worktree location is under
+`.local/worktrees/`, so the Hub repo stays clean.
+
 ## Design Rules
 
 - Do not store raw chat logs.
