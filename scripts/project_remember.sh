@@ -182,7 +182,7 @@ if [[ "$MEMORY_TYPE" == "decision" && "$HAS_RATIONALE" -eq 0 ]]; then
   echo "Quality warning: decisions should include --rationale." >&2
 fi
 
-if ! "$ROOT_DIR/scripts/agent_preflight.sh"; then
+if ! "$ROOT_DIR/scripts/agent_preflight.sh" --compact; then
   echo "Operational error: agent preflight failed." >&2
   exit 2
 fi
@@ -222,14 +222,13 @@ if [[ "$DRY_RUN" -eq 1 ]]; then
   exit 0
 fi
 
-remember_output="$(
-  run_agent_hub remember \
-    --project "$PROJECT" \
-    --type "$MEMORY_TYPE" \
-    --text "$TEXT_VALUE" \
-    "${REMEMBER_ARGS[@]}" \
-    --format json
-)"
+remember_command=(remember --project "$PROJECT" --type "$MEMORY_TYPE" --text "$TEXT_VALUE")
+if [[ "${#REMEMBER_ARGS[@]}" -gt 0 ]]; then
+  remember_command+=("${REMEMBER_ARGS[@]}")
+fi
+remember_command+=(--format json)
+
+remember_output="$(run_agent_hub "${remember_command[@]}")"
 
 object_type="$(
   printf '%s\n' "$remember_output" | "$PYTHON_BIN" -c '
