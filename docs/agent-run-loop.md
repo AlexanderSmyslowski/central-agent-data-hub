@@ -30,6 +30,13 @@ checkout by accident, but it does not create Hub memory or database rows.
 If parallel work is needed, use a separate git worktree. If a lock is stale,
 rerun `agent_start.sh` with `--force-lock`.
 
+Inspect local locks without changing them:
+
+```bash
+scripts/agent_lock_status.sh --repo /path/to/project
+scripts/agent_lock_status.sh --all
+```
+
 ## Design Rules
 
 - Do not store raw chat logs.

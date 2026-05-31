@@ -38,6 +38,10 @@ lock. This protects against two write-capable agents using the same checkout at
 the same time. The finish helper releases the lock. For parallel work, create a
 separate git worktree instead of sharing one working tree.
 
+Use `scripts/agent_lock_status.sh --repo /path/to/project` or
+`scripts/agent_lock_status.sh --all` when a start is blocked and you need to see
+which checkout is locked.
+
 For single-project starts, it also prints a short "Start Decision". This
 confirms whether scoped work is ready, whether a concrete focus is missing, and
 whether review context should be loaded before risky changes.

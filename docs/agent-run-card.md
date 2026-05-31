@@ -15,6 +15,13 @@ For single-project work this also creates a local working-tree run lock. If the
 lock blocks, another agent is already using this checkout. Finish that run or
 create a separate git worktree for parallel work.
 
+To inspect locks without changing them:
+
+```bash
+scripts/agent_lock_status.sh --repo /path/to/project
+scripts/agent_lock_status.sh --all
+```
+
 ## 2. Work
 
 - Stay inside the selected project context.
