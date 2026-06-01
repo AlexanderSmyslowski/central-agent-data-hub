@@ -9,6 +9,8 @@ DB_NAME="agent_hub"
 DB_USER="postgres"
 DB_PORT="55432"
 DEFAULT_DATABASE_URL="postgresql://postgres@localhost:${DB_PORT}/${DB_NAME}"
+AGENT_HUB_DOCKER_TIMEOUT_SECONDS="${AGENT_HUB_DOCKER_TIMEOUT_SECONDS:-15}"
+AGENT_HUB_DB_READY_TIMEOUT_SECONDS="${AGENT_HUB_DB_READY_TIMEOUT_SECONDS:-5}"
 
 if [[ -f "$ROOT_DIR/.env" ]]; then
   set -a
@@ -43,6 +45,47 @@ compose() {
   docker compose -f "$COMPOSE_FILE" "$@"
 }
 
+run_with_timeout() {
+  local timeout_seconds="$1"
+  shift
+
+  "$@" &
+  local pid=$!
+  local elapsed=0
+
+  while kill -0 "$pid" >/dev/null 2>&1; do
+    if (( elapsed >= timeout_seconds )); then
+      kill "$pid" >/dev/null 2>&1 || true
+      sleep 1
+      kill -9 "$pid" >/dev/null 2>&1 || true
+      wait "$pid" >/dev/null 2>&1 || true
+      return 124
+    fi
+    sleep 1
+    elapsed=$((elapsed + 1))
+  done
+
+  wait "$pid"
+}
+
+compose_quick() {
+  run_with_timeout "$AGENT_HUB_DOCKER_TIMEOUT_SECONDS" docker compose -f "$COMPOSE_FILE" "$@"
+}
+
+docker_quick() {
+  run_with_timeout "$AGENT_HUB_DOCKER_TIMEOUT_SECONDS" docker "$@"
+}
+
+postgres_ready() {
+  if command -v pg_isready >/dev/null 2>&1; then
+    run_with_timeout "$AGENT_HUB_DB_READY_TIMEOUT_SECONDS" \
+      pg_isready -h localhost -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" >/dev/null 2>&1
+    return $?
+  fi
+
+  compose_quick exec -T "$DB_SERVICE" pg_isready -U "$DB_USER" -d "$DB_NAME" >/dev/null 2>&1
+}
+
 run_agent_hub() {
   (cd "$ROOT_DIR" && "$PYTHON_BIN" -m agent_hub.cli "$@")
 }
@@ -53,7 +96,7 @@ wait_for_postgres() {
 
   echo "Waiting for ${DB_CONTAINER} to become ready..."
   for _ in $(seq 1 "$tries"); do
-    if compose exec -T "$DB_SERVICE" pg_isready -U "$DB_USER" -d "$DB_NAME" >/dev/null 2>&1; then
+    if postgres_ready; then
       echo "Postgres is ready."
       return 0
     fi

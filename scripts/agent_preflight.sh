@@ -49,7 +49,7 @@ if ! command -v docker >/dev/null 2>&1; then
   exit 2
 fi
 
-if ! docker compose version >/dev/null 2>&1; then
+if ! run_with_timeout "$AGENT_HUB_DOCKER_TIMEOUT_SECONDS" docker compose version >/dev/null 2>&1; then
   echo "Operational error: docker compose is not available." >&2
   exit 2
 fi
@@ -59,19 +59,37 @@ if [[ ! -f "$COMPOSE_FILE" ]]; then
   exit 2
 fi
 
-if ! docker inspect "$DB_CONTAINER" >/dev/null 2>&1; then
+set +e
+docker_quick inspect "$DB_CONTAINER" >/dev/null 2>&1
+inspect_code=$?
+set -e
+if [[ "$inspect_code" -eq 124 ]]; then
+  echo "Operational error: docker is not responding within ${AGENT_HUB_DOCKER_TIMEOUT_SECONDS}s." >&2
+  echo "Restart Docker Desktop, then run scripts/db_status.sh." >&2
+  exit 2
+fi
+if [[ "$inspect_code" -ne 0 ]]; then
   echo "Operational error: durable DB container is missing." >&2
   echo "Run scripts/db_start.sh first." >&2
   exit 2
 fi
 
-if [[ "$(docker inspect -f '{{.State.Running}}' "$DB_CONTAINER" 2>/dev/null)" != "true" ]]; then
+set +e
+running_state="$(docker_quick inspect -f '{{.State.Running}}' "$DB_CONTAINER" 2>/dev/null)"
+running_code=$?
+set -e
+if [[ "$running_code" -eq 124 ]]; then
+  echo "Operational error: docker is not responding within ${AGENT_HUB_DOCKER_TIMEOUT_SECONDS}s." >&2
+  echo "Restart Docker Desktop, then run scripts/db_status.sh." >&2
+  exit 2
+fi
+if [[ "$running_state" != "true" ]]; then
   echo "Operational error: durable DB container is not running." >&2
   echo "Run scripts/db_start.sh first." >&2
   exit 2
 fi
 
-if ! compose exec -T "$DB_SERVICE" pg_isready -U "$DB_USER" -d "$DB_NAME" >/dev/null 2>&1; then
+if ! postgres_ready; then
   echo "Operational error: durable DB is not accepting connections." >&2
   exit 2
 fi

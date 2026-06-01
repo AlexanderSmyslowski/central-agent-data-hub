@@ -13,12 +13,14 @@ echo "URL:       $DEFAULT_DATABASE_URL"
 echo
 
 echo "== Docker Compose =="
-compose ps
+if ! compose_quick ps; then
+  echo "Docker Compose status unavailable within ${AGENT_HUB_DOCKER_TIMEOUT_SECONDS}s."
+fi
 
 echo
 echo "== Volume =="
-if docker volume inspect "$DB_VOLUME" >/dev/null 2>&1; then
-  docker volume inspect "$DB_VOLUME" --format 'Name={{ .Name }} Mountpoint={{ .Mountpoint }}'
+if docker_quick volume inspect "$DB_VOLUME" >/dev/null 2>&1; then
+  docker_quick volume inspect "$DB_VOLUME" --format 'Name={{ .Name }} Mountpoint={{ .Mountpoint }}'
 else
   echo "Volume not found: $DB_VOLUME"
 fi
@@ -37,7 +39,7 @@ fi
 
 echo
 echo "== Healthcheck =="
-if compose exec -T "$DB_SERVICE" pg_isready -U "$DB_USER" -d "$DB_NAME"; then
+if postgres_ready; then
   echo "Healthcheck: ok"
 else
   echo "Healthcheck: not ready"
