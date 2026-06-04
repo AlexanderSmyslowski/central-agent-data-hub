@@ -89,7 +89,7 @@ if ! [[ "$LIMIT" =~ ^[0-9]+$ ]] || (( LIMIT < 1 )); then
   exit 2
 fi
 
-if ! "$ROOT_DIR/scripts/agent_preflight.sh"; then
+if ! "$ROOT_DIR/scripts/agent_preflight.sh" --compact; then
   echo "Operational error: agent preflight failed." >&2
   exit 2
 fi

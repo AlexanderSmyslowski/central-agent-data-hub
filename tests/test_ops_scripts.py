@@ -66,3 +66,11 @@ def test_agent_start_lock_error_points_to_status_and_force_lock() -> None:
     assert 'AGENT_HUB_RUN_LOCK_DIR="${AGENT_HUB_RUN_LOCK_ROOT}/.local/run-locks"' in run_lock
     assert "scripts/agent_lock_status.sh --repo" in run_lock
     assert "If this is your interrupted run, rerun agent_start.sh with --force-lock." in run_lock
+
+
+def test_agent_start_and_project_context_use_compact_preflight() -> None:
+    start = read_script("scripts/agent_start.sh")
+    context = read_script("scripts/project_context.sh")
+
+    assert '"$ROOT_DIR/scripts/agent_preflight.sh" --compact' in start
+    assert '"$ROOT_DIR/scripts/agent_preflight.sh" --compact' in context
