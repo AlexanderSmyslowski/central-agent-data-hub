@@ -773,6 +773,10 @@ def test_context_labels_answered_questions_as_updates(monkeypatch, capsys) -> No
     assert "### Question Updates" in captured.out
     assert "### Open Questions" not in captured.out
     assert "[answered] Which staging subdomain should be used?" in captured.out
+    assert (
+        "No direct reviewed memory matched this focus query; showing recent project memory below."
+        in captured.out
+    )
 
 
 class FakeProjectsConnection:

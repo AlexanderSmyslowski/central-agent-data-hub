@@ -98,7 +98,12 @@ def run_context(args: argparse.Namespace) -> int:
     print(f"- since: {since.isoformat()}")
     print()
     print("## Search Results")
-    print(search_results_markdown(results))
+    print(
+        search_results_markdown(
+            results,
+            "- No direct reviewed memory matched this focus query; showing recent project memory below.",
+        )
+    )
     print()
     print("## Recent Activity")
     print("### Facts")

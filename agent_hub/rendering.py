@@ -338,9 +338,11 @@ def compiled_markdown(payload: dict[str, object]) -> str:
     return "\n".join(lines)
 
 
-def search_results_markdown(rows: list[dict[str, object]]) -> str:
+def search_results_markdown(
+    rows: list[dict[str, object]], empty_message: str = "- none"
+) -> str:
     if not rows:
-        return "- none"
+        return empty_message
     lines = []
     for row in rows:
         lines.append(
