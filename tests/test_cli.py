@@ -11,6 +11,7 @@ import pytest
 from agent_hub import cli
 from agent_hub.errors import ValidationError
 from agent_hub.commands import briefs as brief_commands
+from agent_hub.commands import search as search_commands
 from agent_hub.commands import system as system_commands
 from agent_hub.commands import write as write_commands
 from agent_hub import export_obsidian
@@ -701,6 +702,77 @@ class FakeProjectsCursor:
 
     def fetchall(self) -> list[dict[str, object]]:
         return self.results
+
+
+class FakeContextCursor:
+    def __init__(self) -> None:
+        self.results: list[dict[str, object]] = []
+
+    def __enter__(self) -> "FakeContextCursor":
+        return self
+
+    def __exit__(self, *_args: object) -> None:
+        return None
+
+    def execute(self, query: str, _params: object = None) -> None:
+        if "FROM projects" in query and "WHERE slug" in query:
+            self.results = [
+                {
+                    "id": uuid.UUID("10000000-0000-4000-8000-000000000001"),
+                    "name": "THE ONE",
+                    "slug": "the-one-catering",
+                    "description": "Website work.",
+                    "status": "active",
+                    "metadata": {},
+                    "created_at": "2026-05-28T00:00:00Z",
+                    "updated_at": "2026-05-28T00:00:00Z",
+                }
+            ]
+        elif "FROM open_questions" in query and "updated_at >=" in query:
+            self.results = [
+                {
+                    "id": uuid.UUID("10000000-0000-4000-8000-000000000401"),
+                    "question": "Which staging subdomain should be used?",
+                    "answer": "Use staging.the-one.catering.",
+                    "status": "answered",
+                    "created_at": "2026-05-29T00:00:00Z",
+                    "updated_at": "2026-05-30T00:00:00Z",
+                }
+            ]
+        else:
+            self.results = []
+
+    def fetchone(self) -> dict[str, object] | None:
+        return self.results[0] if self.results else None
+
+    def fetchall(self) -> list[dict[str, object]]:
+        return self.results
+
+
+class FakeContextConnection:
+    def __enter__(self) -> "FakeContextConnection":
+        return self
+
+    def __exit__(self, *_args: object) -> None:
+        return None
+
+    def cursor(self) -> FakeContextCursor:
+        return FakeContextCursor()
+
+
+def test_context_labels_answered_questions_as_updates(monkeypatch, capsys) -> None:
+    monkeypatch.setenv("DATABASE_URL", "postgresql://example.invalid/test")
+    monkeypatch.setattr(search_commands, "connect", lambda: FakeContextConnection())
+
+    code = cli.main(
+        ["context", "--project", "the-one-catering", "--query", "staging"]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "### Question Updates" in captured.out
+    assert "### Open Questions" not in captured.out
+    assert "[answered] Which staging subdomain should be used?" in captured.out
 
 
 class FakeProjectsConnection:

@@ -110,7 +110,7 @@ def run_context(args: argparse.Namespace) -> int:
     print("### Risks")
     print(markdown_list(snapshot["risks"], "title", ("severity", "impact", "mitigation")))
     print()
-    print("### Open Questions")
+    print("### Question Updates")
     print(markdown_list(snapshot["open_questions"], "question", ("answer",)))
     print()
     print("### Relations")
