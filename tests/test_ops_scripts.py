@@ -49,3 +49,14 @@ def test_agent_finish_surfaces_question_answer_dry_run() -> None:
 
     assert "scripts/project_answer_question.sh" in finish
     assert "--question-id <open-question-uuid>" in finish
+    assert "after this finish step" in finish
+    assert "agent-hub export directly" in finish
+
+
+def test_agent_start_lock_error_points_to_status_and_force_lock() -> None:
+    run_lock = read_script("scripts/agent_run_lock.sh")
+
+    assert 'AGENT_HUB_RUN_LOCK_ROOT="${SHARED_ROOT:-$ROOT_DIR}"' in run_lock
+    assert 'AGENT_HUB_RUN_LOCK_DIR="${AGENT_HUB_RUN_LOCK_ROOT}/.local/run-locks"' in run_lock
+    assert "scripts/agent_lock_status.sh --repo" in run_lock
+    assert "If this is your interrupted run, rerun agent_start.sh with --force-lock." in run_lock

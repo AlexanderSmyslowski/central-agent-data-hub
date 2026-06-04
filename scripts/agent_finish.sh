@@ -162,7 +162,7 @@ else
   echo "- If this run needs a durable handoff: rerun with --write-report or store a reviewed report via scripts/project_remember.sh."
 fi
 if [[ "$EXPORT" -eq 0 ]]; then
-  echo "- If reviewed memory was written: run scripts/agent_finish.sh --project $PROJECT --review --export."
+  echo "- If reviewed memory was written after this finish step: rerun scripts/agent_finish.sh --project $PROJECT --review --export, or run agent-hub export directly."
 fi
 if [[ "$BACKUP" -eq 0 ]]; then
   echo "- If important memory was written: run scripts/db_backup.sh after export."

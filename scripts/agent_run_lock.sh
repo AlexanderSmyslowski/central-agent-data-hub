@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-AGENT_HUB_RUN_LOCK_DIR="${ROOT_DIR}/.local/run-locks"
+AGENT_HUB_RUN_LOCK_ROOT="${SHARED_ROOT:-$ROOT_DIR}"
+AGENT_HUB_RUN_LOCK_DIR="${AGENT_HUB_RUN_LOCK_ROOT}/.local/run-locks"
 AGENT_HUB_RUN_LOCK_MAX_AGE_SECONDS="${AGENT_HUB_RUN_LOCK_MAX_AGE_SECONDS:-43200}"
 
 agent_run_repo_root() {
@@ -112,7 +113,8 @@ agent_run_lock_acquire() {
       echo "  branch:  ${lock_branch:-unknown}" >&2
       echo "  since:   ${lock_created_at:-unknown}" >&2
       echo "Finish that run first, or use a separate git worktree for parallel work." >&2
-      echo "If the lock is stale, rerun agent_start.sh with --force-lock." >&2
+      echo "Inspect it with: scripts/agent_lock_status.sh --repo \"$repo_root\"" >&2
+      echo "If this is your interrupted run, rerun agent_start.sh with --force-lock." >&2
       return 2
     fi
   fi
