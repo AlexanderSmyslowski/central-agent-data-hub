@@ -292,6 +292,11 @@ scripts/project_remember.sh \
 
 `scripts/project_remember.sh` ist ein Schutzlayer um `agent-hub remember`: Es fuehrt Preflight und Safety-Scan aus, blockiert Projekterzeugung, verlangt Quellen fuer Fakten, erlaubt `--dry-run` und kann nach erfolgreichem Writeback optional direkt eine kuratierte Relation anlegen. Details und Beispiele stehen in `docs/agent-workflow.md`.
 
+Fuer bestehende offene Fragen gibt es den schmalen Update-Pfad
+`scripts/project_answer_question.sh`: Er fuehrt denselben reviewed Betriebsweg
+aus und markiert eine vorhandene Frage als `answered` oder `closed`, statt nur
+eine neue Antwort daneben zu speichern.
+
 Fuer Codex/Hermes-Policy und Repo-spezifische Startkarten:
 
 - `docs/active-projects.md`
@@ -461,6 +466,7 @@ Beim erneuten Export bleibt der Inhalt innerhalb des Human-Notes-Blocks erhalten
 - `agent-hub receipt --project <slug>`: prueft aktuelle Memory-Zeilen und passende Obsidian-Exportdateien
 - `agent-hub actions --project <slug>`: listet aktuelle Agenten-Auditaktionen fuer einen Projektkontext
 - `agent-hub remember --project <slug> --type <type> --text <text>`: speichert eine gepruefte Erinnerung
+- `agent-hub answer-question --project <slug> --question-id <uuid> --answer <text>`: markiert eine bestehende offene Frage als beantwortet oder geschlossen
 - `agent-hub relations --project <slug>`: listet den belegbaren Projektgraphen
 - `agent-hub relate --project <slug> ...`: verknuepft zwei existierende Hub-Objekte kuratiert
 - `agent-hub import --path <file-or-directory>`: importiert allowlisted Obsidian-Markdown nach Postgres

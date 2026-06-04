@@ -269,6 +269,19 @@ scripts/project_remember.sh \
 `project_remember.sh` never creates projects. If a project is missing, add it
 through reviewed seed or migration changes.
 
+For an existing open question that is now resolved, use the narrow update path:
+
+```bash
+scripts/project_answer_question.sh \
+  --project <project-slug> \
+  --question-id <open-question-uuid> \
+  --answer "Reviewed answer or closure note." \
+  --source "/path/to/non-sensitive/review-note" \
+  --dry-run
+```
+
+Then rerun without `--dry-run` to mark the row as `answered` or `closed`.
+
 When the new memory clearly supports, mitigates, answers, or references an
 existing object, the wrapper can write the memory and relation together:
 

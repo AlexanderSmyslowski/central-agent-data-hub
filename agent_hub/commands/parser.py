@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+import uuid
 from collections.abc import Callable
 from typing import Any
 
@@ -25,7 +26,12 @@ from agent_hub.commands.system import (
     run_projects,
     run_status,
 )
-from agent_hub.commands.write import run_import, run_remember, run_sync
+from agent_hub.commands.write import (
+    run_answer_question,
+    run_import,
+    run_remember,
+    run_sync,
+)
 from agent_hub.memory import REMEMBER_TYPES
 from agent_hub.receipts import RECEIPT_TYPES
 from agent_hub.relations import RELATION_TARGETS, RELATION_TYPES
@@ -80,6 +86,13 @@ def add_limit_argument(
         default=default,
         help=help_text,
     )
+
+
+def uuid_value(value: str) -> str:
+    try:
+        return str(uuid.UUID(value))
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("must be a valid UUID") from exc
 
 
 def add_since_argument(
@@ -470,6 +483,49 @@ def build_parser() -> argparse.ArgumentParser:
     remember_parser.add_argument("--summary", help="Report summary.")
     remember_parser.add_argument("--body", help="Report body.")
     remember_parser.set_defaults(func=run_remember)
+
+    answer_question_parser = subparsers.add_parser(
+        "answer-question",
+        help="Mark an existing open question as answered or closed.",
+    )
+    add_project_argument(
+        answer_question_parser,
+        "Project slug that owns the open question.",
+    )
+    answer_question_parser.add_argument(
+        "--agent",
+        default="codex",
+        help="Agent slug to attribute the update to.",
+    )
+    answer_question_parser.add_argument(
+        "--agent-name",
+        default="Codex",
+        help="Agent display name to attribute the update to.",
+    )
+    answer_question_parser.add_argument(
+        "--question-id",
+        required=True,
+        type=uuid_value,
+        help="Existing open question UUID to update.",
+    )
+    answer_question_parser.add_argument(
+        "--answer",
+        required=True,
+        help="Reviewed answer or closure note.",
+    )
+    answer_question_parser.add_argument(
+        "--status",
+        choices=("answered", "closed"),
+        default="answered",
+        help="Final question status. Default: answered.",
+    )
+    answer_question_parser.add_argument(
+        "--source",
+        help="Source path, URL, or short provenance note.",
+    )
+    add_metadata_argument(answer_question_parser)
+    add_format_argument(answer_question_parser, ("text", "json"), "text")
+    answer_question_parser.set_defaults(func=run_answer_question)
 
     import_parser = subparsers.add_parser(
         "import",

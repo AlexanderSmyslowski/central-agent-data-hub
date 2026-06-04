@@ -87,15 +87,9 @@ def log_agent_action(
     action: str,
     object_type: str,
     object_id: object,
-    args: argparse.Namespace,
+    input_payload: dict[str, object],
     output: dict[str, object],
 ) -> None:
-    input_payload = {
-        "command": "remember",
-        "project": args.project,
-        "type": args.memory_type,
-        "source": args.source,
-    }
     cur.execute(
         """
         INSERT INTO agent_actions (
@@ -264,7 +258,81 @@ def remember(
         f"remember_{object_type}",
         object_type,
         row["id"],
-        args,
+        {
+            "command": "remember",
+            "project": args.project,
+            "type": args.memory_type,
+            "source": args.source,
+        },
         {"project_id": project["id"], "object": row},
     )
     return project, agent, object_type, row
+
+
+def answer_question(
+    cur, args: argparse.Namespace, metadata: dict[str, object]
+) -> tuple[dict[str, object], dict[str, object], dict[str, object]]:
+    project = ensure_project(cur, args)
+    agent = ensure_agent(cur, project["id"], args.agent, args.agent_name)
+
+    cur.execute(
+        """
+        SELECT id, question, answer, status, resolved_at, metadata, created_at
+        FROM open_questions
+        WHERE id = %s AND project_id = %s
+        """,
+        (args.question_id, project["id"]),
+    )
+    existing = cur.fetchone()
+    if not existing:
+        raise NotFoundError(
+            f"open question '{args.question_id}' not found in project '{args.project}'"
+        )
+
+    merged_metadata = dict(existing.get("metadata") or {})
+    merged_metadata.update(metadata)
+
+    cur.execute(
+        """
+        UPDATE open_questions
+        SET answer = %s,
+            status = %s,
+            resolved_at = CASE
+              WHEN %s IN ('answered', 'closed') THEN COALESCE(resolved_at, now())
+              ELSE resolved_at
+            END,
+            metadata = %s::jsonb
+        WHERE id = %s AND project_id = %s
+        RETURNING id, question, answer, status, resolved_at, created_at
+        """,
+        (
+            args.answer,
+            args.status,
+            args.status,
+            json.dumps(merged_metadata),
+            args.question_id,
+            project["id"],
+        ),
+    )
+    row = cur.fetchone()
+
+    log_agent_action(
+        cur,
+        agent["id"],
+        "answer_open_question",
+        "open_question",
+        row["id"],
+        {
+            "command": "answer-question",
+            "project": args.project,
+            "question_id": str(args.question_id),
+            "status": args.status,
+            "source": args.source,
+        },
+        {
+            "project_id": project["id"],
+            "previous_status": existing["status"],
+            "object": row,
+        },
+    )
+    return project, agent, row

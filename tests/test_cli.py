@@ -78,6 +78,7 @@ def test_parse_since_rejects_invalid_value() -> None:
         ["--help"],
         ["brief", "--help"],
         ["remember", "--help"],
+        ["answer-question", "--help"],
         ["sync", "--help"],
         ["relations", "--help"],
         ["compile", "--help"],
@@ -122,6 +123,48 @@ def test_remember_without_database_url_has_clear_error(monkeypatch, capsys) -> N
     assert code == 2
     assert "DATABASE_URL is not set" in captured.err
     assert "Traceback" not in captured.err
+
+
+def test_answer_question_without_database_url_has_clear_error(
+    monkeypatch, capsys
+) -> None:
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+
+    code = cli.main(
+        [
+            "answer-question",
+            "--project",
+            "commcats-de",
+            "--question-id",
+            "cbf9b149-3e7e-4853-b136-4b86cf4dde8e",
+            "--answer",
+            "Use a human secure handoff.",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 2
+    assert "DATABASE_URL is not set" in captured.err
+    assert "Traceback" not in captured.err
+
+
+def test_answer_question_rejects_invalid_uuid(capsys) -> None:
+    with pytest.raises(SystemExit) as excinfo:
+        cli.main(
+            [
+                "answer-question",
+                "--project",
+                "commcats-de",
+                "--question-id",
+                "not-a-uuid",
+                "--answer",
+                "Use a human secure handoff.",
+            ]
+        )
+
+    captured = capsys.readouterr()
+    assert excinfo.value.code == 2
+    assert "must be a valid UUID" in captured.err
 
 
 def test_sync_without_database_url_has_clear_error(monkeypatch, capsys) -> None:
@@ -411,6 +454,65 @@ def test_sync_json_output_includes_diffs(monkeypatch, capsys) -> None:
     assert code == 0
     assert '"diffs"' in captured.out
     assert '"field": "statement"' in captured.out
+
+
+def test_answer_question_json_output(monkeypatch, capsys) -> None:
+    monkeypatch.setenv("DATABASE_URL", "postgresql://example.invalid/test")
+
+    class FakeConnectionContext:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        def cursor(self):
+            return self
+
+    monkeypatch.setattr(write_commands, "connect", lambda: FakeConnectionContext())
+    monkeypatch.setattr(
+        write_commands,
+        "answer_question",
+        lambda *_args, **_kwargs: (
+            {
+                "id": uuid.UUID("10000000-0000-4000-8000-000000000001"),
+                "slug": "commcats-de",
+                "name": "CommCats",
+            },
+            {
+                "id": uuid.UUID("10000000-0000-4000-8000-000000000011"),
+                "slug": "codex",
+                "name": "Codex",
+            },
+            {
+                "id": uuid.UUID("cbf9b149-3e7e-4853-b136-4b86cf4dde8e"),
+                "question": "How should access be handed off?",
+                "answer": "Use a human secure handoff.",
+                "status": "answered",
+                "resolved_at": "2026-06-04T00:00:00Z",
+                "created_at": "2026-05-31T00:00:00Z",
+            },
+        ),
+    )
+
+    code = cli.main(
+        [
+            "answer-question",
+            "--project",
+            "commcats-de",
+            "--question-id",
+            "cbf9b149-3e7e-4853-b136-4b86cf4dde8e",
+            "--answer",
+            "Use a human secure handoff.",
+            "--format",
+            "json",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert '"type": "open_question"' in captured.out
+    assert '"status": "answered"' in captured.out
 
 
 def test_agent_actions_markdown_is_project_scoped() -> None:

@@ -15,7 +15,7 @@ from agent_hub.commands.common import (
 )
 from agent_hub.db import connect
 from agent_hub.import_obsidian import import_markdown, sync_markdown
-from agent_hub.memory import remember
+from agent_hub.memory import answer_question, remember
 
 
 def run_remember(args: argparse.Namespace) -> int:
@@ -58,6 +58,51 @@ def run_remember(args: argparse.Namespace) -> int:
 
     print(
         f"Remembered {object_type} for project '{project['slug']}': "
+        f"{row['id']}"
+    )
+    return 0
+
+
+def run_answer_question(args: argparse.Namespace) -> int:
+    if error_code := require_database_url():
+        return error_code
+
+    try:
+        metadata = parse_metadata(args.metadata)
+    except ValueError as exc:
+        return error(exc, 2)
+    metadata.setdefault("created_by", "agent-hub answer-question")
+    if args.source:
+        metadata.setdefault("source", args.source)
+
+    try:
+        with connect() as conn:
+            with conn.cursor() as cur:
+                project, agent, row = answer_question(cur, args, metadata)
+    except Exception as exc:
+        return exception_error(exc)
+
+    result = {
+        "project": {
+            "id": project["id"],
+            "slug": project["slug"],
+            "name": project["name"],
+        },
+        "agent": {
+            "id": agent["id"],
+            "slug": agent["slug"],
+            "name": agent["name"],
+        },
+        "type": "open_question",
+        "object": row,
+    }
+
+    if args.format == "json":
+        print(json.dumps(result, indent=2, default=json_default, ensure_ascii=False))
+        return 0
+
+    print(
+        f"Answered open_question for project '{project['slug']}': "
         f"{row['id']}"
     )
     return 0
