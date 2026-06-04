@@ -111,6 +111,10 @@ Use the Run Card rhythm for substantial work: start with Hub context, work insid
 one project boundary, finish with review, and write back only reviewed,
 non-sensitive memory.
 
+If work requires protected hosting, deployment, FTP, or production access,
+request a human secure handoff outside the Hub, Git, and Obsidian. Store back
+only the reviewed, non-sensitive outcome.
+
 Use the shared Hub before and after substantial project work:
 
 \`\`\`bash

@@ -486,8 +486,12 @@ ausgegeben.
 
 Website ist das erste Domain-Profil im Hub. Diese Website-Projekte haben unterschiedliche Bearbeitungsstaende:
 
-- `commcats-de`: aktuelle Live-Seite ist bereits eine statische Alfahosting-Website. Agenten sollen lokal in der statischen Quelle arbeiten und nur nach ausdruecklicher Freigabe hochladen.
+- `commcats-de`: aktuelle Live-Seite ist bereits eine statische Alfahosting-Website. Agenten sollen lokal in der statischen Quelle arbeiten und nur nach ausdruecklicher Freigabe hochladen. Wenn der naechste Schritt geschuetzten Live-Zugang braucht, muss der Agent einen Human-Handoff ausserhalb von Hub, Git und Obsidian anfordern.
 - `the-one-catering`: aktuelle Live-Seite bleibt vorerst Framer. Agenten sollen die Live-Seite stabil halten, optisch unsichtbare SEO-/AI-Schritte vorbereiten und eine geschuetzte statische Staging-Version bauen, bevor ueber Migration gesprochen wird.
+
+Fuer geschuetzte Hosting-, Deployment- oder Produktionszugriffe gilt die
+Betriebsregel in `docs/sensitive-access-handoffs.md`: der Hub speichert den
+Bedarf und das Ergebnis, aber nie den Zugangswert selbst.
 
 Projekt-Taxonomie bleibt in v1 bewusst leichtgewichtig ueber `projects.metadata.project_type`. Dokumentierte Werte sind `website`, `ops`, `research`, `product`, `business`, `personal` und `learning`. Eine eigene Spalte kommt erst in Frage, wenn Projekttypen query-kritisch werden.
 

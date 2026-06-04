@@ -313,6 +313,9 @@ scripts/project_context.sh --all-websites
 
 Website boundaries:
 
-- `commcats-de`: live static Alfahosting site; work from the local static source and upload only after approval.
+- `commcats-de`: live static Alfahosting site; work from the local static source and upload only after approval. If a live upload needs protected access, request a human secure handoff outside the Hub, Git, and Obsidian.
 - `the-one-catering`: live Framer site; keep it stable while SEO/AI work and protected static migration preparation happen.
 - `lamour`: planned future web presence; do not inherit positioning from CommCats or THE ONE without a separate decision.
+
+For protected hosting, deployment, FTP, or production access, use the separate
+handoff rule in `docs/sensitive-access-handoffs.md`.
