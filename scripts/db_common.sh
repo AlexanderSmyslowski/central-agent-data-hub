@@ -12,26 +12,38 @@ DB_PORT="55432"
 DEFAULT_DATABASE_URL="postgresql://postgres@localhost:${DB_PORT}/${DB_NAME}"
 AGENT_HUB_DOCKER_TIMEOUT_SECONDS="${AGENT_HUB_DOCKER_TIMEOUT_SECONDS:-15}"
 AGENT_HUB_DB_READY_TIMEOUT_SECONDS="${AGENT_HUB_DB_READY_TIMEOUT_SECONDS:-5}"
+COMMON_GIT_DIR="$(git -C "$ROOT_DIR" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)"
+SHARED_ROOT="$ROOT_DIR"
+if [[ -n "$COMMON_GIT_DIR" ]]; then
+  SHARED_ROOT="$(cd "$COMMON_GIT_DIR/.." && pwd)"
+fi
 
+ENV_FILE=""
 if [[ -f "$ROOT_DIR/.env" ]]; then
+  ENV_FILE="$ROOT_DIR/.env"
+elif [[ -f "$SHARED_ROOT/.env" ]]; then
+  ENV_FILE="$SHARED_ROOT/.env"
+fi
+
+if [[ -n "$ENV_FILE" ]]; then
   set -a
   # shellcheck disable=SC1091
-  source "$ROOT_DIR/.env"
+  source "$ENV_FILE"
   set +a
 fi
 
 export DATABASE_URL="${DATABASE_URL:-$DEFAULT_DATABASE_URL}"
-export OBSIDIAN_EXPORT_DIR="${OBSIDIAN_EXPORT_DIR:-$ROOT_DIR/.local/obsidian-export}"
-export AGENT_HUB_BACKUP_DIR="${AGENT_HUB_BACKUP_DIR:-$ROOT_DIR/.local/backups}"
+export OBSIDIAN_EXPORT_DIR="${OBSIDIAN_EXPORT_DIR:-$SHARED_ROOT/.local/obsidian-export}"
+export AGENT_HUB_BACKUP_DIR="${AGENT_HUB_BACKUP_DIR:-$SHARED_ROOT/.local/backups}"
 
 case "$OBSIDIAN_EXPORT_DIR" in
   /*) ;;
-  *) OBSIDIAN_EXPORT_DIR="$ROOT_DIR/$OBSIDIAN_EXPORT_DIR" ;;
+  *) OBSIDIAN_EXPORT_DIR="$SHARED_ROOT/$OBSIDIAN_EXPORT_DIR" ;;
 esac
 
 case "$AGENT_HUB_BACKUP_DIR" in
   /*) ;;
-  *) AGENT_HUB_BACKUP_DIR="$ROOT_DIR/$AGENT_HUB_BACKUP_DIR" ;;
+  *) AGENT_HUB_BACKUP_DIR="$SHARED_ROOT/$AGENT_HUB_BACKUP_DIR" ;;
 esac
 
 export OBSIDIAN_EXPORT_DIR
@@ -40,6 +52,8 @@ export AGENT_HUB_BACKUP_DIR
 PYTHON_BIN="${PYTHON:-python3}"
 if [[ -x "$ROOT_DIR/.venv/bin/python" && -z "${PYTHON:-}" ]]; then
   PYTHON_BIN="$ROOT_DIR/.venv/bin/python"
+elif [[ -x "$SHARED_ROOT/.venv/bin/python" && -z "${PYTHON:-}" ]]; then
+  PYTHON_BIN="$SHARED_ROOT/.venv/bin/python"
 fi
 
 compose() {
