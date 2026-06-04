@@ -1,6 +1,8 @@
 # Agent Data Hub
 
-Agent Data Hub ist verified memory for agentic work: eine lokale, Postgres-backed Shared-Memory-Schicht fuer Codex/Hermes-Agenten und Menschen.
+> verified context for humans and agents
+
+Agent Data Hub ist eine lokale, Postgres-backed Shared-Memory-Schicht fuer Menschen sowie Codex/Hermes-Agenten.
 
 Der Hub speichert keine Roh-Chatlogs und keine Secrets. Er speichert kuratierte, projektgebundene Fakten, Entscheidungen, Risiken, offene Fragen, Reports, Relations und Agent Actions. PostgreSQL ist der verbindliche Datenstand; Obsidian ist die menschenlesbare Projektion fuer Review, Graph und Human Notes.
 
