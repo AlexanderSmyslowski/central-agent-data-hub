@@ -82,6 +82,10 @@ def sync_events_markdown(rows: list[dict[str, object]]) -> str:
     )
 
 
+def all_empty(*sections: list[dict[str, object]]) -> bool:
+    return all(not section for section in sections)
+
+
 def recommended_steps_markdown(payload: dict[str, object]) -> str:
     steps = []
     for row in unresolved_open_questions(payload["open_questions"])[:3]:
@@ -98,6 +102,27 @@ def recommended_steps_markdown(payload: dict[str, object]) -> str:
 def daily_markdown(payload: dict[str, object]) -> str:
     project = payload["project"]
     since = payload["since"]
+    if all_empty(
+        payload["facts"],
+        payload["decisions"],
+        payload["risks"],
+        unresolved_open_questions(payload["open_questions"]),
+        payload["reports"],
+        payload["relations"],
+        payload["agent_actions"],
+        payload["sync_events"],
+    ):
+        return "\n".join(
+            [
+                f"# Daily: {project['name']}",
+                "",
+                f"- project: {project['slug']}",
+                f"- since: {since.isoformat()}",
+                "",
+                "## Activity Summary",
+                "- No new reviewed facts, decisions, risks, open questions, reports, relations, agent actions, or sync events in this window.",
+            ]
+        )
     return "\n".join(
         [
             f"# Daily: {project['name']}",
@@ -139,6 +164,25 @@ def daily_markdown(payload: dict[str, object]) -> str:
 def handoff_markdown(payload: dict[str, object]) -> str:
     project = payload["project"]
     since = payload["since"]
+    unresolved_questions = unresolved_open_questions(payload["open_questions"])
+    if all_empty(
+        payload["decisions"],
+        payload["risks"],
+        unresolved_questions,
+        payload["facts"],
+        payload["relations"],
+    ):
+        return "\n".join(
+            [
+                f"# Handoff: {project['name']}",
+                "",
+                f"- project: {project['slug']}",
+                f"- since: {since.isoformat()}",
+                "",
+                "## Handoff Summary",
+                "- No new decisions, risks, open questions, evidence, or relation changes need handoff from this window.",
+            ]
+        )
     return "\n".join(
         [
             f"# Handoff: {project['name']}",
@@ -154,7 +198,7 @@ def handoff_markdown(payload: dict[str, object]) -> str:
             "",
             "## What Is Open",
             markdown_list(
-                unresolved_open_questions(payload["open_questions"]),
+                unresolved_questions,
                 "question",
                 ("answer",),
             ),
