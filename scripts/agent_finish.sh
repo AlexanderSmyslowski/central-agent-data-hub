@@ -43,6 +43,7 @@ EXPORT=0
 BACKUP=0
 NO_LOCK=0
 UNRESOLVED_QUESTION_COUNT=""
+HAS_RECENT_ACTIVITY=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -104,6 +105,17 @@ fi
 if ! "$ROOT_DIR/scripts/agent_preflight.sh" --compact; then
   echo "Operational error: agent preflight failed." >&2
   exit 2
+fi
+
+if recent_activity_json="$(run_agent_hub daily --project "$PROJECT" --since "$SINCE" --limit "$LIMIT" --format json 2>/dev/null)"; then
+  HAS_RECENT_ACTIVITY="$(
+    printf '%s' "$recent_activity_json" | "$PYTHON_BIN" -c '
+import json, sys
+payload = json.load(sys.stdin)
+keys = ("facts", "decisions", "risks", "open_questions", "reports", "relations", "agent_actions", "sync_events")
+print(1 if any(payload.get(key) for key in keys) else 0)
+'
+  )"
 fi
 
 if unresolved_question_count_json="$(run_agent_hub brief --project "$PROJECT" --format json --limit 1 2>/dev/null)"; then
@@ -172,14 +184,24 @@ echo "- If nothing durable changed: store no memory."
 echo "- If a useful fact, decision, risk, question, answer, or report emerged: dry-run exactly 1-3 reviewed writebacks."
 if [[ "$WRITE_REPORT" -eq 1 ]]; then
   echo "- Because --write-report was used: verify it with scripts/memory_receipt.sh --project $PROJECT --type report --since $SINCE."
-else
+elif [[ "$HAS_RECENT_ACTIVITY" == "1" ]]; then
   echo "- If this run needs a durable handoff: rerun with --write-report or store a reviewed report via scripts/project_remember.sh."
+else
+  echo "- No durable handoff is visible in this window; skip report writeback unless you want a manual checkpoint."
 fi
 if [[ "$EXPORT" -eq 0 ]]; then
-  echo "- If reviewed memory was written after this finish step: rerun scripts/agent_finish.sh --project $PROJECT --review --export, or run agent-hub export directly."
+  if [[ "$WRITE_REPORT" -eq 1 ]]; then
+    echo "- This finish step wrote a report; export now with scripts/agent_finish.sh --project $PROJECT --review --export, or run agent-hub export directly."
+  else
+    echo "- Export only if you write reviewed memory after this finish step."
+  fi
 fi
 if [[ "$BACKUP" -eq 0 ]]; then
-  echo "- If important memory was written: run scripts/db_backup.sh after export."
+  if [[ "$WRITE_REPORT" -eq 1 ]]; then
+    echo "- This finish step wrote durable memory; run scripts/db_backup.sh after export."
+  else
+    echo "- Backup only if you write or export important reviewed memory after this finish step."
+  fi
 fi
 
 if [[ "$EXPORT" -eq 1 ]]; then

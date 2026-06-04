@@ -52,6 +52,11 @@ def test_agent_finish_surfaces_question_answer_dry_run() -> None:
     assert "after this finish step" in finish
     assert "agent-hub export directly" in finish
     assert "No unresolved open questions are currently visible for this project." in finish
+    assert "No durable handoff is visible in this window" in finish
+    assert "Export only if you write reviewed memory after this finish step." in finish
+    assert "Backup only if you write or export important reviewed memory after this finish step." in finish
+    assert "This finish step wrote a report; export now" in finish
+    assert "This finish step wrote durable memory; run scripts/db_backup.sh after export." in finish
 
 
 def test_agent_start_lock_error_points_to_status_and_force_lock() -> None:
