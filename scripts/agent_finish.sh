@@ -150,11 +150,12 @@ echo "Suggested dry-runs:"
 echo "  scripts/project_remember.sh --project $PROJECT --type fact --text '<reviewed fact>' --source '<source>' --confidence 0.9 --dry-run"
 echo "  scripts/project_remember.sh --project $PROJECT --type decision --text '<decision>' --rationale '<why>' --dry-run"
 echo "  scripts/project_remember.sh --project $PROJECT --type open-question --text '<question>' --dry-run"
+echo "  scripts/project_answer_question.sh --project $PROJECT --question-id <open-question-uuid> --answer '<reviewed answer>' --source '<source>' --dry-run"
 
 echo
 echo "== Next Best Step =="
 echo "- If nothing durable changed: store no memory."
-echo "- If a useful fact, decision, risk, question, or report emerged: dry-run exactly 1-3 reviewed writebacks."
+echo "- If a useful fact, decision, risk, question, answer, or report emerged: dry-run exactly 1-3 reviewed writebacks."
 if [[ "$WRITE_REPORT" -eq 1 ]]; then
   echo "- Because --write-report was used: verify it with scripts/memory_receipt.sh --project $PROJECT --type report --since $SINCE."
 else

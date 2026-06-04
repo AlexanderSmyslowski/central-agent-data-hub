@@ -67,6 +67,17 @@ scripts/project_remember.sh \
   --dry-run
 ```
 
+If an existing open question is now resolved, dry-run the reviewed answer:
+
+```bash
+scripts/project_answer_question.sh \
+  --project <project-slug> \
+  --question-id <open-question-uuid> \
+  --answer "Reviewed answer or closure note." \
+  --source "<source>" \
+  --dry-run
+```
+
 Store at most 1-3 reviewed, non-sensitive memories per run.
 
 ## 5. Close Strongly When Memory Was Written

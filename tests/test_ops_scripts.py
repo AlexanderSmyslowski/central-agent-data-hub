@@ -42,3 +42,10 @@ def test_db_status_uses_fast_healthcheck_paths() -> None:
     assert "docker_quick volume inspect" in status
     assert "postgres_ready" in status
     assert "compose exec -T \"$DB_SERVICE\" pg_isready" not in status
+
+
+def test_agent_finish_surfaces_question_answer_dry_run() -> None:
+    finish = read_script("scripts/agent_finish.sh")
+
+    assert "scripts/project_answer_question.sh" in finish
+    assert "--question-id <open-question-uuid>" in finish
