@@ -17,7 +17,10 @@ from agent_hub.commands.common import (
 from agent_hub.db import connect
 from agent_hub.relations import fetch_project_relations
 from agent_hub.retrieval import fetch_brief_rows
-from agent_hub.statuses import INACTIVE_OPEN_QUESTION_STATUSES
+from agent_hub.statuses import (
+    INACTIVE_OPEN_QUESTION_STATUSES,
+    format_open_question_count,
+)
 
 
 def run_brief(args: argparse.Namespace) -> int:
@@ -37,7 +40,13 @@ def run_brief(args: argparse.Namespace) -> int:
                       (SELECT count(*) FROM documents WHERE project_id = %(project_id)s) AS documents,
                       (SELECT count(*) FROM facts WHERE project_id = %(project_id)s) AS facts,
                       (SELECT count(*) FROM decisions WHERE project_id = %(project_id)s) AS decisions,
-                      (SELECT count(*) FROM open_questions WHERE project_id = %(project_id)s) AS open_questions,
+                      (
+                        SELECT count(*)
+                        FROM open_questions
+                        WHERE project_id = %(project_id)s
+                          AND status NOT IN ('answered', 'closed', 'resolved', 'archived')
+                      ) AS open_questions,
+                      (SELECT count(*) FROM open_questions WHERE project_id = %(project_id)s) AS open_questions_total,
                       (SELECT count(*) FROM risks WHERE project_id = %(project_id)s) AS risks,
                       (SELECT count(*) FROM reports WHERE project_id = %(project_id)s) AS reports,
                       (SELECT count(*) FROM agent_actions aa
@@ -120,6 +129,10 @@ def run_brief(args: argparse.Namespace) -> int:
     print()
     print("## Counts")
     for key, value in counts.items():
+        if key == "open_questions_total":
+            continue
+        if key == "open_questions":
+            value = format_open_question_count(value, counts.get("open_questions_total"))
         print(f"- {key}: {value}")
     print()
     print_rows("Decisions", decisions, "decision")

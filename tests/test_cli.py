@@ -568,6 +568,7 @@ class FakeCursor:
                     "facts": 1,
                     "decisions": 1,
                     "open_questions": 0,
+                    "open_questions_total": 0,
                     "risks": 0,
                     "reports": 0,
                     "agent_actions": 0,
@@ -626,6 +627,45 @@ def test_brief_json_output(monkeypatch, capsys) -> None:
     assert '"slug": "commcats-de"' in captured.out
     assert '"decisions"' in captured.out
     assert '"facts"' in captured.out
+
+
+class FakeAnsweredQuestionCursor(FakeCursor):
+    def execute(self, query: str, _params: object = None) -> None:
+        if "SELECT" in query and "AS documents" in query:
+            self.results = [
+                {
+                    "documents": 0,
+                    "facts": 1,
+                    "decisions": 1,
+                    "open_questions": 0,
+                    "open_questions_total": 1,
+                    "risks": 0,
+                    "reports": 0,
+                    "agent_actions": 0,
+                }
+            ]
+            return
+        super().execute(query, _params)
+
+
+class FakeAnsweredQuestionConnection(FakeConnection):
+    def cursor(self) -> FakeAnsweredQuestionCursor:
+        return FakeAnsweredQuestionCursor()
+
+
+def test_brief_text_marks_open_questions_as_unresolved(monkeypatch, capsys) -> None:
+    monkeypatch.setenv("DATABASE_URL", "postgresql://example.invalid/test")
+    monkeypatch.setattr(
+        brief_commands, "connect", lambda: FakeAnsweredQuestionConnection()
+    )
+
+    code = cli.main(["brief", "--project", "commcats-de"])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "- open_questions: 0 unresolved (1 total)" in captured.out
+    assert "## Open Questions" in captured.out
+    assert "- none" in captured.out
 
 
 class FakeProjectsCursor:

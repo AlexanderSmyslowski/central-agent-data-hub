@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from agent_hub.statuses import unresolved_open_questions
+from agent_hub.statuses import format_open_question_count, unresolved_open_questions
 
 
 def truncate(value: object, limit: int = 96) -> str:
@@ -217,6 +217,12 @@ def limit_markdown_chars(text: str, max_chars: int | None) -> str:
 def compiled_markdown(payload: dict[str, object]) -> str:
     project = payload["project"]
     counts = payload["counts"]
+    rendered_counts: list[str] = []
+    for key, value in counts.items():
+        if key == "open_questions":
+            rendered_counts.append(f"{key}={format_open_question_count(value)}")
+        else:
+            rendered_counts.append(f"{key}={value}")
     lines = [
         f"# Compiled Project Memory: {project['name']}",
         "",
@@ -225,10 +231,9 @@ def compiled_markdown(payload: dict[str, object]) -> str:
     ]
     if project.get("description"):
         lines.append(f"- current_state: {truncate(project['description'], 220)}")
-    lines.extend(
+        lines.extend(
         [
-            "- memory_counts: "
-            + ", ".join(f"{key}={value}" for key, value in counts.items()),
+            "- memory_counts: " + ", ".join(rendered_counts),
             "",
             "## What Is Decided",
             markdown_list(payload["decisions"], "decision", ("rationale",)),

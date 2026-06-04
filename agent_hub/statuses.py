@@ -11,3 +11,13 @@ def unresolved_open_questions(rows: list[dict[str, object]]) -> list[dict[str, o
         for row in rows
         if row.get("status") not in INACTIVE_OPEN_QUESTION_STATUSES
     ]
+
+
+def format_open_question_count(unresolved: int, total: int | None = None) -> str:
+    if total is None:
+        total = unresolved
+    if total <= 0:
+        return "0 unresolved"
+    if unresolved == total:
+        return f"{unresolved} unresolved"
+    return f"{unresolved} unresolved ({total} total)"

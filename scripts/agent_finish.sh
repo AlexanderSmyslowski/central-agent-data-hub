@@ -42,6 +42,7 @@ REVIEW=0
 EXPORT=0
 BACKUP=0
 NO_LOCK=0
+UNRESOLVED_QUESTION_COUNT=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -105,6 +106,13 @@ if ! "$ROOT_DIR/scripts/agent_preflight.sh" --compact; then
   exit 2
 fi
 
+if unresolved_question_count_json="$(run_agent_hub brief --project "$PROJECT" --format json --limit 1 2>/dev/null)"; then
+  UNRESOLVED_QUESTION_COUNT="$(
+    printf '%s' "$unresolved_question_count_json" | "$PYTHON_BIN" -c \
+      'import json, sys; print(len(json.load(sys.stdin).get("open_questions", [])))'
+  )"
+fi
+
 echo
 echo "== Daily Finish Summary: $PROJECT =="
 daily_args=(--project "$PROJECT" --since "$SINCE" --limit "$LIMIT")
@@ -150,7 +158,13 @@ echo "Suggested dry-runs:"
 echo "  scripts/project_remember.sh --project $PROJECT --type fact --text '<reviewed fact>' --source '<source>' --confidence 0.9 --dry-run"
 echo "  scripts/project_remember.sh --project $PROJECT --type decision --text '<decision>' --rationale '<why>' --dry-run"
 echo "  scripts/project_remember.sh --project $PROJECT --type open-question --text '<question>' --dry-run"
-echo "  scripts/project_answer_question.sh --project $PROJECT --question-id <open-question-uuid> --answer '<reviewed answer>' --source '<source>' --dry-run"
+if [[ "$UNRESOLVED_QUESTION_COUNT" =~ ^[0-9]+$ ]] && (( UNRESOLVED_QUESTION_COUNT > 0 )); then
+  echo "  scripts/project_answer_question.sh --project $PROJECT --question-id <open-question-uuid> --answer '<reviewed answer>' --source '<source>' --dry-run"
+elif [[ "$UNRESOLVED_QUESTION_COUNT" =~ ^[0-9]+$ ]]; then
+  echo "- No unresolved open questions are currently visible for this project."
+else
+  echo "  scripts/project_answer_question.sh --project $PROJECT --question-id <open-question-uuid> --answer '<reviewed answer>' --source '<source>' --dry-run"
+fi
 
 echo
 echo "== Next Best Step =="
