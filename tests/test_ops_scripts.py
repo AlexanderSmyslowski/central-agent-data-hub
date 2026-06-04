@@ -14,10 +14,12 @@ def test_preflight_uses_bounded_docker_checks() -> None:
 
     assert "run_with_timeout()" in common
     assert "AGENT_HUB_DOCKER_TIMEOUT_SECONDS" in common
+    assert "COMPOSE_PROJECT_NAME" in common
     assert "docker_quick()" in common
     assert "compose_quick()" in common
     assert "postgres_ready()" in common
     assert "pg_isready -h localhost -p \"$DB_PORT\"" in common
+    assert 'docker compose -p "$COMPOSE_PROJECT_NAME" -f "$COMPOSE_FILE"' in common
 
     assert "docker_quick inspect \"$DB_CONTAINER\"" in preflight
     assert "docker is not responding within" in preflight

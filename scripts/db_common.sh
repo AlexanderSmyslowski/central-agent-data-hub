@@ -2,6 +2,7 @@
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 COMPOSE_FILE="$ROOT_DIR/docker-compose.yml"
+COMPOSE_PROJECT_NAME="${AGENT_HUB_COMPOSE_PROJECT_NAME:-central-agent-data-hub}"
 DB_SERVICE="postgres"
 DB_CONTAINER="central-agent-data-hub-postgres"
 DB_VOLUME="central-agent-data-hub-pgdata"
@@ -42,7 +43,7 @@ if [[ -x "$ROOT_DIR/.venv/bin/python" && -z "${PYTHON:-}" ]]; then
 fi
 
 compose() {
-  docker compose -f "$COMPOSE_FILE" "$@"
+  docker compose -p "$COMPOSE_PROJECT_NAME" -f "$COMPOSE_FILE" "$@"
 }
 
 run_with_timeout() {
@@ -69,7 +70,7 @@ run_with_timeout() {
 }
 
 compose_quick() {
-  run_with_timeout "$AGENT_HUB_DOCKER_TIMEOUT_SECONDS" docker compose -f "$COMPOSE_FILE" "$@"
+  run_with_timeout "$AGENT_HUB_DOCKER_TIMEOUT_SECONDS" docker compose -p "$COMPOSE_PROJECT_NAME" -f "$COMPOSE_FILE" "$@"
 }
 
 docker_quick() {
