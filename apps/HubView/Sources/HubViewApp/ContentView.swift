@@ -123,31 +123,56 @@ private struct ProjectDetailView: View {
             VStack(alignment: .leading, spacing: 28) {
                 header
                 summaryPanel
-                section(title: "Decisions", rows: detail.decisions) { row in
-                    ItemRow(title: row.decision, subtitle: row.rationale)
-                }
-                section(title: "Risks", rows: detail.risks) { row in
-                    ItemRow(title: row.title, subtitle: row.impact ?? row.mitigation)
-                }
-                section(title: "Open questions", rows: detail.openQuestions) { row in
+                section(
+                    title: "Open questions",
+                    rows: detail.openQuestions,
+                    emptyText: "No unresolved questions are visible."
+                ) { row in
                     ItemRow(title: row.question, subtitle: row.answer)
                 }
-                section(title: "Facts", rows: detail.facts) { row in
+                section(
+                    title: "Risks",
+                    rows: detail.risks,
+                    emptyText: "No active risks are visible."
+                ) { row in
+                    ItemRow(title: row.title, subtitle: row.impact ?? row.mitigation)
+                }
+                section(
+                    title: "Decisions",
+                    rows: detail.decisions,
+                    emptyText: "No active decisions are visible."
+                ) { row in
+                    ItemRow(title: row.decision, subtitle: row.rationale)
+                }
+                section(
+                    title: "Facts",
+                    rows: detail.facts,
+                    emptyText: "No reviewed facts are visible."
+                ) { row in
                     ItemRow(title: row.statement, subtitle: row.source)
                 }
-                section(title: "Reports", rows: detail.reports) { row in
+                section(
+                    title: "Reports",
+                    rows: detail.reports,
+                    emptyText: "No reports are visible."
+                ) { row in
                     ItemRow(title: row.title, subtitle: row.summary)
                 }
-                section(title: "Relations", rows: detail.relations) { row in
+                section(
+                    title: "Relations",
+                    rows: detail.relations,
+                    emptyText: "No relations are visible."
+                ) { row in
                     RelationItemView(row: row)
                 }
             }
-            .frame(maxWidth: 920, alignment: .leading)
-            .padding(.horizontal, 40)
-            .padding(.vertical, 32)
+            .frame(maxWidth: 880, alignment: .leading)
+            .padding(.horizontal, 44)
+            .padding(.vertical, 36)
             .frame(maxWidth: .infinity, alignment: .center)
         }
         .background(Color(nsColor: .windowBackgroundColor))
+        .textSelection(.enabled)
     }
 
     private var header: some View {
@@ -155,9 +180,7 @@ private struct ProjectDetailView: View {
             Text(detail.project.name)
                 .font(.system(size: 30, weight: .semibold))
                 .foregroundStyle(.primary)
-            Text(detail.project.slug)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            headerMeta
             if let description = detail.project.description, !description.isEmpty {
                 Text(description)
                     .font(.body)
@@ -170,15 +193,41 @@ private struct ProjectDetailView: View {
         }
     }
 
+    private var headerMeta: some View {
+        HStack(spacing: 8) {
+            Text(detail.project.slug)
+            if let updated = formattedUpdatedAt(detail.project.updatedAt) {
+                Text("•")
+                Text(updated)
+            }
+        }
+        .font(.subheadline)
+        .foregroundStyle(.secondary)
+    }
+
     private var summaryPanel: some View {
         VStack(spacing: 0) {
-            SummaryRow(label: "Status", value: detail.project.status)
-            SummaryRow(label: "Memory", value: "\(detail.counts.total) reviewed entries")
-            SummaryRow(label: "Open work", value: "\(detail.counts.openQuestions) questions, \(detail.counts.risks) risks")
-            SummaryRow(label: "Quality", value: "\(detail.quality.score) · \(detail.quality.status)")
-            if let updated = formattedUpdatedAt(detail.project.updatedAt) {
-                SummaryRow(label: "Updated", value: updated, showsDivider: false)
+            HStack(spacing: 0) {
+                MetricCell(
+                    label: "Memory",
+                    value: "\(detail.counts.total)",
+                    note: "\(detail.counts.facts) facts, \(detail.counts.reports) reports"
+                )
+                Divider()
+                MetricCell(
+                    label: "Open work",
+                    value: "\(detail.counts.openQuestions + detail.counts.risks)",
+                    note: "\(detail.counts.openQuestions) questions, \(detail.counts.risks) risks"
+                )
+                Divider()
+                MetricCell(
+                    label: "Quality",
+                    value: "\(detail.quality.score)",
+                    note: detail.quality.status
+                )
             }
+            Divider()
+            SummaryRow(label: "Status", value: detail.project.status)
         }
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -190,14 +239,13 @@ private struct ProjectDetailView: View {
     private func section<Row, Content: View>(
         title: String,
         rows: [Row],
+        emptyText: String,
         @ViewBuilder content: @escaping (Row) -> Content
     ) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.headline)
-                .foregroundStyle(.primary)
+            SectionHeader(title: title, count: rows.count)
             if rows.isEmpty {
-                QuietEmpty(text: "Nothing visible here.")
+                QuietEmpty(text: emptyText)
             } else {
                 VStack(spacing: 0) {
                     ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
@@ -224,6 +272,47 @@ private struct ProjectDetailView: View {
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
         return formatter.string(from: date)
+    }
+}
+
+private struct SectionHeader: View {
+    let title: String
+    let count: Int
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Text(title)
+                .font(.headline)
+                .foregroundStyle(.primary)
+            Text("\(count)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Spacer(minLength: 0)
+        }
+    }
+}
+
+private struct MetricCell: View {
+    let label: String
+    let value: String
+    let note: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.system(size: 24, weight: .semibold))
+                .foregroundStyle(.primary)
+            Text(note)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 18)
+        .padding(.vertical, 16)
     }
 }
 
@@ -285,16 +374,25 @@ private struct RelationItemView: View {
                 .font(.body)
                 .foregroundStyle(.primary)
                 .fixedSize(horizontal: false, vertical: true)
-            Text(row.relationType)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            HStack(spacing: 8) {
+                Rectangle()
+                    .fill(Color.secondary.opacity(0.35))
+                    .frame(width: 18, height: 1)
+                Text(relationLabel)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
             Text(row.targetSummary ?? "Target")
-                .font(.caption)
+                .font(.callout)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 12)
+    }
+
+    private var relationLabel: String {
+        row.relationType.replacingOccurrences(of: "_", with: " ")
     }
 }
 
