@@ -74,6 +74,12 @@ cat >"$INFO_PLIST" <<PLIST
   <string>$APP_DISPLAY_NAME</string>
   <key>CFBundleDisplayName</key>
   <string>$APP_DISPLAY_NAME</string>
+  <key>CFBundleDevelopmentRegion</key>
+  <string>de</string>
+  <key>CFBundleLocalizations</key>
+  <array>
+    <string>de</string>
+  </array>
   <key>CFBundleIconFile</key>
   <string>HubView.icns</string>
   <key>CFBundlePackageType</key>
