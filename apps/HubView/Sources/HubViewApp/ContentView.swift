@@ -221,6 +221,7 @@ private struct ProjectDetailView: View {
                 systemMapPanel
                 summaryPanel
                 workingContextPanel
+                rulesPanel
                 MemoryDetailHeader()
                 section(
                     title: "Offene Fragen",
@@ -398,10 +399,25 @@ private struct ProjectDetailView: View {
             Divider()
             SummaryRow(
                 label: "Arbeitsweise",
-                value: workModeLabel(detail.project.metadata?.workMode)
+                value: workModeLabel(detail.project.metadata?.workMode),
+                showsDivider: false
             )
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color(nsColor: .controlBackgroundColor))
+        )
+    }
+
+    private var rulesPanel: some View {
+        VStack(spacing: 0) {
+            PanelIntro(
+                title: "Arbeitsregeln",
+                description: "Liegen im Projekt-Repo, in Skills und gegebenenfalls im Skill-Manifest. Sie sind nicht Teil des Hub-Gedächtnisses."
+            )
+            Divider()
             SummaryRow(
-                label: "Arbeitsregeln",
+                label: "Ablage",
                 value: rulesLocationText,
                 showsDivider: false
             )
