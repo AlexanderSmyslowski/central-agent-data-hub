@@ -86,9 +86,57 @@ private struct DetailContainerView: View {
             } else if let message = store.errorMessage {
                 ErrorView(message: message)
             } else {
-                ContentUnavailableView("Projekt auswählen", systemImage: "sidebar.left")
+                WelcomeView()
             }
         }
+    }
+}
+
+private struct WelcomeView: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 28) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Hub View")
+                    .font(.system(size: 30, weight: .semibold))
+                    .foregroundStyle(.primary)
+                Text("Lesefläche für Agent Data Hub")
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+                Text("Wähle links ein Projekt. Hub View zeigt nur, was der Hub weiß. Es schreibt nichts zurück.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            HStack(alignment: .top, spacing: 0) {
+                ConceptCell(
+                    title: "Gedächtnis",
+                    text: "Was wir dauerhaft geprüft wissen.",
+                    footnote: "liegt im Hub"
+                )
+                Divider()
+                ConceptCell(
+                    title: "Arbeitskontext",
+                    text: "Was für den aktuellen Lauf gilt.",
+                    footnote: "wird beim Start erzeugt"
+                )
+                Divider()
+                ConceptCell(
+                    title: "Arbeitsregeln",
+                    text: "Wie gearbeitet werden soll.",
+                    footnote: "liegt in Repo-Doku und Skills"
+                )
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color(nsColor: .controlBackgroundColor))
+            )
+        }
+        .frame(maxWidth: 720, alignment: .leading)
+        .padding(.horizontal, 44)
+        .padding(.vertical, 42)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(Color(nsColor: .windowBackgroundColor))
     }
 }
 

@@ -25,9 +25,6 @@ final class HubStore: ObservableObject {
                 try self.cli.fetchProjects()
             }.value
             self.projects = projects
-            if selectedProjectID == nil {
-                selectedProjectID = projects.first?.id
-            }
             errorMessage = nil
         } catch {
             errorMessage = error.localizedDescription
