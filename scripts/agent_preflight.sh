@@ -22,6 +22,13 @@ EOF
 
 COMPACT=0
 
+hub_unavailable_message() {
+  cat >&2 <<'EOF'
+Der zentrale Agent Data Hub laeuft lokal gerade nicht.
+Bitte Docker starten oder kurz warten, bis der gemeinsame Projektspeicher wieder bereit ist.
+EOF
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --compact)
@@ -64,11 +71,13 @@ docker_quick inspect "$DB_CONTAINER" >/dev/null 2>&1
 inspect_code=$?
 set -e
 if [[ "$inspect_code" -eq 124 ]]; then
+  hub_unavailable_message
   echo "Operational error: docker is not responding within ${AGENT_HUB_DOCKER_TIMEOUT_SECONDS}s." >&2
   echo "Restart Docker Desktop, then run scripts/db_status.sh." >&2
   exit 2
 fi
 if [[ "$inspect_code" -ne 0 ]]; then
+  hub_unavailable_message
   echo "Operational error: durable DB container is missing." >&2
   echo "Run scripts/db_start.sh first." >&2
   exit 2
@@ -79,17 +88,20 @@ running_state="$(docker_quick inspect -f '{{.State.Running}}' "$DB_CONTAINER" 2>
 running_code=$?
 set -e
 if [[ "$running_code" -eq 124 ]]; then
+  hub_unavailable_message
   echo "Operational error: docker is not responding within ${AGENT_HUB_DOCKER_TIMEOUT_SECONDS}s." >&2
   echo "Restart Docker Desktop, then run scripts/db_status.sh." >&2
   exit 2
 fi
 if [[ "$running_state" != "true" ]]; then
+  hub_unavailable_message
   echo "Operational error: durable DB container is not running." >&2
   echo "Run scripts/db_start.sh first." >&2
   exit 2
 fi
 
 if ! postgres_ready; then
+  hub_unavailable_message
   echo "Operational error: durable DB is not accepting connections." >&2
   exit 2
 fi

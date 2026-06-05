@@ -29,6 +29,8 @@ def test_preflight_uses_bounded_docker_checks() -> None:
     assert 'AGENT_HUB_BACKUP_DIR="$SHARED_ROOT/$AGENT_HUB_BACKUP_DIR"' in common
 
     assert "docker_quick inspect \"$DB_CONTAINER\"" in preflight
+    assert "Der zentrale Agent Data Hub laeuft lokal gerade nicht." in preflight
+    assert "Bitte Docker starten oder kurz warten" in preflight
     assert "docker is not responding within" in preflight
     assert "Restart Docker Desktop" in preflight
     assert "postgres_ready" in preflight
