@@ -94,7 +94,7 @@ private struct DetailContainerView: View {
     var body: some View {
         Group {
             if let detail = store.detail {
-                ProjectDetailView(detail: detail, wikiLinks: store.wikiLinks)
+                ProjectDetailView(detail: detail, store: store)
             } else if store.isLoadingDetail || store.isLoadingProjects {
                 ProgressView()
                     .controlSize(.large)
@@ -212,7 +212,7 @@ private struct ProjectRow: View {
 
 private struct ProjectDetailView: View {
     let detail: HubViewModel
-    let wikiLinks: WikiLinkResolver
+    @ObservedObject var store: HubStore
 
     private enum SectionAnchor: String {
         case memoryOverview
@@ -238,6 +238,9 @@ private struct ProjectDetailView: View {
                     }
                     workingContextPanel
                     rulesPanel
+                    if let preview = store.preview {
+                        previewPanel(preview)
+                    }
                     MemoryDetailHeader()
                         .id(SectionAnchor.memoryOverview)
                     section(
@@ -246,12 +249,16 @@ private struct ProjectDetailView: View {
                         rows: detail.openQuestions,
                         emptyText: "Keine offenen Fragen sichtbar."
                     ) { row in
-                        let wikiPath = wikiLinks.existingPath(wikiLinks.openQuestionPath(row))
+                        let wikiPath = store.wikiLinks.existingPath(store.wikiLinks.openQuestionPath(row))
                         ItemRow(
                             title: row.question,
                             subtitle: row.answer,
+                            isSelected: store.preview?.url == wikiPath,
+                            previewAction: wikiPath.map { path in
+                                { store.showPreview(title: row.question, kind: "Offene Frage", url: path) }
+                            },
                             openAction: wikiPath.map { path in
-                                { wikiLinks.openIfPresent(path) }
+                                { store.wikiLinks.openIfPresent(path) }
                             }
                         )
                     }
@@ -262,12 +269,16 @@ private struct ProjectDetailView: View {
                         rows: detail.risks,
                         emptyText: "Keine aktiven Risiken sichtbar."
                     ) { row in
-                        let wikiPath = wikiLinks.existingPath(wikiLinks.riskPath(row))
+                        let wikiPath = store.wikiLinks.existingPath(store.wikiLinks.riskPath(row))
                         ItemRow(
                             title: row.title,
                             subtitle: row.impact ?? row.mitigation,
+                            isSelected: store.preview?.url == wikiPath,
+                            previewAction: wikiPath.map { path in
+                                { store.showPreview(title: row.title, kind: "Risiko", url: path) }
+                            },
                             openAction: wikiPath.map { path in
-                                { wikiLinks.openIfPresent(path) }
+                                { store.wikiLinks.openIfPresent(path) }
                             }
                         )
                     }
@@ -278,12 +289,16 @@ private struct ProjectDetailView: View {
                         rows: detail.decisions,
                         emptyText: "Keine aktiven Entscheidungen sichtbar."
                     ) { row in
-                        let wikiPath = wikiLinks.existingPath(wikiLinks.decisionPath(row))
+                        let wikiPath = store.wikiLinks.existingPath(store.wikiLinks.decisionPath(row))
                         ItemRow(
                             title: row.decision,
                             subtitle: row.rationale,
+                            isSelected: store.preview?.url == wikiPath,
+                            previewAction: wikiPath.map { path in
+                                { store.showPreview(title: row.decision, kind: "Entscheidung", url: path) }
+                            },
                             openAction: wikiPath.map { path in
-                                { wikiLinks.openIfPresent(path) }
+                                { store.wikiLinks.openIfPresent(path) }
                             }
                         )
                     }
@@ -294,12 +309,16 @@ private struct ProjectDetailView: View {
                         rows: detail.facts,
                         emptyText: "Keine geprüften Fakten sichtbar."
                     ) { row in
-                        let wikiPath = wikiLinks.existingPath(wikiLinks.factPath(row))
+                        let wikiPath = store.wikiLinks.existingPath(store.wikiLinks.factPath(row))
                         ItemRow(
                             title: row.statement,
                             subtitle: row.source,
+                            isSelected: store.preview?.url == wikiPath,
+                            previewAction: wikiPath.map { path in
+                                { store.showPreview(title: row.statement, kind: "Fakt", url: path) }
+                            },
                             openAction: wikiPath.map { path in
-                                { wikiLinks.openIfPresent(path) }
+                                { store.wikiLinks.openIfPresent(path) }
                             }
                         )
                     }
@@ -310,12 +329,16 @@ private struct ProjectDetailView: View {
                         rows: detail.reports,
                         emptyText: "Keine Berichte sichtbar."
                     ) { row in
-                        let wikiPath = wikiLinks.existingPath(wikiLinks.reportPath(row))
+                        let wikiPath = store.wikiLinks.existingPath(store.wikiLinks.reportPath(row))
                         ItemRow(
                             title: row.title,
                             subtitle: row.summary,
+                            isSelected: store.preview?.url == wikiPath,
+                            previewAction: wikiPath.map { path in
+                                { store.showPreview(title: row.title, kind: "Bericht", url: path) }
+                            },
                             openAction: wikiPath.map { path in
-                                { wikiLinks.openIfPresent(path) }
+                                { store.wikiLinks.openIfPresent(path) }
                             }
                         )
                     }
@@ -518,6 +541,52 @@ private struct ProjectDetailView: View {
             return "Im Projekt-Repo: AGENTS.md, Repo-Doku, Skills und optional .agent-data-hub/project-skill-manifest.yml."
         }
         return "In Skills, AGENTS.md und Repo-Dokumenten. Sie werden nicht als Hub-Gedächtnis gespeichert."
+    }
+
+    private func previewPanel(_ preview: WikiPreviewDocument) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Vorschau")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                    Text("\(preview.kind) im menschenlesbaren Spiegel-Wiki")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer(minLength: 0)
+                Button("Im Wiki öffnen") {
+                    store.wikiLinks.openIfPresent(preview.url)
+                }
+                .buttonStyle(.plain)
+                .font(.caption.weight(.medium))
+                Button {
+                    store.clearPreview()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.caption.weight(.semibold))
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .help("Vorschau schließen")
+            }
+
+            Text(preview.title)
+                .font(.headline)
+                .foregroundStyle(.primary)
+
+            ScrollView {
+                PreviewMarkdownText(markdown: preview.content)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(minHeight: 160, maxHeight: 320)
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 16)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color(nsColor: .controlBackgroundColor))
+        )
     }
 
     @ViewBuilder
@@ -758,21 +827,20 @@ private struct SummaryRow: View {
 private struct ItemRow: View {
     let title: String
     let subtitle: String?
+    var isSelected: Bool = false
+    var previewAction: (() -> Void)? = nil
     var openAction: (() -> Void)? = nil
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 5) {
-                Text(title)
-                    .font(.body)
-                    .foregroundStyle(.primary)
-                    .fixedSize(horizontal: false, vertical: true)
-                if let subtitle, !subtitle.isEmpty {
-                    Text(subtitle)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+            if let previewAction {
+                Button(action: previewAction) {
+                    rowText
                 }
+                .buttonStyle(.plain)
+                .contentShape(Rectangle())
+            } else {
+                rowText
             }
             Spacer(minLength: 0)
             if let openAction {
@@ -786,7 +854,56 @@ private struct ItemRow: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 10)
         .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(isSelected ? Color.accentColor.opacity(0.11) : Color.clear)
+        )
+    }
+
+    private var rowText: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(title)
+                .font(.body)
+                .foregroundStyle(.primary)
+                .fixedSize(horizontal: false, vertical: true)
+            if let subtitle, !subtitle.isEmpty {
+                Text(subtitle)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if previewAction != nil {
+                Text("In Hub View lesen")
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(.blue)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct PreviewMarkdownText: View {
+    let markdown: String
+
+    var body: some View {
+        Text(renderedMarkdown)
+            .textSelection(.enabled)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var renderedMarkdown: AttributedString {
+        if let attributed = try? AttributedString(
+            markdown: markdown,
+            options: AttributedString.MarkdownParsingOptions(
+                interpretedSyntax: .inlineOnlyPreservingWhitespace
+            )
+        ) {
+            return attributed
+        }
+        return AttributedString(markdown)
     }
 }
 

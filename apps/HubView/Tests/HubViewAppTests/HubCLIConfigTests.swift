@@ -54,6 +54,12 @@ func hubStoreShowHomeClearsProjectSelection() {
 
     store.selectedProjectID = "central-agent-data-hub"
     store.detail = sampleHubViewModel()
+    store.preview = WikiPreviewDocument(
+        title: "Preview",
+        kind: "Fakt",
+        url: URL(fileURLWithPath: "/vault/Facts/preview.md"),
+        content: "Hallo"
+    )
     store.errorMessage = "Detail konnte nicht geladen werden."
     store.isLoadingDetail = true
 
@@ -61,6 +67,7 @@ func hubStoreShowHomeClearsProjectSelection() {
 
     #expect(store.selectedProjectID == nil)
     #expect(store.detail == nil)
+    #expect(store.preview == nil)
     #expect(store.errorMessage == nil)
     #expect(store.isLoadingDetail == false)
 }
@@ -81,12 +88,19 @@ func hubStoreSelectProjectClearsStaleDetailImmediately() {
 
     store.selectedProjectID = nil
     store.detail = sampleHubViewModel()
+    store.preview = WikiPreviewDocument(
+        title: "Alt",
+        kind: "Bericht",
+        url: URL(fileURLWithPath: "/vault/Reports/old.md"),
+        content: "Alt"
+    )
     store.errorMessage = "Alte Meldung."
 
     store.selectProject("commcats-de")
 
     #expect(store.selectedProjectID == "commcats-de")
     #expect(store.detail == nil)
+    #expect(store.preview == nil)
     #expect(store.errorMessage == nil)
     #expect(store.isLoadingDetail == true)
 }
@@ -121,6 +135,23 @@ func wikiLinkResolverBuildsReportExportPathLikeHubExport() {
     let path = resolver.reportPath(row)
 
     #expect(path?.path == "/vault/Reports/daily-report-central-agent-data-hub-2026-05-29-00000602.md")
+}
+
+@Test
+func wikiPreviewLoaderStripsFrontmatter() {
+    let markdown = """
+    ---
+    title: Test
+    status: active
+    ---
+    # Ueberschrift
+
+    Inhalt
+    """
+
+    let cleaned = WikiPreviewLoader.stripFrontmatter(from: markdown)
+
+    #expect(cleaned == "# Ueberschrift\n\nInhalt")
 }
 
 private func sampleHubViewModel() -> HubViewModel {

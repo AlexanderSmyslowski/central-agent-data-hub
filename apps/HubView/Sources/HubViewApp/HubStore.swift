@@ -6,6 +6,7 @@ final class HubStore: ObservableObject {
     @Published var projects: [ProjectSummary] = []
     @Published var selectedProjectID: ProjectSummary.ID?
     @Published var detail: HubViewModel?
+    @Published var preview: WikiPreviewDocument?
     @Published var errorMessage: String?
     @Published var isLoadingProjects = false
     @Published var isLoadingDetail = false
@@ -36,6 +37,7 @@ final class HubStore: ObservableObject {
     func loadSelectedProject() async {
         guard let projectID = selectedProjectID else {
             detail = nil
+            preview = nil
             isLoadingDetail = false
             return
         }
@@ -72,6 +74,7 @@ final class HubStore: ObservableObject {
         }
         selectedProjectID = projectID
         detail = nil
+        preview = nil
         errorMessage = nil
         isLoadingDetail = true
     }
@@ -79,7 +82,16 @@ final class HubStore: ObservableObject {
     func showHome() {
         selectedProjectID = nil
         detail = nil
+        preview = nil
         errorMessage = nil
         isLoadingDetail = false
+    }
+
+    func showPreview(title: String, kind: String, url: URL?) {
+        preview = WikiPreviewLoader.load(title: title, kind: kind, url: url)
+    }
+
+    func clearPreview() {
+        preview = nil
     }
 }
