@@ -44,14 +44,21 @@ private struct SidebarView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text("Hub View")
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(.primary)
-                Text("Lesefläche für Agent Data Hub")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+            Button {
+                store.showHome()
+            } label: {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Hub View")
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(.primary)
+                    Text("Lesefläche für Agent Data Hub")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .buttonStyle(.plain)
+            .help("Zur Startansicht")
             .padding(.horizontal, 20)
             .padding(.top, 24)
             .padding(.bottom, 14)

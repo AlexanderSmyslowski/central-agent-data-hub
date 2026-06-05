@@ -54,4 +54,10 @@ final class HubStore: ObservableObject {
         await load()
         await loadSelectedProject()
     }
+
+    func showHome() {
+        selectedProjectID = nil
+        detail = nil
+        errorMessage = nil
+    }
 }
