@@ -5,9 +5,15 @@ the Central Agent Data Hub.
 
 For the shortest copyable version, use `docs/agent-run-card.md`.
 
-The Hub is not a website-only memory. It is the operational project memory for
-agentic work across domains: implementation, operations, research, business
-decisions, open questions, risks, reports, and handoffs.
+The Hub separates three things:
+
+- **Gedächtnis**: what the project has durably verified.
+- **Arbeitskontext**: what applies to this specific run.
+- **Arbeitsregeln**: how the agent should work in the repo.
+
+This distinction keeps the Hub small. PostgreSQL stores reviewed memory. The
+start helpers assemble the current working context. `AGENTS.md`, repo documents,
+and skills keep the working rules close to the code.
 
 ## Before Work
 
@@ -64,9 +70,9 @@ For a single-project start, the helper now prefers the compiled memory:
 agent-hub compile --project <project-slug>
 ```
 
-Compiled memory is the token-efficient entrypoint for agents. It compresses the
-current state, decisions, risks, open questions, important relations, useful
-reports, and suggested next steps into one short working brief. Use
+Compiled memory is the token-efficient entrypoint for agents. It turns reviewed
+Hub memory into a short working brief: current state, decisions, risks, open
+questions, important relations, useful reports, and suggested next steps. Use
 `agent-hub context` only when a specific focus query needs extra retrieval.
 
 Useful compile variants:
@@ -114,9 +120,9 @@ See `docs/codex-memory-policy.md` for the reusable Codex/Hermes policy and
 `docs/repo-agent-memory-template.md` for per-repository agent instructions.
 
 Projects may also define a repo-local project skill manifest. This manifest is
-a small map of required context files, recommended skill packs, quality gates,
-and non-goals. It should point agents toward the right execution help without
-copying long technical rules into Hub memory.
+a small map of working rules: required context files, recommended skill packs,
+quality gates, and non-goals. It points agents toward the right execution help
+without copying long technical rules into Hub memory.
 
 See `docs/project-skill-manifest.md`.
 

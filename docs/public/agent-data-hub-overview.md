@@ -1,16 +1,20 @@
 # Agent Data Hub
 
-Verified memory for agentic work.
+Verified context for humans and agents.
 
 ## Short Version
 
-Agent Data Hub is a controlled memory layer for humans and AI agents. It keeps
-important project knowledge out of disposable chat logs and stores reviewed
-facts, decisions, risks, questions, reports, and relations in a durable database.
+Agent Data Hub is a controlled context system for humans and AI agents. It keeps
+important project knowledge out of disposable chat logs and separates three
+things:
 
-Humans read and review the same knowledge through a Markdown wiki projection.
-Agents start work from compact project context and write back only curated,
-non-sensitive memory.
+- **Memory**: what is durably reviewed and stored in PostgreSQL.
+- **Working context**: what applies to the current agent run.
+- **Working rules**: how the repo says work should be done.
+
+Humans read and review the same knowledge through Markdown, Obsidian, and Hub
+View. Agents start work from compact project context and write back only
+curated, non-sensitive memory.
 
 ## Why It Exists
 
@@ -19,7 +23,8 @@ correct, and easy to mix across projects. Agent Data Hub uses project contexts,
 quality gates, receipts, backups, and relation links to make memory more
 trustworthy.
 
-It is not a place for raw chat logs. It is a place for reviewed working memory.
+It is not a place for raw chat logs. It is a place for reviewed project memory
+and clear working context.
 
 ## Core Flow
 
@@ -45,13 +50,16 @@ scripts/memory_receipt.sh --project project-a --since 24h
 flowchart TD
     Human["Human Lead / Control Layer"]
     Agents["AI Agents"]
+    Rules["Working Rules\nAGENTS.md / Skills / Repo Docs"]
+    Context["Working Context\nStart / Compile / Context"]
     Gates["Quality Gates"]
-    DB[("PostgreSQL\nBinding Memory")]
-    Wiki["Human Wiki\nMarkdown Projection"]
+    DB[("PostgreSQL\nReviewed Memory")]
+    Wiki["Human Views\nMarkdown / Obsidian / Hub View"]
     Backup["Verified Backups"]
-    Repo["Project Repo\nAGENTS.md"]
 
-    Repo --> Gates
+    Rules --> Context
+    DB --> Context
+    Context --> Agents
     Human --> Gates
     Agents --> Gates
     Gates --> DB

@@ -79,11 +79,11 @@ enum HubCLIError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .missingDatabaseURL:
-            return "DATABASE_URL fehlt. Bitte Hub View ueber das Projekt-Startscript oeffnen."
+            return "DATABASE_URL fehlt. Bitte Hub View über das Projekt-Startscript öffnen."
         case .commandFailed(let message):
             return message
         case .emptyOutput:
-            return "Der Agent Data Hub hat keine Ausgabe zurueckgegeben."
+            return "Der Agent Data Hub hat keine Ausgabe zurückgegeben."
         }
     }
 }

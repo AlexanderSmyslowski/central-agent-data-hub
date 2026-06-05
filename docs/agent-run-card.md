@@ -2,6 +2,12 @@
 
 Use this card when starting substantial work with Agent Data Hub.
 
+Keep the three parts separate:
+
+- **Gedächtnis**: what the Hub stores as reviewed project knowledge.
+- **Arbeitskontext**: what the start step assembles for this run.
+- **Arbeitsregeln**: how the repo says work should be done.
+
 ## 1. Start
 
 ```bash
@@ -9,7 +15,8 @@ scripts/agent_start.sh --project <project-slug> --query "<current focus>" --revi
 ```
 
 Read the compiled memory, focused context, review, working contract, and Start
-Decision before changing anything meaningful.
+Decision before changing anything meaningful. Together they form the
+Arbeitskontext for this run.
 
 For single-project work this also creates a local working-tree run lock. If the
 lock blocks, another agent is already using this checkout. Finish that run or
@@ -37,6 +44,7 @@ scripts/agent_worktree.sh \
 ## 2. Work
 
 - Stay inside the selected project context.
+- Follow the Arbeitsregeln from `AGENTS.md`, repo documents, and relevant skills.
 - Use one write-capable agent per working tree.
 - Do not transfer assumptions from another project.
 - Do not store secrets, credentials, private customer data, or raw invoice data.

@@ -2,9 +2,17 @@
 
 > verified context for humans and agents
 
-Agent Data Hub ist eine lokale, Postgres-backed Shared-Memory-Schicht fuer Menschen sowie Codex/Hermes-Agenten.
+Agent Data Hub ist ein geprüftes Kontextsystem für Menschen und Agenten.
 
-Der Hub speichert keine Roh-Chatlogs und keine Secrets. Er speichert kuratierte, projektgebundene Fakten, Entscheidungen, Risiken, offene Fragen, Reports, Relations und Agent Actions. PostgreSQL ist der verbindliche Datenstand; Obsidian ist die menschenlesbare Projektion fuer Review, Graph und Human Notes.
+Er sorgt dafür, dass Agenten nicht aus verstreuten Chats oder alten Annahmen arbeiten, sondern aus einem klaren Projektkontext.
+
+Das System besteht aus drei Teilen:
+
+- **Gedächtnis**: Was wir dauerhaft geprüft wissen. Das liegt in PostgreSQL.
+- **Arbeitskontext**: Was für den aktuellen Lauf gilt. Das wird beim Start erzeugt.
+- **Arbeitsregeln**: Wie gearbeitet werden soll. Das steht in Skills, `AGENTS.md` und Repo-Dokumenten.
+
+Der Hub speichert keine Roh-Chatlogs und keine Secrets. Er speichert kuratierte, projektgebundene Fakten, Entscheidungen, Risiken, offene Fragen, Reports, Relations und Agent Actions. PostgreSQL ist der verbindliche Datenstand; Obsidian und Hub View sind menschenlesbare Ansichten.
 
 Der technische Repo-Name bleibt `central-agent-data-hub`.
 
@@ -44,17 +52,17 @@ Menschenlesbare Projektion oeffnen:
 /Users/alexandersmyslowski/Projects/central-agent-data-hub/.local/obsidian-export/Compiled/Agent Data Hub.md
 ```
 
-## Design Principles
+## Grundsaetze
 
-- Verified memory, not raw chat history.
-- Project boundaries before convenience.
-- Compact agent context, richer human projection.
-- Quality gates before writeback.
-- Receipts and backups over trust-me claims.
-- Repo-local rules and skill packs stay outside the Hub core.
-- No secrets, private customer data, raw invoice data, or deployment credentials.
+- Geprüftes Gedächtnis statt Roh-Chatverlauf.
+- Projektgrenzen vor Bequemlichkeit.
+- Kurzer Arbeitskontext für Agenten, ruhigere Ansicht für Menschen.
+- Qualitätsprüfung vor Writeback.
+- Receipts und Backups statt bloßer Behauptungen.
+- Arbeitsregeln und Skill-Packs bleiben außerhalb des Hub-Gedächtnisses.
+- Keine Secrets, privaten Kundendaten, Rohrechnungen oder Deployment-Zugänge.
 
-Before adding architecture, ask: does this make the Hub simpler, more reliable, or more useful in daily agent work?
+Vor neuer Architektur fragen: Macht das den Hub einfacher, verlässlicher oder im Alltag nützlicher?
 
 ## Aktueller v0-Status
 

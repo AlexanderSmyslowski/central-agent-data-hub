@@ -53,7 +53,7 @@ private struct SidebarView: View {
                     Text("Hub View")
                         .font(.title3.weight(.semibold))
                         .foregroundStyle(.primary)
-                    Text("Leseflaeche fuer Agent Data Hub")
+                    Text("Lesefläche für Agent Data Hub")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .textCase(nil)
@@ -86,7 +86,7 @@ private struct DetailContainerView: View {
             } else if let message = store.errorMessage {
                 ErrorView(message: message)
             } else {
-                ContentUnavailableView("Projekt auswaehlen", systemImage: "sidebar.left")
+                ContentUnavailableView("Projekt auswählen", systemImage: "sidebar.left")
             }
         }
     }
@@ -123,10 +123,13 @@ private struct ProjectDetailView: View {
             VStack(alignment: .leading, spacing: 28) {
                 header
                 introPanel
+                systemMapPanel
                 summaryPanel
+                workingContextPanel
+                MemoryDetailHeader()
                 section(
                     title: "Offene Fragen",
-                    description: "Punkte, die fuer dieses Projekt noch geklaert werden muessen.",
+                    description: "Punkte, die für dieses Projekt noch geklärt werden müssen.",
                     rows: detail.openQuestions,
                     emptyText: "Keine offenen Fragen sichtbar."
                 ) { row in
@@ -142,7 +145,7 @@ private struct ProjectDetailView: View {
                 }
                 section(
                     title: "Entscheidungen",
-                    description: "Bewusst getroffene Festlegungen fuer dieses Projekt.",
+                    description: "Bewusst getroffene Festlegungen für dieses Projekt.",
                     rows: detail.decisions,
                     emptyText: "Keine aktiven Entscheidungen sichtbar."
                 ) { row in
@@ -150,25 +153,25 @@ private struct ProjectDetailView: View {
                 }
                 section(
                     title: "Fakten",
-                    description: "Gepruefte Informationen, auf die sich Menschen und Agenten stuetzen koennen.",
+                    description: "Geprüfte Informationen, auf die sich Menschen und Agenten stützen können.",
                     rows: detail.facts,
-                    emptyText: "Keine geprueften Fakten sichtbar."
+                    emptyText: "Keine geprüften Fakten sichtbar."
                 ) { row in
                     ItemRow(title: row.statement, subtitle: row.source)
                 }
                 section(
                     title: "Berichte",
-                    description: "Kurze Zusammenfassungen, Uebergaben oder Tagesstaende.",
+                    description: "Kurze Zusammenfassungen, Übergaben oder Tagesstände.",
                     rows: detail.reports,
                     emptyText: "Keine Berichte sichtbar."
                 ) { row in
                     ItemRow(title: row.title, subtitle: row.summary)
                 }
                 section(
-                    title: "Verknuepfungen",
+                    title: "Verknüpfungen",
                     description: "Beziehungen zwischen Fakten, Entscheidungen, Risiken und Berichten.",
                     rows: detail.relations,
-                    emptyText: "Keine Verknuepfungen sichtbar."
+                    emptyText: "Keine Verknüpfungen sichtbar."
                 ) { row in
                     RelationItemView(row: row)
                 }
@@ -194,7 +197,7 @@ private struct ProjectDetailView: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            Text("Gepruefter Kontext fuer Menschen und Agenten.")
+            Text("Geprüfter Kontext für Menschen und Agenten.")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
@@ -217,7 +220,7 @@ private struct ProjectDetailView: View {
             Text("Was du hier siehst")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.primary)
-            Text("Links waehlst du ein Projekt. Rechts siehst du den geprueften Projektkontext: was bekannt, offen, entschieden oder riskant ist.")
+            Text("Links wählst du ein Projekt. Rechts siehst du, was der Hub dazu weiß, was für Agentenläufe gilt und wo die Arbeitsregeln liegen.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -230,8 +233,39 @@ private struct ProjectDetailView: View {
         )
     }
 
+    private var systemMapPanel: some View {
+        HStack(alignment: .top, spacing: 0) {
+            ConceptCell(
+                title: "Gedächtnis",
+                text: "Was wir dauerhaft geprüft wissen.",
+                footnote: "liegt im Hub"
+            )
+            Divider()
+            ConceptCell(
+                title: "Arbeitskontext",
+                text: "Was für den aktuellen Lauf gilt.",
+                footnote: "wird beim Start erzeugt"
+            )
+            Divider()
+            ConceptCell(
+                title: "Arbeitsregeln",
+                text: "Wie gearbeitet werden soll.",
+                footnote: "liegt in Repo-Doku und Skills"
+            )
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color(nsColor: .controlBackgroundColor))
+        )
+    }
+
     private var summaryPanel: some View {
         VStack(spacing: 0) {
+            PanelIntro(
+                title: "Gedächtnis",
+                description: "Geprüftes Projektwissen aus PostgreSQL. Hub View zeigt es nur an."
+            )
+            Divider()
             HStack(spacing: 0) {
                 MetricCell(
                     label: "Wissen",
@@ -246,7 +280,7 @@ private struct ProjectDetailView: View {
                 )
                 Divider()
                 MetricCell(
-                    label: "Qualitaet",
+                    label: "Qualität",
                     value: "\(detail.quality.score)",
                     note: qualityLabel(detail.quality.status)
                 )
@@ -258,6 +292,39 @@ private struct ProjectDetailView: View {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(Color(nsColor: .controlBackgroundColor))
         )
+    }
+
+    private var workingContextPanel: some View {
+        VStack(spacing: 0) {
+            PanelIntro(
+                title: "Arbeitskontext",
+                description: "Wird bei agent_start, compile oder context für einen konkreten Lauf zusammengestellt."
+            )
+            Divider()
+            SummaryRow(
+                label: "Arbeitsweise",
+                value: workModeLabel(detail.project.metadata?.workMode)
+            )
+            SummaryRow(
+                label: "Arbeitsregeln",
+                value: rulesLocationText,
+                showsDivider: false
+            )
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color(nsColor: .controlBackgroundColor))
+        )
+    }
+
+    private var rulesLocationText: String {
+        if let manifest = detail.project.metadata?.skillManifest, !manifest.isEmpty {
+            return "Im Projekt-Repo: AGENTS.md, Repo-Doku, Skills und \(manifest)."
+        }
+        if detail.project.metadata?.localPath?.isEmpty == false {
+            return "Im Projekt-Repo: AGENTS.md, Repo-Doku, Skills und optional .agent-data-hub/project-skill-manifest.yml."
+        }
+        return "In Skills, AGENTS.md und Repo-Dokumenten. Sie werden nicht als Hub-Gedächtnis gespeichert."
     }
 
     @ViewBuilder
@@ -323,6 +390,72 @@ private struct ProjectDetailView: View {
             return "Fehler"
         default:
             return raw
+        }
+    }
+
+    private func workModeLabel(_ raw: String?) -> String {
+        guard let raw, !raw.isEmpty else {
+            return "kein Arbeitsmodus hinterlegt"
+        }
+        return raw.replacingOccurrences(of: "-", with: " ")
+    }
+}
+
+private struct PanelIntro: View {
+    let title: String
+    let description: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary)
+            Text(description)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 18)
+        .padding(.vertical, 15)
+    }
+}
+
+private struct ConceptCell: View {
+    let title: String
+    let text: String
+    let footnote: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary)
+            Text(text)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(footnote)
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 18)
+        .padding(.vertical, 15)
+    }
+}
+
+private struct MemoryDetailHeader: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text("Gedächtnis im Detail")
+                .font(.headline)
+                .foregroundStyle(.primary)
+            Text("Diese Einträge sind die geprüfte Projekterinnerung. Sie sind keine Arbeitsregeln und kein Roh-Chatverlauf.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 }
@@ -453,7 +586,7 @@ private struct RelationItemView: View {
     private var relationLabel: String {
         switch row.relationType.lowercased() {
         case "supports":
-            return "stuetzt"
+            return "stützt"
         case "references":
             return "verweist auf"
         case "mitigates":

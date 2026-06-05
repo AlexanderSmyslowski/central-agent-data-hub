@@ -7,8 +7,13 @@ short: the code should stay easier to read than the document that explains it.
 
 Keep the Hub small, explicit, and boring:
 
-- PostgreSQL is the binding data source.
-- Obsidian is a projection and controlled review/import surface.
+- PostgreSQL stores the **Gedächtnis**: reviewed project facts, decisions,
+  risks, open questions, reports, and relations.
+- Start, compile, and context commands assemble the **Arbeitskontext** for one
+  run.
+- Skills, `AGENTS.md`, and repo documents hold the **Arbeitsregeln**.
+- Obsidian and Hub View are read/review surfaces, not competing sources of
+  truth.
 - CLI commands orchestrate workflows; they should not hide domain logic.
 - Domain modules own domain rules.
 - Compatibility facades are allowed when they keep public imports stable.

@@ -3,10 +3,14 @@ import Foundation
 struct ProjectMetadata: Decodable, Hashable {
     let projectType: String?
     let workMode: String?
+    let localPath: String?
+    let skillManifest: String?
 
     private enum CodingKeys: String, CodingKey {
         case projectType = "project_type"
         case workMode = "work_mode"
+        case localPath = "local_path"
+        case skillManifest = "skill_manifest"
     }
 }
 

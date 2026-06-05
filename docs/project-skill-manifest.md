@@ -1,48 +1,47 @@
 # Project Skill Manifest
 
-The project skill manifest is an optional repo-local orientation file for agent
-work. It tells Codex/Hermes which local documents, skill packs, quality gates,
-and non-goals matter before work starts.
+Das Project Skill Manifest ist eine optionale Datei im jeweiligen Repo. Es sagt
+Codex/Hermes vor Arbeitsbeginn, welche Dokumente, Skills, Qualitätsprüfungen
+und Grenzen für dieses Projekt gelten.
 
-It is deliberately not a new Hub subsystem. The Hub remains the verified memory
-and governance layer; `AGENTS.md` remains the repo-local working contract; skill
-packs remain execution help; Obsidian remains review and projection.
+Es ist bewusst kein neuer Hub-Speicher. Der Hub speichert das geprüfte
+Gedächtnis. `AGENTS.md` bleibt der Arbeitsvertrag im Repo. Skills bleiben
+Ausführungshilfe. Obsidian und Hub View bleiben Lese- und Review-Flächen.
 
-## Why This Exists
+## Warum es das gibt
 
-Agents are more reliable when they know which project-specific instructions and
-domain skills apply. The manifest gives them that map without copying long
-technical rules into Postgres.
+Agenten arbeiten verlässlicher, wenn sie die richtigen Arbeitsregeln kennen.
+Das Manifest ist die Karte zu diesen Regeln, ohne lange technische Texte in
+PostgreSQL zu kopieren.
 
-Use it when a project has more than one important local instruction file or when
-domain-specific skills are easy to forget.
+Nutze es, wenn ein Projekt mehrere wichtige Anweisungsdateien hat oder wenn
+bestimmte Skills leicht übersehen werden.
 
-## Recommended Location
+## Empfohlener Ort
 
 ```text
 .agent-data-hub/project-skill-manifest.yml
 ```
 
-The path is intentionally repo-local. A future Hub project may reference it via
-`projects.metadata.skill_manifest`, but the manifest itself should stay close to
-the code and project documents it describes.
+Der Pfad ist absichtlich repo-lokal. Ein Hub-Projekt kann später darauf
+verweisen, aber die Datei selbst bleibt nah am Code und an den Dokumenten, die
+sie beschreibt.
 
-## What Belongs Here
+## Was hier hineingehört
 
-- Short lists of required repo-local context files.
-- Recommended or required skill packs by stable name.
-- Quality gates to check before finish or handoff.
-- Explicit non-goals and scope boundaries.
-- A brief statement of what belongs in Hub memory and what does not.
+- kurze Listen wichtiger Repo-Dokumente
+- empfohlene oder verpflichtende Skills
+- Qualitätsprüfungen vor Finish oder Handoff
+- klare Grenzen und Nicht-Ziele
+- eine kurze Aussage, was ins Hub-Gedächtnis gehört und was nicht
 
-## What Does Not Belong Here
+## Was hier nicht hineingehört
 
-- Long technical rule texts copied from framework docs.
-- Raw chat history, private notes, credentials, or customer data.
-- Secrets, API keys, tokens, FTP credentials, raw invoice data, or deployment
-  details.
-- Project facts that should be stored as verified Hub memory.
-- Automatically generated dependency or tool output.
+- lange technische Regeltexte aus Framework-Dokumentation
+- Roh-Chatverläufe, private Notizen, Zugangsdaten oder Kundendaten
+- Secrets, API keys, Tokens, FTP-Zugänge, Rohrechnungen oder Deployment-Details
+- Projektfakten, die als geprüftes Hub-Gedächtnis gespeichert werden sollten
+- automatisch erzeugte Tool- oder Dependency-Ausgaben
 
 ## Example
 
@@ -52,26 +51,30 @@ See:
 /Users/alexandersmyslowski/Projects/central-agent-data-hub/docs/examples/project-skill-manifest.yml
 ```
 
-## Relationship To The Hub
+## Beziehung zum Hub
 
-The manifest is a thin reference layer:
+Die drei Teile bleiben getrennt:
 
-- Hub memory answers: what is true, decided, risky, open, or linked?
-- `AGENTS.md` answers: how should agents behave in this repo?
-- Skill packs answer: how should a domain task be executed well?
-- The manifest answers: which of those things should an agent load first?
+- **Gedächtnis**: Was wissen wir dauerhaft geprüft?
+- **Arbeitskontext**: Was gilt für diesen Lauf?
+- **Arbeitsregeln**: Wie soll in diesem Repo gearbeitet werden?
 
-If a manifest entry becomes a durable project fact or decision, write that
-curated statement to the Hub through `scripts/project_remember.sh`. Do not copy
-the whole manifest into Hub memory.
+Das Manifest gehört zu den Arbeitsregeln. Es speichert nicht das
+Projektgedächtnis. Es zeigt nur, welche Regelquellen ein Agent zuerst beachten
+soll.
 
-## Architecture Rule
+Wenn aus einem Manifest-Eintrag ein dauerhafter Projektfakt oder eine
+Entscheidung wird, schreibe diese kurze geprüfte Aussage über
+`scripts/project_remember.sh` in den Hub. Kopiere nicht das ganze Manifest in
+das Hub-Gedächtnis.
 
-Before expanding this mechanism, ask:
+## Architekturregel
 
-- Does it reduce daily agent confusion?
-- Does it remove another manual step?
-- Does it keep the Hub smaller than the work it coordinates?
-- Would a strong engineer consider the boundary clean?
+Vor dem Ausbau fragen:
 
-If the answer is no, keep it as documentation.
+- Reduziert es echte Verwirrung im Agentenalltag?
+- Entfernt es einen manuellen Schritt?
+- Bleibt der Hub kleiner als die Arbeit, die er koordiniert?
+- Ist die Grenze für einen strengen Code-Review sauber?
+
+Wenn die Antwort nein ist, bleibt es Dokumentation.
