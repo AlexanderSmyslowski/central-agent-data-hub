@@ -833,15 +833,7 @@ private struct ItemRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            if let previewAction {
-                Button(action: previewAction) {
-                    rowText
-                }
-                .buttonStyle(.plain)
-                .contentShape(Rectangle())
-            } else {
-                rowText
-            }
+            rowText
             Spacer(minLength: 0)
             if let openAction {
                 Button(action: openAction) {
@@ -860,6 +852,14 @@ private struct ItemRow: View {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .fill(isSelected ? Color.accentColor.opacity(0.11) : Color.clear)
         )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            previewAction?()
+        }
+        .onHover { isHovering in
+            guard isHovering else { return }
+            previewAction?()
+        }
     }
 
     private var rowText: some View {
