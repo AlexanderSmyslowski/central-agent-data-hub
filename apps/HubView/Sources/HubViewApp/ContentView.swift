@@ -49,16 +49,16 @@ private struct SidebarView: View {
                         .tag(project.id)
                 }
             } header: {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 3) {
                     Text("Hub View")
                         .font(.title3.weight(.semibold))
                         .foregroundStyle(.primary)
                     Text("Read-only review surface for Agent Data Hub")
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundStyle(.secondary)
                         .textCase(nil)
                 }
-                .padding(.bottom, 8)
+                .padding(.bottom, 10)
             }
         }
         .listStyle(.sidebar)
@@ -96,22 +96,22 @@ private struct ProjectRow: View {
     let project: ProjectSummary
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 4) {
             Text(project.name)
-                .font(.body.weight(.medium))
+                .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.primary)
                 .lineLimit(1)
             Text(project.slug)
-                .font(.caption)
+                .font(.caption2)
                 .foregroundStyle(.secondary)
             if let description = project.description, !description.isEmpty {
                 Text(description)
-                    .font(.caption)
+                    .font(.caption2)
                     .foregroundStyle(.secondary)
-                    .lineLimit(2)
+                    .lineLimit(1)
             }
         }
-        .padding(.vertical, 6)
+        .padding(.vertical, 4)
     }
 }
 
@@ -176,9 +176,9 @@ private struct ProjectDetailView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
             Text(detail.project.name)
-                .font(.system(size: 30, weight: .semibold))
+                .font(.system(size: 28, weight: .semibold))
                 .foregroundStyle(.primary)
             headerMeta
             if let description = detail.project.description, !description.isEmpty {
@@ -188,7 +188,7 @@ private struct ProjectDetailView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             Text("Verified context for humans and agents.")
-                .font(.caption)
+                .font(.caption2)
                 .foregroundStyle(.secondary)
         }
     }
@@ -285,7 +285,7 @@ private struct SectionHeader: View {
                 .font(.headline)
                 .foregroundStyle(.primary)
             Text("\(count)")
-                .font(.caption)
+                .font(.caption2.monospacedDigit())
                 .foregroundStyle(.secondary)
             Spacer(minLength: 0)
         }
@@ -300,19 +300,19 @@ private struct MetricCell: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(label)
-                .font(.caption)
+                .font(.caption2)
                 .foregroundStyle(.secondary)
             Text(value)
-                .font(.system(size: 24, weight: .semibold))
+                .font(.system(size: 22, weight: .semibold))
                 .foregroundStyle(.primary)
             Text(note)
-                .font(.caption)
+                .font(.caption2)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 18)
-        .padding(.vertical, 16)
+        .padding(.vertical, 15)
     }
 }
 
@@ -325,7 +325,7 @@ private struct SummaryRow: View {
         VStack(spacing: 0) {
             HStack(alignment: .firstTextBaseline, spacing: 16) {
                 Text(label)
-                    .font(.caption)
+                    .font(.caption2)
                     .foregroundStyle(.secondary)
                     .frame(width: 96, alignment: .leading)
                 Text(value)
@@ -348,20 +348,20 @@ private struct ItemRow: View {
     let subtitle: String?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 5) {
             Text(title)
                 .font(.body)
                 .foregroundStyle(.primary)
                 .fixedSize(horizontal: false, vertical: true)
             if let subtitle, !subtitle.isEmpty {
                 Text(subtitle)
-                    .font(.caption)
+                    .font(.caption2)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.vertical, 12)
+        .padding(.vertical, 10)
     }
 }
 
@@ -369,7 +369,7 @@ private struct RelationItemView: View {
     let row: RelationRow
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 5) {
             Text(row.sourceSummary ?? "Source")
                 .font(.body)
                 .foregroundStyle(.primary)
@@ -379,16 +379,16 @@ private struct RelationItemView: View {
                     .fill(Color.secondary.opacity(0.35))
                     .frame(width: 18, height: 1)
                 Text(relationLabel)
-                    .font(.caption)
+                    .font(.caption2)
                     .foregroundStyle(.secondary)
             }
             Text(row.targetSummary ?? "Target")
-                .font(.callout)
+                .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.vertical, 12)
+        .padding(.vertical, 10)
     }
 
     private var relationLabel: String {
