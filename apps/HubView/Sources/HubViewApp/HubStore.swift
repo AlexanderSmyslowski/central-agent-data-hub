@@ -32,21 +32,30 @@ final class HubStore: ObservableObject {
     }
 
     func loadSelectedProject() async {
-        guard let selectedProjectID else {
+        guard let projectID = selectedProjectID else {
             detail = nil
+            isLoadingDetail = false
             return
         }
         isLoadingDetail = true
-        defer { isLoadingDetail = false }
 
         do {
             let detail = try await Task.detached(priority: .userInitiated) {
-                try self.cli.fetchProjectView(slug: selectedProjectID)
+                try self.cli.fetchProjectView(slug: projectID)
             }.value
+            guard selectedProjectID == projectID else {
+                return
+            }
             self.detail = detail
             errorMessage = nil
         } catch {
+            guard selectedProjectID == projectID else {
+                return
+            }
             errorMessage = error.localizedDescription
+        }
+        if selectedProjectID == projectID {
+            isLoadingDetail = false
         }
     }
 
@@ -55,9 +64,20 @@ final class HubStore: ObservableObject {
         await loadSelectedProject()
     }
 
+    func selectProject(_ projectID: ProjectSummary.ID) {
+        guard selectedProjectID != projectID else {
+            return
+        }
+        selectedProjectID = projectID
+        detail = nil
+        errorMessage = nil
+        isLoadingDetail = true
+    }
+
     func showHome() {
         selectedProjectID = nil
         detail = nil
         errorMessage = nil
+        isLoadingDetail = false
     }
 }

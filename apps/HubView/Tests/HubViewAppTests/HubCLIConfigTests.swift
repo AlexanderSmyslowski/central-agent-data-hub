@@ -53,7 +53,46 @@ func hubStoreShowHomeClearsProjectSelection() {
     )
 
     store.selectedProjectID = "central-agent-data-hub"
-    store.detail = HubViewModel(
+    store.detail = sampleHubViewModel()
+    store.errorMessage = "Detail konnte nicht geladen werden."
+    store.isLoadingDetail = true
+
+    store.showHome()
+
+    #expect(store.selectedProjectID == nil)
+    #expect(store.detail == nil)
+    #expect(store.errorMessage == nil)
+    #expect(store.isLoadingDetail == false)
+}
+
+@MainActor
+@Test
+func hubStoreSelectProjectClearsStaleDetailImmediately() {
+    let store = HubStore(
+        cli: HubCLI(
+            config: HubCLIConfig(
+                repoRoot: "/repo",
+                pythonBin: "/python",
+                databaseURL: "postgres://db",
+                obsidianExportDir: "/vault"
+            )
+        )
+    )
+
+    store.selectedProjectID = nil
+    store.detail = sampleHubViewModel()
+    store.errorMessage = "Alte Meldung."
+
+    store.selectProject("commcats-de")
+
+    #expect(store.selectedProjectID == "commcats-de")
+    #expect(store.detail == nil)
+    #expect(store.errorMessage == nil)
+    #expect(store.isLoadingDetail == true)
+}
+
+private func sampleHubViewModel() -> HubViewModel {
+    HubViewModel(
         project: ProjectRecord(
             name: "Central Agent Data Hub",
             slug: "central-agent-data-hub",
@@ -87,11 +126,4 @@ func hubStoreShowHomeClearsProjectSelection() {
             openQuestions: []
         )
     )
-    store.errorMessage = "Detail konnte nicht geladen werden."
-
-    store.showHome()
-
-    #expect(store.selectedProjectID == nil)
-    #expect(store.detail == nil)
-    #expect(store.errorMessage == nil)
 }

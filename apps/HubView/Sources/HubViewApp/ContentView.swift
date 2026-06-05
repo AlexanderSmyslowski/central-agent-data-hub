@@ -47,20 +47,14 @@ private struct SidebarView: View {
             Button {
                 store.showHome()
             } label: {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Hub View")
-                        .font(.title3.weight(.semibold))
-                        .foregroundStyle(.primary)
-                    Text("Lesefläche für Agent Data Hub")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                HomeRow(isSelected: store.selectedProjectID == nil)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
             .buttonStyle(.plain)
             .help("Zur Startansicht")
-            .padding(.horizontal, 20)
-            .padding(.top, 24)
+            .padding(.horizontal, 10)
+            .padding(.top, 18)
             .padding(.bottom, 14)
 
             if store.projects.isEmpty && !store.isLoadingProjects && store.errorMessage == nil {
@@ -71,16 +65,19 @@ private struct SidebarView: View {
                     LazyVStack(alignment: .leading, spacing: 3) {
                         ForEach(store.projects) { project in
                             Button {
-                                store.selectedProjectID = project.id
+                                store.selectProject(project.id)
                             } label: {
                                 ProjectRow(
                                     project: project,
                                     isSelected: project.id == store.selectedProjectID
                                 )
                             }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
                             .buttonStyle(.plain)
                         }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 10)
                     .padding(.bottom, 12)
                 }
@@ -159,6 +156,29 @@ private struct WelcomeView: View {
     }
 }
 
+private struct HomeRow: View {
+    let isSelected: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text("Hub View")
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(isSelected ? .white : .primary)
+            Text("Lesefläche für Agent Data Hub")
+                .font(.caption2)
+                .foregroundStyle(isSelected ? .white.opacity(0.82) : .secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .contentShape(Rectangle())
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(isSelected ? Color.accentColor : Color.clear)
+        )
+    }
+}
+
 private struct ProjectRow: View {
     let project: ProjectSummary
     let isSelected: Bool
@@ -182,6 +202,7 @@ private struct ProjectRow: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
+        .contentShape(Rectangle())
         .background(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(isSelected ? Color.accentColor : Color.clear)
