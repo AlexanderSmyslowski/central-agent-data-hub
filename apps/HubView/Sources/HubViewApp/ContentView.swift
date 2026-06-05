@@ -8,11 +8,12 @@ struct ContentView: View {
     }
 
     var body: some View {
-        NavigationSplitView {
+        HStack(spacing: 0) {
             SidebarView(store: store)
-        } detail: {
+            Divider()
             DetailContainerView(store: store)
         }
+        .background(Color(nsColor: .windowBackgroundColor))
         .toolbar {
             ToolbarItem(placement: .automatic) {
                 Text("Nur lesen")
@@ -42,33 +43,44 @@ private struct SidebarView: View {
     @ObservedObject var store: HubStore
 
     var body: some View {
-        List(selection: $store.selectedProjectID) {
-            Section {
-                ForEach(store.projects) { project in
-                    ProjectRow(project: project)
-                        .tag(project.id)
-                }
-            } header: {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Hub View")
-                        .font(.title3.weight(.semibold))
-                        .foregroundStyle(.primary)
-                    Text("Lesefläche für Agent Data Hub")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .textCase(nil)
-                }
-                .padding(.bottom, 10)
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Hub View")
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(.primary)
+                Text("Lesefläche für Agent Data Hub")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
             }
-        }
-        .listStyle(.sidebar)
-        .navigationTitle("Projekte")
-        .frame(minWidth: 280, idealWidth: 300)
-        .overlay {
+            .padding(.horizontal, 20)
+            .padding(.top, 24)
+            .padding(.bottom, 14)
+
             if store.projects.isEmpty && !store.isLoadingProjects && store.errorMessage == nil {
                 ContentUnavailableView("Keine aktiven Projekte", systemImage: "tray")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 3) {
+                        ForEach(store.projects) { project in
+                            Button {
+                                store.selectedProjectID = project.id
+                            } label: {
+                                ProjectRow(
+                                    project: project,
+                                    isSelected: project.id == store.selectedProjectID
+                                )
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.bottom, 12)
+                }
             }
         }
+        .frame(width: 300)
+        .background(.bar)
     }
 }
 
@@ -142,24 +154,31 @@ private struct WelcomeView: View {
 
 private struct ProjectRow: View {
     let project: ProjectSummary
+    let isSelected: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(project.name)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.primary)
+                .foregroundStyle(isSelected ? .white : .primary)
                 .lineLimit(1)
             Text(project.slug)
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(isSelected ? .white.opacity(0.82) : .secondary)
             if let description = project.description, !description.isEmpty {
                 Text(description)
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(isSelected ? .white.opacity(0.82) : .secondary)
                     .lineLimit(1)
             }
         }
-        .padding(.vertical, 4)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(isSelected ? Color.accentColor : Color.clear)
+        )
     }
 }
 
