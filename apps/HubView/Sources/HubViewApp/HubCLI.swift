@@ -79,11 +79,11 @@ enum HubCLIError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .missingDatabaseURL:
-            return "DATABASE_URL is missing. Start Hub View through the project run script."
+            return "DATABASE_URL fehlt. Bitte Hub View ueber das Projekt-Startscript oeffnen."
         case .commandFailed(let message):
             return message
         case .emptyOutput:
-            return "The Agent Data Hub command returned no output."
+            return "Der Agent Data Hub hat keine Ausgabe zurueckgegeben."
         }
     }
 }
@@ -154,7 +154,7 @@ struct HubCLI {
         guard process.terminationStatus == 0 else {
             let message = String(data: errorData, encoding: .utf8)?
                 .trimmingCharacters(in: .whitespacesAndNewlines)
-            throw HubCLIError.commandFailed(message?.isEmpty == false ? message! : "Agent Data Hub command failed.")
+            throw HubCLIError.commandFailed(message?.isEmpty == false ? message! : "Der Agent Data Hub Befehl ist fehlgeschlagen.")
         }
         guard !outputData.isEmpty else {
             throw HubCLIError.emptyOutput

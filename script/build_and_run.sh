@@ -16,6 +16,8 @@ APP_RESOURCES="$APP_CONTENTS/Resources"
 APP_BINARY="$APP_MACOS/$APP_EXECUTABLE_NAME"
 INFO_PLIST="$APP_CONTENTS/Info.plist"
 RUNTIME_CONFIG="$APP_RESOURCES/runtime-config.json"
+ICON_SOURCE="$ROOT_DIR/apps/HubView/Resources/HubView.icns"
+ICON_TARGET="$APP_RESOURCES/HubView.icns"
 
 # shellcheck disable=SC1091
 source "$ROOT_DIR/scripts/db_common.sh"
@@ -55,6 +57,10 @@ mkdir -p "$APP_RESOURCES"
 cp "$BUILD_BINARY" "$APP_BINARY"
 chmod +x "$APP_BINARY"
 
+if [[ -f "$ICON_SOURCE" ]]; then
+  cp "$ICON_SOURCE" "$ICON_TARGET"
+fi
+
 cat >"$INFO_PLIST" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -66,6 +72,10 @@ cat >"$INFO_PLIST" <<PLIST
   <string>$BUNDLE_ID</string>
   <key>CFBundleName</key>
   <string>$APP_DISPLAY_NAME</string>
+  <key>CFBundleDisplayName</key>
+  <string>$APP_DISPLAY_NAME</string>
+  <key>CFBundleIconFile</key>
+  <string>HubView.icns</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>LSMinimumSystemVersion</key>

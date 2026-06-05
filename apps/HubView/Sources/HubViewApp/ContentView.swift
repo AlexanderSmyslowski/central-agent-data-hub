@@ -15,7 +15,7 @@ struct ContentView: View {
         }
         .toolbar {
             ToolbarItem(placement: .automatic) {
-                Text("Read-only")
+                Text("Nur lesen")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -25,7 +25,7 @@ struct ContentView: View {
                 } label: {
                     Image(systemName: "arrow.clockwise")
                 }
-                .help("Reload")
+                .help("Neu laden")
             }
         }
         .task {
@@ -53,7 +53,7 @@ private struct SidebarView: View {
                     Text("Hub View")
                         .font(.title3.weight(.semibold))
                         .foregroundStyle(.primary)
-                    Text("Read-only review surface for Agent Data Hub")
+                    Text("Leseflaeche fuer Agent Data Hub")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .textCase(nil)
@@ -62,11 +62,11 @@ private struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
-        .navigationTitle("Projects")
+        .navigationTitle("Projekte")
         .frame(minWidth: 280, idealWidth: 300)
         .overlay {
             if store.projects.isEmpty && !store.isLoadingProjects && store.errorMessage == nil {
-                ContentUnavailableView("No active projects", systemImage: "tray")
+                ContentUnavailableView("Keine aktiven Projekte", systemImage: "tray")
             }
         }
     }
@@ -86,7 +86,7 @@ private struct DetailContainerView: View {
             } else if let message = store.errorMessage {
                 ErrorView(message: message)
             } else {
-                ContentUnavailableView("Select a project", systemImage: "sidebar.left")
+                ContentUnavailableView("Projekt auswaehlen", systemImage: "sidebar.left")
             }
         }
     }
@@ -124,44 +124,44 @@ private struct ProjectDetailView: View {
                 header
                 summaryPanel
                 section(
-                    title: "Open questions",
+                    title: "Offene Fragen",
                     rows: detail.openQuestions,
-                    emptyText: "No unresolved questions are visible."
+                    emptyText: "Keine offenen Fragen sichtbar."
                 ) { row in
                     ItemRow(title: row.question, subtitle: row.answer)
                 }
                 section(
-                    title: "Risks",
+                    title: "Risiken",
                     rows: detail.risks,
-                    emptyText: "No active risks are visible."
+                    emptyText: "Keine aktiven Risiken sichtbar."
                 ) { row in
                     ItemRow(title: row.title, subtitle: row.impact ?? row.mitigation)
                 }
                 section(
-                    title: "Decisions",
+                    title: "Entscheidungen",
                     rows: detail.decisions,
-                    emptyText: "No active decisions are visible."
+                    emptyText: "Keine aktiven Entscheidungen sichtbar."
                 ) { row in
                     ItemRow(title: row.decision, subtitle: row.rationale)
                 }
                 section(
-                    title: "Facts",
+                    title: "Fakten",
                     rows: detail.facts,
-                    emptyText: "No reviewed facts are visible."
+                    emptyText: "Keine geprueften Fakten sichtbar."
                 ) { row in
                     ItemRow(title: row.statement, subtitle: row.source)
                 }
                 section(
-                    title: "Reports",
+                    title: "Berichte",
                     rows: detail.reports,
-                    emptyText: "No reports are visible."
+                    emptyText: "Keine Berichte sichtbar."
                 ) { row in
                     ItemRow(title: row.title, subtitle: row.summary)
                 }
                 section(
-                    title: "Relations",
+                    title: "Verknuepfungen",
                     rows: detail.relations,
-                    emptyText: "No relations are visible."
+                    emptyText: "Keine Verknuepfungen sichtbar."
                 ) { row in
                     RelationItemView(row: row)
                 }
@@ -187,7 +187,7 @@ private struct ProjectDetailView: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            Text("Verified context for humans and agents.")
+            Text("Gepruefter Kontext fuer Menschen und Agenten.")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
@@ -209,25 +209,25 @@ private struct ProjectDetailView: View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
                 MetricCell(
-                    label: "Memory",
+                    label: "Wissen",
                     value: "\(detail.counts.total)",
-                    note: "\(detail.counts.facts) facts, \(detail.counts.reports) reports"
+                    note: "\(detail.counts.facts) Fakten, \(detail.counts.reports) Reports"
                 )
                 Divider()
                 MetricCell(
-                    label: "Open work",
+                    label: "Offen",
                     value: "\(detail.counts.openQuestions + detail.counts.risks)",
-                    note: "\(detail.counts.openQuestions) questions, \(detail.counts.risks) risks"
+                    note: "\(detail.counts.openQuestions) Fragen, \(detail.counts.risks) Risiken"
                 )
                 Divider()
                 MetricCell(
-                    label: "Quality",
+                    label: "Qualitaet",
                     value: "\(detail.quality.score)",
-                    note: detail.quality.status
+                    note: qualityLabel(detail.quality.status)
                 )
             }
             Divider()
-            SummaryRow(label: "Status", value: detail.project.status)
+            SummaryRow(label: "Status", value: statusLabel(detail.project.status))
         }
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -272,6 +272,32 @@ private struct ProjectDetailView: View {
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
         return formatter.string(from: date)
+    }
+
+    private func statusLabel(_ raw: String) -> String {
+        switch raw.lowercased() {
+        case "active":
+            return "aktiv"
+        case "planned":
+            return "geplant"
+        case "archived":
+            return "archiviert"
+        default:
+            return raw
+        }
+    }
+
+    private func qualityLabel(_ raw: String) -> String {
+        switch raw.lowercased() {
+        case "healthy":
+            return "gesund"
+        case "warning":
+            return "Hinweis"
+        case "error":
+            return "Fehler"
+        default:
+            return raw
+        }
     }
 }
 
@@ -370,7 +396,7 @@ private struct RelationItemView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text(row.sourceSummary ?? "Source")
+            Text(row.sourceSummary ?? "Quelle")
                 .font(.body)
                 .foregroundStyle(.primary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -382,7 +408,7 @@ private struct RelationItemView: View {
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
-            Text(row.targetSummary ?? "Target")
+            Text(row.targetSummary ?? "Ziel")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -392,7 +418,20 @@ private struct RelationItemView: View {
     }
 
     private var relationLabel: String {
-        row.relationType.replacingOccurrences(of: "_", with: " ")
+        switch row.relationType.lowercased() {
+        case "supports":
+            return "stuetzt"
+        case "references":
+            return "verweist auf"
+        case "mitigates":
+            return "mindert"
+        case "answers":
+            return "beantwortet"
+        case "blocks":
+            return "blockiert"
+        default:
+            return row.relationType.replacingOccurrences(of: "_", with: " ")
+        }
     }
 }
 
@@ -411,7 +450,7 @@ private struct ErrorView: View {
 
     var body: some View {
         ContentUnavailableView {
-            Label("Hub View could not load data", systemImage: "exclamationmark.triangle")
+            Label("Hub View konnte die Daten nicht laden", systemImage: "exclamationmark.triangle")
         } description: {
             Text(message)
         }
