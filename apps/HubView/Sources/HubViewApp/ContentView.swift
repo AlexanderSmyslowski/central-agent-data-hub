@@ -122,9 +122,11 @@ private struct ProjectDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
                 header
+                introPanel
                 summaryPanel
                 section(
                     title: "Offene Fragen",
+                    description: "Punkte, die fuer dieses Projekt noch geklaert werden muessen.",
                     rows: detail.openQuestions,
                     emptyText: "Keine offenen Fragen sichtbar."
                 ) { row in
@@ -132,6 +134,7 @@ private struct ProjectDetailView: View {
                 }
                 section(
                     title: "Risiken",
+                    description: "Probleme oder Unsicherheiten, die Aufmerksamkeit brauchen.",
                     rows: detail.risks,
                     emptyText: "Keine aktiven Risiken sichtbar."
                 ) { row in
@@ -139,6 +142,7 @@ private struct ProjectDetailView: View {
                 }
                 section(
                     title: "Entscheidungen",
+                    description: "Bewusst getroffene Festlegungen fuer dieses Projekt.",
                     rows: detail.decisions,
                     emptyText: "Keine aktiven Entscheidungen sichtbar."
                 ) { row in
@@ -146,6 +150,7 @@ private struct ProjectDetailView: View {
                 }
                 section(
                     title: "Fakten",
+                    description: "Gepruefte Informationen, auf die sich Menschen und Agenten stuetzen koennen.",
                     rows: detail.facts,
                     emptyText: "Keine geprueften Fakten sichtbar."
                 ) { row in
@@ -153,6 +158,7 @@ private struct ProjectDetailView: View {
                 }
                 section(
                     title: "Berichte",
+                    description: "Kurze Zusammenfassungen, Uebergaben oder Tagesstaende.",
                     rows: detail.reports,
                     emptyText: "Keine Berichte sichtbar."
                 ) { row in
@@ -160,6 +166,7 @@ private struct ProjectDetailView: View {
                 }
                 section(
                     title: "Verknuepfungen",
+                    description: "Beziehungen zwischen Fakten, Entscheidungen, Risiken und Berichten.",
                     rows: detail.relations,
                     emptyText: "Keine Verknuepfungen sichtbar."
                 ) { row in
@@ -205,13 +212,31 @@ private struct ProjectDetailView: View {
         .foregroundStyle(.secondary)
     }
 
+    private var introPanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Was du hier siehst")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary)
+            Text("Links waehlst du ein Projekt. Rechts siehst du den geprueften Projektkontext: was bekannt, offen, entschieden oder riskant ist.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 16)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color(nsColor: .controlBackgroundColor))
+        )
+    }
+
     private var summaryPanel: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
                 MetricCell(
                     label: "Wissen",
                     value: "\(detail.counts.total)",
-                    note: "\(detail.counts.facts) Fakten, \(detail.counts.reports) Reports"
+                    note: "\(detail.counts.facts) Fakten, \(detail.counts.reports) Berichte"
                 )
                 Divider()
                 MetricCell(
@@ -238,12 +263,13 @@ private struct ProjectDetailView: View {
     @ViewBuilder
     private func section<Row, Content: View>(
         title: String,
+        description: String,
         rows: [Row],
         emptyText: String,
         @ViewBuilder content: @escaping (Row) -> Content
     ) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: title, count: rows.count)
+            SectionHeader(title: title, description: description, count: rows.count)
             if rows.isEmpty {
                 QuietEmpty(text: emptyText)
             } else {
@@ -303,17 +329,24 @@ private struct ProjectDetailView: View {
 
 private struct SectionHeader: View {
     let title: String
+    let description: String
     let count: Int
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
-            Text(title)
-                .font(.headline)
-                .foregroundStyle(.primary)
-            Text("\(count)")
-                .font(.caption2.monospacedDigit())
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+                Text("\(count)")
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                Spacer(minLength: 0)
+            }
+            Text(description)
+                .font(.caption)
                 .foregroundStyle(.secondary)
-            Spacer(minLength: 0)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 }
