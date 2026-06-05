@@ -11,9 +11,11 @@ final class HubStore: ObservableObject {
     @Published var isLoadingDetail = false
 
     private let cli: HubCLI
+    let wikiLinks: WikiLinkResolver
 
     init(cli: HubCLI) {
         self.cli = cli
+        self.wikiLinks = WikiLinkResolver(exportDir: cli.config.obsidianExportDir)
     }
 
     func load() async {

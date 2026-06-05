@@ -91,6 +91,38 @@ func hubStoreSelectProjectClearsStaleDetailImmediately() {
     #expect(store.isLoadingDetail == true)
 }
 
+@Test
+func wikiLinkResolverBuildsFactExportPathLikeHubExport() {
+    let resolver = WikiLinkResolver(exportDir: "/vault")
+    let row = FactRow(
+        id: "20000000-0000-4000-8000-000000000204",
+        statement: "The Central Agent Data Hub is the shared agentic work memory for Codex/Hermes.",
+        source: nil,
+        confidence: nil,
+        status: "active"
+    )
+
+    let path = resolver.factPath(row)
+
+    #expect(path?.path == "/vault/Facts/the-central-agent-data-hub-is-the-shared-agentic-work-memory-for-codex-hermes-00000204.md")
+}
+
+@Test
+func wikiLinkResolverBuildsReportExportPathLikeHubExport() {
+    let resolver = WikiLinkResolver(exportDir: "/vault")
+    let row = ReportRow(
+        id: "20000000-0000-4000-8000-000000000602",
+        title: "Daily Report - Central Agent Data Hub - 2026-05-29",
+        reportType: "daily",
+        summary: nil,
+        status: "published"
+    )
+
+    let path = resolver.reportPath(row)
+
+    #expect(path?.path == "/vault/Reports/daily-report-central-agent-data-hub-2026-05-29-00000602.md")
+}
+
 private func sampleHubViewModel() -> HubViewModel {
     HubViewModel(
         project: ProjectRecord(

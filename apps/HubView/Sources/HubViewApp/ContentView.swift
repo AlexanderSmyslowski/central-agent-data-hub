@@ -94,7 +94,7 @@ private struct DetailContainerView: View {
     var body: some View {
         Group {
             if let detail = store.detail {
-                ProjectDetailView(detail: detail)
+                ProjectDetailView(detail: detail, wikiLinks: store.wikiLinks)
             } else if store.isLoadingDetail || store.isLoadingProjects {
                 ProgressView()
                     .controlSize(.large)
@@ -212,73 +212,132 @@ private struct ProjectRow: View {
 
 private struct ProjectDetailView: View {
     let detail: HubViewModel
+    let wikiLinks: WikiLinkResolver
+
+    private enum SectionAnchor: String {
+        case memoryOverview
+        case openQuestions
+        case risks
+        case decisions
+        case facts
+        case reports
+        case relations
+    }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
-                header
-                introPanel
-                systemMapPanel
-                summaryPanel
-                workingContextPanel
-                rulesPanel
-                MemoryDetailHeader()
-                section(
-                    title: "Offene Fragen",
-                    description: "Punkte, die für dieses Projekt noch geklärt werden müssen.",
-                    rows: detail.openQuestions,
-                    emptyText: "Keine offenen Fragen sichtbar."
-                ) { row in
-                    ItemRow(title: row.question, subtitle: row.answer)
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 28) {
+                    header
+                    introPanel
+                    systemMapPanel
+                    summaryPanel { anchor in
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            proxy.scrollTo(anchor, anchor: .top)
+                        }
+                    }
+                    workingContextPanel
+                    rulesPanel
+                    MemoryDetailHeader()
+                        .id(SectionAnchor.memoryOverview)
+                    section(
+                        title: "Offene Fragen",
+                        description: "Punkte, die für dieses Projekt noch geklärt werden müssen.",
+                        rows: detail.openQuestions,
+                        emptyText: "Keine offenen Fragen sichtbar."
+                    ) { row in
+                        let wikiPath = wikiLinks.existingPath(wikiLinks.openQuestionPath(row))
+                        ItemRow(
+                            title: row.question,
+                            subtitle: row.answer,
+                            openAction: wikiPath.map { path in
+                                { wikiLinks.openIfPresent(path) }
+                            }
+                        )
+                    }
+                    .id(SectionAnchor.openQuestions)
+                    section(
+                        title: "Risiken",
+                        description: "Probleme oder Unsicherheiten, die Aufmerksamkeit brauchen.",
+                        rows: detail.risks,
+                        emptyText: "Keine aktiven Risiken sichtbar."
+                    ) { row in
+                        let wikiPath = wikiLinks.existingPath(wikiLinks.riskPath(row))
+                        ItemRow(
+                            title: row.title,
+                            subtitle: row.impact ?? row.mitigation,
+                            openAction: wikiPath.map { path in
+                                { wikiLinks.openIfPresent(path) }
+                            }
+                        )
+                    }
+                    .id(SectionAnchor.risks)
+                    section(
+                        title: "Entscheidungen",
+                        description: "Bewusst getroffene Festlegungen für dieses Projekt.",
+                        rows: detail.decisions,
+                        emptyText: "Keine aktiven Entscheidungen sichtbar."
+                    ) { row in
+                        let wikiPath = wikiLinks.existingPath(wikiLinks.decisionPath(row))
+                        ItemRow(
+                            title: row.decision,
+                            subtitle: row.rationale,
+                            openAction: wikiPath.map { path in
+                                { wikiLinks.openIfPresent(path) }
+                            }
+                        )
+                    }
+                    .id(SectionAnchor.decisions)
+                    section(
+                        title: "Fakten",
+                        description: "Geprüfte Informationen, auf die sich Menschen und Agenten stützen können.",
+                        rows: detail.facts,
+                        emptyText: "Keine geprüften Fakten sichtbar."
+                    ) { row in
+                        let wikiPath = wikiLinks.existingPath(wikiLinks.factPath(row))
+                        ItemRow(
+                            title: row.statement,
+                            subtitle: row.source,
+                            openAction: wikiPath.map { path in
+                                { wikiLinks.openIfPresent(path) }
+                            }
+                        )
+                    }
+                    .id(SectionAnchor.facts)
+                    section(
+                        title: "Berichte",
+                        description: "Kurze Zusammenfassungen, Übergaben oder Tagesstände.",
+                        rows: detail.reports,
+                        emptyText: "Keine Berichte sichtbar."
+                    ) { row in
+                        let wikiPath = wikiLinks.existingPath(wikiLinks.reportPath(row))
+                        ItemRow(
+                            title: row.title,
+                            subtitle: row.summary,
+                            openAction: wikiPath.map { path in
+                                { wikiLinks.openIfPresent(path) }
+                            }
+                        )
+                    }
+                    .id(SectionAnchor.reports)
+                    section(
+                        title: "Verknüpfungen",
+                        description: "Beziehungen zwischen Fakten, Entscheidungen, Risiken und Berichten.",
+                        rows: detail.relations,
+                        emptyText: "Keine Verknüpfungen sichtbar."
+                    ) { row in
+                        RelationItemView(row: row)
+                    }
+                    .id(SectionAnchor.relations)
                 }
-                section(
-                    title: "Risiken",
-                    description: "Probleme oder Unsicherheiten, die Aufmerksamkeit brauchen.",
-                    rows: detail.risks,
-                    emptyText: "Keine aktiven Risiken sichtbar."
-                ) { row in
-                    ItemRow(title: row.title, subtitle: row.impact ?? row.mitigation)
-                }
-                section(
-                    title: "Entscheidungen",
-                    description: "Bewusst getroffene Festlegungen für dieses Projekt.",
-                    rows: detail.decisions,
-                    emptyText: "Keine aktiven Entscheidungen sichtbar."
-                ) { row in
-                    ItemRow(title: row.decision, subtitle: row.rationale)
-                }
-                section(
-                    title: "Fakten",
-                    description: "Geprüfte Informationen, auf die sich Menschen und Agenten stützen können.",
-                    rows: detail.facts,
-                    emptyText: "Keine geprüften Fakten sichtbar."
-                ) { row in
-                    ItemRow(title: row.statement, subtitle: row.source)
-                }
-                section(
-                    title: "Berichte",
-                    description: "Kurze Zusammenfassungen, Übergaben oder Tagesstände.",
-                    rows: detail.reports,
-                    emptyText: "Keine Berichte sichtbar."
-                ) { row in
-                    ItemRow(title: row.title, subtitle: row.summary)
-                }
-                section(
-                    title: "Verknüpfungen",
-                    description: "Beziehungen zwischen Fakten, Entscheidungen, Risiken und Berichten.",
-                    rows: detail.relations,
-                    emptyText: "Keine Verknüpfungen sichtbar."
-                ) { row in
-                    RelationItemView(row: row)
-                }
+                .frame(maxWidth: 880, alignment: .leading)
+                .padding(.horizontal, 44)
+                .padding(.vertical, 36)
+                .frame(maxWidth: .infinity, alignment: .center)
             }
-            .frame(maxWidth: 880, alignment: .leading)
-            .padding(.horizontal, 44)
-            .padding(.vertical, 36)
-            .frame(maxWidth: .infinity, alignment: .center)
+            .background(Color(nsColor: .windowBackgroundColor))
+            .textSelection(.enabled)
         }
-        .background(Color(nsColor: .windowBackgroundColor))
-        .textSelection(.enabled)
     }
 
     private var header: some View {
@@ -355,7 +414,9 @@ private struct ProjectDetailView: View {
         )
     }
 
-    private var summaryPanel: some View {
+    private func summaryPanel(
+        jumpTo: @escaping (SectionAnchor) -> Void
+    ) -> some View {
         VStack(spacing: 0) {
             PanelIntro(
                 title: "Gedächtnis",
@@ -366,13 +427,34 @@ private struct ProjectDetailView: View {
                 MetricCell(
                     label: "Wissen",
                     value: "\(detail.counts.total)",
-                    note: "\(detail.counts.facts) Fakten, \(detail.counts.reports) Berichte"
+                    note: "Zum gesamten Gedächtnis springen.",
+                    action: { jumpTo(.memoryOverview) },
+                    links: [
+                        MetricLink(
+                            title: "\(detail.counts.facts) Fakten",
+                            action: { jumpTo(.facts) }
+                        ),
+                        MetricLink(
+                            title: "\(detail.counts.reports) Berichte",
+                            action: { jumpTo(.reports) }
+                        ),
+                    ]
                 )
                 Divider()
                 MetricCell(
                     label: "Offen",
                     value: "\(detail.counts.openQuestions + detail.counts.risks)",
-                    note: "\(detail.counts.openQuestions) Fragen, \(detail.counts.risks) Risiken"
+                    note: "Offene Punkte im Projekt.",
+                    links: [
+                        MetricLink(
+                            title: "\(detail.counts.openQuestions) Fragen",
+                            action: { jumpTo(.openQuestions) }
+                        ),
+                        MetricLink(
+                            title: "\(detail.counts.risks) Risiken",
+                            action: { jumpTo(.risks) }
+                        ),
+                    ]
                 )
                 Divider()
                 MetricCell(
@@ -599,8 +681,38 @@ private struct MetricCell: View {
     let label: String
     let value: String
     let note: String
+    var action: (() -> Void)? = nil
+    var links: [MetricLink] = []
 
     var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if let action {
+                Button(action: action) {
+                    metricContent
+                }
+                .buttonStyle(.plain)
+                .contentShape(Rectangle())
+            } else {
+                metricContent
+            }
+
+            if !links.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(Array(links.enumerated()), id: \.offset) { _, link in
+                        Button(link.title, action: link.action)
+                            .buttonStyle(.plain)
+                            .font(.caption2.weight(.medium))
+                            .foregroundStyle(.blue)
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 18)
+        .padding(.vertical, 15)
+    }
+
+    private var metricContent: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(label)
                 .font(.caption2)
@@ -613,9 +725,6 @@ private struct MetricCell: View {
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 18)
-        .padding(.vertical, 15)
     }
 }
 
@@ -649,23 +758,41 @@ private struct SummaryRow: View {
 private struct ItemRow: View {
     let title: String
     let subtitle: String?
+    var openAction: (() -> Void)? = nil
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            Text(title)
-                .font(.body)
-                .foregroundStyle(.primary)
-                .fixedSize(horizontal: false, vertical: true)
-            if let subtitle, !subtitle.isEmpty {
-                Text(subtitle)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 5) {
+                Text(title)
+                    .font(.body)
+                    .foregroundStyle(.primary)
                     .fixedSize(horizontal: false, vertical: true)
+                if let subtitle, !subtitle.isEmpty {
+                    Text(subtitle)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            Spacer(minLength: 0)
+            if let openAction {
+                Button(action: openAction) {
+                    Image(systemName: "arrow.up.forward.square")
+                        .font(.body)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .help("Im Wiki öffnen")
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 10)
     }
+}
+
+private struct MetricLink {
+    let title: String
+    let action: () -> Void
 }
 
 private struct RelationItemView: View {
