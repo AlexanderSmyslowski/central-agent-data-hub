@@ -13,6 +13,7 @@ from wsgiref.simple_server import make_server
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
+from agent_hub.codex_projects import with_project_display_names
 from agent_hub.commands.common import fetch_project
 from agent_hub.commands.summaries import fetch_compiled_payload
 from agent_hub.db import connect
@@ -50,7 +51,7 @@ def fetch_active_projects(cur) -> list[dict[str, object]]:
         ORDER BY slug
         """
     )
-    return list(cur.fetchall())
+    return with_project_display_names(list(cur.fetchall()))
 
 
 def fetch_latest_report(cur, project_id: object) -> dict[str, object] | None:

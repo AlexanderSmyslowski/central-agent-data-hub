@@ -8,6 +8,7 @@ import os
 import sys
 from pathlib import Path
 
+from agent_hub.codex_projects import with_project_display_names
 from agent_hub.commands.common import (
     concise_error,
     error,
@@ -152,7 +153,7 @@ def run_projects(args: argparse.Namespace) -> int:
                     """,
                     params,
                 )
-                projects = list(cur.fetchall())
+                projects = with_project_display_names(list(cur.fetchall()))
     except Exception as exc:
         return exception_error(exc)
 

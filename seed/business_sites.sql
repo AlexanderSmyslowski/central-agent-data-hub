@@ -15,6 +15,7 @@ VALUES
   '{
     "domain": "commcats.de",
     "local_path": "/Users/alexandersmyslowski/Documents/commcats.de",
+    "codex_workspace_root": "/Users/alexandersmyslowski/Documents/commcats.de 2",
     "memory_scope": "website",
     "project_type": "website",
     "site_state": "live-static-alfahosting",
@@ -31,6 +32,7 @@ VALUES
   '{
     "domain": "the-one.catering",
     "local_path": "/Users/alexandersmyslowski/Documents/the-one-catering",
+    "codex_workspace_root": "/Users/alexandersmyslowski/Documents/the-one.catering",
     "memory_scope": "website",
     "project_type": "website",
     "site_state": "live-framer-site-with-static-migration-planned",

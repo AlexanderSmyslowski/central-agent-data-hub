@@ -9,6 +9,7 @@ import os
 import re
 import sys
 
+from agent_hub.codex_projects import with_project_display_name
 from agent_hub.rendering import truncate
 
 
@@ -84,7 +85,7 @@ def fetch_project(cur, slug: str) -> dict[str, object] | None:
         """,
         (slug,),
     )
-    return cur.fetchone()
+    return with_project_display_name(cur.fetchone())
 
 
 def print_relations(rows: list[dict[str, object]]) -> None:

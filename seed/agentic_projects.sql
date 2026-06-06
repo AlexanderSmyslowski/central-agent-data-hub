@@ -15,6 +15,7 @@ VALUES
   '{
     "repo": "AlexanderSmyslowski/catering-agents-platform",
     "local_path": "/Users/alexandersmyslowski/Projects/catering-agents-platform",
+    "codex_workspace_root": "/Users/alexandersmyslowski/Library/Mobile Documents/com~apple~CloudDocs/Dateien/THE ONE von Alexander/Codex",
     "memory_scope": "product-platform",
     "project_type": "product",
     "work_mode": "repo-memory-plus-central-hub-start-finish",
@@ -30,6 +31,7 @@ VALUES
   '{
     "repo": "AlexanderSmyslowski/central-agent-data-hub",
     "local_path": "/Users/alexandersmyslowski/Projects/central-agent-data-hub",
+    "codex_workspace_root": "/Users/alexandersmyslowski/Documents/Agenten Gedächtnis Datenbank Progres SQL",
     "memory_scope": "agentic-operations",
     "project_type": "ops",
     "work_mode": "durable-local-db-plus-curated-agent-writeback",
@@ -45,6 +47,7 @@ VALUES
   '{
     "repo": "AlexanderSmyslowski/zeiterfassung-tool",
     "local_path": "/Users/alexandersmyslowski/Projects/zeiterfassung-tool",
+    "codex_workspace_root": "/Users/hans_clawbot/Documents",
     "memory_scope": "product-platform",
     "project_type": "product",
     "work_mode": "central-hub-start-finish",
