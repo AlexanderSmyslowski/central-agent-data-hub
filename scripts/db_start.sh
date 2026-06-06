@@ -13,6 +13,8 @@ Usage: scripts/db_start.sh [--demo]
 Starts the durable local Central Agent Data Hub database, waits for readiness,
 applies the schema, and seeds the maintainer's local working set.
 
+For the neutral public demo path, use scripts/db_start_public_demo.sh instead.
+
 Options:
   --demo    Also apply seed/demo.sql, the neutral public sample dataset.
 EOF
@@ -67,3 +69,4 @@ run_agent_hub brief --project catering-agents-platform --limit 4
 
 echo
 echo "Durable local Hub database is ready."
+echo "This is the maintainer local ops path."

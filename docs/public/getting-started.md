@@ -14,35 +14,25 @@ export DATABASE_URL="postgresql://postgres@localhost:55432/agent_hub"
 export OBSIDIAN_EXPORT_DIR=".local/obsidian-export"
 ```
 
-## 2. Start PostgreSQL
+## 2. Start The Public Demo Path
 
 ```bash
-docker compose up -d postgres
+scripts/db_start_public_demo.sh
 ```
 
-## 3. Apply Migrations
+This script starts PostgreSQL, applies migrations, seeds only `seed/demo.sql`,
+and prints a demo-focused readiness check.
+
+It does not wipe an existing local operator database. For the quietest first
+run, use it against a fresh local database or Docker volume.
+
+## 3. Run The End-To-End Demo Smoke
 
 ```bash
-.venv/bin/python -m agent_hub.cli migrate --apply
+bash scripts/smoke_public_demo.sh
 ```
 
-## 4. Load Demo Data
-
-```bash
-docker compose exec -T postgres \
-  psql -v ON_ERROR_STOP=1 -U postgres -d agent_hub \
-  < seed/demo.sql
-```
-
-## 5. Verify the System
-
-```bash
-.venv/bin/python -m agent_hub.cli status
-.venv/bin/python -m agent_hub.cli check
-.venv/bin/python -m agent_hub.cli compile --project central-agent-data-hub-demo
-```
-
-## 6. Open Human Views
+## 4. Open Human Views
 
 Export the Markdown projection:
 
@@ -59,10 +49,10 @@ scripts/hub_view.sh
 Hub View is a local read-only review surface. PostgreSQL remains the reviewed
 source of truth.
 
-## Important Note About Seeds
+## Important Note About Startup Paths
 
-`seed/demo.sql` is the public sample dataset.
+`scripts/db_start_public_demo.sh` is the public sample path.
 
-`seed/business_sites.sql` and `seed/agentic_projects.sql` reflect the
-maintainer's own operator workflow and local projects. They are useful as real
-working examples, but not the recommended public preview path.
+`scripts/db_start.sh` reflects the maintainer's own operator workflow and loads
+maintainer-local working seeds. It is useful for real daily operations, but not
+the recommended public preview path.

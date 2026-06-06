@@ -105,3 +105,25 @@ def test_schema_friction_wrapper_stores_marked_open_question() -> None:
     assert "--metadata observed=" in script
     assert "--metadata why=" in script
     assert '"$ROOT_DIR/scripts/project_remember.sh"' in script
+
+
+def test_public_demo_start_is_separate_from_maintainer_seed_path() -> None:
+    script = read_script("scripts/db_start_public_demo.sh")
+
+    assert 'apply_sql_file "seed/demo.sql"' in script
+    assert 'run_agent_hub brief --project central-agent-data-hub-demo --limit 4' in script
+    assert 'run_agent_hub compile --project central-agent-data-hub-demo --limit 4' in script
+    assert 'run_agent_hub quality --project central-agent-data-hub-demo' in script
+    assert 'apply_sql_file "seed/business_sites.sql"' not in script
+    assert 'apply_sql_file "seed/agentic_projects.sql"' not in script
+
+
+def test_public_demo_smoke_verifies_demo_exports() -> None:
+    script = read_script("scripts/smoke_public_demo.sh")
+
+    assert 'run_agent_hub brief --project central-agent-data-hub-demo --limit 4' in script
+    assert 'run_agent_hub compile --project central-agent-data-hub-demo --limit 4' in script
+    assert 'run_agent_hub quality --project central-agent-data-hub-demo' in script
+    assert 'run_agent_hub export >/dev/null' in script
+    assert 'central-agent-data-hub-demo.md' in script
+    assert 'Compiled/central-agent-data-hub-demo.md' in script

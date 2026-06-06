@@ -78,45 +78,22 @@ flowchart TD
 
 ## Public Quickstart
 
-For a public smoke test, prefer the neutral demo dataset instead of the
-maintainer's own working seeds.
+For a public smoke test, use the dedicated neutral demo path:
 
-1. Create a local environment file from `.env.example`, or export:
-
-```bash
-export DATABASE_URL="postgresql://postgres@localhost:55432/agent_hub"
-export OBSIDIAN_EXPORT_DIR=".local/obsidian-export"
-```
-
-2. Start PostgreSQL:
+1. Create a local environment file from `.env.example`.
+2. Start the public demo database path:
 
 ```bash
-docker compose up -d postgres
+scripts/db_start_public_demo.sh
 ```
 
-3. Apply the schema:
+3. Run the end-to-end demo smoke:
 
 ```bash
-.venv/bin/python -m agent_hub.cli migrate --apply
+scripts/smoke_public_demo.sh
 ```
 
-4. Load the public demo project:
-
-```bash
-docker compose exec -T postgres \
-  psql -v ON_ERROR_STOP=1 -U postgres -d agent_hub \
-  < seed/demo.sql
-```
-
-5. Inspect the state:
-
-```bash
-.venv/bin/python -m agent_hub.cli status
-.venv/bin/python -m agent_hub.cli check
-.venv/bin/python -m agent_hub.cli brief --project central-agent-data-hub-demo
-```
-
-6. Start the local read-only review UI:
+4. Start the local read-only review UI:
 
 ```bash
 scripts/hub_view.sh
@@ -183,16 +160,16 @@ Do not store these in the Hub:
 - unreviewed claims
 - cross-project assumptions
 
-## Demo Data Note
+## Startup Paths
 
-This repository contains two kinds of seed data:
+This repository now has two deliberately separate startup paths:
 
-- `seed/demo.sql`: the neutral public demo dataset
-- `seed/business_sites.sql` and `seed/agentic_projects.sql`: maintainer-local
-  working seeds used for real daily operations
+- `scripts/db_start_public_demo.sh`: neutral public demo path
+- `scripts/db_start.sh`: maintainer local ops path
 
-The maintainer-local seeds are useful for the operator's own workflow, but they
-are **not** the recommended public getting-started path.
+The public path is the recommended first experience for outside developers.
+The maintainer path exists for the operator's own daily work and seeds real
+local working data.
 
 ## Further Reading
 
