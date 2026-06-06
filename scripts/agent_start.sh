@@ -136,6 +136,12 @@ if [[ "$NO_LOCK" -eq 1 && "$FORCE_LOCK" -eq 1 ]]; then
   exit 2
 fi
 
+if [[ -n "$PROJECT" ]]; then
+  echo "== Agent Guard =="
+  "$ROOT_DIR/scripts/agent_guard.sh" --project "$PROJECT" --cwd "$PWD"
+  echo
+fi
+
 if [[ -n "$PROJECT" && "$NO_LOCK" -eq 0 ]]; then
   echo "== Run Lock =="
   if ! agent_run_lock_acquire "$PROJECT" "$FORCE_LOCK"; then

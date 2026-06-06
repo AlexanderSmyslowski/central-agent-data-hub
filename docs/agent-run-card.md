@@ -18,6 +18,10 @@ Read the compiled memory, focused context, review, working contract, and Start
 Decision before changing anything meaningful. Together they form the
 Arbeitskontext for this run.
 
+For single-project work this first checks that the current working directory
+belongs to the selected project. If the project and directory do not match, stop
+and switch to the correct Codex project or repo.
+
 For single-project work this also creates a local working-tree run lock. If the
 lock blocks, another agent is already using this checkout. Finish that run or
 create a separate git worktree for parallel work.

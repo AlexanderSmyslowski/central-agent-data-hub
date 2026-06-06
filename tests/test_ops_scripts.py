@@ -76,3 +76,22 @@ def test_agent_start_and_project_context_use_compact_preflight() -> None:
 
     assert '"$ROOT_DIR/scripts/agent_preflight.sh" --compact' in start
     assert '"$ROOT_DIR/scripts/agent_preflight.sh" --compact' in context
+
+
+def test_agent_start_runs_project_guard_before_lock() -> None:
+    start = read_script("scripts/agent_start.sh")
+
+    guard_index = start.index('"$ROOT_DIR/scripts/agent_guard.sh" --project "$PROJECT" --cwd "$PWD"')
+    lock_index = start.index("agent_run_lock_acquire")
+    assert guard_index < lock_index
+
+
+def test_agent_guard_checks_project_paths_and_git_remote() -> None:
+    guard = read_script("scripts/agent_guard.sh")
+
+    assert "metadata.local_path" in guard
+    assert "metadata.codex_workspace_root" in guard
+    assert 'for key in ("local_path", "codex_workspace_root")' in guard
+    assert "Agent guard: project/workdir mismatch." in guard
+    assert "git_origin_url()" in guard
+    assert 'reason:  $matched_reason' in guard

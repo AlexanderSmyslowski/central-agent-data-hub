@@ -27,6 +27,11 @@ lock under `.local/run-locks/`. `agent_finish.sh` releases it. The lock is local
 coordination only: it prevents two agent sessions from writing in the same repo
 checkout by accident, but it does not create Hub memory or database rows.
 
+Before the lock, `agent_start.sh` runs an agent guard. The guard checks whether
+the current working directory belongs to the selected project through the
+registered project path or Codex workspace root. If the project and working
+directory do not match, the run stops before context is loaded.
+
 If parallel work is needed, use a separate git worktree. If a lock is stale,
 rerun `agent_start.sh` with `--force-lock`.
 
