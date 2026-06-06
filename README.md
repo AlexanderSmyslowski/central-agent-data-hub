@@ -5,6 +5,8 @@
 Agent Data Hub is an early local-first technical preview for reviewed project
 memory and disciplined agent work.
 
+License: MIT.
+
 It is built for a simple problem: agents often work from scattered chats,
 partial context, and stale assumptions. Agent Data Hub gives them a smaller,
 reviewable starting point and gives humans a calmer way to inspect what is
@@ -175,6 +177,9 @@ local working data.
 
 - [Public overview](docs/public/agent-data-hub-overview.md)
 - [Public getting started](docs/public/getting-started.md)
+- [v0.1.0 release notes](docs/public/v0.1.0-release-notes.md)
 - [Agent workflow](docs/agent-workflow.md)
 - [Code architecture](docs/code-architecture.md)
 - [Schema notes](docs/schema-notes.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security policy](SECURITY.md)
