@@ -130,7 +130,7 @@ This guided setup prepares a calm local starting point:
 - review/wiki paths
 - optional Signal Inbox
 - optional public demo path
-- optional first project registration
+- optional first project registration plan
 
 It keeps the Hub model-independent.
 The "Triage Orchestrator" is simply the human or agent process that reviews
@@ -146,9 +146,9 @@ echo
 
 WIKI_ROOT="$(expand_path "$(prompt_with_default "Wiki/review root" "$default_wiki_root")")"
 SIGNAL_INBOX_CHOICE="$(ask_yes_no "Create a Signal Inbox?" "yes")"
-PUBLIC_DEMO_CHOICE="$(ask_yes_no "Prepare the public demo path?" "yes")"
+PUBLIC_DEMO_CHOICE="$(ask_yes_no "Include the public demo path in next steps?" "yes")"
 HUB_VIEW_CHOICE="$(ask_yes_no "Use Hub View?" "yes")"
-REGISTER_PROJECT_CHOICE="$(ask_yes_no "Register a first real project now?" "no")"
+REGISTER_PROJECT_CHOICE="$(ask_yes_no "Prepare a first real project registration?" "no")"
 
 if [[ "$REGISTER_PROJECT_CHOICE" == "yes" ]]; then
   FIRST_PROJECT_NAME="$(prompt_with_default "First project name" "My Project")"
@@ -176,19 +176,30 @@ fi
 echo "  local_setup_file:  $ROOT_DIR/$SETUP_FILE_REL"
 
 if [[ "$DRY_RUN" -eq 1 ]]; then
+  has_next_steps=0
   echo
   echo "Dry run: no files or folders were written."
   echo
   echo "Next commands after a real run:"
   if [[ "$PUBLIC_DEMO_CHOICE" == "yes" ]]; then
+    has_next_steps=1
     echo "  scripts/db_start_public_demo.sh"
     echo "  scripts/smoke_public_demo.sh"
   fi
   if [[ "$HUB_VIEW_CHOICE" == "yes" ]]; then
+    has_next_steps=1
     echo "  scripts/hub_view.sh"
   fi
   if [[ "$SIGNAL_INBOX_CHOICE" == "yes" ]]; then
+    has_next_steps=1
     echo "  scripts/init_signal_inbox.sh --path \"$signal_inbox_dir\""
+  fi
+  if [[ "$REGISTER_PROJECT_CHOICE" == "yes" ]]; then
+    has_next_steps=1
+    echo "  scripts/register_project.sh --repo \"$FIRST_PROJECT_REPO\" --slug \"$FIRST_PROJECT_SLUG\" --name \"$FIRST_PROJECT_NAME\""
+  fi
+  if [[ "$has_next_steps" -eq 0 ]]; then
+    echo "  none selected"
   fi
   exit 0
 fi
@@ -237,13 +248,24 @@ echo "Setup written:"
 echo "  $ROOT_DIR/$SETUP_FILE_REL"
 echo
 echo "Recommended next steps:"
+has_next_steps=0
 if [[ "$PUBLIC_DEMO_CHOICE" == "yes" ]]; then
+  has_next_steps=1
   echo "  scripts/db_start_public_demo.sh"
   echo "  scripts/smoke_public_demo.sh"
 fi
 if [[ "$HUB_VIEW_CHOICE" == "yes" ]]; then
+  has_next_steps=1
   echo "  scripts/hub_view.sh"
 fi
 if [[ "$REGISTER_PROJECT_CHOICE" == "yes" ]]; then
+  has_next_steps=1
   echo "  scripts/register_project.sh --repo \"$FIRST_PROJECT_REPO\" --slug \"$FIRST_PROJECT_SLUG\" --name \"$FIRST_PROJECT_NAME\""
+fi
+if [[ "$SIGNAL_INBOX_CHOICE" == "yes" ]]; then
+  has_next_steps=1
+  echo "  scripts/init_signal_inbox.sh --path \"$signal_inbox_dir\""
+fi
+if [[ "$has_next_steps" -eq 0 ]]; then
+  echo "  none selected"
 fi
