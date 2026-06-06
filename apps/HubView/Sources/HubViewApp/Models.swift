@@ -5,12 +5,14 @@ struct ProjectMetadata: Decodable, Hashable {
     let workMode: String?
     let localPath: String?
     let skillManifest: String?
+    let codexWorkspaceRoot: String?
 
     private enum CodingKeys: String, CodingKey {
         case projectType = "project_type"
         case workMode = "work_mode"
         case localPath = "local_path"
         case skillManifest = "skill_manifest"
+        case codexWorkspaceRoot = "codex_workspace_root"
     }
 }
 

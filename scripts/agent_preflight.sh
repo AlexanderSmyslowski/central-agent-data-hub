@@ -6,12 +6,15 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/db_common.sh"
 
 usage() {
   cat <<'EOF'
-Usage: scripts/agent_preflight.sh [--compact]
+Usage: scripts/agent_preflight.sh [--compact] [--allow-direct-db]
 
 Read-only operational readiness check for Codex/Hermes before Hub writeback.
 
 Options:
   --compact  Print only successful check summaries; print full output on failure.
+  --allow-direct-db
+             If Docker/Compose is unavailable, allow read-only Hub access when
+             DATABASE_URL is reachable and agent-hub check is ok.
 
 Exit codes:
   0  ready
@@ -21,6 +24,7 @@ EOF
 }
 
 COMPACT=0
+ALLOW_DIRECT_DB=0
 
 hub_unavailable_message() {
   cat >&2 <<'EOF'
@@ -29,10 +33,45 @@ Bitte Docker starten oder kurz warten, bis der gemeinsame Projektspeicher wieder
 EOF
 }
 
+direct_db_preflight() {
+  local reason="$1"
+
+  echo "Operational warning: $reason" >&2
+  echo "Trying direct read-only Hub check through DATABASE_URL." >&2
+  echo >&2
+
+  if ! check_output="$(run_agent_hub check 2>&1)"; then
+    echo "$check_output" >&2
+    echo "Operational error: direct Hub check failed." >&2
+    return 2
+  fi
+
+  echo "Database: ok (direct)"
+  if [[ "$COMPACT" -eq 0 ]]; then
+    echo
+    echo "== Agent Hub Check =="
+    echo "$check_output"
+    echo
+    echo "Backup health: skipped (Docker/Compose unavailable for local backup checks)"
+  else
+    echo
+    echo "Agent Hub check: ok"
+    echo "Backup health: skipped (direct read-only mode)"
+  fi
+
+  echo
+  echo "Agent preflight result: ready for read-only context"
+  return 0
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --compact)
       COMPACT=1
+      shift
+      ;;
+    --allow-direct-db)
+      ALLOW_DIRECT_DB=1
       shift
       ;;
     -h|--help)
@@ -52,11 +91,19 @@ echo "Mode: read-only"
 echo
 
 if ! command -v docker >/dev/null 2>&1; then
+  if [[ "$ALLOW_DIRECT_DB" -eq 1 ]]; then
+    direct_db_preflight "docker is not available."
+    exit $?
+  fi
   echo "Operational error: docker is not available." >&2
   exit 2
 fi
 
 if ! run_with_timeout "$AGENT_HUB_DOCKER_TIMEOUT_SECONDS" docker compose version >/dev/null 2>&1; then
+  if [[ "$ALLOW_DIRECT_DB" -eq 1 ]]; then
+    direct_db_preflight "docker compose is not available."
+    exit $?
+  fi
   echo "Operational error: docker compose is not available." >&2
   exit 2
 fi

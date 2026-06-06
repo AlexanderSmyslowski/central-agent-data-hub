@@ -378,6 +378,14 @@ private struct ProjectDetailView: View {
             Text("Geprüfter Kontext für Menschen und Agenten.")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
+            if let workspace = detail.project.metadata?.codexWorkspaceRoot, !workspace.isEmpty {
+                Text("Codex-Projekt: \(workspace)")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .help(workspace)
+            }
         }
     }
 

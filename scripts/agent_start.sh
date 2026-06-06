@@ -146,7 +146,7 @@ if [[ -n "$PROJECT" && "$NO_LOCK" -eq 0 ]]; then
 fi
 
 if [[ -n "$PROJECT" ]]; then
-  "$ROOT_DIR/scripts/agent_preflight.sh" --compact
+  "$ROOT_DIR/scripts/agent_preflight.sh" --compact --allow-direct-db
   echo
   echo "== Compiled Project Memory: $PROJECT =="
   run_agent_hub compile --project "$PROJECT" --limit "$LIMIT"

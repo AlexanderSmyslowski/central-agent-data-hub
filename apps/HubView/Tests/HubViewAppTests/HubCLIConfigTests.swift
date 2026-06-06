@@ -38,6 +38,24 @@ func bundledRuntimeConfigDecodesExpectedFields() {
     #expect(config?.obsidianExportDir == "/vault")
 }
 
+@Test
+func projectMetadataDecodesCodexWorkspaceRoot() throws {
+    let data = Data(
+        """
+        {
+          "project_type": "ops",
+          "work_mode": "central-hub-start-finish",
+          "local_path": "/repo",
+          "codex_workspace_root": "/Users/example/Documents/Agent Data Hub"
+        }
+        """.utf8
+    )
+
+    let metadata = try JSONDecoder().decode(ProjectMetadata.self, from: data)
+
+    #expect(metadata.codexWorkspaceRoot == "/Users/example/Documents/Agent Data Hub")
+}
+
 @MainActor
 @Test
 func hubStoreShowHomeClearsProjectSelection() {
