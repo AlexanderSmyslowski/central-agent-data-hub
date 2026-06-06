@@ -50,7 +50,9 @@ def test_agent_finish_surfaces_question_answer_dry_run() -> None:
     finish = read_script("scripts/agent_finish.sh")
 
     assert "scripts/project_answer_question.sh" in finish
+    assert "scripts/project_update_decision.sh" in finish
     assert "--question-id <open-question-uuid>" in finish
+    assert "--decision-id <decision-uuid>" in finish
     assert "after this finish step" in finish
     assert "agent-hub export directly" in finish
     assert "No unresolved open questions are currently visible for this project." in finish
@@ -59,6 +61,16 @@ def test_agent_finish_surfaces_question_answer_dry_run() -> None:
     assert "Backup only if you write or export important reviewed memory after this finish step." in finish
     assert "This finish step wrote a report; export now" in finish
     assert "This finish step wrote durable memory; run scripts/db_backup.sh after export." in finish
+
+
+def test_project_update_decision_wrapper_has_change_guard() -> None:
+    script = read_script("scripts/project_update_decision.sh")
+
+    assert "--decision-id <uuid>" in script
+    assert "--rationale <text>" in script
+    assert "provide at least one change" in script
+    assert "agent-hub update-decision" in script
+    assert "Project decision update result: dry-run ok" in script
 
 
 def test_agent_start_lock_error_points_to_status_and_force_lock() -> None:

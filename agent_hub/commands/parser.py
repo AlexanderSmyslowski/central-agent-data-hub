@@ -32,6 +32,7 @@ from agent_hub.commands.write import (
     run_import,
     run_remember,
     run_sync,
+    run_update_decision,
 )
 from agent_hub.memory import REMEMBER_TYPES
 from agent_hub.receipts import RECEIPT_TYPES
@@ -547,6 +548,51 @@ def build_parser() -> argparse.ArgumentParser:
     add_metadata_argument(answer_question_parser)
     add_format_argument(answer_question_parser, ("text", "json"), "text")
     answer_question_parser.set_defaults(func=run_answer_question)
+
+    update_decision_parser = subparsers.add_parser(
+        "update-decision",
+        help="Update an existing decision with reviewed rationale, consequences, or status.",
+    )
+    add_project_argument(
+        update_decision_parser,
+        "Project slug that owns the decision.",
+    )
+    update_decision_parser.add_argument(
+        "--agent",
+        default="codex",
+        help="Agent slug to attribute the update to.",
+    )
+    update_decision_parser.add_argument(
+        "--agent-name",
+        default="Codex",
+        help="Agent display name to attribute the update to.",
+    )
+    update_decision_parser.add_argument(
+        "--decision-id",
+        required=True,
+        type=uuid_value,
+        help="Existing decision UUID to update.",
+    )
+    update_decision_parser.add_argument(
+        "--rationale",
+        help="Reviewed rationale to store on the decision.",
+    )
+    update_decision_parser.add_argument(
+        "--consequences",
+        help="Reviewed consequences or operational effect.",
+    )
+    update_decision_parser.add_argument(
+        "--status",
+        choices=("proposed", "accepted", "rejected", "superseded", "archived"),
+        help="Decision status override.",
+    )
+    update_decision_parser.add_argument(
+        "--source",
+        help="Source path, URL, or short provenance note.",
+    )
+    add_metadata_argument(update_decision_parser)
+    add_format_argument(update_decision_parser, ("text", "json"), "text")
+    update_decision_parser.set_defaults(func=run_update_decision)
 
     import_parser = subparsers.add_parser(
         "import",

@@ -169,6 +169,7 @@ echo
 echo "Suggested dry-runs:"
 echo "  scripts/project_remember.sh --project $PROJECT --type fact --text '<reviewed fact>' --source '<source>' --confidence 0.9 --dry-run"
 echo "  scripts/project_remember.sh --project $PROJECT --type decision --text '<decision>' --rationale '<why>' --dry-run"
+echo "  scripts/project_update_decision.sh --project $PROJECT --decision-id <decision-uuid> --rationale '<why>' --dry-run"
 echo "  scripts/project_remember.sh --project $PROJECT --type open-question --text '<question>' --dry-run"
 if [[ "$UNRESOLVED_QUESTION_COUNT" =~ ^[0-9]+$ ]] && (( UNRESOLVED_QUESTION_COUNT > 0 )); then
   echo "  scripts/project_answer_question.sh --project $PROJECT --question-id <open-question-uuid> --answer '<reviewed answer>' --source '<source>' --dry-run"

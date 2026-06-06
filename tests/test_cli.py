@@ -81,6 +81,7 @@ def test_parse_since_rejects_invalid_value() -> None:
         ["brief", "--help"],
         ["remember", "--help"],
         ["answer-question", "--help"],
+        ["update-decision", "--help"],
         ["sync", "--help"],
         ["relations", "--help"],
         ["compile", "--help"],
@@ -234,6 +235,30 @@ def test_answer_question_without_database_url_has_clear_error(
     assert "Traceback" not in captured.err
 
 
+def test_update_decision_without_database_url_has_clear_error(
+    monkeypatch, capsys
+) -> None:
+    monkeypatch.setenv("AGENT_HUB_DISABLE_ENV_AUTOLOAD", "1")
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+
+    code = cli.main(
+        [
+            "update-decision",
+            "--project",
+            "central-agent-data-hub",
+            "--decision-id",
+            "292a05fc-264d-4d76-a428-46e9fa8d9973",
+            "--rationale",
+            "Keep open questions reviewable instead of letting them drift into task noise.",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 2
+    assert "DATABASE_URL is not set" in captured.err
+    assert "Traceback" not in captured.err
+
+
 def test_answer_question_rejects_invalid_uuid(capsys) -> None:
     with pytest.raises(SystemExit) as excinfo:
         cli.main(
@@ -245,6 +270,25 @@ def test_answer_question_rejects_invalid_uuid(capsys) -> None:
                 "not-a-uuid",
                 "--answer",
                 "Use a human secure handoff.",
+            ]
+        )
+
+    captured = capsys.readouterr()
+    assert excinfo.value.code == 2
+    assert "must be a valid UUID" in captured.err
+
+
+def test_update_decision_rejects_invalid_uuid(capsys) -> None:
+    with pytest.raises(SystemExit) as excinfo:
+        cli.main(
+            [
+                "update-decision",
+                "--project",
+                "central-agent-data-hub",
+                "--decision-id",
+                "not-a-uuid",
+                "--rationale",
+                "Reviewed rationale.",
             ]
         )
 
@@ -629,6 +673,63 @@ def test_agent_actions_markdown_is_project_scoped() -> None:
     assert "# Agent Actions: Project A" in rendered
     assert "- project: project-a" in rendered
     assert "[succeeded] codex remember_fact fact:" in rendered
+
+
+def test_update_decision_json_output(monkeypatch, capsys) -> None:
+    class FakeConnectionContext:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        def cursor(self):
+            return self
+
+    monkeypatch.setattr(write_commands, "connect", lambda: FakeConnectionContext())
+    monkeypatch.setattr(
+        write_commands,
+        "update_decision",
+        lambda *_args, **_kwargs: (
+            {
+                "id": uuid.UUID("10000000-0000-4000-8000-000000000001"),
+                "slug": "central-agent-data-hub",
+                "name": "Central Agent Data Hub",
+            },
+            {
+                "id": uuid.UUID("10000000-0000-4000-8000-000000000011"),
+                "slug": "codex",
+                "name": "Codex",
+            },
+            {
+                "id": uuid.UUID("292a05fc-264d-4d76-a428-46e9fa8d9973"),
+                "decision": "Open questions should be reviewed uncertainties.",
+                "rationale": "Keep them reviewable and out of loose task sprawl.",
+                "consequences": None,
+                "status": "accepted",
+                "created_at": "2026-06-06T23:04:36Z",
+            },
+        ),
+    )
+
+    code = cli.main(
+        [
+            "update-decision",
+            "--project",
+            "central-agent-data-hub",
+            "--decision-id",
+            "292a05fc-264d-4d76-a428-46e9fa8d9973",
+            "--rationale",
+            "Keep them reviewable and out of loose task sprawl.",
+            "--format",
+            "json",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert '"type": "decision"' in captured.out
+    assert '"status": "accepted"' in captured.out
 
 
 class FakeCursor:

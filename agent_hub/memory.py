@@ -336,3 +336,89 @@ def answer_question(
         },
     )
     return project, agent, row
+
+
+def update_decision(
+    cur, args: argparse.Namespace, metadata: dict[str, object]
+) -> tuple[dict[str, object], dict[str, object], dict[str, object]]:
+    project = ensure_project(cur, args)
+    agent = ensure_agent(cur, project["id"], args.agent, args.agent_name)
+
+    cur.execute(
+        """
+        SELECT id, decision, rationale, consequences, status, metadata, created_at
+        FROM decisions
+        WHERE id = %s AND project_id = %s
+        """,
+        (args.decision_id, project["id"]),
+    )
+    existing = cur.fetchone()
+    if not existing:
+        raise NotFoundError(
+            f"decision '{args.decision_id}' not found in project '{args.project}'"
+        )
+
+    if (
+        args.rationale is None
+        and args.consequences is None
+        and args.status is None
+        and not metadata
+    ):
+        raise ValueError(
+            "update-decision requires at least one change: --rationale, "
+            "--consequences, --status, or --metadata"
+        )
+
+    merged_metadata = dict(existing.get("metadata") or {})
+    merged_metadata.update(metadata)
+
+    cur.execute(
+        """
+        UPDATE decisions
+        SET rationale = COALESCE(%s, rationale),
+            consequences = COALESCE(%s, consequences),
+            status = COALESCE(%s, status),
+            metadata = %s::jsonb
+        WHERE id = %s AND project_id = %s
+        RETURNING id, decision, rationale, consequences, status, created_at
+        """,
+        (
+            args.rationale,
+            args.consequences,
+            args.status,
+            json.dumps(merged_metadata),
+            args.decision_id,
+            project["id"],
+        ),
+    )
+    row = cur.fetchone()
+
+    log_agent_action(
+        cur,
+        agent["id"],
+        "update_decision",
+        "decision",
+        row["id"],
+        {
+            "command": "update-decision",
+            "project": args.project,
+            "decision_id": str(args.decision_id),
+            "status": args.status,
+            "source": args.source,
+            "updated_fields": [
+                field
+                for field, value in (
+                    ("rationale", args.rationale),
+                    ("consequences", args.consequences),
+                    ("status", args.status),
+                )
+                if value is not None
+            ],
+        },
+        {
+            "project_id": project["id"],
+            "previous_status": existing["status"],
+            "object": row,
+        },
+    )
+    return project, agent, row
