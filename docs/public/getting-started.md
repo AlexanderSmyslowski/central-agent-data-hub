@@ -14,7 +14,8 @@ scripts/setup_assistant.sh
 ```
 
 The assistant asks only a few questions, proposes defaults, can create a
-Signal Inbox, and writes a local setup file without touching the database.
+Signal Inbox, shows a summary before writing, and stores a local setup file
+without touching the database.
 
 Create a local `.env` from `.env.example`, or export the required variables:
 

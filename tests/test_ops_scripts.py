@@ -150,11 +150,13 @@ def test_setup_assistant_stays_small_and_model_independent() -> None:
 
     assert "--dry-run" in script
     assert "--defaults" in script
+    assert "Write this local setup now?" in script
     assert "Create a Signal Inbox?" in script
     assert "Prepare the public demo path?" in script
     assert "Use Hub View?" in script
     assert "Register a first real project now?" in script
     assert "human or agent process" in script
+    assert 'if [[ "$value" == "~" ]]' in script
     assert "scripts/init_signal_inbox.sh" in script
     assert "scripts/register_project.sh" in script
     assert "does not write to Agent Data Hub memory" not in script

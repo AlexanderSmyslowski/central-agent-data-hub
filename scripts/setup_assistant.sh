@@ -76,6 +76,19 @@ prompt_with_default() {
   printf '%s\n' "$answer"
 }
 
+expand_path() {
+  local value="$1"
+  if [[ "$value" == "~" ]]; then
+    printf '%s\n' "$HOME"
+    return 0
+  fi
+  if [[ "${value#\~/}" != "$value" ]]; then
+    printf '%s\n' "$HOME/${value#\~/}"
+    return 0
+  fi
+  printf '%s\n' "$value"
+}
+
 normalize_yes_no() {
   local value="${1:-}"
   value="$(printf '%s' "$value" | tr '[:upper:]' '[:lower:]')"
@@ -131,7 +144,7 @@ default_export_dir=".local/obsidian-export"
 print_intro
 echo
 
-WIKI_ROOT="$(prompt_with_default "Wiki/review root" "$default_wiki_root")"
+WIKI_ROOT="$(expand_path "$(prompt_with_default "Wiki/review root" "$default_wiki_root")")"
 SIGNAL_INBOX_CHOICE="$(ask_yes_no "Create a Signal Inbox?" "yes")"
 PUBLIC_DEMO_CHOICE="$(ask_yes_no "Prepare the public demo path?" "yes")"
 HUB_VIEW_CHOICE="$(ask_yes_no "Use Hub View?" "yes")"
@@ -140,7 +153,7 @@ REGISTER_PROJECT_CHOICE="$(ask_yes_no "Register a first real project now?" "no")
 if [[ "$REGISTER_PROJECT_CHOICE" == "yes" ]]; then
   FIRST_PROJECT_NAME="$(prompt_with_default "First project name" "My Project")"
   FIRST_PROJECT_SLUG="$(prompt_with_default "First project slug" "my-project")"
-  FIRST_PROJECT_REPO="$(prompt_with_default "First project repo path" "$HOME/Projects/my-project")"
+  FIRST_PROJECT_REPO="$(expand_path "$(prompt_with_default "First project repo path" "$HOME/Projects/my-project")")"
 fi
 
 signal_inbox_dir=""
@@ -160,6 +173,7 @@ if [[ "$REGISTER_PROJECT_CHOICE" == "yes" ]]; then
   echo "  first_project:     $FIRST_PROJECT_NAME ($FIRST_PROJECT_SLUG)"
   echo "  first_repo:        $FIRST_PROJECT_REPO"
 fi
+echo "  local_setup_file:  $ROOT_DIR/$SETUP_FILE_REL"
 
 if [[ "$DRY_RUN" -eq 1 ]]; then
   echo
@@ -176,6 +190,12 @@ if [[ "$DRY_RUN" -eq 1 ]]; then
   if [[ "$SIGNAL_INBOX_CHOICE" == "yes" ]]; then
     echo "  scripts/init_signal_inbox.sh --path \"$signal_inbox_dir\""
   fi
+  exit 0
+fi
+
+if [[ "$(ask_yes_no "Write this local setup now?" "yes")" != "yes" ]]; then
+  echo
+  echo "Setup canceled. No files or folders were written."
   exit 0
 fi
 
