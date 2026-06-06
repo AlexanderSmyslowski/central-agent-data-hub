@@ -359,6 +359,19 @@ def fetch_project_quality(cur, project: dict[str, object]) -> dict[str, object]:
     )
     open_questions = list(cur.fetchall())
 
+    cur.execute(
+        """
+        SELECT id, question, status, updated_at, metadata->>'suggestion' AS suggestion
+        FROM open_questions
+        WHERE project_id = %s
+          AND status NOT IN ('answered', 'closed', 'resolved', 'archived')
+          AND metadata->>'schema_friction' = 'true'
+        ORDER BY updated_at DESC, created_at DESC, id
+        """,
+        (project_id,),
+    )
+    schema_friction_questions = list(cur.fetchall())
+
     relations = fetch_project_relations(cur, project_id, limit=None)
     counts = fetch_project_counts(cur, project_id)
     memory_total = sum(
@@ -393,6 +406,7 @@ def fetch_project_quality(cur, project: dict[str, object]) -> dict[str, object]:
         "decisions_without_rationale": decisions_without_rationale,
         "risks_without_mitigation": risks_without_mitigation,
         "open_questions": open_questions,
+        "schema_friction_questions": schema_friction_questions,
         "relations": relations,
         "relation_count": len(relations),
         "relation_coverage": relation_coverage,

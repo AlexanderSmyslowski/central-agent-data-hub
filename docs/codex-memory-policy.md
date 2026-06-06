@@ -48,6 +48,9 @@ Never store these in the Hub:
 - Open questions should be real clarification needs, not task lists.
 - Reports are for daily summaries, handoffs, audits, and review notes.
 - Relations should be explicit and useful for future review.
+- If useful information does not fit any category, record a schema-friction
+  open question instead of inventing a new category or forcing it into the wrong
+  one.
 
 ## Project Boundaries
 

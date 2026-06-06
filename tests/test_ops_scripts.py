@@ -95,3 +95,13 @@ def test_agent_guard_checks_project_paths_and_git_remote() -> None:
     assert "Agent guard: project/workdir mismatch." in guard
     assert "git_origin_url()" in guard
     assert 'reason:  $matched_reason' in guard
+
+
+def test_schema_friction_wrapper_stores_marked_open_question() -> None:
+    script = read_script("scripts/project_schema_friction.sh")
+
+    assert "--type open-question" in script
+    assert "--metadata schema_friction=true" in script
+    assert "--metadata observed=" in script
+    assert "--metadata why=" in script
+    assert '"$ROOT_DIR/scripts/project_remember.sh"' in script

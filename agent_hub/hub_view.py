@@ -111,6 +111,7 @@ def build_detail_view(cur, project: dict[str, object]) -> dict[str, object]:
                 ("decisions without rationale", len(quality["decisions_without_rationale"])),
                 ("risks without mitigation", len(quality["risks_without_mitigation"])),
                 ("open questions", len(quality["open_questions"])),
+                ("schema friction", len(quality["schema_friction_questions"])),
             ],
         },
         "facts": compiled["facts"],

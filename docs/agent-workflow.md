@@ -213,6 +213,23 @@ The finish helper prints a memory triage before any manual writeback. It should
 help the agent decide whether the outcome is a fact, decision, risk, open
 question, report, or just temporary working noise that should not be stored.
 
+If useful information does not fit any existing Hub category, do not force it
+into a fact, decision, risk, or report. Record a small structure question
+instead:
+
+```bash
+scripts/project_schema_friction.sh \
+  --project <project-slug> \
+  --observed "The agent found a recurring project rule that is not memory." \
+  --why "It is not a fact or decision; it may belong in AGENTS.md or a skill manifest." \
+  --suggestion "review as project-skill-manifest candidate" \
+  --dry-run
+```
+
+This stores, after review, an `open_question` marked with `schema_friction`
+metadata. It does not create a new database category and it does not let agents
+revise the Hub schema automatically.
+
 When another channel claims that it wrote curated memory and exported it, verify
 the claim with a receipt:
 

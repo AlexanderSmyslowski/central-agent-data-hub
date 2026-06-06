@@ -4,6 +4,7 @@ from agent_hub.rendering import (
     daily_markdown,
     compiled_markdown,
     handoff_markdown,
+    quality_markdown,
     recommended_steps_markdown,
 )
 from agent_hub.statuses import format_open_question_count
@@ -75,6 +76,40 @@ def test_compiled_memory_counts_label_open_questions_as_unresolved() -> None:
     rendered = compiled_markdown(payload)
 
     assert "open_questions=0 unresolved" in rendered
+
+
+def test_quality_markdown_surfaces_schema_friction_questions() -> None:
+    payload = {
+        "project": {"name": "Demo", "slug": "demo"},
+        "score": 92,
+        "status": "healthy",
+        "relation_count": 0,
+        "relation_coverage": 0.0,
+        "counts": {
+            "documents": 0,
+            "facts": 0,
+            "decisions": 0,
+            "open_questions": 1,
+            "risks": 0,
+            "reports": 0,
+        },
+        "facts_without_source": [],
+        "decisions_without_rationale": [],
+        "risks_without_mitigation": [],
+        "open_questions": [
+            {"question": "How should this be classified?", "status": "open"}
+        ],
+        "schema_friction_questions": [
+            {"question": "Schema friction: classify access handoff?", "status": "open"}
+        ],
+        "relations": [],
+    }
+
+    rendered = quality_markdown(payload)
+
+    assert "schema_friction_questions: 1" in rendered
+    assert "## Schema Friction" in rendered
+    assert "Schema friction: classify access handoff?" in rendered
 
 
 def test_daily_markdown_compacts_fully_quiet_window() -> None:
