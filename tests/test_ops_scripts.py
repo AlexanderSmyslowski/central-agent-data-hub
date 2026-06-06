@@ -143,3 +143,19 @@ def test_signal_inbox_init_script_scaffolds_sources_and_triage() -> None:
     assert 'write_file "$target_abs/triage/reviewed.md"' in script
     assert 'write_file "$target_abs/triage/prompt.md"' in script
     assert "do not write directly into Agent Data Hub without review" in script
+
+
+def test_setup_assistant_stays_small_and_model_independent() -> None:
+    script = read_script("scripts/setup_assistant.sh")
+
+    assert "--dry-run" in script
+    assert "--defaults" in script
+    assert "Create a Signal Inbox?" in script
+    assert "Prepare the public demo path?" in script
+    assert "Use Hub View?" in script
+    assert "Register a first real project now?" in script
+    assert "human or agent process" in script
+    assert "scripts/init_signal_inbox.sh" in script
+    assert "scripts/register_project.sh" in script
+    assert "does not write to Agent Data Hub memory" not in script
+    assert "Hub model-independent" in script

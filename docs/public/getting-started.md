@@ -7,6 +7,15 @@ the neutral demo dataset, not the maintainer's own daily project seeds.
 
 Use Python 3.11+, Docker, and Docker Compose.
 
+For the guided path, start here:
+
+```bash
+scripts/setup_assistant.sh
+```
+
+The assistant asks only a few questions, proposes defaults, can create a
+Signal Inbox, and writes a local setup file without touching the database.
+
 Create a local `.env` from `.env.example`, or export the required variables:
 
 ```bash
