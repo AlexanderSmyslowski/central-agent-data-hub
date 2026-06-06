@@ -138,6 +138,46 @@ Before adding a new workflow layer, ask whether it makes daily agent work
 simpler, more reliable, or easier to review. If it only adds another place to
 repeat rules, keep it out of the Hub.
 
+## Signal Inbox And Triage
+
+Not every interesting input should be written into reviewed memory.
+
+Use a Signal Inbox outside PostgreSQL for:
+
+- X or Twitter research
+- Gmail observations
+- Hermes or Codex notes
+- screenshots, links, and outside findings
+
+The Signal Inbox is intentionally upstream from the Hub:
+
+- it is unreviewed
+- it may be useful later
+- it is not durable project truth yet
+
+Triage sits between the Signal Inbox and the Hub. The normal outcomes are:
+
+- ignore
+- keep in wiki
+- open question
+- fact candidate
+- decision candidate
+- risk candidate
+- skill candidate
+- project note
+- needs human review
+
+Do not auto-promote Signal Inbox content into PostgreSQL. Review first, then
+write back only the durable result.
+
+To create a standard local structure:
+
+```bash
+scripts/init_signal_inbox.sh --path /path/to/wiki/inbox/signals
+```
+
+See `docs/signal-inbox.md`.
+
 ## Agent Run Loop
 
 The preferred unit of work is one reviewed run: one project, one focus, one

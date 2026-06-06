@@ -21,6 +21,9 @@ Agent Data Hub separates three things:
 - **Working rules**: repo-local instructions such as `AGENTS.md`, skills, and
   project documents.
 
+Useful signals that are not reviewed yet should stay outside the Hub in a
+Signal Inbox until they are triaged.
+
 The Hub stores curated facts, decisions, risks, open questions, reports, and
 relations. It can export a human-readable Markdown projection and show the same
 state in a small local read-only UI called Hub View.
@@ -62,6 +65,8 @@ What is still rough:
 ```mermaid
 flowchart TD
     Rules["Working rules\nAGENTS.md / Skills / Repo docs"]
+    Signals["Signal Inbox\nunreviewed signals"]
+    Triage["Triage\nreview and recommendation"]
     Context["Working context\nstart / compile / context"]
     Memory[("Reviewed memory\nPostgreSQL")]
     Views["Human views\nMarkdown / Obsidian / Hub View"]
@@ -69,6 +74,10 @@ flowchart TD
     Agents["Agents"]
     Humans["Humans"]
 
+    Agents --> Signals
+    Humans --> Signals
+    Signals --> Triage
+    Triage --> Memory
     Rules --> Context
     Memory --> Context
     Context --> Agents
@@ -149,6 +158,27 @@ The human-facing surfaces are for:
 They are not the binding database. PostgreSQL remains the reviewed source of
 truth.
 
+## Signal Inbox
+
+Not every useful input belongs in reviewed memory immediately.
+
+Agent Data Hub now documents a small Signal Inbox pattern for:
+
+- X or Twitter research
+- Gmail observations
+- Hermes or Codex notes
+- external links and screenshots
+
+The Signal Inbox is a human-readable wiki folder outside PostgreSQL. Triage
+decides whether a signal should be ignored, kept in the wiki, promoted to a
+memory candidate, or treated as a skill or policy hint.
+
+Initialize one with:
+
+```bash
+scripts/init_signal_inbox.sh --path /path/to/wiki/inbox/signals
+```
+
 ## Safety Boundaries
 
 Do not store these in the Hub:
@@ -182,5 +212,6 @@ local working data.
 - [Agent workflow](docs/agent-workflow.md)
 - [Code architecture](docs/code-architecture.md)
 - [Schema notes](docs/schema-notes.md)
+- [Signal Inbox](docs/signal-inbox.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
