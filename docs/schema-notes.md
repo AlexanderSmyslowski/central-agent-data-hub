@@ -1,30 +1,46 @@
 # Schema Notes
 
-## Tabellenübersicht
+This note describes the durable PostgreSQL model used by Agent Data Hub.
 
-- `projects`: zentrale Projektanker mit Slug, Status und Metadaten.
-- `agents`: bekannte Agenten oder Profile, optional projektbezogen.
-- `documents`: Knowledge-Base- oder Obsidian-nahe Dokumente mit Pfad, Inhalt, Frontmatter und Content-Hash.
-- `facts`: verdichtete Aussagen mit Quelle, Confidence und Prüfstatus.
-- `decisions`: getroffene oder vorgeschlagene Entscheidungen mit Begründung und Folgen.
-- `open_questions`: offene oder beantwortete Fragen mit optionaler Antwort und `resolved_at`.
-- `risks`: Risiken mit Severity, Impact, Mitigation und Status.
-- `reports`: kuratierte Lageberichte, Statusberichte oder Entscheidungsnotizen.
-- `relations`: typisierte Verknüpfungen zwischen Kernobjekten.
-- `agent_actions`: Auditspur für Agentenhandlungen.
-- `event_log`: generische Ereignisspur.
-- `sync_events`: Import-/Export-/Synchronisationsereignisse.
-- `schema_migrations`: angewendete oder fehlgeschlagene Schema-Migrationen mit Checksumme.
+The schema is intentionally compact. It is meant to support reviewed project
+memory and auditability without turning the Hub into a transcript store.
 
-## Migration-Modell
+## Core Tables
 
-`migrations/001_init.sql` bleibt die Baseline und wird nicht nachtraeglich veraendert. `migrations/002_schema_migrations.sql` fuehrt `schema_migrations` ein, damit spaetere Schemaaenderungen nachvollziehbar in Dateireihenfolge angewendet werden koennen. `migrations/003_relation_agent_actions.sql` erweitert die Relations-Constraints um `agent_action`, damit Auditzeilen im Projektgraph referenzierbar sind.
+- `projects`: project anchors with slug, status, description, and metadata
+- `agents`: known agents or profiles, optionally tied to a project
+- `documents`: imported or projected Markdown-like documents
+- `facts`: reviewed statements with source and confidence
+- `decisions`: chosen directions with rationale and consequences
+- `open_questions`: unresolved or answered clarification needs
+- `risks`: active or resolved risks with severity, impact, and mitigation
+- `reports`: daily summaries, handoffs, audits, or review notes
+- `relations`: typed links between core objects
+- `agent_actions`: audit trail for agent writes and updates
+- `sync_events`: import/export/sync trail
+- `schema_migrations`: migration tracking with checksum and status
 
-Der CLI-Runner `agent-hub migrate --apply` registriert bestehende Datenbanken nachtraeglich: Wenn das Basisschema bereits existiert, wird `001_init.sql` als angewendet eingetragen und nur das Tracking ergaenzt. `agent-hub migrate --status`, `agent-hub status` und `agent-hub check` zeigen offene, fehlgeschlagene oder checksum-geaenderte Migrationen an.
+## Migration Model
 
-## Projekt-Taxonomie
+Migrations are applied in file order from `migrations/`.
 
-V1 nutzt bewusst keine neue Spalte fuer Projekttypen. Der Typ liegt in `projects.metadata.project_type`, damit die Taxonomie leicht erweiterbar bleibt. Dokumentierte Werte sind:
+- `001_init.sql`: baseline schema
+- `002_schema_migrations.sql`: migration tracking table
+- `003_relation_agent_actions.sql`: allows relations to reference agent actions
+
+`agent-hub migrate --status` shows open, failed, or changed migrations.
+`agent-hub migrate --apply` applies the pending set.
+
+If an older database already has the base schema, the migration runner can mark
+the baseline as applied and add tracking without rebuilding the database.
+
+## Project Taxonomy
+
+Project type is stored in `projects.metadata.project_type` rather than in a
+dedicated column. That keeps the schema stable while allowing the project set
+to evolve.
+
+Documented values currently include:
 
 - `website`
 - `ops`
@@ -34,11 +50,14 @@ V1 nutzt bewusst keine neue Spalte fuer Projekttypen. Der Typ liegt in `projects
 - `personal`
 - `learning`
 
-`agent-hub projects --type <project_type>` filtert aktive Projekte nach diesem Metadatenwert.
+`agent-hub projects --type <project_type>` filters active projects by that
+metadata value.
 
-## Relation-Modell
+## Relation Model
 
-`relations` ist bewusst polymorph gehalten. Erlaubte Objekttypen sind:
+`relations` is intentionally polymorphic.
+
+Allowed object types are:
 
 - `project`
 - `agent`
@@ -50,9 +69,11 @@ V1 nutzt bewusst keine neue Spalte fuer Projekttypen. Der Typ liegt in `projects
 - `report`
 - `agent_action`
 
-Die Kombination aus `source_type`, `source_id`, `relation_type`, `target_type`, `target_id` ist eindeutig. Dadurch können z. B. Dokumente Fakten belegen, Entscheidungen Risiken entschärfen oder Reports offene Fragen zusammenfassen, ohne für jede Beziehung eine eigene Join-Tabelle anzulegen.
+The unique tuple
+`source_type, source_id, relation_type, target_type, target_id`
+prevents duplicate links while keeping the graph flexible.
 
-V1.3 nutzt ein kontrolliertes, aber noch nicht als DB-Constraint festgeschriebenes Relationstyp-Vokabular:
+Supported relation labels currently include:
 
 - `supports`
 - `contradicts`
@@ -65,24 +86,31 @@ V1.3 nutzt ein kontrolliertes, aber noch nicht als DB-Constraint festgeschrieben
 - `blocks`
 - `depends_on`
 
-`agent-hub relate` validiert Objekttypen, Relationstypen, Objekt-Existenz und Projektzuordnung vor dem Write. `agent-hub relations` und `agent-hub brief --with-relations` machen den Projektgraphen lesbar. `agent-hub check` bleibt hart bei gebrochenen Objektverweisen und warnt bei Relationstypen ausserhalb des kontrollierten Vokabulars.
+`agent-hub relate` validates object types, relation labels, object existence,
+and project compatibility before writing a relation.
 
-## Audit-Modell
+## Audit Model
 
-- `agent_actions` beschreibt konkrete Handlungen eines Agenten mit Input, Output, Status und Fehlertext.
-- `event_log` beschreibt fachliche oder technische Ereignisse mit Payload und Status.
-- `sync_events` beschreibt Synchronisationsläufe aus Quellen wie Obsidian, Git, Hermes-Reports oder späteren Importern.
+Auditability is handled through a small number of tables:
 
-Alle drei Tabellen haben `created_at`, `updated_at`, JSONB-Metadaten und Indizes für typische Auswertungen nach Agent, Objekt, Status und Zeit.
+- `agent_actions` records write-oriented agent actions with input, output, and status
+- `sync_events` records import/export/sync runs
+- `schema_migrations` records migration state and checksum history
 
-## Obsidian-/Knowledge-Base-Projektion
+This keeps the system reviewable without storing raw chat transcripts.
 
-Die Tabelle `documents` ist der primäre Anker für eine spätere Obsidian- oder Markdown-Projektion:
+## Projection Model
 
-- `path` bildet den relativen oder absoluten Dokumentpfad ab.
-- `frontmatter` speichert YAML-/Markdown-Metadaten als JSONB.
-- `content` speichert den aktuellen Markdown-Text.
-- `content_hash` erlaubt Sync- und Änderungsprüfung.
-- `relations` kann Links, Quellenbezüge, Ableitungen und Entscheidungszusammenhänge strukturiert ergänzen.
+Markdown and Obsidian projection are layered on top of the database rather than
+treated as the source of truth.
 
-In v0 wird kein `pg_trgm` aktiviert. Suchfunktionen bleiben bewusst außerhalb dieser Basismigration, bis ein konkreter Suchpfad entschieden ist.
+`documents` and `relations` support that projection by storing:
+
+- paths
+- frontmatter as JSON
+- current content
+- content hashes for sync checks
+- graph-style links between structured objects
+
+The projection layer is deliberately secondary. PostgreSQL remains the reviewed
+operational source of truth.

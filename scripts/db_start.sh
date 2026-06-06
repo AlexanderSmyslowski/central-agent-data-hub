@@ -11,10 +11,10 @@ usage() {
 Usage: scripts/db_start.sh [--demo]
 
 Starts the durable local Central Agent Data Hub database, waits for readiness,
-applies the schema, and seeds non-sensitive business-site memory.
+applies the schema, and seeds the maintainer's local working set.
 
 Options:
-  --demo    Also apply seed/demo.sql. Use only for local sample data.
+  --demo    Also apply seed/demo.sql, the neutral public sample dataset.
 EOF
 }
 
