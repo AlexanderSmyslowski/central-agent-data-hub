@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -30,6 +31,8 @@ from agent_hub.quality import (
     find_missing_project_references,
     find_unknown_relation_types,
 )
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def run_export(_args: argparse.Namespace) -> int:
@@ -129,6 +132,32 @@ def run_status(_args: argparse.Namespace) -> int:
             healthy = False
 
     return 0 if healthy else 1
+
+
+def run_setup(args: argparse.Namespace) -> int:
+    script_path = REPO_ROOT / "scripts" / "setup_assistant.sh"
+    if not script_path.is_file():
+        print(
+            f"Error: setup assistant script not found: {script_path}",
+            file=sys.stderr,
+        )
+        print(
+            "Run the repository checkout directly or use scripts/setup_assistant.sh.",
+            file=sys.stderr,
+        )
+        return 2
+
+    command = [str(script_path)]
+    if getattr(args, "dry_run", False):
+        command.append("--dry-run")
+    if getattr(args, "defaults", False):
+        command.append("--defaults")
+    command.extend(getattr(args, "setup_args", []))
+    try:
+        result = subprocess.run(command, check=False)
+    except OSError as exc:
+        return exception_error(exc)
+    return int(result.returncode)
 
 
 def run_projects(args: argparse.Namespace) -> int:

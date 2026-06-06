@@ -5,6 +5,7 @@ from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
 import uuid
+import subprocess
 
 import pytest
 
@@ -83,6 +84,7 @@ def test_parse_since_rejects_invalid_value() -> None:
         ["sync", "--help"],
         ["relations", "--help"],
         ["compile", "--help"],
+        ["setup", "--help"],
     ],
 )
 def test_help_commands_exit_cleanly(command: list[str], capsys) -> None:
@@ -92,6 +94,40 @@ def test_help_commands_exit_cleanly(command: list[str], capsys) -> None:
     captured = capsys.readouterr()
     assert excinfo.value.code == 0
     assert "usage:" in captured.out
+
+
+def test_setup_command_runs_repository_script(monkeypatch) -> None:
+    calls: list[list[str]] = []
+
+    def fake_run(command: list[str], check: bool = False):
+        calls.append(command)
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(system_commands, "subprocess", SimpleNamespace(run=fake_run))
+    monkeypatch.setattr(system_commands, "REPO_ROOT", Path("/tmp/agent-hub-repo"))
+    monkeypatch.setattr(Path, "is_file", lambda self: True)
+
+    code = cli.main(["setup", "--defaults", "--dry-run"])
+
+    assert code == 0
+    assert calls == [[
+        "/tmp/agent-hub-repo/scripts/setup_assistant.sh",
+        "--dry-run",
+        "--defaults",
+    ]]
+
+
+def test_setup_command_has_clear_error_when_script_is_missing(
+    monkeypatch, capsys
+) -> None:
+    monkeypatch.setattr(system_commands, "REPO_ROOT", Path("/tmp/agent-hub-repo"))
+    monkeypatch.setattr(Path, "is_file", lambda self: False)
+
+    code = cli.main(["setup"])
+
+    captured = capsys.readouterr()
+    assert code == 2
+    assert "setup assistant script not found" in captured.err
 
 
 def test_brief_without_database_url_has_clear_error(monkeypatch, capsys) -> None:

@@ -85,7 +85,7 @@ VALUES
   '00000000-0000-4000-8000-000000000001',
   'A later Obsidian export can map frontmatter and markdown paths without additional core tables.',
   'reports/technical/v0-schema-smoke.md',
-  0.550,
+  0.650,
   'proposed',
   '{"demo": true, "confidence_label": "medium"}'::jsonb
 )
@@ -101,9 +101,9 @@ VALUES (
   '00000000-0000-4000-8000-000000000301',
   '00000000-0000-4000-8000-000000000001',
   'Should Obsidian export remain file-based in v0 or get a dedicated sync worker immediately?',
-  NULL,
-  'open',
-  NULL,
+  'Keep v0 file-based. Revisit a dedicated sync worker only after the schema, receipts, and review flow stay stable in real local use.',
+  'answered',
+  CURRENT_TIMESTAMP,
   '{"demo": true}'::jsonb
 )
 ON CONFLICT (id) DO UPDATE SET

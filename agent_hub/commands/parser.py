@@ -24,6 +24,7 @@ from agent_hub.commands.system import (
     run_export,
     run_migrate,
     run_projects,
+    run_setup,
     run_status,
 )
 from agent_hub.commands.write import (
@@ -155,6 +156,26 @@ def build_parser() -> argparse.ArgumentParser:
         "Run consistency checks for export and review readiness.",
         run_check,
     )
+    setup_parser = subparsers.add_parser(
+        "setup",
+        help="Run the guided local setup assistant from this repository checkout.",
+    )
+    setup_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show the setup plan without writing files or creating folders.",
+    )
+    setup_parser.add_argument(
+        "--defaults",
+        action="store_true",
+        help="Use the assistant's recommended defaults without prompts.",
+    )
+    setup_parser.add_argument(
+        "setup_args",
+        nargs=argparse.REMAINDER,
+        help="Extra arguments passed through to scripts/setup_assistant.sh after --.",
+    )
+    setup_parser.set_defaults(func=run_setup)
 
     migrate_parser = subparsers.add_parser(
         "migrate",

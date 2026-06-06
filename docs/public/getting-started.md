@@ -10,7 +10,7 @@ Use Python 3.11+, Docker, and Docker Compose.
 For the guided path, start here:
 
 ```bash
-scripts/setup_assistant.sh
+agent-hub setup
 ```
 
 The assistant asks only a few questions, proposes defaults, can create a

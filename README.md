@@ -94,11 +94,17 @@ For a public smoke test, use the dedicated neutral demo path:
 For a guided local setup with calm defaults, run:
 
 ```bash
-scripts/setup_assistant.sh
+agent-hub setup
 ```
 
 The assistant asks only a few questions, shows the planned local changes, and
 writes a small local setup file before you start the demo path.
+
+You can still run the underlying script directly:
+
+```bash
+scripts/setup_assistant.sh
+```
 
 1. Create a local environment file from `.env.example`.
 2. Start the public demo database path:
