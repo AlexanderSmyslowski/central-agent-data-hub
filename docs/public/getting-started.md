@@ -7,6 +7,15 @@ the neutral demo dataset, not the maintainer's own daily project seeds.
 
 Use Python 3.11+, Docker, and Docker Compose.
 
+From a fresh checkout:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+cp .env.example .env
+```
+
 For the guided path, start here:
 
 ```bash
@@ -17,7 +26,7 @@ The assistant asks only a few questions, proposes defaults, can create a
 Signal Inbox, shows a summary before writing, and stores a local setup file
 without touching the database or silently registering projects.
 
-Create a local `.env` from `.env.example`, or export the required variables:
+If you prefer not to create `.env`, export the required variables manually:
 
 ```bash
 export DATABASE_URL="postgresql://postgres@localhost:55432/agent_hub"

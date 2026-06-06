@@ -57,7 +57,7 @@ What is already real:
 What is still rough:
 
 - some scripts are tuned for the maintainer's own local workflow
-- setup is local-operator oriented, not packaged for broad installation
+- packaging is still intentionally lightweight
 - the demo path is narrower than the internal day-to-day path
 
 ## Architecture
@@ -91,6 +91,15 @@ flowchart TD
 
 For a public smoke test, use the dedicated neutral demo path:
 
+1. Create a virtual environment and install the local CLI:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+cp .env.example .env
+```
+
 For a guided local setup with calm defaults, run:
 
 ```bash
@@ -106,7 +115,6 @@ You can still run the underlying script directly:
 scripts/setup_assistant.sh
 ```
 
-1. Create a local environment file from `.env.example`.
 2. Start the public demo database path:
 
 ```bash
