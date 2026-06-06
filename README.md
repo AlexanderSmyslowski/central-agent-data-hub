@@ -202,6 +202,13 @@ Initialize one with:
 scripts/init_signal_inbox.sh --path /path/to/wiki/inbox/signals
 ```
 
+That initializer now creates only a minimal root by default. Add a first source
+file only when a real source needs one:
+
+```bash
+scripts/init_signal_inbox.sh --path /path/to/wiki/inbox/signals --scaffold-source x-research
+```
+
 ## Safety Boundaries
 
 Do not store these in the Hub:

@@ -129,20 +129,15 @@ def test_public_demo_smoke_verifies_demo_exports() -> None:
     assert 'Compiled/central-agent-data-hub-demo.md' in script
 
 
-def test_signal_inbox_init_script_scaffolds_sources_and_triage() -> None:
+def test_signal_inbox_init_script_is_lazy_by_default() -> None:
     script = read_script("scripts/init_signal_inbox.sh")
 
     assert "--path <directory>" in script
-    assert '"$target_abs/x-research"' in script
-    assert '"$target_abs/gmail"' in script
-    assert '"$target_abs/codex"' in script
-    assert '"$target_abs/hermes"' in script
-    assert '"$target_abs/web-research"' in script
-    assert '"$target_abs/triage"' in script
-    assert 'write_file "$target_abs/triage/queue.md"' in script
-    assert 'write_file "$target_abs/triage/reviewed.md"' in script
-    assert 'write_file "$target_abs/triage/prompt.md"' in script
-    assert "do not write directly into Agent Data Hub without review" in script
+    assert "--scaffold-source <name>" in script
+    assert 'write_file "$target_abs/README.md"' in script
+    assert 'write_file "$target_abs/${source_slug}.md"' in script
+    assert "create a source file only when the first real signal appears" in script
+    assert "reviewed memory belongs in Agent Data Hub, not here" in script
 
 
 def test_setup_assistant_stays_small_and_model_independent() -> None:

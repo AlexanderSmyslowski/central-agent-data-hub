@@ -170,10 +170,16 @@ Triage sits between the Signal Inbox and the Hub. The normal outcomes are:
 Do not auto-promote Signal Inbox content into PostgreSQL. Review first, then
 write back only the durable result.
 
-To create a standard local structure:
+To create a minimal local root:
 
 ```bash
 scripts/init_signal_inbox.sh --path /path/to/wiki/inbox/signals
+```
+
+To intentionally scaffold a first source file:
+
+```bash
+scripts/init_signal_inbox.sh --path /path/to/wiki/inbox/signals --scaffold-source x-research
 ```
 
 See `docs/signal-inbox.md`.

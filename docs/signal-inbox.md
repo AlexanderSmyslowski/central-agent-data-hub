@@ -55,24 +55,25 @@ Use a human-readable wiki path outside the Hub repo, for example:
 ```text
 /path/to/wiki/inbox/signals/
   README.md
-  x-research/
-    inbox.md
-  gmail/
-    inbox.md
-  codex/
-    inbox.md
-  hermes/
-    inbox.md
-  web-research/
-    inbox.md
-  triage/
-    queue.md
-    reviewed.md
-    prompt.md
+  x-research.md
+  gmail.md
+  hermes.md
 ```
 
-This keeps inputs grouped by source, while keeping triage separate from raw
-capture.
+Start almost empty. The folder should usually contain only `README.md` until a
+real source produces a real signal.
+
+Create a source file only when needed. A single file is enough for many users.
+
+If a source later becomes busy or needs supporting notes, it can grow into its
+own folder:
+
+```text
+/path/to/wiki/inbox/signals/
+  README.md
+  x-research/
+    inbox.md
+```
 
 If an existing source already writes elsewhere, do not force an abrupt move.
 Treat that file as a legacy input until the source can be pointed at the new
@@ -82,7 +83,24 @@ Example:
 
 - existing `x-research-inbox.md` may remain in place until the X research agent
   is updated
-- future X research entries should go to `signals/x-research/inbox.md`
+- future X research entries may go to `signals/x-research.md`
+- if X research later needs more structure, it may grow to
+  `signals/x-research/inbox.md`
+
+## Signal Write Policy
+
+Write a signal only when all of these are true:
+
+- it came from outside the current chat or emerged as a relevant observation
+  during work
+- it may later matter for a project, a decision, a risk, an open question, or
+  a skill or policy
+- it is not yet reviewed enough for Agent Data Hub memory
+- it would likely be lost if left only in chat history
+- it contains no secrets, credentials, private customer data, or sensitive raw
+  logs
+
+If these conditions are not met, do not write a signal.
 
 ## Signal Entry Shape
 
@@ -149,7 +167,7 @@ Only the result of triage may become reviewed memory.
 
 The first implementation should stay simple:
 
-- a documented folder structure
+- a nearly empty root folder
 - a predictable signal-entry template
 - a triage prompt or runbook
 - a small initializer script
