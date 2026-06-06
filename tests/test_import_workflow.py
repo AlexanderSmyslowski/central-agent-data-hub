@@ -221,6 +221,7 @@ source: smoke test
 
 
 def test_import_cli_without_database_url_has_clear_error(monkeypatch, capsys) -> None:
+    monkeypatch.setenv("AGENT_HUB_DISABLE_ENV_AUTOLOAD", "1")
     monkeypatch.delenv("DATABASE_URL", raising=False)
 
     code = cli.main(["import", "--path", "notes"])

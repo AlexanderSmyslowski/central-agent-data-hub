@@ -130,7 +130,54 @@ def test_setup_command_has_clear_error_when_script_is_missing(
     assert "setup assistant script not found" in captured.err
 
 
+def test_bootstrap_local_environment_loads_repo_env_and_expands_paths(
+    tmp_path: Path, monkeypatch
+) -> None:
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    env_file = repo_root / ".env"
+    env_file.write_text(
+        "DATABASE_URL=postgresql://postgres@localhost:55432/agent_hub\n"
+        "OBSIDIAN_EXPORT_DIR=.local/obsidian-export\n",
+        encoding="utf-8",
+    )
+    work_dir = repo_root / "subdir"
+    work_dir.mkdir()
+
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.delenv("OBSIDIAN_EXPORT_DIR", raising=False)
+    monkeypatch.delenv("AGENT_HUB_BACKUP_DIR", raising=False)
+
+    cli.bootstrap_local_environment(cwd=work_dir, repo_root=repo_root)
+
+    assert cli.os.environ["DATABASE_URL"] == "postgresql://postgres@localhost:55432/agent_hub"
+    assert cli.os.environ["OBSIDIAN_EXPORT_DIR"] == str(
+        repo_root / ".local/obsidian-export"
+    )
+    assert cli.os.environ["AGENT_HUB_BACKUP_DIR"] == str(repo_root / ".local/backups")
+
+
+def test_bootstrap_local_environment_leaves_env_unset_when_no_file_exists(
+    tmp_path: Path, monkeypatch
+) -> None:
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    work_dir = repo_root / "subdir"
+    work_dir.mkdir()
+
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.delenv("OBSIDIAN_EXPORT_DIR", raising=False)
+    monkeypatch.delenv("AGENT_HUB_BACKUP_DIR", raising=False)
+
+    cli.bootstrap_local_environment(cwd=work_dir, repo_root=repo_root)
+
+    assert "DATABASE_URL" not in cli.os.environ
+    assert "OBSIDIAN_EXPORT_DIR" not in cli.os.environ
+    assert "AGENT_HUB_BACKUP_DIR" not in cli.os.environ
+
+
 def test_brief_without_database_url_has_clear_error(monkeypatch, capsys) -> None:
+    monkeypatch.setenv("AGENT_HUB_DISABLE_ENV_AUTOLOAD", "1")
     monkeypatch.delenv("DATABASE_URL", raising=False)
 
     code = cli.main(["brief", "--project", "commcats-de"])
@@ -142,6 +189,7 @@ def test_brief_without_database_url_has_clear_error(monkeypatch, capsys) -> None
 
 
 def test_remember_without_database_url_has_clear_error(monkeypatch, capsys) -> None:
+    monkeypatch.setenv("AGENT_HUB_DISABLE_ENV_AUTOLOAD", "1")
     monkeypatch.delenv("DATABASE_URL", raising=False)
 
     code = cli.main(
@@ -165,6 +213,7 @@ def test_remember_without_database_url_has_clear_error(monkeypatch, capsys) -> N
 def test_answer_question_without_database_url_has_clear_error(
     monkeypatch, capsys
 ) -> None:
+    monkeypatch.setenv("AGENT_HUB_DISABLE_ENV_AUTOLOAD", "1")
     monkeypatch.delenv("DATABASE_URL", raising=False)
 
     code = cli.main(
@@ -205,6 +254,7 @@ def test_answer_question_rejects_invalid_uuid(capsys) -> None:
 
 
 def test_sync_without_database_url_has_clear_error(monkeypatch, capsys) -> None:
+    monkeypatch.setenv("AGENT_HUB_DISABLE_ENV_AUTOLOAD", "1")
     monkeypatch.delenv("DATABASE_URL", raising=False)
 
     code = cli.main(["sync", "--path", "notes", "--plan"])
@@ -216,6 +266,7 @@ def test_sync_without_database_url_has_clear_error(monkeypatch, capsys) -> None:
 
 
 def test_projects_without_database_url_has_clear_error(monkeypatch, capsys) -> None:
+    monkeypatch.setenv("AGENT_HUB_DISABLE_ENV_AUTOLOAD", "1")
     monkeypatch.delenv("DATABASE_URL", raising=False)
 
     code = cli.main(["projects"])
@@ -227,6 +278,7 @@ def test_projects_without_database_url_has_clear_error(monkeypatch, capsys) -> N
 
 
 def test_compile_without_database_url_has_clear_error(monkeypatch, capsys) -> None:
+    monkeypatch.setenv("AGENT_HUB_DISABLE_ENV_AUTOLOAD", "1")
     monkeypatch.delenv("DATABASE_URL", raising=False)
 
     code = cli.main(["compile", "--project", "central-agent-data-hub"])
@@ -238,6 +290,7 @@ def test_compile_without_database_url_has_clear_error(monkeypatch, capsys) -> No
 
 
 def test_quality_without_database_url_has_clear_error(monkeypatch, capsys) -> None:
+    monkeypatch.setenv("AGENT_HUB_DISABLE_ENV_AUTOLOAD", "1")
     monkeypatch.delenv("DATABASE_URL", raising=False)
 
     code = cli.main(["quality", "--project", "central-agent-data-hub"])
@@ -249,6 +302,7 @@ def test_quality_without_database_url_has_clear_error(monkeypatch, capsys) -> No
 
 
 def test_migrate_without_database_url_has_clear_error(monkeypatch, capsys) -> None:
+    monkeypatch.setenv("AGENT_HUB_DISABLE_ENV_AUTOLOAD", "1")
     monkeypatch.delenv("DATABASE_URL", raising=False)
 
     code = cli.main(["migrate", "--status"])
@@ -260,6 +314,7 @@ def test_migrate_without_database_url_has_clear_error(monkeypatch, capsys) -> No
 
 
 def test_relations_without_database_url_has_clear_error(monkeypatch, capsys) -> None:
+    monkeypatch.setenv("AGENT_HUB_DISABLE_ENV_AUTOLOAD", "1")
     monkeypatch.delenv("DATABASE_URL", raising=False)
 
     code = cli.main(["relations", "--project", "commcats-de"])
@@ -271,6 +326,7 @@ def test_relations_without_database_url_has_clear_error(monkeypatch, capsys) -> 
 
 
 def test_relate_without_database_url_has_clear_error(monkeypatch, capsys) -> None:
+    monkeypatch.setenv("AGENT_HUB_DISABLE_ENV_AUTOLOAD", "1")
     monkeypatch.delenv("DATABASE_URL", raising=False)
 
     code = cli.main(
@@ -312,6 +368,7 @@ def test_relate_without_database_url_has_clear_error(monkeypatch, capsys) -> Non
 def test_retrieval_commands_without_database_url_have_clear_error(
     command: list[str], monkeypatch, capsys
 ) -> None:
+    monkeypatch.setenv("AGENT_HUB_DISABLE_ENV_AUTOLOAD", "1")
     monkeypatch.delenv("DATABASE_URL", raising=False)
 
     code = cli.main(command)
