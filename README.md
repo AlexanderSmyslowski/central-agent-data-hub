@@ -178,6 +178,7 @@ local working data.
 - [Public overview](docs/public/agent-data-hub-overview.md)
 - [Public getting started](docs/public/getting-started.md)
 - [v0.1.0 release notes](docs/public/v0.1.0-release-notes.md)
+- [Announcement pack](docs/public/announcement-pack.md)
 - [Agent workflow](docs/agent-workflow.md)
 - [Code architecture](docs/code-architecture.md)
 - [Schema notes](docs/schema-notes.md)
