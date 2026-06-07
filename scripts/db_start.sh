@@ -43,7 +43,7 @@ mkdir -p "$OBSIDIAN_EXPORT_DIR"
 echo "Starting durable local Hub database..."
 echo "Container: $DB_CONTAINER"
 echo "Volume:    $DB_VOLUME"
-echo "URL:       $DEFAULT_DATABASE_URL"
+echo "URL:       $DISPLAY_DATABASE_URL"
 echo
 
 compose up -d "$DB_SERVICE"

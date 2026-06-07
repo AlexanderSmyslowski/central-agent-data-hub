@@ -97,7 +97,7 @@ def bootstrap_local_environment(
                 os.environ[key] = value
 
         os.environ.setdefault(
-            "DATABASE_URL", "postgresql://postgres@localhost:55432/agent_hub"
+            "DATABASE_URL", "postgresql://postgres:changeme@localhost:55432/agent_hub"
         )
         os.environ.setdefault(
             "OBSIDIAN_EXPORT_DIR", str(shared_root / ".local/obsidian-export")

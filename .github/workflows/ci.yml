@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: agent_hub
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci-password
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d agent_hub"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install
+        run: pip install -e ".[dev]"
+
+      - name: Syntax check scripts
+        run: bash -n scripts/*.sh
+
+      - name: Compile Python
+        run: python -m compileall agent_hub
+
+      - name: Run tests
+        env:
+          DATABASE_URL: postgresql://postgres:ci-password@localhost:55432/agent_hub
+        run: pytest -q

@@ -9,7 +9,6 @@ DB_VOLUME="central-agent-data-hub-pgdata"
 DB_NAME="agent_hub"
 DB_USER="postgres"
 DB_PORT="55432"
-DEFAULT_DATABASE_URL="postgresql://postgres@localhost:${DB_PORT}/${DB_NAME}"
 AGENT_HUB_DOCKER_TIMEOUT_SECONDS="${AGENT_HUB_DOCKER_TIMEOUT_SECONDS:-15}"
 AGENT_HUB_DB_READY_TIMEOUT_SECONDS="${AGENT_HUB_DB_READY_TIMEOUT_SECONDS:-5}"
 COMMON_GIT_DIR="$(git -C "$ROOT_DIR" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)"
@@ -32,6 +31,11 @@ if [[ -n "$ENV_FILE" ]]; then
   set +a
 fi
 
+POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-changeme}"
+DEFAULT_DATABASE_URL="postgresql://${DB_USER}:${POSTGRES_PASSWORD}@localhost:${DB_PORT}/${DB_NAME}"
+DISPLAY_DATABASE_URL="postgresql://${DB_USER}:***@localhost:${DB_PORT}/${DB_NAME}"
+
+export POSTGRES_PASSWORD
 export DATABASE_URL="${DATABASE_URL:-$DEFAULT_DATABASE_URL}"
 export OBSIDIAN_EXPORT_DIR="${OBSIDIAN_EXPORT_DIR:-$SHARED_ROOT/.local/obsidian-export}"
 export AGENT_HUB_BACKUP_DIR="${AGENT_HUB_BACKUP_DIR:-$SHARED_ROOT/.local/backups}"

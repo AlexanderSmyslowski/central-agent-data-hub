@@ -138,7 +138,7 @@ def test_bootstrap_local_environment_loads_repo_env_and_expands_paths(
     repo_root.mkdir()
     env_file = repo_root / ".env"
     env_file.write_text(
-        "DATABASE_URL=postgresql://postgres@localhost:55432/agent_hub\n"
+        "DATABASE_URL=postgresql://postgres:changeme@localhost:55432/agent_hub\n"
         "OBSIDIAN_EXPORT_DIR=.local/obsidian-export\n",
         encoding="utf-8",
     )
@@ -151,7 +151,10 @@ def test_bootstrap_local_environment_loads_repo_env_and_expands_paths(
 
     cli.bootstrap_local_environment(cwd=work_dir, repo_root=repo_root)
 
-    assert cli.os.environ["DATABASE_URL"] == "postgresql://postgres@localhost:55432/agent_hub"
+    assert (
+        cli.os.environ["DATABASE_URL"]
+        == "postgresql://postgres:changeme@localhost:55432/agent_hub"
+    )
     assert cli.os.environ["OBSIDIAN_EXPORT_DIR"] == str(
         repo_root / ".local/obsidian-export"
     )

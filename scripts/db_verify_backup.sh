@@ -7,7 +7,9 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/db_common.sh"
 VERIFY_CONTAINER="central-agent-data-hub-backup-verify"
 VERIFY_DB="agent_hub_verify"
 VERIFY_PORT="${AGENT_HUB_VERIFY_PORT:-55433}"
-VERIFY_DATABASE_URL="postgresql://postgres@localhost:${VERIFY_PORT}/${VERIFY_DB}"
+VERIFY_DB_PASSWORD="${AGENT_HUB_VERIFY_POSTGRES_PASSWORD:-changeme}"
+VERIFY_DATABASE_URL="postgresql://postgres:${VERIFY_DB_PASSWORD}@localhost:${VERIFY_PORT}/${VERIFY_DB}"
+VERIFY_DISPLAY_DATABASE_URL="postgresql://postgres:***@localhost:${VERIFY_PORT}/${VERIFY_DB}"
 
 usage() {
   cat <<'EOF'
@@ -43,13 +45,13 @@ cleanup
 echo "Verifying backup in temporary Postgres container..."
 echo "Dump:      $dump_path"
 echo "Container: $VERIFY_CONTAINER"
-echo "URL:       $VERIFY_DATABASE_URL"
+echo "URL:       $VERIFY_DISPLAY_DATABASE_URL"
 echo
 
 docker run -d \
   --name "$VERIFY_CONTAINER" \
-  -e POSTGRES_HOST_AUTH_METHOD=trust \
   -e POSTGRES_DB="$VERIFY_DB" \
+  -e POSTGRES_PASSWORD="$VERIFY_DB_PASSWORD" \
   -p "127.0.0.1:${VERIFY_PORT}:5432" \
   postgres:16 >/dev/null
 

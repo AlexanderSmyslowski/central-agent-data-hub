@@ -29,7 +29,7 @@ without touching the database or silently registering projects.
 If you prefer not to create `.env`, export the required variables manually:
 
 ```bash
-export DATABASE_URL="postgresql://postgres@localhost:55432/agent_hub"
+export DATABASE_URL="postgresql://postgres:changeme@localhost:55432/agent_hub"
 export OBSIDIAN_EXPORT_DIR=".local/obsidian-export"
 ```
 

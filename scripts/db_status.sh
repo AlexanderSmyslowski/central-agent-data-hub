@@ -9,7 +9,7 @@ mkdir -p "$OBSIDIAN_EXPORT_DIR"
 echo "Central Agent Data Hub durable DB status"
 echo "Container: $DB_CONTAINER"
 echo "Volume:    $DB_VOLUME"
-echo "URL:       $DEFAULT_DATABASE_URL"
+echo "URL:       $DISPLAY_DATABASE_URL"
 echo
 
 echo "== Docker Compose =="

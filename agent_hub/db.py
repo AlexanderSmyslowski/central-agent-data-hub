@@ -16,7 +16,7 @@ def get_database_url() -> str:
     if not database_url:
         raise ConfigurationError(
             "DATABASE_URL is required, for example "
-            "postgresql://postgres:postgres@localhost:5432/agent_hub"
+            "postgresql://postgres:changeme@localhost:55432/agent_hub"
         )
     return database_url
 
