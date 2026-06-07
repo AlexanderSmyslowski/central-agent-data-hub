@@ -46,6 +46,10 @@ and prints a demo-focused readiness check.
 It does not wipe an existing local operator database. For the quietest first
 run, use it against a fresh local database or Docker volume.
 
+If you need to run a second local copy alongside an existing Agent Data Hub
+instance, set `AGENT_HUB_DB_PORT`, `AGENT_HUB_DB_CONTAINER`, and
+`AGENT_HUB_DB_VOLUME` before starting the demo.
+
 ## 3. Run The End-To-End Demo Smoke
 
 ```bash
