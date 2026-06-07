@@ -167,16 +167,17 @@ def run_projects(args: argparse.Namespace) -> int:
     try:
         with connect() as conn:
             with conn.cursor() as cur:
-                cur.execute(
-                    """
-                    SELECT slug, name, status, description, metadata
-                    FROM projects
-                    WHERE status = 'active'
-                    AND (%s IS NULL OR metadata->>'project_type' = %s)
-                    ORDER BY slug
-                    """,
-                    (args.project_type, args.project_type),
-                )
+                query = """
+                SELECT slug, name, status, description, metadata
+                FROM projects
+                WHERE status = 'active'
+                """
+                params: tuple[object, ...] = ()
+                if args.project_type:
+                    query += " AND metadata->>'project_type' = %s"
+                    params = (args.project_type,)
+                query += " ORDER BY slug"
+                cur.execute(query, params)
                 projects = with_project_display_names(list(cur.fetchall()))
     except Exception as exc:
         return exception_error(exc)

@@ -5,7 +5,8 @@ the neutral demo dataset, not the maintainer's own daily project seeds.
 
 ## 1. Prepare Environment
 
-Use Python 3.11+, Docker, and Docker Compose.
+Use Python 3.11+, Docker, and Docker Compose. Make sure Docker is running
+before starting the local database.
 
 From a fresh checkout:
 
