@@ -41,6 +41,11 @@ Agent Data Hub is not:
 It is a local reviewed context system with operational checks, backups, and
 explicit project boundaries.
 
+The automation boundary is intentionally conservative: checks, exports,
+receipts, backups, and read-only context can run automatically; triage may make
+suggestions; Hub writeback stays reviewed; deployments, credentials,
+destructive actions, and external publishing require explicit human approval.
+
 ## Public Preview Status
 
 This repository should currently be read as an **early local-first technical
@@ -240,6 +245,7 @@ local working data.
 - [v0.1.0 release notes](docs/public/v0.1.0-release-notes.md)
 - [Announcement pack](docs/public/announcement-pack.md)
 - [Agent workflow](docs/agent-workflow.md)
+- [Automation boundaries](docs/automation-boundaries.md)
 - [Code architecture](docs/code-architecture.md)
 - [Schema notes](docs/schema-notes.md)
 - [Signal Inbox](docs/signal-inbox.md)

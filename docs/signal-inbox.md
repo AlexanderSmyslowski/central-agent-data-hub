@@ -163,6 +163,10 @@ That means:
 
 Only the result of triage may become reviewed memory.
 
+For the broader automation policy, see `automation-boundaries.md`. Signal
+Inbox triage belongs to the suggested level: it may summarize and recommend,
+but it must not write reviewed memory without review.
+
 ## Minimal First Implementation
 
 The first implementation should stay simple:

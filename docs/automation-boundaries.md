@@ -1,0 +1,116 @@
+# Automation Boundaries
+
+Agent Data Hub can support more independent agent work, but it should not blur
+the line between unreviewed input and reviewed memory.
+
+The useful question is not "can this be automated?" but "what kind of
+automation is this?"
+
+## Boundary Levels
+
+### Automatic
+
+These actions may run automatically because they inspect, verify, or project
+already reviewed state:
+
+- `agent-hub status`
+- `agent-hub check`
+- `agent-hub quality`
+- `agent-hub receipt`
+- `agent-hub export`
+- local backup health checks
+- local database backup after reviewed memory changes
+- read-only briefs, context packs, and compiled memory
+
+Automatic actions must not create new reviewed claims. They may fail loudly,
+write local projections, or produce audit evidence.
+
+### Suggested
+
+These actions may produce recommendations, but not reviewed Hub writes:
+
+- reading Signal Inbox entries
+- grouping signals by likely project
+- summarizing what a signal appears to say
+- proposing a fact, decision, risk, open question, report, skill, or policy
+  candidate
+- identifying unclear project ownership
+- flagging sensitive or unsafe material
+
+Suggested actions should show the evidence, uncertainty, likely memory type,
+and recommended next step. They should be treated as triage output, not as Hub
+truth.
+
+### Reviewed
+
+These actions may write to PostgreSQL only after review:
+
+- storing a fact
+- storing or updating a decision
+- storing a risk
+- creating or answering an open question
+- storing a report
+- writing a relation
+- importing controlled Markdown into Hub memory
+
+Reviewed writeback needs a project boundary, clear source, correct memory type,
+non-sensitive content, and durable value for future work. Use `--dry-run` first
+when there is any doubt.
+
+### Requires Explicit Human Approval
+
+These actions are outside normal autonomous Hub work:
+
+- deployment or production changes
+- deleting data, backups, repositories, or live files
+- publishing externally
+- using credentials or protected hosting access
+- handling customer-private data, raw invoices, secrets, tokens, or private logs
+- changing the schema or automation policy in a way that expands write authority
+
+For these, request explicit human approval and use secure handoff outside the
+Hub, Git, and Obsidian for credentials or protected access. Store back only the
+reviewed, non-sensitive outcome.
+
+## Writeback Checklist
+
+Before a memory write, an agent should be able to answer yes to all of these:
+
+- Is it attached to the correct project?
+- Is the source clear and non-sensitive?
+- Has the claim or conclusion been reviewed?
+- Is it useful beyond the current chat or command output?
+- Is the memory type correct?
+- Is it free of secrets, credentials, private customer data, raw invoices, raw
+  logs, and deployment secrets?
+
+If any answer is no, do not write reviewed memory. Keep it in the current work,
+place a non-sensitive signal upstream, or create a reviewed open question.
+
+## Signal Inbox Rule
+
+Signal Inbox content is unreviewed by default. An agent may read it, summarize
+it, and suggest what it might become. It must not auto-promote Signal Inbox
+entries into PostgreSQL.
+
+Before a Signal Inbox item is promoted, the reviewing agent should briefly tell
+the human:
+
+- what the signal is about
+- which project it likely concerns
+- what memory type it might become
+- what uncertainty remains
+- whether any sensitivity risk exists
+
+Only the reviewed result may be written to Agent Data Hub.
+
+## Practical Default
+
+Keep automation boring:
+
+- automate checks, projections, receipts, and backups
+- automate summaries and triage suggestions
+- keep reviewed writeback explicit
+- keep operational actions behind human approval
+
+This preserves the core promise: verified context for humans and agents.

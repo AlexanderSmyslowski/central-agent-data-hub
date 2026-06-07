@@ -134,6 +134,11 @@ questions drift from one project into another.
 Do not store secrets, FTP credentials, raw invoice data, private customer data,
 or deployment passwords in the Hub.
 
+For automation, keep the levels explicit: automatic checks and projections are
+safe by default, triage output is only suggested, Hub writeback must be reviewed,
+and operational actions need explicit human approval. See
+`automation-boundaries.md`.
+
 Before adding a new workflow layer, ask whether it makes daily agent work
 simpler, more reliable, or easier to review. If it only adds another place to
 repeat rules, keep it out of the Hub.

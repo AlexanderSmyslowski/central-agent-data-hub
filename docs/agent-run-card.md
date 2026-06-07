@@ -53,6 +53,7 @@ scripts/agent_worktree.sh \
 - Do not transfer assumptions from another project.
 - Do not store secrets, credentials, private customer data, or raw invoice data.
 - Treat uncertainty as an open question, not as a fact.
+- Treat triage output as a suggestion until it is reviewed.
 - Prefer one focused task and one clean outcome.
 
 ## 3. Finish

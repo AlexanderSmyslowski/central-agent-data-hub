@@ -62,6 +62,11 @@ scripts/agent_finish.sh --project <project-slug> --review
 
 Only useful, reviewed residue should be written back.
 
+Automation is split deliberately: read-only checks and projections can run on
+their own, triage can suggest candidates, and Hub writeback remains reviewed.
+Operational actions such as deployment, external publishing, deletion, or
+credential use require explicit human approval.
+
 ## How Humans Use It
 
 Humans can inspect the same memory in two calmer forms:
