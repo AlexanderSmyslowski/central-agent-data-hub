@@ -11,7 +11,6 @@ from agent_hub.errors import ConfigurationError
 
 
 def get_database_url() -> str:
-    """Return DATABASE_URL or raise a clear configuration error."""
     database_url = os.environ.get("DATABASE_URL")
     if not database_url:
         raise ConfigurationError(

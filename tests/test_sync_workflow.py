@@ -349,7 +349,7 @@ source: smoke test
         def execute(self, sql, params=None):
             self.last_sql = sql
             if "INSERT INTO sync_events" in sql:
-                self.sync_event_statuses.append(params[0])
+                self.sync_event_statuses.append(params[2])
 
         def fetchone(self):
             if "FROM projects" in self.last_sql:

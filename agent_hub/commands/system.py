@@ -76,8 +76,8 @@ def run_migrate(args: argparse.Namespace) -> int:
                 for item in applied:
                     print(f"Applied migration: {item}")
                 if errors:
-                    for error in errors:
-                        print(f"Error: {error}", file=sys.stderr)
+                    for err_msg in errors:
+                        print(f"Error: {err_msg}", file=sys.stderr)
                     return 1
                 if not applied:
                     print("No migrations to apply.")
@@ -167,20 +167,15 @@ def run_projects(args: argparse.Namespace) -> int:
     try:
         with connect() as conn:
             with conn.cursor() as cur:
-                params: tuple[object, ...] = ()
-                type_filter = ""
-                if args.project_type:
-                    type_filter = "AND metadata->>'project_type' = %s"
-                    params = (args.project_type,)
                 cur.execute(
-                    f"""
+                    """
                     SELECT slug, name, status, description, metadata
                     FROM projects
                     WHERE status = 'active'
-                    {type_filter}
+                    AND (%s IS NULL OR metadata->>'project_type' = %s)
                     ORDER BY slug
                     """,
-                    params,
+                    (args.project_type, args.project_type),
                 )
                 projects = with_project_display_names(list(cur.fetchall()))
     except Exception as exc:

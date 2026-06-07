@@ -10,12 +10,30 @@ from agent_hub.commands.common import (
     error,
     exception_error,
     json_default,
-    require_database_url,
     parse_metadata,
+    require_database_url,
 )
 from agent_hub.db import connect
 from agent_hub.import_obsidian import import_markdown, sync_markdown
+from agent_hub.importing.models import SyncResult
 from agent_hub.memory import answer_question, remember, update_decision
+
+
+def _write_result(project, agent, type_: str, row) -> dict:
+    return {
+        "project": {
+            "id": project["id"],
+            "slug": project["slug"],
+            "name": project["name"],
+        },
+        "agent": {
+            "id": agent["id"],
+            "slug": agent["slug"],
+            "name": agent["name"],
+        },
+        "type": type_,
+        "object": row,
+    }
 
 
 def run_remember(args: argparse.Namespace) -> int:
@@ -37,20 +55,7 @@ def run_remember(args: argparse.Namespace) -> int:
     except Exception as exc:
         return exception_error(exc)
 
-    result = {
-        "project": {
-            "id": project["id"],
-            "slug": project["slug"],
-            "name": project["name"],
-        },
-        "agent": {
-            "id": agent["id"],
-            "slug": agent["slug"],
-            "name": agent["name"],
-        },
-        "type": object_type,
-        "object": row,
-    }
+    result = _write_result(project, agent, object_type, row)
 
     if args.format == "json":
         print(json.dumps(result, indent=2, default=json_default, ensure_ascii=False))
@@ -82,20 +87,7 @@ def run_answer_question(args: argparse.Namespace) -> int:
     except Exception as exc:
         return exception_error(exc)
 
-    result = {
-        "project": {
-            "id": project["id"],
-            "slug": project["slug"],
-            "name": project["name"],
-        },
-        "agent": {
-            "id": agent["id"],
-            "slug": agent["slug"],
-            "name": agent["name"],
-        },
-        "type": "open_question",
-        "object": row,
-    }
+    result = _write_result(project, agent, "open_question", row)
 
     if args.format == "json":
         print(json.dumps(result, indent=2, default=json_default, ensure_ascii=False))
@@ -127,20 +119,7 @@ def run_update_decision(args: argparse.Namespace) -> int:
     except Exception as exc:
         return exception_error(exc)
 
-    result = {
-        "project": {
-            "id": project["id"],
-            "slug": project["slug"],
-            "name": project["name"],
-        },
-        "agent": {
-            "id": agent["id"],
-            "slug": agent["slug"],
-            "name": agent["name"],
-        },
-        "type": "decision",
-        "object": row,
-    }
+    result = _write_result(project, agent, "decision", row)
 
     if args.format == "json":
         print(json.dumps(result, indent=2, default=json_default, ensure_ascii=False))
@@ -182,13 +161,13 @@ def run_import(args: argparse.Namespace) -> int:
         if result.errors:
             print()
             print(f"Errors: {len(result.errors)}")
-            for error in result.errors:
-                print(f"- {error['path']}: {error['error']}")
+            for import_error in result.errors:
+                print(f"- {import_error['path']}: {import_error['error']}")
 
     return 1 if result.errors else 0
 
 
-def print_sync_result(result) -> None:
+def print_sync_result(result: SyncResult) -> None:
     print(f"Planned {len(result.planned)} Markdown note(s).")
     for row in result.planned:
         label = row.get("type", "unknown")
@@ -219,8 +198,8 @@ def print_sync_result(result) -> None:
     if result.errors:
         print()
         print(f"Errors: {len(result.errors)}")
-        for error in result.errors:
-            print(f"- {error['path']}: {error['error']}")
+        for sync_error in result.errors:
+            print(f"- {sync_error['path']}: {sync_error['error']}")
 
 
 def run_sync(args: argparse.Namespace) -> int:

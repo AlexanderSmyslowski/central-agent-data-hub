@@ -6,11 +6,14 @@ import json
 from pathlib import Path
 from typing import Any
 
+import psycopg
+
 from agent_hub.importing.allowlist import iter_markdown_files, load_allowlist
 from agent_hub.importing.identity import json_default
 from agent_hub.importing.markdown import normalize_import_item
 from agent_hub.importing.models import ImportAllowlist, ImportItem, ImportResult, SyncResult
 from agent_hub.importing.store import apply_import_item, plan_import_item
+
 
 def load_import_items(
     path: Path,
@@ -29,7 +32,7 @@ def load_import_items(
 def import_markdown(
     path: Path,
     allowlist_path: Path,
-    conn,
+    conn: psycopg.Connection,
     dry_run: bool = False,
     on_duplicate: str = "skip",
 ) -> ImportResult:
@@ -60,7 +63,7 @@ def import_markdown(
 def sync_markdown(
     path: Path,
     allowlist_path: Path,
-    conn,
+    conn: psycopg.Connection,
     apply: bool = False,
 ) -> SyncResult:
     allowlist, files, import_result = load_import_items(path, allowlist_path)
@@ -116,13 +119,17 @@ def log_sync_event(
     status: str,
     payload: dict[str, Any],
     error: str | None = None,
+    source: str = "obsidian",
+    direction: str = "inbound",
 ) -> None:
     cur.execute(
         """
         INSERT INTO sync_events (source, direction, status, payload, error, metadata)
-        VALUES ('obsidian', 'inbound', %s, %s::jsonb, %s, %s::jsonb)
+        VALUES (%s, %s, %s, %s::jsonb, %s, %s::jsonb)
         """,
         (
+            source,
+            direction,
             status,
             json.dumps(payload, default=json_default),
             error,

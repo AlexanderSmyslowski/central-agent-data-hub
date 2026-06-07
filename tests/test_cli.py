@@ -1022,7 +1022,7 @@ def test_projects_type_filter_passes_project_type(monkeypatch, capsys) -> None:
     captured = capsys.readouterr()
     assert code == 0
     assert "Active projects:" in captured.out
-    assert FakeProjectsCursor.last_params == ("website",)
+    assert FakeProjectsCursor.last_params == ("website", "website")
 
 
 class FakeQualityCursor:
