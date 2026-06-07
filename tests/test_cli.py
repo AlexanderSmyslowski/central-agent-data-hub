@@ -104,6 +104,7 @@ def test_setup_command_runs_repository_script(monkeypatch) -> None:
         calls.append(command)
         return SimpleNamespace(returncode=0)
 
+    monkeypatch.setenv("AGENT_HUB_DISABLE_ENV_AUTOLOAD", "1")
     monkeypatch.setattr(system_commands, "subprocess", SimpleNamespace(run=fake_run))
     monkeypatch.setattr(system_commands, "REPO_ROOT", Path("/tmp/agent-hub-repo"))
     monkeypatch.setattr(Path, "is_file", lambda self: True)
