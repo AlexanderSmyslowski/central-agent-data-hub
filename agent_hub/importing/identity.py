@@ -79,7 +79,7 @@ def import_metadata(item: ImportItem, existing_metadata: dict[str, Any] | None =
     now = datetime.now(timezone.utc).isoformat()
     metadata["agent_hub_import"] = {
         "import_key": item.import_key,
-        "source_path": str(item.path),
+        "source_path": item.source_path,
         "content_hash": item.content_hash,
         "data_hash": hash_payload(item_values(item)),
         "data": normalize_value(item_values(item)),
@@ -158,4 +158,3 @@ def changed_fields_from_last(
         if field in last_values
         and not values_equal(current_values.get(field), last_values.get(field))
     }
-

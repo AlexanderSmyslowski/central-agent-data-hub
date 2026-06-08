@@ -20,6 +20,7 @@ class ImportAllowlist:
 @dataclass
 class ImportItem:
     path: Path
+    source_path: str
     frontmatter: dict[str, Any]
     body: str
     project_slug: str

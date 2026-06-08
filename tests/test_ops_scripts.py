@@ -139,6 +139,34 @@ def test_public_demo_smoke_verifies_demo_exports() -> None:
     assert 'run_agent_hub export >/dev/null' in script
     assert 'central-agent-data-hub-demo.md' in script
     assert 'Compiled/central-agent-data-hub-demo.md' in script
+    assert 'HUB_VIEW_SMOKE_PORT:-9876' in script
+    assert 'scripts/hub_view.sh" --host 127.0.0.1 --port "$hub_view_smoke_port"' in script
+    assert "urllib.request" in script
+    assert "read-only review surface" in script
+
+
+def test_public_hub_view_entrypoint_is_public_safe() -> None:
+    script = read_script("scripts/hub_view.sh")
+
+    assert "agent_preflight.sh" not in script
+    assert "commcats-de" not in script
+    assert "the-one-catering" not in script
+    assert "run_agent_hub check" in script
+    assert "scripts/db_start_public_demo.sh" in script
+    assert 'exec "$PYTHON_BIN" -m agent_hub.hub_view "$@"' in script
+
+
+def test_public_entrypoints_do_not_reference_maintainer_projects() -> None:
+    public_scripts = [
+        "scripts/hub_view.sh",
+        "scripts/smoke_public_demo.sh",
+        "scripts/db_start_public_demo.sh",
+    ]
+
+    for path in public_scripts:
+        script = read_script(path)
+        assert "commcats-de" not in script
+        assert "the-one-catering" not in script
 
 
 def test_signal_inbox_init_script_is_lazy_by_default() -> None:

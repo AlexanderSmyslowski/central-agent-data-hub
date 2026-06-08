@@ -7,6 +7,7 @@ import pytest
 from agent_hub.errors import SafetyError, ValidationError
 from agent_hub.import_obsidian import (
     contains_secret,
+    import_metadata,
     load_allowlist,
     normalize_import_item,
     parse_markdown,
@@ -41,7 +42,32 @@ metadata:
 
     assert item.memory_type == "fact"
     assert item.project_slug == "commcats-de"
+    assert item.source_path == "fact.md"
     assert item.data["confidence"] == 0.9
+
+
+def test_import_metadata_uses_relative_source_path(tmp_path: Path) -> None:
+    allowlist = load_allowlist(write_allowlist(tmp_path))
+    (tmp_path / "notes" / "facts").mkdir()
+    note = write_note(
+        tmp_path / "notes" / "facts" / "example.md",
+        """
+type: fact
+project: commcats-de
+statement: CommCats is static.
+source: smoke test
+confidence: 0.9
+""",
+    )
+
+    item = normalize_import_item(note, allowlist)
+    metadata = import_metadata(item)
+    import_state = metadata["agent_hub_import"]
+
+    assert item.source_path == "facts/example.md"
+    assert import_state["source_path"] == "facts/example.md"
+    assert str(tmp_path) not in import_state["source_path"]
+    assert note.is_absolute() is True
 
 
 def test_normalize_import_item_rejects_unknown_project(tmp_path: Path) -> None:

@@ -80,6 +80,7 @@ def normalize_import_item(path: Path, allowlist: ImportAllowlist) -> ImportItem:
     db_id = frontmatter.get("db_id")
     if db_id is not None and not isinstance(db_id, str):
         raise ValidationError("db_id must be a string when provided")
+    source_path = relative_import_path(path, allowlist)
     import_key = derive_import_key(path, allowlist, frontmatter, memory_type, project_slug)
     content_hash = hash_payload(
         {
@@ -91,6 +92,7 @@ def normalize_import_item(path: Path, allowlist: ImportAllowlist) -> ImportItem:
 
     return ImportItem(
         path=path,
+        source_path=source_path,
         frontmatter=frontmatter,
         body=body,
         project_slug=project_slug,
