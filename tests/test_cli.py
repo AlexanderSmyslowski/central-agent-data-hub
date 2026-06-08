@@ -12,6 +12,7 @@ import pytest
 from agent_hub import cli
 from agent_hub.errors import ValidationError
 from agent_hub.commands import briefs as brief_commands
+from agent_hub.commands import prepare as prepare_commands
 from agent_hub.commands import search as search_commands
 from agent_hub.commands import system as system_commands
 from agent_hub.commands import write as write_commands
@@ -85,6 +86,7 @@ def test_parse_since_rejects_invalid_value() -> None:
         ["sync", "--help"],
         ["relations", "--help"],
         ["compile", "--help"],
+        ["prepare", "--help"],
         ["setup", "--help"],
     ],
 )
@@ -1093,3 +1095,147 @@ def test_fetch_memory_quality_warnings_collects_curated_quality_gaps() -> None:
     ]
     assert rows[0]["issue"] == "missing source"
     assert rows[-1]["issue"] == "answered or closed without answer"
+
+
+class FakePrepareCursor:
+    def __enter__(self) -> "FakePrepareCursor":
+        return self
+
+    def __exit__(self, *_args: object) -> None:
+        return None
+
+    def execute(self, query: str, _params: object = None) -> None:
+        if any(word in query.upper() for word in ("INSERT", "UPDATE", "DELETE")):
+            raise AssertionError("prepare must stay read-only")
+
+
+class FakePrepareConnection:
+    def __enter__(self) -> "FakePrepareConnection":
+        return self
+
+    def __exit__(self, *_args: object) -> None:
+        return None
+
+    def cursor(self) -> FakePrepareCursor:
+        return FakePrepareCursor()
+
+
+def fake_prepare_project() -> dict[str, object]:
+    return {
+        "id": uuid.UUID("10000000-0000-4000-8000-000000000001"),
+        "name": "Agent Data Hub",
+        "slug": "central-agent-data-hub",
+        "description": "Reviewed context system.",
+        "status": "active",
+        "metadata": {},
+    }
+
+
+def fake_prepare_compiled_payload(project: dict[str, object]) -> dict[str, object]:
+    return {
+        "project": project,
+        "counts": {},
+        "facts": [
+            {
+                "id": uuid.UUID("10000000-0000-4000-8000-000000000201"),
+                "statement": "Agent Data Hub stores reviewed memory.",
+                "source": "README.md",
+                "confidence": 0.95,
+                "status": "verified",
+            }
+        ],
+        "decisions": [
+            {
+                "id": uuid.UUID("10000000-0000-4000-8000-000000000301"),
+                "decision": "Keep writeback reviewed.",
+                "rationale": "Unreviewed context should not become project truth.",
+                "status": "accepted",
+            }
+        ],
+        "risks": [
+            {
+                "id": uuid.UUID("10000000-0000-4000-8000-000000000401"),
+                "title": "Context drift",
+                "severity": "medium",
+                "impact": "Agents may act on stale assumptions.",
+                "mitigation": "Use prepare before scoped work.",
+                "status": "open",
+            }
+        ],
+        "open_questions": [
+            {
+                "id": uuid.UUID("10000000-0000-4000-8000-000000000501"),
+                "question": "Should release checks include Hub View smoke?",
+                "answer": None,
+                "status": "open",
+            }
+        ],
+        "reports": [],
+        "relations": [],
+    }
+
+
+def patch_prepare_dependencies(monkeypatch) -> None:
+    monkeypatch.setenv("DATABASE_URL", "postgresql://example.invalid/test")
+    monkeypatch.setattr(prepare_commands, "connect", lambda: FakePrepareConnection())
+    monkeypatch.setattr(
+        prepare_commands,
+        "fetch_project",
+        lambda _cur, _slug: fake_prepare_project(),
+    )
+    monkeypatch.setattr(
+        prepare_commands,
+        "fetch_compiled_payload",
+        lambda _cur, project, _limit: fake_prepare_compiled_payload(project),
+    )
+
+
+def test_prepare_markdown_outputs_task_specific_context(monkeypatch, capsys) -> None:
+    patch_prepare_dependencies(monkeypatch)
+
+    code = cli.main(
+        [
+            "prepare",
+            "--project",
+            "central-agent-data-hub",
+            "--task",
+            "review release v0.1.1",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "# Agent Context Pack" in captured.out
+    assert "- task: review release v0.1.1" in captured.out
+    assert "## Verified Project State" in captured.out
+    assert "## Relevant Decisions" in captured.out
+    assert "## Constraints" in captured.out
+    assert "## Risks" in captured.out
+    assert "## Open Questions" in captured.out
+    assert "## Allowed Actions" in captured.out
+    assert "## Requires Human Approval" in captured.out
+    assert "## Suggested Checks" in captured.out
+    assert "deployment or production changes" in captured.out
+    assert ".venv/bin/python -m pytest -q" in captured.out
+
+
+def test_prepare_json_output_is_stable(monkeypatch, capsys) -> None:
+    patch_prepare_dependencies(monkeypatch)
+
+    code = cli.main(
+        [
+            "prepare",
+            "--project",
+            "central-agent-data-hub",
+            "--task",
+            "review release v0.1.1",
+            "--format",
+            "json",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert '"task": "review release v0.1.1"' in captured.out
+    assert '"verified_project_state"' in captured.out
+    assert '"requires_human_approval"' in captured.out

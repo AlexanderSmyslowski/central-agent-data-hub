@@ -150,6 +150,15 @@ scripts/agent_start.sh --project <project-slug> --query "<current focus>" --revi
 scripts/agent_finish.sh --project <project-slug> --review
 ```
 
+For a task-specific read-only context pack:
+
+```bash
+agent-hub prepare --project <project-slug> --task "review release v0.1.1"
+```
+
+`prepare` turns reviewed memory into a concrete working brief for one task. It
+does not write memory, import signals, or make decisions.
+
 Write back only reviewed, non-sensitive memory:
 
 ```bash

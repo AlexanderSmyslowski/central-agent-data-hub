@@ -75,6 +75,18 @@ Hub memory into a short working brief: current state, decisions, risks, open
 questions, important relations, useful reports, and suggested next steps. Use
 `agent-hub context` only when a specific focus query needs extra retrieval.
 
+For a concrete task, use `prepare` to turn reviewed memory into a task-specific
+read-only context pack:
+
+```bash
+agent-hub prepare --project <project-slug> --task "<current task>"
+```
+
+`prepare` includes the task goal, verified project state, relevant decisions,
+constraints, risks, open questions, allowed actions, actions that require human
+approval, and suggested checks. It does not write memory or promote Signal Inbox
+content.
+
 Useful compile variants:
 
 ```bash

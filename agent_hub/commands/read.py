@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from agent_hub.commands.briefs import run_brief
+from agent_hub.commands.prepare import run_prepare
 from agent_hub.commands.quality_views import run_actions, run_quality, run_receipt
 from agent_hub.commands.search import run_context, run_search
 from agent_hub.commands.summaries import (
@@ -23,6 +24,7 @@ __all__ = [
     "run_context",
     "run_daily",
     "run_handoff",
+    "run_prepare",
     "run_quality",
     "run_receipt",
     "run_review",

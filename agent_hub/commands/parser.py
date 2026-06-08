@@ -11,6 +11,7 @@ from typing import Any
 from agent_hub.commands.common import confidence_value, positive_int
 from agent_hub.commands.graph import run_relate, run_relations
 from agent_hub.commands.briefs import run_brief
+from agent_hub.commands.prepare import run_prepare
 from agent_hub.commands.quality_views import run_actions, run_quality, run_receipt
 from agent_hub.commands.search import run_context, run_search
 from agent_hub.commands.summaries import (
@@ -290,6 +291,16 @@ def build_parser() -> argparse.ArgumentParser:
     add_limit_argument(context_parser, 8, "Maximum rows per context section.")
     add_format_argument(context_parser, ("markdown", "json"), "markdown")
     context_parser.set_defaults(func=run_context)
+
+    prepare_parser = subparsers.add_parser(
+        "prepare",
+        help="Build a task-specific read-only agent context pack.",
+    )
+    add_project_argument(prepare_parser)
+    prepare_parser.add_argument("--task", required=True, help="Concrete task focus.")
+    add_limit_argument(prepare_parser, 8, "Maximum rows per prepare section.")
+    add_format_argument(prepare_parser, ("markdown", "json"), "markdown")
+    prepare_parser.set_defaults(func=run_prepare)
 
     compile_parser = subparsers.add_parser(
         "compile",
