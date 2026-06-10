@@ -53,5 +53,5 @@ class SyncResult:
         return [
             item
             for item in self.planned
-            if item.get("action") in {"conflict", "reject", "error"}
+            if item.get("action") in {"ask", "conflict", "reject", "error"}
         ]

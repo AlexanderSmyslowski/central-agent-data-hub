@@ -16,7 +16,14 @@ from agent_hub.commands.common import (
 from agent_hub.db import connect
 from agent_hub.import_obsidian import import_markdown, sync_markdown
 from agent_hub.importing.models import SyncResult
-from agent_hub.memory import answer_question, remember, update_decision
+from agent_hub.memory import (
+    HumanReviewRequired,
+    answer_question,
+    remember,
+    remember_plan,
+    update_decision,
+)
+from agent_hub.writeback_routing import card_for_item
 
 
 def _write_result(project, agent, type_: str, row) -> dict:
@@ -51,7 +58,42 @@ def run_remember(args: argparse.Namespace) -> int:
     try:
         with connect() as conn:
             with conn.cursor() as cur:
+                if getattr(args, "dry_run", False):
+                    planned = remember_plan(cur, args, metadata)
+                    if args.format == "json":
+                        print(
+                            json.dumps(
+                                planned,
+                                indent=2,
+                                default=json_default,
+                                ensure_ascii=False,
+                            )
+                        )
+                    else:
+                        print(
+                            f"Planned {planned['type']} for project "
+                            f"'{planned['project']['slug']}'."
+                        )
+                        print(f"status: {planned['status'] or 'default'}")
+                        print(f"reason: {planned['reason']}")
+                        print()
+                        print(planned["card"])
+                    return 0
                 project, agent, object_type, row = remember(cur, args, metadata)
+    except HumanReviewRequired as exc:
+        result = {
+            "tier": "ask",
+            "reason": exc.reason,
+            "card": card_for_item(exc.candidate),
+        }
+        if args.format == "json":
+            print(json.dumps(result, indent=2, default=json_default, ensure_ascii=False))
+        else:
+            print("Human review required.")
+            print(f"reason: {exc.reason}")
+            print()
+            print(result["card"])
+        return 1
     except Exception as exc:
         return exception_error(exc)
 
@@ -63,7 +105,7 @@ def run_remember(args: argparse.Namespace) -> int:
 
     print(
         f"Remembered {object_type} for project '{project['slug']}': "
-        f"{row['id']}"
+        f"{row['id']} ({row.get('status', 'unknown')})"
     )
     return 0
 
@@ -154,9 +196,10 @@ def run_import(args: argparse.Namespace) -> int:
         for row in rows:
             suffix = f" -> {row['id']}" if "id" in row else ""
             row_action = row.get("action", "import")
+            reason = f" ({row['reason']})" if row.get("reason") else ""
             print(
                 f"- {row_action} {row['type']} {row['project']}: "
-                f"{row['path']}{suffix}"
+                f"{row['path']}{suffix}{reason}"
             )
         if result.errors:
             print()
@@ -177,7 +220,7 @@ def print_sync_result(result: SyncResult) -> None:
         if row.get("diffs"):
             fields = ", ".join(diff["field"] for diff in row["diffs"])
             print(f"  fields: {fields}")
-            if row["action"] == "conflict":
+            if row["action"] in {"ask", "conflict"}:
                 print("  blocker: review required before sync --apply")
             for diff in row["diffs"]:
                 print(

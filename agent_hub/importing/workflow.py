@@ -42,7 +42,10 @@ def import_markdown(
             try:
                 item = normalize_import_item(file, allowlist)
                 planned = plan_import_item(cur, item, on_duplicate=on_duplicate)
-                if planned["action"] in {"error", "conflict", "reject"}:
+                if planned["action"] in {"ask", "error", "conflict", "reject"}:
+                    if dry_run:
+                        result.planned.append(planned)
+                        continue
                     result.errors.append(
                         {
                             "path": str(file),

@@ -8,7 +8,7 @@ usage() {
   cat <<'EOF'
 Usage: scripts/project_remember.sh --project <slug> --type <type> --text <text> [options]
 
-Safe writeback wrapper for reviewed, non-sensitive project memory. The project
+Review-routed wrapper for non-sensitive project memory candidates. The project
 must already exist; this wrapper never creates projects.
 
 Required:
@@ -37,7 +37,7 @@ Allowed options:
 
 Exit codes:
   0  remembered or dry-run passed
-  1  project, data, or writeback error
+  1  project, data, review, or write error
   2  usage, safety, or operational readiness error
 EOF
 }
@@ -195,11 +195,31 @@ if ! run_agent_hub brief --project "$PROJECT" --limit 4; then
 fi
 
 if [[ "$DRY_RUN" -eq 1 ]]; then
+  dry_run_command=(remember --project "$PROJECT" --type "$MEMORY_TYPE" --text "$TEXT_VALUE" --dry-run --format json)
+  if [[ "${#REMEMBER_ARGS[@]}" -gt 0 ]]; then
+    dry_run_command+=("${REMEMBER_ARGS[@]}")
+  fi
+  if ! dry_run_output="$(run_agent_hub "${dry_run_command[@]}")"; then
+    printf '%s\n' "$dry_run_output"
+    exit 1
+  fi
+  dry_run_summary="$(
+    printf '%s\n' "$dry_run_output" | "$PYTHON_BIN" -c '
+import json
+import sys
+
+payload = json.load(sys.stdin)
+print(f"Route:  {payload[\"tier\"]}")
+print(f"Status: {payload[\"status\"] or \"default\"}")
+print(f"Reason: {payload[\"reason\"]}")
+'
+  )"
   echo
-  echo "Dry run: writeback was not executed."
+  echo "Dry run: memory was not written."
   echo "Project: $PROJECT"
   echo "Type:    $MEMORY_TYPE"
   echo "Planned command: agent-hub remember --project '$PROJECT' --type '$MEMORY_TYPE' --text '<provided text>'"
+  printf '%s\n' "$dry_run_summary"
   echo "Quality gates:"
   if [[ "$MEMORY_TYPE" == "fact" ]]; then
     echo "- source: ok"
@@ -228,7 +248,10 @@ if [[ "${#REMEMBER_ARGS[@]}" -gt 0 ]]; then
 fi
 remember_command+=(--format json)
 
-remember_output="$(run_agent_hub "${remember_command[@]}")"
+if ! remember_output="$(run_agent_hub "${remember_command[@]}")"; then
+  printf '%s\n' "$remember_output"
+  exit 1
+fi
 
 object_type="$(
   printf '%s\n' "$remember_output" | "$PYTHON_BIN" -c '
@@ -248,9 +271,18 @@ payload = json.load(sys.stdin)
 print(payload["object"]["id"])
 '
 )"
+object_status="$(
+  printf '%s\n' "$remember_output" | "$PYTHON_BIN" -c '
+import json
+import sys
 
-echo "Remembered $object_type for project '$PROJECT': $object_id"
-echo "Project remember result: wrote reviewed memory"
+payload = json.load(sys.stdin)
+print(payload["object"].get("status", "unknown"))
+'
+)"
+
+echo "Remembered $object_type for project '$PROJECT': $object_id ($object_status)"
+echo "Project remember result: wrote memory candidate"
 
 if [[ -n "$RELATE_TO" ]]; then
   target_type="${RELATE_TO%%:*}"

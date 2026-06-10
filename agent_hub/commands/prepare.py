@@ -63,6 +63,7 @@ TASK_SELECTION_NOTE = (
     "open questions stay on a safety floor and are not filtered out by task text."
 )
 TASK_SELECTION_TIE_BREAKING = "task_score DESC, created_at DESC, id DESC"
+DRAFT_PREPARE_REASON = "included as unconfirmed draft"
 
 
 PREPARE_SPECS = {
@@ -110,10 +111,36 @@ def annotate_prepare_row(
     task_score: object | None = None,
 ) -> dict[str, object]:
     annotated = dict(row)
-    annotated["prepare_reason"] = reason
+    annotated["prepare_reason"] = (
+        DRAFT_PREPARE_REASON if row.get("status") == "draft" else reason
+    )
     if task_score is not None:
         annotated["task_score"] = float(task_score)
     return annotated
+
+
+def review_status(row: dict[str, object]) -> str:
+    return "draft" if row.get("status") == "draft" else "verified"
+
+
+def non_draft_rows(rows: list[dict[str, object]]) -> list[dict[str, object]]:
+    return [row for row in rows if review_status(row) != "draft"]
+
+
+def draft_rows_by_type(
+    compiled: dict[str, object],
+) -> dict[str, list[dict[str, object]]]:
+    return {
+        "facts": [row for row in compiled["facts"] if review_status(row) == "draft"],
+        "decisions": [
+            row for row in compiled["decisions"] if review_status(row) == "draft"
+        ],
+        "risks": [row for row in compiled["risks"] if review_status(row) == "draft"],
+        "open_questions": [
+            row for row in compiled["open_questions"] if review_status(row) == "draft"
+        ],
+        "reports": [row for row in compiled["reports"] if review_status(row) == "draft"],
+    }
 
 
 def merge_prepare_rows(
@@ -309,7 +336,13 @@ def build_context_trail(payload: dict[str, object]) -> dict[str, object]:
     included_counts = {}
     sources = []
     for payload_key, count_key, item_type in TRAIL_SOURCES:
-        rows = payload[payload_key]
+        rows = list(payload[payload_key])
+        draft_key = count_key
+        if count_key == "open questions":
+            draft_key = "open_questions"
+        drafts = payload.get("drafts_pending_review", {})
+        if isinstance(drafts, dict) and draft_key in drafts:
+            rows.extend(drafts[draft_key])
         included_counts[count_key] = len(rows)
         for row in rows:
             sources.append(
@@ -317,6 +350,9 @@ def build_context_trail(payload: dict[str, object]) -> dict[str, object]:
                     "type": item_type,
                     "id": row["id"],
                     "status": row.get("status", "not available"),
+                    "review_status": review_status(row)
+                    if item_type != "relation"
+                    else "not applicable",
                     "reason": row.get(
                         "prepare_reason",
                         "included by deterministic prepare selection",
@@ -345,24 +381,26 @@ def build_prepare_payload(
     task: str,
     compiled: dict[str, object],
 ) -> dict[str, object]:
+    drafts = draft_rows_by_type(compiled)
     payload = {
         "project": project,
         "task": task,
         "goal": task,
-        "verified_project_state": compiled["facts"],
-        "relevant_decisions": compiled["decisions"],
+        "verified_project_state": non_draft_rows(compiled["facts"]),
+        "relevant_decisions": non_draft_rows(compiled["decisions"]),
         "constraints": [
             "Use only reviewed, project-bound Hub memory as durable context.",
             "Treat Signal Inbox and triage output as suggestions until reviewed.",
             "Do not store secrets, credentials, private customer data, raw invoices, raw logs, or deployment secrets.",
             "PostgreSQL remains the reviewed source of truth; Hub View and Markdown exports are review surfaces.",
         ],
-        "risks": compiled["risks"],
-        "open_questions": unresolved_open_questions(compiled["open_questions"]),
+        "risks": non_draft_rows(compiled["risks"]),
+        "open_questions": unresolved_open_questions(non_draft_rows(compiled["open_questions"])),
         "allowed_actions": ALLOWED_ACTIONS,
         "requires_human_approval": HUMAN_APPROVAL_ACTIONS,
         "suggested_checks": SUGGESTED_CHECKS,
-        "reports": compiled["reports"],
+        "reports": non_draft_rows(compiled["reports"]),
+        "drafts_pending_review": drafts,
         "relations": compiled["relations"],
     }
     payload["context_trail"] = build_context_trail(payload)
@@ -398,6 +436,7 @@ def context_trail_markdown(trail: dict[str, object]) -> str:
                 [
                     f"- {source['type']}:{source['id']}",
                     f"  status: {source['status']}",
+                    f"  review_status: {source['review_status']}",
                     f"  reason: {source['reason']}",
                 ]
             )
@@ -419,6 +458,26 @@ def context_trail_markdown(trail: dict[str, object]) -> str:
         ]
     )
     return "\n".join(lines)
+
+
+def draft_section_markdown(drafts: dict[str, list[dict[str, object]]]) -> str:
+    sections = [
+        ("Facts", drafts.get("facts", []), "statement", ("source", "confidence")),
+        ("Decisions", drafts.get("decisions", []), "decision", ("rationale",)),
+        ("Risks", drafts.get("risks", []), "title", ("severity", "impact", "mitigation")),
+        ("Open Questions", drafts.get("open_questions", []), "question", ("answer",)),
+        ("Reports", drafts.get("reports", []), "title", ("report_type", "summary")),
+    ]
+    if not any(rows for _title, rows, _primary, _extra in sections):
+        return "- none"
+    lines: list[str] = []
+    for title, rows, primary, extras in sections:
+        if not rows:
+            continue
+        lines.append(f"### {title}")
+        lines.append(markdown_list(rows, primary, extras))
+        lines.append("")
+    return "\n".join(lines).rstrip()
 
 
 def prepare_markdown(payload: dict[str, object]) -> str:
@@ -447,6 +506,9 @@ def prepare_markdown(payload: dict[str, object]) -> str:
             "",
             "## Open Questions",
             markdown_list(payload["open_questions"], "question", ("answer",)),
+            "",
+            "## Drafts Pending Review",
+            draft_section_markdown(payload["drafts_pending_review"]),
             "",
             "## Allowed Actions",
             simple_list(payload["allowed_actions"]),

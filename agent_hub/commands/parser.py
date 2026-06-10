@@ -11,6 +11,7 @@ from typing import Any
 from agent_hub.commands.common import confidence_value, positive_int
 from agent_hub.commands.graph import run_relate, run_relations
 from agent_hub.commands.briefs import run_brief
+from agent_hub.commands.inbox import run_inbox
 from agent_hub.commands.prepare import run_prepare
 from agent_hub.commands.quality_views import run_actions, run_quality, run_receipt
 from agent_hub.commands.search import run_context, run_search
@@ -380,6 +381,48 @@ def build_parser() -> argparse.ArgumentParser:
     add_format_argument(actions_parser, ("text", "json", "markdown"), "text")
     actions_parser.set_defaults(func=run_actions)
 
+    inbox_parser = subparsers.add_parser(
+        "inbox",
+        help="List or review draft memory candidates.",
+    )
+    inbox_parser.add_argument(
+        "--project",
+        help="Optional project slug to inspect.",
+    )
+    add_limit_argument(
+        inbox_parser,
+        20,
+        "Maximum draft cards to list.",
+        arg_type=positive_int,
+    )
+    inbox_parser.add_argument(
+        "--agent",
+        default="codex",
+        help="Agent slug to attribute accept/reject actions to.",
+    )
+    inbox_parser.add_argument(
+        "--agent-name",
+        default="Codex",
+        help="Agent display name to attribute accept/reject actions to.",
+    )
+    review_group = inbox_parser.add_mutually_exclusive_group()
+    review_group.add_argument(
+        "--accept",
+        action="append",
+        type=uuid_value,
+        default=[],
+        help="Promote a draft by UUID; repeat for batch review.",
+    )
+    review_group.add_argument(
+        "--reject",
+        action="append",
+        type=uuid_value,
+        default=[],
+        help="Discard a draft by UUID; repeat for batch review.",
+    )
+    add_format_argument(inbox_parser, ("text", "json"), "text")
+    inbox_parser.set_defaults(func=run_inbox)
+
     relations_parser = subparsers.add_parser(
         "relations",
         help="List curated relations for a project graph.",
@@ -436,7 +479,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     remember_parser = subparsers.add_parser(
         "remember",
-        help="Store a reviewed fact, decision, question, risk, or report.",
+        help="Submit a routed fact, decision, question, risk, or report candidate.",
     )
     add_project_argument(
         remember_parser,
@@ -479,11 +522,16 @@ def build_parser() -> argparse.ArgumentParser:
     )
     remember_parser.add_argument(
         "--status",
-        help="Status override; defaults depend on the memory type.",
+        help="Requested status; unreviewed candidates may still be stored as draft.",
     )
     remember_parser.add_argument(
         "--source",
         help="Source path, URL, or short provenance note.",
+    )
+    remember_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show the deterministic review route without writing.",
     )
     add_metadata_argument(remember_parser)
     add_format_argument(remember_parser, ("text", "json"), "text")

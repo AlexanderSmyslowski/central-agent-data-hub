@@ -1,0 +1,261 @@
+"""Review inbox command for draft memory candidates."""
+
+from __future__ import annotations
+
+import argparse
+import json
+from typing import Any
+
+from agent_hub.commands.common import (
+    error,
+    exception_error,
+    json_default,
+    require_database_url,
+)
+from agent_hub.db import connect
+from agent_hub.memory import ensure_agent, log_agent_action
+from agent_hub.writeback_routing import card_for_item
+
+
+INBOX_TABLES = {
+    "fact": {
+        "table": "facts",
+        "columns": "memory.id, memory.project_id, memory.statement, memory.source, memory.confidence, memory.status, memory.metadata, memory.created_at, memory.updated_at",
+        "reviewed_status": "verified",
+    },
+    "decision": {
+        "table": "decisions",
+        "columns": "memory.id, memory.project_id, memory.decision, memory.rationale, memory.consequences, memory.status, memory.metadata, memory.created_at, memory.updated_at",
+        "reviewed_status": "accepted",
+    },
+    "risk": {
+        "table": "risks",
+        "columns": "memory.id, memory.project_id, memory.title, memory.severity, memory.impact, memory.mitigation, memory.status, memory.metadata, memory.created_at, memory.updated_at",
+        "reviewed_status": "open",
+    },
+    "open_question": {
+        "table": "open_questions",
+        "columns": "memory.id, memory.project_id, memory.question, memory.answer, memory.status, memory.metadata, memory.created_at, memory.updated_at",
+        "reviewed_status": "open",
+    },
+    "report": {
+        "table": "reports",
+        "columns": "memory.id, memory.project_id, memory.title, memory.report_type, memory.summary, memory.body, memory.status, memory.metadata, memory.created_at, memory.updated_at",
+        "reviewed_status": "published",
+    },
+}
+
+
+def row_sort_key(row: dict[str, Any]) -> tuple[str, str, str]:
+    return (
+        str(row.get("updated_at") or ""),
+        str(row.get("created_at") or ""),
+        str(row.get("id") or ""),
+    )
+
+
+def row_with_type(row: dict[str, Any], item_type: str) -> dict[str, Any]:
+    return {**row, "type": item_type}
+
+
+def fetch_drafts(
+    cur,
+    *,
+    project_slug: str | None = None,
+    limit: int = 20,
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for item_type, spec in INBOX_TABLES.items():
+        params: list[Any] = ["draft"]
+        project_filter = ""
+        if project_slug:
+            project_filter = "AND p.slug = %s"
+            params.append(project_slug)
+        params.append(limit)
+        cur.execute(
+            f"""
+            SELECT {spec['columns']}, p.slug AS project, p.name AS project_name
+            FROM {spec['table']} AS memory
+            JOIN projects AS p ON p.id = memory.project_id
+            WHERE memory.status = %s
+              {project_filter}
+            ORDER BY memory.updated_at DESC, memory.created_at DESC, memory.id DESC
+            LIMIT %s
+            """,
+            tuple(params),
+        )
+        rows.extend(row_with_type(row, item_type) for row in cur.fetchall())
+    rows.sort(key=row_sort_key, reverse=True)
+    return rows[:limit]
+
+
+def find_draft(
+    cur,
+    draft_id: str,
+    *,
+    project_slug: str | None = None,
+) -> dict[str, Any] | None:
+    matches: list[dict[str, Any]] = []
+    for item_type, spec in INBOX_TABLES.items():
+        params: list[Any] = [draft_id, "draft"]
+        project_filter = ""
+        if project_slug:
+            project_filter = "AND p.slug = %s"
+            params.append(project_slug)
+        cur.execute(
+            f"""
+            SELECT {spec['columns']}, p.slug AS project, p.name AS project_name
+            FROM {spec['table']} AS memory
+            JOIN projects AS p ON p.id = memory.project_id
+            WHERE memory.id = %s
+              AND memory.status = %s
+              {project_filter}
+            """,
+            tuple(params),
+        )
+        row = cur.fetchone()
+        if row:
+            matches.append(row_with_type(row, item_type))
+    if len(matches) > 1:
+        raise ValueError(f"draft id is ambiguous across memory types: {draft_id}")
+    return matches[0] if matches else None
+
+
+def review_draft(
+    cur,
+    row: dict[str, Any],
+    *,
+    decision: str,
+    agent_slug: str,
+    agent_name: str,
+) -> dict[str, Any]:
+    item_type = row["type"]
+    spec = INBOX_TABLES[item_type]
+    table = spec["table"]
+    next_status = spec["reviewed_status"] if decision == "accept" else "archived"
+    metadata = dict(row.get("metadata") or {})
+    metadata["agent_hub_review"] = {
+        "decision": decision,
+        "previous_status": row["status"],
+        "next_status": next_status,
+    }
+    cur.execute(
+        f"""
+        UPDATE {table}
+        SET status = %s,
+            metadata = %s::jsonb
+        WHERE id = %s
+          AND status = 'draft'
+        RETURNING id, status
+        """,
+        (next_status, json.dumps(metadata, default=json_default), row["id"]),
+    )
+    updated = cur.fetchone()
+    if not updated:
+        raise ValueError(f"draft disappeared before review: {row['id']}")
+
+    agent = ensure_agent(cur, row["project_id"], agent_slug, agent_name)
+    log_agent_action(
+        cur,
+        agent["id"],
+        f"inbox_{decision}",
+        item_type,
+        row["id"],
+        {
+            "command": "inbox",
+            "decision": decision,
+            "project": row["project"],
+        },
+        {
+            "project_id": row["project_id"],
+            "previous_status": row["status"],
+            "next_status": next_status,
+        },
+    )
+    return {
+        "id": str(row["id"]),
+        "project": row["project"],
+        "type": item_type,
+        "decision": decision,
+        "status": next_status,
+    }
+
+
+def print_draft_cards(rows: list[dict[str, Any]]) -> None:
+    if not rows:
+        print("No draft memory candidates.")
+        return
+    for row in rows:
+        print(f"{row['id']} [{row['project']} / {row['type']}]")
+        print(card_for_item(row))
+        print()
+
+
+def run_inbox(args: argparse.Namespace) -> int:
+    if error_code := require_database_url():
+        return error_code
+
+    review_ids = args.accept or args.reject
+    decision = "accept" if args.accept else "reject" if args.reject else None
+
+    try:
+        with connect() as conn:
+            with conn.cursor() as cur:
+                if not review_ids:
+                    rows = fetch_drafts(
+                        cur,
+                        project_slug=args.project,
+                        limit=args.limit,
+                    )
+                    if args.format == "json":
+                        payload = [{**row, "card": card_for_item(row)} for row in rows]
+                        print(
+                            json.dumps(
+                                payload,
+                                indent=2,
+                                default=json_default,
+                                ensure_ascii=False,
+                            )
+                        )
+                    else:
+                        print_draft_cards(rows)
+                    return 0
+
+                reviewed = []
+                missing = []
+                for draft_id in review_ids:
+                    row = find_draft(cur, draft_id, project_slug=args.project)
+                    if not row:
+                        missing.append(str(draft_id))
+                        continue
+                    reviewed.append(
+                        review_draft(
+                            cur,
+                            row,
+                            decision=decision or "reject",
+                            agent_slug=args.agent,
+                            agent_name=args.agent_name,
+                        )
+                    )
+    except Exception as exc:
+        return exception_error(exc)
+
+    if args.format == "json":
+        print(
+            json.dumps(
+                {"reviewed": reviewed, "missing": missing},
+                indent=2,
+                default=json_default,
+                ensure_ascii=False,
+            )
+        )
+    else:
+        for row in reviewed:
+            print(
+                f"{row['decision']} {row['type']} {row['project']}: "
+                f"{row['id']} -> {row['status']}"
+            )
+        for draft_id in missing:
+            print(f"missing draft: {draft_id}")
+
+    return error("some draft ids were not found", 1) if missing else 0

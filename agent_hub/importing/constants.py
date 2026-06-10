@@ -52,10 +52,10 @@ FIELD_OWNERS = {
 }
 
 STATUS_VALUES = {
-    "fact": {"proposed", "verified", "disputed", "deprecated", "archived"},
-    "decision": {"proposed", "accepted", "rejected", "superseded", "archived"},
-    "open_question": {"open", "answered", "deferred", "closed", "archived"},
-    "risk": {"open", "mitigating", "accepted", "resolved", "archived"},
+    "fact": {"draft", "proposed", "verified", "disputed", "deprecated", "archived"},
+    "decision": {"draft", "proposed", "accepted", "rejected", "superseded", "archived"},
+    "open_question": {"draft", "open", "answered", "deferred", "closed", "archived"},
+    "risk": {"draft", "open", "mitigating", "accepted", "resolved", "archived"},
     "report": {"draft", "published", "superseded", "archived"},
 }
 

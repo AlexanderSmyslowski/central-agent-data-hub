@@ -159,12 +159,13 @@ agent-hub prepare --project <project-slug> --task "review release v0.1.1"
 `prepare` turns reviewed memory into a concrete working brief for one task. It
 does not write memory, import signals, or make decisions. The output includes a
 Context Trail that lists included source item counts, IDs, status, task scores,
-and inclusion reasons. `--task` ranks facts, decisions, and reports with
-deterministic PostgreSQL full-text search, then fills with recent reviewed
-context. Active risks and open questions remain on a safety floor and are not
-filtered out by task text.
+review status, and inclusion reasons. Drafts may appear in a separate review
+section, clearly marked as unconfirmed. `--task` ranks facts, decisions, and
+reports with deterministic PostgreSQL full-text search, then fills with recent
+reviewed context. Active risks and open questions remain on a safety floor and
+are not filtered out by task text.
 
-Write back only reviewed, non-sensitive memory:
+Submit only sourced, non-sensitive memory candidates:
 
 ```bash
 scripts/project_remember.sh \
@@ -173,6 +174,31 @@ scripts/project_remember.sh \
   --text "Reviewed project memory goes here." \
   --source "non-sensitive source"
 ```
+
+The wrapper applies the same routing as the CLI. Ordinary candidates become
+drafts; sensitive or contradictory candidates require review first.
+
+## Drafts and Review Inbox
+
+New memory candidates are routed before they touch reviewed memory:
+
+- `auto`: reversible evidence such as receipts, audit records, or same-source
+  refreshes of an existing reviewed item
+- `ask`: money amounts, secret or credential patterns, customer-data hints,
+  deletion intent, or contradictions with existing reviewed memory
+- `draft`: ordinary unreviewed candidates
+
+Drafts are stored with status `draft` and remain outside reviewed memory until a
+human explicitly accepts them:
+
+```bash
+agent-hub inbox
+agent-hub inbox --accept <draft-id>
+agent-hub inbox --reject <draft-id>
+```
+
+There is no time-based auto-accept and no silent promotion from draft to
+reviewed memory.
 
 If something useful does not fit an existing category, record a structure
 question instead of forcing it into the wrong type:

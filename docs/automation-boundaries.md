@@ -25,6 +25,16 @@ already reviewed state:
 Automatic actions must not create new reviewed claims. They may fail loudly,
 write local projections, or produce audit evidence.
 
+The only write candidates that may use the automatic route are reversible
+evidence with strong provenance:
+
+- receipts
+- audit records
+- same-source refreshes of an existing reviewed item
+
+Automatic routing records a reason string. It must not silently turn an
+ordinary new claim into reviewed memory.
+
 ### Suggested
 
 These actions may produce recommendations, but not reviewed Hub writes:
@@ -41,6 +51,9 @@ Suggested actions should show the evidence, uncertainty, likely memory type,
 and recommended next step. They should be treated as triage output, not as Hub
 truth.
 
+Ordinary unreviewed candidates may be stored as `draft`. A draft is visible to
+`agent-hub prepare` and `agent-hub inbox`, but it is not reviewed memory.
+
 ### Reviewed
 
 These actions may write to PostgreSQL only after review:
@@ -56,6 +69,37 @@ These actions may write to PostgreSQL only after review:
 Reviewed writeback needs a project boundary, clear source, correct memory type,
 non-sensitive content, and durable value for future work. Use `--dry-run` first
 when there is any doubt.
+
+Draft promotion is a reviewed action. It happens only through an explicit review
+step such as:
+
+```bash
+agent-hub inbox --accept <draft-id>
+```
+
+Rejecting a draft is also explicit and audited:
+
+```bash
+agent-hub inbox --reject <draft-id>
+```
+
+There is no time-based auto-accept and no silent promotion from draft to
+reviewed memory.
+
+### Human Review Required
+
+Some candidates are not written as drafts until a human looks at them. The Hub
+routes these to `ask` when a deterministic rule sees:
+
+- money amounts
+- secret or credential patterns
+- customer-data hints
+- deletion intent
+- contradiction with existing reviewed memory for the same identity
+
+Each `ask` decision carries a reason string and should be shown in plain
+language: what would be remembered, the source, and the consequence if it is
+wrong.
 
 ### Requires Explicit Human Approval
 

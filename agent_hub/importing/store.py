@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 import json
 from typing import Any
 
@@ -17,6 +18,16 @@ from agent_hub.importing.identity import (
     row_values,
 )
 from agent_hub.importing.models import ImportItem
+from agent_hub.writeback_routing import route_candidate
+
+
+DRAFT_STATUSES = {
+    "fact": "draft",
+    "decision": "draft",
+    "open_question": "draft",
+    "risk": "draft",
+    "report": "draft",
+}
 
 def fetch_project(cur, project_slug: str) -> dict[str, Any]:
     cur.execute("SELECT id, name, slug FROM projects WHERE slug = %s", (project_slug,))
@@ -79,10 +90,34 @@ def log_import_action(
     )
 
 
-def insert_import_item(cur, item: ImportItem) -> dict[str, Any]:
+def route_metadata(planned: dict[str, Any]) -> dict[str, str]:
+    return {
+        "tier": str(planned.get("tier") or planned.get("action") or "unknown"),
+        "reason": str(planned.get("reason") or "not recorded"),
+    }
+
+
+def item_for_planned_status(item: ImportItem, planned: dict[str, Any]) -> ImportItem:
+    status = planned.get("status")
+    if not status:
+        return item
+    data = dict(item.data)
+    data["status"] = status
+    return replace(item, data=data)
+
+
+def insert_import_item(
+    cur,
+    item: ImportItem,
+    planned: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    if planned:
+        item = item_for_planned_status(item, planned)
     project = fetch_project(cur, item.project_slug)
     agent = ensure_import_agent(cur, project["id"])
     metadata = import_metadata(item)
+    if planned:
+        metadata["agent_hub_writeback"] = route_metadata(planned)
 
     if item.memory_type == "fact":
         cur.execute(
@@ -194,6 +229,9 @@ def insert_import_item(cur, item: ImportItem) -> dict[str, Any]:
         "type": object_type,
         "id": str(row["id"]),
         "import_key": item.import_key,
+        "status": item.data.get("status"),
+        "tier": planned.get("tier") if planned else None,
+        "reason": planned.get("reason") if planned else None,
     }
 
 
@@ -244,9 +282,20 @@ def plan_import_item(
         "import_key": item.import_key,
     }
     if not existing:
-        return {**base, "action": "create"}
+        tier, reason = route_candidate(item, [])
+        if tier == "ask":
+            return {**base, "action": "ask", "tier": tier, "reason": reason}
+        planned = {**base, "action": "create", "tier": tier, "reason": reason}
+        if tier == "draft":
+            planned["status"] = DRAFT_STATUSES[item.memory_type]
+        return planned
 
     base["id"] = str(existing["id"])
+    existing_for_route = {**existing, "type": item.memory_type}
+    tier, route_reason = route_candidate(item, [existing_for_route])
+    if tier == "ask":
+        return {**base, "action": "ask", "tier": tier, "reason": route_reason}
+
     if on_duplicate == "error":
         return {**base, "action": "error", "reason": "duplicate import target"}
     if on_duplicate == "skip":
@@ -297,7 +346,21 @@ def plan_import_item(
             "diffs": diffs,
             "conflicting_fields": conflicting_fields,
         }
-    return {**base, "action": "update", "diffs": diffs}
+    if tier != "auto":
+        return {
+            **base,
+            "action": "ask",
+            "tier": "ask",
+            "reason": "needs human review before changing existing memory",
+            "diffs": diffs,
+        }
+    return {
+        **base,
+        "action": "update",
+        "tier": tier,
+        "reason": route_reason,
+        "diffs": diffs,
+    }
 
 
 def update_import_item(
@@ -311,10 +374,13 @@ def update_import_item(
     if not existing:
         raise NotFoundError(f"Import target disappeared: {item.import_key}")
 
+    if planned.get("status"):
+        item = item_for_planned_status(item, planned)
     values = item_values(item)
     columns = list(values)
     set_clause = ", ".join([f"{column} = %s" for column in columns])
     metadata = import_metadata(item, existing.get("metadata") or {})
+    metadata["agent_hub_writeback"] = route_metadata(planned)
     params = [values[column] for column in columns]
     params.extend([json.dumps(metadata, default=json_default), existing["id"]])
     table = TYPE_TABLES[item.memory_type]
@@ -352,7 +418,7 @@ def update_import_item(
 
 def apply_import_item(cur, item: ImportItem, planned: dict[str, Any]) -> dict[str, Any]:
     if planned["action"] == "create":
-        return insert_import_item(cur, item)
+        return insert_import_item(cur, item, planned)
     if planned["action"] == "update":
         return update_import_item(cur, item, planned)
     return planned

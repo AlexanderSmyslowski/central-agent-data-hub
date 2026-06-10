@@ -3,10 +3,18 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 
 from agent_hub.errors import NotFoundError
+from agent_hub.importing.constants import TYPE_COLUMNS, TYPE_TABLES
 from agent_hub.rendering import truncate
+from agent_hub.writeback_routing import (
+    card_for_item,
+    candidate_type,
+    identity_value,
+    route_candidate,
+)
 
 REMEMBER_TYPES = (
     "fact",
@@ -15,6 +23,23 @@ REMEMBER_TYPES = (
     "risk",
     "report",
 )
+
+DRAFT_STATUSES = {
+    "fact": "draft",
+    "decision": "draft",
+    "open_question": "draft",
+    "risk": "draft",
+    "report": "draft",
+}
+
+
+class HumanReviewRequired(Exception):
+    """Raised when a memory candidate needs explicit human review first."""
+
+    def __init__(self, candidate: dict[str, object], reason: str) -> None:
+        self.candidate = candidate
+        self.reason = reason
+        super().__init__(reason)
 
 
 def json_default(value: object) -> str:
@@ -54,6 +79,18 @@ def ensure_project(cur, args: argparse.Namespace) -> dict[str, object]:
             args.project_description,
             json.dumps({"created_by": "agent-hub remember"}),
         ),
+    )
+    return cur.fetchone()
+
+
+def fetch_project(cur, slug: str) -> dict[str, object] | None:
+    cur.execute(
+        """
+        SELECT id, name, slug, description, status, metadata, created_at, updated_at
+        FROM projects
+        WHERE slug = %s
+        """,
+        (slug,),
     )
     return cur.fetchone()
 
@@ -108,6 +145,175 @@ def log_agent_action(
             json.dumps({"created_by": "agent-hub remember"}),
         ),
     )
+
+
+def memory_type_to_object_type(value: str) -> str:
+    return value.replace("-", "_")
+
+
+def candidate_from_args(
+    args: argparse.Namespace,
+    metadata: dict[str, object],
+) -> dict[str, object]:
+    object_type = memory_type_to_object_type(args.memory_type)
+    candidate: dict[str, object] = {
+        "type": object_type,
+        "text": args.text,
+        "source": args.source,
+        "status": args.status,
+        "metadata": metadata,
+    }
+    if object_type == "fact":
+        candidate.update(
+            {
+                "statement": args.text,
+                "confidence": getattr(args, "confidence", None),
+            }
+        )
+    elif object_type == "decision":
+        candidate.update(
+            {
+                "decision": args.text,
+                "rationale": getattr(args, "rationale", None),
+                "consequences": getattr(args, "consequences", None),
+            }
+        )
+    elif object_type == "open_question":
+        candidate.update(
+            {
+                "question": args.text,
+                "answer": getattr(args, "answer", None),
+            }
+        )
+    elif object_type == "risk":
+        candidate.update(
+            {
+                "title": args.text,
+                "severity": getattr(args, "severity", None),
+                "impact": getattr(args, "impact", None),
+                "mitigation": getattr(args, "mitigation", None),
+            }
+        )
+    elif object_type == "report":
+        candidate.update(
+            {
+                "title": getattr(args, "title", None) or truncate(args.text, 80),
+                "report_type": getattr(args, "report_type", None),
+                "summary": getattr(args, "summary", None),
+                "body": getattr(args, "body", None) or args.text,
+            }
+        )
+    for key in ("import_key", "identity"):
+        if key in metadata:
+            candidate[key] = metadata[key]
+    return candidate
+
+
+def fetch_existing_memory(
+    cur,
+    project_id: object,
+    candidate: dict[str, object],
+) -> list[dict[str, object]]:
+    item_type = candidate_type(candidate)
+    item_identity = identity_value(candidate)
+    if not item_identity or item_type not in TYPE_TABLES:
+        return []
+
+    table = TYPE_TABLES[item_type]
+    columns = ", ".join(TYPE_COLUMNS[item_type])
+    cur.execute(
+        f"""
+        SELECT id, project_id, metadata, updated_at, {columns}
+        FROM {table}
+        WHERE project_id = %s
+          AND (
+            id::text = %s
+            OR metadata #>> '{{agent_hub_import,import_key}}' = %s
+            OR metadata #>> '{{agent_hub_writeback,identity}}' = %s
+            OR metadata ->> 'import_key' = %s
+            OR metadata ->> 'identity' = %s
+          )
+        ORDER BY updated_at DESC, id DESC
+        """,
+        (
+            project_id,
+            item_identity,
+            item_identity,
+            item_identity,
+            item_identity,
+            item_identity,
+        ),
+    )
+    rows = []
+    for row in cur.fetchall():
+        rows.append({**row, "type": item_type})
+    return rows
+
+
+def route_remember_candidate(
+    cur,
+    project: dict[str, object] | None,
+    args: argparse.Namespace,
+    metadata: dict[str, object],
+) -> tuple[dict[str, object], str, str]:
+    candidate = candidate_from_args(args, metadata)
+    tier, reason = route_candidate(candidate, [])
+    if tier == "ask":
+        raise HumanReviewRequired(candidate, reason)
+    existing = fetch_existing_memory(cur, project["id"], candidate) if project else []
+    tier, reason = route_candidate(candidate, existing)
+    if tier == "ask":
+        raise HumanReviewRequired(candidate, reason)
+    return candidate, tier, reason
+
+
+def remember_plan(
+    cur,
+    args: argparse.Namespace,
+    metadata: dict[str, object],
+) -> dict[str, object]:
+    project = fetch_project(cur, args.project)
+    if not project:
+        if getattr(args, "create_project", False):
+            candidate = candidate_from_args(args, metadata)
+            tier, reason = route_candidate(candidate, [])
+            if tier == "ask":
+                raise HumanReviewRequired(candidate, reason)
+            object_type = memory_type_to_object_type(args.memory_type)
+            status = DRAFT_STATUSES[object_type] if tier == "draft" else args.status
+            return {
+                "project": {
+                    "id": None,
+                    "slug": args.project,
+                    "name": args.project_name or args.project.replace("-", " ").title(),
+                },
+                "type": object_type,
+                "tier": tier,
+                "reason": reason,
+                "status": status,
+                "card": card_for_item(candidate),
+            }
+        raise NotFoundError(
+            f"Project '{args.project}' not found. "
+            "Use --create-project to create it explicitly."
+        )
+    candidate, tier, reason = route_remember_candidate(cur, project, args, metadata)
+    object_type = memory_type_to_object_type(args.memory_type)
+    status = getattr(args, "status", None)
+    if tier == "draft":
+        status = DRAFT_STATUSES[object_type]
+    return {
+        "project": {
+            "id": project["id"],
+            "slug": project["slug"],
+            "name": project["name"],
+        },
+        "type": object_type,
+        "tier": tier,
+        "reason": reason,
+        "status": status,
+        "card": card_for_item(candidate),
+    }
 
 
 def insert_fact(
@@ -248,10 +454,22 @@ REMEMBER_INSERTS = {
 def remember(
     cur, args: argparse.Namespace, metadata: dict[str, object]
 ) -> tuple[dict[str, object], dict[str, object], str, dict[str, object]]:
+    route_remember_candidate(cur, None, args, metadata)
     project = ensure_project(cur, args)
+    _candidate, tier, reason = route_remember_candidate(cur, project, args, metadata)
+    metadata = dict(metadata)
+    metadata["agent_hub_writeback"] = {
+        "tier": tier,
+        "reason": reason,
+        "original_status": args.status,
+    }
+    write_args = copy.copy(args)
+    object_type = memory_type_to_object_type(args.memory_type)
+    if tier == "draft":
+        write_args.status = DRAFT_STATUSES[object_type]
     agent = ensure_agent(cur, project["id"], args.agent, args.agent_name)
     insert_func = REMEMBER_INSERTS[args.memory_type]
-    object_type, row = insert_func(cur, project["id"], args, metadata)
+    object_type, row = insert_func(cur, project["id"], write_args, metadata)
     log_agent_action(
         cur,
         agent["id"],
@@ -264,7 +482,12 @@ def remember(
             "type": args.memory_type,
             "source": args.source,
         },
-        {"project_id": project["id"], "object": row},
+        {
+            "project_id": project["id"],
+            "object": row,
+            "writeback_tier": tier,
+            "writeback_reason": reason,
+        },
     )
     return project, agent, object_type, row
 
