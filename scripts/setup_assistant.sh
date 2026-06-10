@@ -188,7 +188,11 @@ if [[ "$DRY_RUN" -eq 1 ]]; then
   fi
   if [[ "$HUB_VIEW_CHOICE" == "yes" ]]; then
     has_next_steps=1
-    echo "  scripts/hub_view.sh"
+    if [[ "$PUBLIC_DEMO_CHOICE" == "yes" ]]; then
+      echo "  AGENT_HUB_PUBLIC_DEMO=1 scripts/hub_view.sh"
+    else
+      echo "  scripts/hub_view.sh"
+    fi
   fi
   if [[ "$SIGNAL_INBOX_CHOICE" == "yes" ]]; then
     has_next_steps=1
@@ -256,7 +260,11 @@ if [[ "$PUBLIC_DEMO_CHOICE" == "yes" ]]; then
 fi
 if [[ "$HUB_VIEW_CHOICE" == "yes" ]]; then
   has_next_steps=1
-  echo "  scripts/hub_view.sh"
+  if [[ "$PUBLIC_DEMO_CHOICE" == "yes" ]]; then
+    echo "  AGENT_HUB_PUBLIC_DEMO=1 scripts/hub_view.sh"
+  else
+    echo "  scripts/hub_view.sh"
+  fi
 fi
 if [[ "$REGISTER_PROJECT_CHOICE" == "yes" ]]; then
   has_next_steps=1

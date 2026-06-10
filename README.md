@@ -127,6 +127,10 @@ scripts/setup_assistant.sh
 scripts/db_start_public_demo.sh
 ```
 
+This path forces a separate local demo database (`agent_hub_demo` by default).
+It ignores `DATABASE_URL` from `.env` for the demo process so a maintainer's
+configured working database cannot be migrated or seeded by a public demo start.
+
 3. Run the end-to-end demo smoke:
 
 ```bash
@@ -136,7 +140,7 @@ scripts/smoke_public_demo.sh
 4. Start the local review UI:
 
 ```bash
-scripts/hub_view.sh
+AGENT_HUB_PUBLIC_DEMO=1 scripts/hub_view.sh
 ```
 
 Hub View is a local review surface, not the operational source of truth.
@@ -289,8 +293,14 @@ This repository now has two deliberately separate startup paths:
 - `scripts/db_start.sh`: maintainer local ops path
 
 The public path is the recommended first experience for outside developers.
+It forces its own local demo database name, container, volume, and port
+(`agent_hub_demo`, `central-agent-data-hub-demo-postgres`,
+`central-agent-data-hub-demo-pgdata`, and `55434` by default), and it refuses to
+run if the effective target is not the demo database. `DATABASE_URL` in `.env`
+is intentionally ignored by that path.
+
 The maintainer path exists for the operator's own daily work and seeds real
-local working data.
+local working data. It continues to use the configured `.env` database.
 
 ## Further Reading
 

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+export AGENT_HUB_PUBLIC_DEMO=1
+
 # shellcheck disable=SC1091
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/db_common.sh"
 
@@ -38,7 +40,7 @@ if [[ ! -f "$demo_compiled_export" ]]; then
   exit 1
 fi
 
-"$ROOT_DIR/scripts/hub_view.sh" --host 127.0.0.1 --port "$hub_view_smoke_port" \
+AGENT_HUB_PUBLIC_DEMO=1 "$ROOT_DIR/scripts/hub_view.sh" --host 127.0.0.1 --port "$hub_view_smoke_port" \
   >"$hub_view_log" 2>&1 &
 hub_view_pid="$!"
 

@@ -5,6 +5,12 @@ COMPOSE_FILE="$ROOT_DIR/docker-compose.yml"
 COMPOSE_PROJECT_NAME="${AGENT_HUB_COMPOSE_PROJECT_NAME:-central-agent-data-hub}"
 AGENT_HUB_DOCKER_TIMEOUT_SECONDS="${AGENT_HUB_DOCKER_TIMEOUT_SECONDS:-15}"
 AGENT_HUB_DB_READY_TIMEOUT_SECONDS="${AGENT_HUB_DB_READY_TIMEOUT_SECONDS:-5}"
+PUBLIC_DEMO_REQUESTED="${AGENT_HUB_PUBLIC_DEMO:-0}"
+PUBLIC_DEMO_COMPOSE_PROJECT_NAME="${AGENT_HUB_COMPOSE_PROJECT_NAME:-central-agent-data-hub-demo}"
+PUBLIC_DEMO_DB_CONTAINER="${AGENT_HUB_DB_CONTAINER:-central-agent-data-hub-demo-postgres}"
+PUBLIC_DEMO_DB_VOLUME="${AGENT_HUB_DB_VOLUME:-central-agent-data-hub-demo-pgdata}"
+PUBLIC_DEMO_DB_NAME="${AGENT_HUB_DB_NAME:-agent_hub_demo}"
+PUBLIC_DEMO_DB_PORT="${AGENT_HUB_DB_PORT:-55434}"
 COMMON_GIT_DIR="$(git -C "$ROOT_DIR" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)"
 SHARED_ROOT="$ROOT_DIR"
 if [[ -n "$COMMON_GIT_DIR" ]]; then
@@ -42,6 +48,62 @@ export POSTGRES_PASSWORD
 export DATABASE_URL="${DATABASE_URL:-$DEFAULT_DATABASE_URL}"
 export OBSIDIAN_EXPORT_DIR="${OBSIDIAN_EXPORT_DIR:-$SHARED_ROOT/.local/obsidian-export}"
 export AGENT_HUB_BACKUP_DIR="${AGENT_HUB_BACKUP_DIR:-$SHARED_ROOT/.local/backups}"
+
+mask_database_url() {
+  local url="$1"
+  printf '%s\n' "$url" | sed -E 's#(://[^:/@]+):[^@]*@#\1:***@#'
+}
+
+database_name_from_url() {
+  local url_without_query="${1%%\?*}"
+  local path="${url_without_query##*/}"
+  printf '%s\n' "$path"
+}
+
+configure_public_demo_database() {
+  COMPOSE_PROJECT_NAME="$PUBLIC_DEMO_COMPOSE_PROJECT_NAME"
+  DB_CONTAINER="$PUBLIC_DEMO_DB_CONTAINER"
+  DB_VOLUME="$PUBLIC_DEMO_DB_VOLUME"
+  DB_NAME="$PUBLIC_DEMO_DB_NAME"
+  DB_PORT="$PUBLIC_DEMO_DB_PORT"
+  DEFAULT_DATABASE_URL="postgresql://${DB_USER}:${POSTGRES_PASSWORD}@localhost:${DB_PORT}/${DB_NAME}"
+  DISPLAY_DATABASE_URL="postgresql://${DB_USER}:***@localhost:${DB_PORT}/${DB_NAME}"
+
+  export AGENT_HUB_COMPOSE_PROJECT_NAME="$COMPOSE_PROJECT_NAME"
+  export AGENT_HUB_DB_CONTAINER="$DB_CONTAINER"
+  export AGENT_HUB_DB_VOLUME="$DB_VOLUME"
+  export AGENT_HUB_DB_NAME="$DB_NAME"
+  export AGENT_HUB_DB_PORT="$DB_PORT"
+  export DATABASE_URL="$DEFAULT_DATABASE_URL"
+}
+
+require_demo_database_target() {
+  local expected_db_name="$1"
+  local effective_url="$2"
+  local effective_db_name
+  effective_db_name="$(database_name_from_url "$effective_url")"
+
+  if [[ "$expected_db_name" != *demo* ]]; then
+    echo "Error: public demo path expects a demo database name containing 'demo'." >&2
+    echo "Expected demo database name: $expected_db_name" >&2
+    echo "Effective database name: $effective_db_name" >&2
+    echo "Effective URL: $(mask_database_url "$effective_url")" >&2
+    return 1
+  fi
+
+  if [[ "$effective_db_name" != "$expected_db_name" ]]; then
+    echo "Error: public demo path refused to use a non-demo target database." >&2
+    echo "Expected demo database name: $expected_db_name" >&2
+    echo "Effective database name: $effective_db_name" >&2
+    echo "Effective URL: $(mask_database_url "$effective_url")" >&2
+    return 1
+  fi
+}
+
+if [[ "$PUBLIC_DEMO_REQUESTED" == "1" ]]; then
+  configure_public_demo_database
+  require_demo_database_target "$DB_NAME" "$DATABASE_URL"
+fi
 
 case "$OBSIDIAN_EXPORT_DIR" in
   /*) ;;

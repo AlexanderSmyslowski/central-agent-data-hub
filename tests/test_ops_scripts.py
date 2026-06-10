@@ -1,3 +1,5 @@
+import os
+import subprocess
 from pathlib import Path
 
 
@@ -122,6 +124,11 @@ def test_schema_friction_wrapper_stores_marked_open_question() -> None:
 def test_public_demo_start_is_separate_from_maintainer_seed_path() -> None:
     script = read_script("scripts/db_start_public_demo.sh")
 
+    assert "AGENT_HUB_PUBLIC_DEMO=1" in script
+    assert "--dry-run" in script
+    assert "Database:  $DB_NAME" in script
+    assert 'echo "  scripts/smoke_public_demo.sh"' in script
+    assert 'echo "  AGENT_HUB_PUBLIC_DEMO=1 scripts/hub_view.sh"' in script
     assert 'apply_sql_file "seed/demo.sql"' in script
     assert 'run_agent_hub brief --project central-agent-data-hub-demo --limit 4' in script
     assert 'run_agent_hub compile --project central-agent-data-hub-demo --limit 4' in script
@@ -130,9 +137,67 @@ def test_public_demo_start_is_separate_from_maintainer_seed_path() -> None:
     assert 'apply_sql_file "seed/agentic_projects.sql"' not in script
 
 
+def test_public_demo_mode_forces_demo_database_when_database_url_is_set() -> None:
+    env = os.environ.copy()
+    env.pop("AGENT_HUB_DB_NAME", None)
+    env.pop("AGENT_HUB_DB_PORT", None)
+    env.pop("AGENT_HUB_DB_CONTAINER", None)
+    env.pop("AGENT_HUB_DB_VOLUME", None)
+    env.pop("AGENT_HUB_DB_USER", None)
+    env["DATABASE_URL"] = "postgresql://postgres:secret@localhost:55432/agent_hub"
+
+    result = subprocess.run(
+        ["bash", "scripts/db_start_public_demo.sh", "--dry-run"],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Database:  agent_hub_demo" in result.stdout
+    assert "URL:       postgresql://postgres:***@localhost:55434/agent_hub_demo" in result.stdout
+    assert "agent_hub\n" not in result.stdout
+    assert "Dry run only. No Docker, migration, or seed command was run." in result.stdout
+
+
+def test_public_demo_guard_refuses_non_demo_database_name() -> None:
+    env = os.environ.copy()
+    env["AGENT_HUB_DB_NAME"] = "agent_hub"
+    env.pop("AGENT_HUB_DB_USER", None)
+
+    result = subprocess.run(
+        ["bash", "scripts/db_start_public_demo.sh", "--dry-run"],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode != 0
+    assert "expects a demo database name containing 'demo'" in result.stderr
+    assert "Expected demo database name: agent_hub" in result.stderr
+    assert "Effective database name: agent_hub" in result.stderr
+    assert "postgresql://postgres:***@localhost" in result.stderr
+    assert "secret" not in result.stderr
+
+
+def test_public_demo_default_database_name_differs_from_ops_default() -> None:
+    common = read_script("scripts/db_common.sh")
+
+    assert 'PUBLIC_DEMO_DB_NAME="${AGENT_HUB_DB_NAME:-agent_hub_demo}"' in common
+    assert 'DB_NAME="${AGENT_HUB_DB_NAME:-agent_hub}"' in common
+    assert "require_demo_database_target" in common
+    assert "configure_public_demo_database" in common
+    assert "agent_hub_demo" != "agent_hub"
+
+
 def test_public_demo_smoke_verifies_demo_exports() -> None:
     script = read_script("scripts/smoke_public_demo.sh")
 
+    assert "AGENT_HUB_PUBLIC_DEMO=1" in script
     assert 'run_agent_hub brief --project central-agent-data-hub-demo --limit 4' in script
     assert 'run_agent_hub compile --project central-agent-data-hub-demo --limit 4' in script
     assert 'run_agent_hub quality --project central-agent-data-hub-demo' in script
@@ -141,6 +206,7 @@ def test_public_demo_smoke_verifies_demo_exports() -> None:
     assert 'Compiled/central-agent-data-hub-demo.md' in script
     assert 'HUB_VIEW_SMOKE_PORT:-9876' in script
     assert 'scripts/hub_view.sh" --host 127.0.0.1 --port "$hub_view_smoke_port"' in script
+    assert 'AGENT_HUB_PUBLIC_DEMO=1 "$ROOT_DIR/scripts/hub_view.sh"' in script
     assert "urllib.request" in script
     assert "local review surface" in script
 

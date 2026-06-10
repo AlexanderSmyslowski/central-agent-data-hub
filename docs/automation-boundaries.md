@@ -99,6 +99,23 @@ Hub View review actions are guarded deliberately:
 - review buttons are disabled when Hub View is not bound to loopback
 - there is no bulk accept and no silent promotion
 
+## Demo And Ops Database Boundary
+
+The public demo path and the maintainer local ops path are physically separate
+database targets.
+
+`scripts/db_start_public_demo.sh` forces a demo database identity for its own
+process: separate database name, container, volume, and port. It also overrides
+any `DATABASE_URL` loaded from `.env` and refuses to migrate or seed unless the
+effective target database is the demo database.
+
+`scripts/db_start.sh` is the maintainer local ops path. It intentionally uses
+the configured local database from `.env` and is the place for the operator's
+real working set.
+
+This keeps public onboarding scripts from writing into the maintainer's
+operational memory store.
+
 ### Human Review Required
 
 Some candidates are not written as drafts until a human looks at them. The Hub
