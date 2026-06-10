@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 import json
 
 from agent_hub.commands.common import (
@@ -13,6 +14,13 @@ from agent_hub.commands.common import (
     project_not_found,
 )
 from agent_hub.db import connect
+from agent_hub.gaps import (
+    DEFAULT_STALE_AFTER_DAYS,
+    collect_prepare_gaps,
+    fetch_pending_draft_counts,
+    known_gaps_markdown,
+)
+from agent_hub.quality import fetch_project_counts
 from agent_hub.relations import fetch_project_relations
 from agent_hub.rendering import markdown_list
 from agent_hub.statuses import (
@@ -329,6 +337,8 @@ def fetch_prepare_payload(
             cur, project_id=project_id, key="reports", task=task, limit=report_limit
         ),
         "relations": relations,
+        "active_counts": fetch_project_counts(cur, project_id),
+        "pending_draft_counts": fetch_pending_draft_counts(cur, project_id),
     }
 
 
@@ -361,7 +371,7 @@ def build_context_trail(payload: dict[str, object]) -> dict[str, object]:
                 }
             )
 
-    return {
+    trail = {
         "included_counts": included_counts,
         "sources": sources,
         "excluded": {
@@ -373,6 +383,10 @@ def build_context_trail(payload: dict[str, object]) -> dict[str, object]:
             "tie_breaking": TASK_SELECTION_TIE_BREAKING,
         },
     }
+    gaps = payload.get("gaps")
+    if isinstance(gaps, dict):
+        trail["gap_summary"] = gaps.get("summary", {})
+    return trail
 
 
 def build_prepare_payload(
@@ -380,8 +394,17 @@ def build_prepare_payload(
     project: dict[str, object],
     task: str,
     compiled: dict[str, object],
+    now: datetime | None = None,
+    stale_after_days: int = DEFAULT_STALE_AFTER_DAYS,
 ) -> dict[str, object]:
     drafts = draft_rows_by_type(compiled)
+    current_time = now or datetime.now(timezone.utc)
+    gaps = collect_prepare_gaps(
+        {**compiled, "drafts_pending_review": drafts},
+        task,
+        current_time,
+        stale_after_days=stale_after_days,
+    )
     payload = {
         "project": project,
         "task": task,
@@ -401,6 +424,7 @@ def build_prepare_payload(
         "suggested_checks": SUGGESTED_CHECKS,
         "reports": non_draft_rows(compiled["reports"]),
         "drafts_pending_review": drafts,
+        "gaps": gaps,
         "relations": compiled["relations"],
     }
     payload["context_trail"] = build_context_trail(payload)
@@ -418,6 +442,7 @@ def context_trail_markdown(trail: dict[str, object]) -> str:
     sources = trail["sources"]
     excluded = trail["excluded"]
     task_selection = trail["task_selection"]
+    gap_summary = trail.get("gap_summary", {})
 
     lines = [
         "Included:",
@@ -457,6 +482,26 @@ def context_trail_markdown(trail: dict[str, object]) -> str:
             f"- tie_breaking: {task_selection['tie_breaking']}",
         ]
     )
+    if isinstance(gap_summary, dict):
+        thresholds = gap_summary.get("thresholds", {})
+        stale_after_days = (
+            thresholds.get("stale_after_days")
+            if isinstance(thresholds, dict)
+            else None
+        )
+        lines.extend(
+            [
+                "",
+                "Gap Summary:",
+                f"- stale: {gap_summary.get('stale', 0)}",
+                f"- unanswered: {gap_summary.get('unanswered', 0)}",
+                f"- empty_types: {gap_summary.get('empty_types', 0)}",
+                f"- blind_spots: {gap_summary.get('blind_spots', 0)}",
+                f"- pending_drafts: {gap_summary.get('pending_drafts', 0)}",
+            ]
+        )
+        if stale_after_days is not None:
+            lines.append(f"- stale_after_days: {stale_after_days}")
     return "\n".join(lines)
 
 
@@ -521,6 +566,9 @@ def prepare_markdown(payload: dict[str, object]) -> str:
             "",
             "## Context Trail",
             context_trail_markdown(payload["context_trail"]),
+            "",
+            "## Known Gaps",
+            known_gaps_markdown(payload["gaps"]),
         ]
     )
 
@@ -543,6 +591,7 @@ def run_prepare(args: argparse.Namespace) -> int:
         project=project,
         task=args.task,
         compiled=compiled,
+        stale_after_days=args.stale_after_days,
     )
     if args.format == "json":
         print(json.dumps(payload, indent=2, default=json_default, ensure_ascii=False))

@@ -300,6 +300,12 @@ def build_parser() -> argparse.ArgumentParser:
     add_project_argument(prepare_parser)
     prepare_parser.add_argument("--task", required=True, help="Concrete task focus.")
     add_limit_argument(prepare_parser, 8, "Maximum rows per prepare section.")
+    prepare_parser.add_argument(
+        "--stale-after-days",
+        type=positive_int,
+        default=42,
+        help="Label reviewed items as stale only when older than this many days.",
+    )
     add_format_argument(prepare_parser, ("markdown", "json"), "markdown")
     prepare_parser.set_defaults(func=run_prepare)
 

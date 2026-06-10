@@ -91,6 +91,18 @@ with deterministic PostgreSQL full-text search, then fills with recent reviewed
 context. Active risks and open questions remain on a safety floor and are not
 filtered out by task text.
 
+`prepare` also reports Known Gaps. This makes the context pack more honest: the
+agent sees stale included items, old unanswered questions, empty memory types,
+task areas with no reviewed match, and draft counts waiting for review. The
+stale threshold is visible in the output and defaults to 42 days:
+
+```bash
+agent-hub prepare --project <project-slug> --task "<current task>" --stale-after-days 42
+```
+
+Stale is only a label in the output. It does not demote a reviewed item, change
+status, trigger re-review, or write anything to PostgreSQL.
+
 Useful compile variants:
 
 ```bash
