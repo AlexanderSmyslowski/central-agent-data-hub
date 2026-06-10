@@ -84,8 +84,9 @@ agent-hub prepare --project <project-slug> --task "<current task>"
 
 `prepare` includes the task goal, verified project state, relevant decisions,
 constraints, risks, open questions, allowed actions, actions that require human
-approval, and suggested checks. It does not write memory or promote Signal Inbox
-content.
+approval, suggested checks, and a Context Trail with included source counts and
+item IDs. It does not write memory or promote Signal Inbox content. `--task`
+names the work goal; it does not yet filter or rank reviewed context.
 
 Useful compile variants:
 

@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime
+import json
 from pathlib import Path
+import subprocess
 from types import SimpleNamespace
 import uuid
-import subprocess
 
 import pytest
 
@@ -1171,7 +1172,19 @@ def fake_prepare_compiled_payload(project: dict[str, object]) -> dict[str, objec
             }
         ],
         "reports": [],
-        "relations": [],
+        "relations": [
+            {
+                "id": uuid.UUID("10000000-0000-4000-8000-000000000601"),
+                "source_type": "fact",
+                "source_id": uuid.UUID("10000000-0000-4000-8000-000000000201"),
+                "source_summary": "Agent Data Hub stores reviewed memory.",
+                "relation_type": "supports",
+                "target_type": "decision",
+                "target_id": uuid.UUID("10000000-0000-4000-8000-000000000301"),
+                "target_summary": "Keep writeback reviewed.",
+                "metadata": {},
+            }
+        ],
     }
 
 
@@ -1215,8 +1228,71 @@ def test_prepare_markdown_outputs_task_specific_context(monkeypatch, capsys) -> 
     assert "## Allowed Actions" in captured.out
     assert "## Requires Human Approval" in captured.out
     assert "## Suggested Checks" in captured.out
+    assert "## Context Trail" in captured.out
     assert "deployment or production changes" in captured.out
     assert ".venv/bin/python -m pytest -q" in captured.out
+
+
+def test_prepare_context_trail_lists_sources_and_excluded_limit(
+    monkeypatch, capsys
+) -> None:
+    patch_prepare_dependencies(monkeypatch)
+
+    code = cli.main(
+        [
+            "prepare",
+            "--project",
+            "central-agent-data-hub",
+            "--task",
+            "review release v0.1.1",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Included:" in captured.out
+    assert "- facts: 1" in captured.out
+    assert "- decisions: 1" in captured.out
+    assert "- risks: 1" in captured.out
+    assert "- open questions: 1" in captured.out
+    assert "- relations: 1" in captured.out
+    assert "- fact:10000000-0000-4000-8000-000000000201" in captured.out
+    assert "  status: verified" in captured.out
+    assert "- decision:10000000-0000-4000-8000-000000000301" in captured.out
+    assert "  status: accepted" in captured.out
+    assert "- relation:10000000-0000-4000-8000-000000000601" in captured.out
+    assert "  status: not available" in captured.out
+    assert "reason: included by current deterministic prepare selection" in captured.out
+    assert "Excluded:" in captured.out
+    assert "- not tracked by current prepare implementation" in captured.out
+
+
+def test_prepare_task_selection_remains_metadata_only(monkeypatch, capsys) -> None:
+    patch_prepare_dependencies(monkeypatch)
+
+    code = cli.main(
+        [
+            "prepare",
+            "--project",
+            "central-agent-data-hub",
+            "--task",
+            "review release v0.1.1",
+            "--format",
+            "json",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert code == 0
+    assert payload["task"] == "review release v0.1.1"
+    assert payload["context_trail"]["task_selection"] == {
+        "mode": "metadata_only",
+        "note": (
+            "--task is used as the task goal only; it does not filter or rank "
+            "reviewed context yet."
+        ),
+    }
 
 
 def test_prepare_json_output_is_stable(monkeypatch, capsys) -> None:
@@ -1239,3 +1315,5 @@ def test_prepare_json_output_is_stable(monkeypatch, capsys) -> None:
     assert '"task": "review release v0.1.1"' in captured.out
     assert '"verified_project_state"' in captured.out
     assert '"requires_human_approval"' in captured.out
+    assert '"context_trail"' in captured.out
+    assert '"excluded"' in captured.out

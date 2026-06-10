@@ -44,6 +44,47 @@ SUGGESTED_CHECKS = [
     ".venv/bin/python -m agent_hub.cli check",
 ]
 
+TRAIL_SOURCES = (
+    ("verified_project_state", "facts", "fact"),
+    ("relevant_decisions", "decisions", "decision"),
+    ("risks", "risks", "risk"),
+    ("open_questions", "open_questions", "open_question"),
+    ("reports", "reports", "report"),
+    ("relations", "relations", "relation"),
+)
+
+
+def build_context_trail(payload: dict[str, object]) -> dict[str, object]:
+    included_counts = {}
+    sources = []
+    for payload_key, count_key, item_type in TRAIL_SOURCES:
+        rows = payload[payload_key]
+        included_counts[count_key] = len(rows)
+        for row in rows:
+            sources.append(
+                {
+                    "type": item_type,
+                    "id": row["id"],
+                    "status": row.get("status", "not available"),
+                    "reason": "included by current deterministic prepare selection",
+                }
+            )
+
+    return {
+        "included_counts": included_counts,
+        "sources": sources,
+        "excluded": {
+            "note": "not tracked by current prepare implementation",
+        },
+        "task_selection": {
+            "mode": "metadata_only",
+            "note": (
+                "--task is used as the task goal only; it does not filter or rank "
+                "reviewed context yet."
+            ),
+        },
+    }
+
 
 def build_prepare_payload(
     *,
@@ -51,7 +92,7 @@ def build_prepare_payload(
     task: str,
     compiled: dict[str, object],
 ) -> dict[str, object]:
-    return {
+    payload = {
         "project": project,
         "task": task,
         "goal": task,
@@ -71,12 +112,57 @@ def build_prepare_payload(
         "reports": compiled["reports"],
         "relations": compiled["relations"],
     }
+    payload["context_trail"] = build_context_trail(payload)
+    return payload
 
 
 def simple_list(items: list[str]) -> str:
     if not items:
         return "- none"
     return "\n".join(f"- {item}" for item in items)
+
+
+def context_trail_markdown(trail: dict[str, object]) -> str:
+    counts = trail["included_counts"]
+    sources = trail["sources"]
+    excluded = trail["excluded"]
+    task_selection = trail["task_selection"]
+
+    lines = [
+        "Included:",
+        f"- facts: {counts['facts']}",
+        f"- decisions: {counts['decisions']}",
+        f"- risks: {counts['risks']}",
+        f"- open questions: {counts['open_questions']}",
+        f"- reports: {counts['reports']}",
+        f"- relations: {counts['relations']}",
+        "",
+        "Sources:",
+    ]
+    if sources:
+        for source in sources:
+            lines.extend(
+                [
+                    f"- {source['type']}:{source['id']}",
+                    f"  status: {source['status']}",
+                    f"  reason: {source['reason']}",
+                ]
+            )
+    else:
+        lines.append("- none")
+
+    lines.extend(
+        [
+            "",
+            "Excluded:",
+            f"- {excluded['note']}",
+            "",
+            "Task Selection:",
+            f"- mode: {task_selection['mode']}",
+            f"- note: {task_selection['note']}",
+        ]
+    )
+    return "\n".join(lines)
 
 
 def prepare_markdown(payload: dict[str, object]) -> str:
@@ -114,6 +200,9 @@ def prepare_markdown(payload: dict[str, object]) -> str:
             "",
             "## Suggested Checks",
             simple_list(payload["suggested_checks"]),
+            "",
+            "## Context Trail",
+            context_trail_markdown(payload["context_trail"]),
         ]
     )
 
