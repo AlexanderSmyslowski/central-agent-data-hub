@@ -4,6 +4,7 @@ import argparse
 from datetime import datetime
 import json
 from pathlib import Path
+import re
 import subprocess
 from types import SimpleNamespace
 import uuid
@@ -1106,8 +1107,20 @@ class FakePrepareCursor:
         return None
 
     def execute(self, query: str, _params: object = None) -> None:
-        if any(word in query.upper() for word in ("INSERT", "UPDATE", "DELETE")):
+        if re.search(r"\b(INSERT|UPDATE|DELETE)\b", query.upper()):
             raise AssertionError("prepare must stay read-only")
+
+
+class RecordingPrepareCursor(FakePrepareCursor):
+    def __init__(self) -> None:
+        self.queries: list[str] = []
+
+    def execute(self, query: str, _params: object = None) -> None:
+        super().execute(query, _params)
+        self.queries.append(query)
+
+    def fetchall(self) -> list[dict[str, object]]:
+        return []
 
 
 class FakePrepareConnection:
@@ -1143,6 +1156,8 @@ def fake_prepare_compiled_payload(project: dict[str, object]) -> dict[str, objec
                 "source": "README.md",
                 "confidence": 0.95,
                 "status": "verified",
+                "prepare_reason": "included by deterministic task text match",
+                "task_score": 0.42,
             }
         ],
         "decisions": [
@@ -1151,6 +1166,7 @@ def fake_prepare_compiled_payload(project: dict[str, object]) -> dict[str, objec
                 "decision": "Keep writeback reviewed.",
                 "rationale": "Unreviewed context should not become project truth.",
                 "status": "accepted",
+                "prepare_reason": "included as recent fallback after task-ranked context",
             }
         ],
         "risks": [
@@ -1161,6 +1177,7 @@ def fake_prepare_compiled_payload(project: dict[str, object]) -> dict[str, objec
                 "impact": "Agents may act on stale assumptions.",
                 "mitigation": "Use prepare before scoped work.",
                 "status": "open",
+                "prepare_reason": "included by safety floor for active risks",
             }
         ],
         "open_questions": [
@@ -1169,6 +1186,11 @@ def fake_prepare_compiled_payload(project: dict[str, object]) -> dict[str, objec
                 "question": "Should release checks include Hub View smoke?",
                 "answer": None,
                 "status": "open",
+                "prepare_reason": (
+                    "included by safety floor for unresolved open questions; "
+                    "also matched task text"
+                ),
+                "task_score": 0.23,
             }
         ],
         "reports": [],
@@ -1183,6 +1205,7 @@ def fake_prepare_compiled_payload(project: dict[str, object]) -> dict[str, objec
                 "target_id": uuid.UUID("10000000-0000-4000-8000-000000000301"),
                 "target_summary": "Keep writeback reviewed.",
                 "metadata": {},
+                "prepare_reason": "included as recent project relation context",
             }
         ],
     }
@@ -1198,8 +1221,8 @@ def patch_prepare_dependencies(monkeypatch) -> None:
     )
     monkeypatch.setattr(
         prepare_commands,
-        "fetch_compiled_payload",
-        lambda _cur, project, _limit: fake_prepare_compiled_payload(project),
+        "fetch_prepare_payload",
+        lambda _cur, project, _task, _limit: fake_prepare_compiled_payload(project),
     )
 
 
@@ -1262,12 +1285,18 @@ def test_prepare_context_trail_lists_sources_and_excluded_limit(
     assert "  status: accepted" in captured.out
     assert "- relation:10000000-0000-4000-8000-000000000601" in captured.out
     assert "  status: not available" in captured.out
-    assert "reason: included by current deterministic prepare selection" in captured.out
+    assert "reason: included by deterministic task text match" in captured.out
+    assert "task_score: 0.420000" in captured.out
+    assert "reason: included by safety floor for active risks" in captured.out
+    assert (
+        "reason: included by safety floor for unresolved open questions; also matched task text"
+        in captured.out
+    )
     assert "Excluded:" in captured.out
     assert "- not tracked by current prepare implementation" in captured.out
 
 
-def test_prepare_task_selection_remains_metadata_only(monkeypatch, capsys) -> None:
+def test_prepare_task_selection_is_deterministic_full_text(monkeypatch, capsys) -> None:
     patch_prepare_dependencies(monkeypatch)
 
     code = cli.main(
@@ -1287,11 +1316,9 @@ def test_prepare_task_selection_remains_metadata_only(monkeypatch, capsys) -> No
     assert code == 0
     assert payload["task"] == "review release v0.1.1"
     assert payload["context_trail"]["task_selection"] == {
-        "mode": "metadata_only",
-        "note": (
-            "--task is used as the task goal only; it does not filter or rank "
-            "reviewed context yet."
-        ),
+        "mode": "deterministic_full_text",
+        "note": prepare_commands.TASK_SELECTION_NOTE,
+        "tie_breaking": "task_score DESC, created_at DESC, id DESC",
     }
 
 
@@ -1317,3 +1344,43 @@ def test_prepare_json_output_is_stable(monkeypatch, capsys) -> None:
     assert '"requires_human_approval"' in captured.out
     assert '"context_trail"' in captured.out
     assert '"excluded"' in captured.out
+
+
+def test_prepare_merge_prefers_task_matches_then_recent_fallback() -> None:
+    task_match = {
+        "id": uuid.UUID("10000000-0000-4000-8000-000000000701"),
+        "task_score": 0.5,
+    }
+    duplicate_recent = {"id": task_match["id"]}
+    fallback = {"id": uuid.UUID("10000000-0000-4000-8000-000000000702")}
+
+    rows = prepare_commands.merge_prepare_rows(
+        [task_match],
+        [duplicate_recent, fallback],
+        limit=2,
+        primary_reason="task",
+        fallback_reason="fallback",
+    )
+
+    assert [row["id"] for row in rows] == [task_match["id"], fallback["id"]]
+    assert rows[0]["prepare_reason"] == "task"
+    assert rows[0]["task_score"] == 0.5
+    assert rows[1]["prepare_reason"] == "fallback"
+
+
+def test_prepare_task_match_query_is_read_only_and_stably_ordered() -> None:
+    cur = RecordingPrepareCursor()
+
+    rows = prepare_commands.fetch_task_match_prepare_rows(
+        cur,
+        project_id=uuid.UUID("10000000-0000-4000-8000-000000000001"),
+        key="facts",
+        task="review release",
+        limit=3,
+    )
+
+    assert rows == []
+    query = cur.queries[0]
+    assert "plainto_tsquery('simple'" in query
+    assert "to_tsvector('simple'" in query
+    assert "ORDER BY task_score DESC, created_at DESC, id DESC" in query

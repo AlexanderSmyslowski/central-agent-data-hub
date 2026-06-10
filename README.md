@@ -158,8 +158,11 @@ agent-hub prepare --project <project-slug> --task "review release v0.1.1"
 
 `prepare` turns reviewed memory into a concrete working brief for one task. It
 does not write memory, import signals, or make decisions. The output includes a
-Context Trail that lists included source item counts and IDs. `--task` names the
-work goal; it does not yet filter or rank reviewed context.
+Context Trail that lists included source item counts, IDs, status, task scores,
+and inclusion reasons. `--task` ranks facts, decisions, and reports with
+deterministic PostgreSQL full-text search, then fills with recent reviewed
+context. Active risks and open questions remain on a safety floor and are not
+filtered out by task text.
 
 Write back only reviewed, non-sensitive memory:
 
