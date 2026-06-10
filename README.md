@@ -180,6 +180,43 @@ The default stale threshold is 42 days and can be changed with:
 agent-hub prepare --project <project-slug> --task "review release" --stale-after-days 60
 ```
 
+## MCP (Read-Only)
+
+Agent Data Hub can expose reviewed context to MCP-capable agents over stdio:
+
+```bash
+pip install -e ".[mcp]"
+agent-hub mcp-serve
+```
+
+The MCP server is deliberately read-only. It can list projects, build the same
+JSON context pack as `agent-hub prepare --format json`, search reviewed memory,
+and return the compact `agent-hub brief --format json` shape. It cannot
+remember, import, accept, reject, sync, or modify memory.
+
+Example Claude Code setup from this checkout:
+
+```bash
+claude mcp add agent-data-hub -- agent-hub mcp-serve
+```
+
+Equivalent `.mcp.json` shape:
+
+```json
+{
+  "mcpServers": {
+    "agent-data-hub": {
+      "command": "agent-hub",
+      "args": ["mcp-serve"]
+    }
+  }
+}
+```
+
+Generic stdio clients should launch `agent-hub mcp-serve` with `DATABASE_URL`
+set for the local Hub database. Writes stay behind the CLI and Hub View review
+paths, where the human review gate is explicit.
+
 Submit only sourced, non-sensitive memory candidates:
 
 ```bash

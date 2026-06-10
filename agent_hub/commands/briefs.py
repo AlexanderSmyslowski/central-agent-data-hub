@@ -23,6 +23,94 @@ from agent_hub.statuses import (
 )
 
 
+def fetch_brief_payload(
+    cur,
+    project: dict[str, object],
+    limit: int,
+    *,
+    with_relations: bool = False,
+) -> dict[str, object]:
+    cur.execute(
+        """
+        SELECT
+          (SELECT count(*) FROM documents WHERE project_id = %(project_id)s) AS documents,
+          (SELECT count(*) FROM facts WHERE project_id = %(project_id)s) AS facts,
+          (SELECT count(*) FROM decisions WHERE project_id = %(project_id)s) AS decisions,
+          (
+            SELECT count(*)
+            FROM open_questions
+            WHERE project_id = %(project_id)s
+              AND status NOT IN ('answered', 'closed', 'resolved', 'archived')
+          ) AS open_questions,
+          (SELECT count(*) FROM open_questions WHERE project_id = %(project_id)s) AS open_questions_total,
+          (SELECT count(*) FROM risks WHERE project_id = %(project_id)s) AS risks,
+          (SELECT count(*) FROM reports WHERE project_id = %(project_id)s) AS reports,
+          (SELECT count(*) FROM agent_actions aa
+            JOIN agents a ON a.id = aa.agent_id
+            WHERE a.project_id = %(project_id)s) AS agent_actions
+        """,
+        {"project_id": project["id"]},
+    )
+    counts = cur.fetchone()
+
+    decisions = fetch_brief_rows(
+        cur,
+        "decisions",
+        project["id"],
+        "id, decision, rationale",
+        limit=limit,
+    )
+    facts = fetch_brief_rows(
+        cur,
+        "facts",
+        project["id"],
+        "id, statement, source, confidence",
+        excluded_statuses=("archived", "deprecated"),
+        limit=limit,
+    )
+    questions = fetch_brief_rows(
+        cur,
+        "open_questions",
+        project["id"],
+        "id, question, answer",
+        excluded_statuses=INACTIVE_OPEN_QUESTION_STATUSES,
+        limit=limit,
+    )
+    risks = fetch_brief_rows(
+        cur,
+        "risks",
+        project["id"],
+        "id, title, severity, impact, mitigation",
+        excluded_statuses=("archived", "resolved"),
+        limit=limit,
+    )
+    reports = fetch_brief_rows(
+        cur,
+        "reports",
+        project["id"],
+        "id, title, report_type, summary",
+        limit=limit,
+    )
+    relations = []
+    if with_relations:
+        relations = fetch_project_relations(
+            cur,
+            project["id"],
+            limit=limit,
+        )
+
+    return {
+        "project": project,
+        "counts": counts,
+        "decisions": decisions,
+        "facts": facts,
+        "open_questions": questions,
+        "risks": risks,
+        "reports": reports,
+        "relations": relations,
+    }
+
+
 def run_brief(args: argparse.Namespace) -> int:
     if error_code := require_database_url():
         return error_code
@@ -33,86 +121,12 @@ def run_brief(args: argparse.Namespace) -> int:
                 project = fetch_project(cur, args.project)
                 if not project:
                     return project_not_found(args.project)
-
-                cur.execute(
-                    """
-                    SELECT
-                      (SELECT count(*) FROM documents WHERE project_id = %(project_id)s) AS documents,
-                      (SELECT count(*) FROM facts WHERE project_id = %(project_id)s) AS facts,
-                      (SELECT count(*) FROM decisions WHERE project_id = %(project_id)s) AS decisions,
-                      (
-                        SELECT count(*)
-                        FROM open_questions
-                        WHERE project_id = %(project_id)s
-                          AND status NOT IN ('answered', 'closed', 'resolved', 'archived')
-                      ) AS open_questions,
-                      (SELECT count(*) FROM open_questions WHERE project_id = %(project_id)s) AS open_questions_total,
-                      (SELECT count(*) FROM risks WHERE project_id = %(project_id)s) AS risks,
-                      (SELECT count(*) FROM reports WHERE project_id = %(project_id)s) AS reports,
-                      (SELECT count(*) FROM agent_actions aa
-                        JOIN agents a ON a.id = aa.agent_id
-                        WHERE a.project_id = %(project_id)s) AS agent_actions
-                    """,
-                    {"project_id": project["id"]},
-                )
-                counts = cur.fetchone()
-
-                decisions = fetch_brief_rows(
+                brief = fetch_brief_payload(
                     cur,
-                    "decisions",
-                    project["id"],
-                    "id, decision, rationale",
-                    limit=args.limit,
+                    project,
+                    args.limit,
+                    with_relations=args.with_relations,
                 )
-                facts = fetch_brief_rows(
-                    cur,
-                    "facts",
-                    project["id"],
-                    "id, statement, source, confidence",
-                    excluded_statuses=("archived", "deprecated"),
-                    limit=args.limit,
-                )
-                questions = fetch_brief_rows(
-                    cur,
-                    "open_questions",
-                    project["id"],
-                    "id, question, answer",
-                    excluded_statuses=INACTIVE_OPEN_QUESTION_STATUSES,
-                    limit=args.limit,
-                )
-                risks = fetch_brief_rows(
-                    cur,
-                    "risks",
-                    project["id"],
-                    "id, title, severity, impact, mitigation",
-                    excluded_statuses=("archived", "resolved"),
-                    limit=args.limit,
-                )
-                reports = fetch_brief_rows(
-                    cur,
-                    "reports",
-                    project["id"],
-                    "id, title, report_type, summary",
-                    limit=args.limit,
-                )
-                relations = []
-                if args.with_relations:
-                    relations = fetch_project_relations(
-                        cur,
-                        project["id"],
-                        limit=args.limit,
-                    )
-
-        brief = {
-            "project": project,
-            "counts": counts,
-            "decisions": decisions,
-            "facts": facts,
-            "open_questions": questions,
-            "risks": risks,
-            "reports": reports,
-            "relations": relations,
-        }
     except Exception as exc:
         return exception_error(exc)
 
@@ -128,6 +142,7 @@ def run_brief(args: argparse.Namespace) -> int:
         print(f"- description: {project['description']}")
     print()
     print("## Counts")
+    counts = brief["counts"]
     for key, value in counts.items():
         if key == "open_questions_total":
             continue
@@ -135,13 +150,13 @@ def run_brief(args: argparse.Namespace) -> int:
             value = format_open_question_count(value, counts.get("open_questions_total"))
         print(f"- {key}: {value}")
     print()
-    print_rows("Decisions", decisions, "decision")
-    print_rows("Facts", facts, "statement")
-    print_rows("Open Questions", questions, "question")
-    print_rows("Risks", risks, "title")
-    print_rows("Reports", reports, "title")
+    print_rows("Decisions", brief["decisions"], "decision")
+    print_rows("Facts", brief["facts"], "statement")
+    print_rows("Open Questions", brief["open_questions"], "question")
+    print_rows("Risks", brief["risks"], "title")
+    print_rows("Reports", brief["reports"], "title")
     if args.with_relations:
         print("## Relations")
-        print_relations(relations)
+        print_relations(brief["relations"])
         print()
     return 0

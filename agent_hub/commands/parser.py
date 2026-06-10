@@ -12,6 +12,7 @@ from agent_hub.commands.common import confidence_value, positive_int
 from agent_hub.commands.graph import run_relate, run_relations
 from agent_hub.commands.briefs import run_brief
 from agent_hub.commands.inbox import run_inbox
+from agent_hub.commands.mcp import run_mcp_serve
 from agent_hub.commands.prepare import run_prepare
 from agent_hub.commands.quality_views import run_actions, run_quality, run_receipt
 from agent_hub.commands.search import run_context, run_search
@@ -308,6 +309,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     add_format_argument(prepare_parser, ("markdown", "json"), "markdown")
     prepare_parser.set_defaults(func=run_prepare)
+
+    mcp_parser = subparsers.add_parser(
+        "mcp-serve",
+        help="Serve read-only Agent Data Hub MCP tools over stdio.",
+    )
+    mcp_parser.set_defaults(func=run_mcp_serve)
 
     compile_parser = subparsers.add_parser(
         "compile",

@@ -25,6 +25,11 @@ already reviewed state:
 Automatic actions must not create new reviewed claims. They may fail loudly,
 write local projections, or produce audit evidence.
 
+The MCP server belongs in this read-only layer. It exposes reviewed Hub context
+over stdio for external agents, but it has no write tools, no HTTP transport,
+and no import, remember, accept, reject, or sync capability. The server asks
+Postgres for a read-only session; writes remain outside the MCP boundary.
+
 The only write candidates that may use the automatic route are reversible
 evidence with strong provenance:
 

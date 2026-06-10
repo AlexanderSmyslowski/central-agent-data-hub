@@ -89,6 +89,7 @@ def test_parse_since_rejects_invalid_value() -> None:
         ["relations", "--help"],
         ["compile", "--help"],
         ["prepare", "--help"],
+        ["mcp-serve", "--help"],
         ["setup", "--help"],
     ],
 )

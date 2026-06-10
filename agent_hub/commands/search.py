@@ -24,6 +24,23 @@ from agent_hub.rendering import (
 )
 
 
+def fetch_search_payload(
+    cur,
+    project: dict[str, object],
+    query: str,
+    memory_type: str,
+    limit: int,
+) -> dict[str, object]:
+    results = search_project_memory(
+        cur,
+        project["id"],
+        query,
+        memory_type,
+        limit,
+    )
+    return {"project": project, "query": query, "results": results}
+
+
 def run_search(args: argparse.Namespace) -> int:
     if error_code := require_database_url():
         return error_code
@@ -34,9 +51,9 @@ def run_search(args: argparse.Namespace) -> int:
                 project = fetch_project(cur, args.project)
                 if not project:
                     return project_not_found(args.project)
-                results = search_project_memory(
+                payload = fetch_search_payload(
                     cur,
-                    project["id"],
+                    project,
                     args.query,
                     args.memory_type,
                     args.limit,
@@ -44,13 +61,12 @@ def run_search(args: argparse.Namespace) -> int:
     except Exception as exc:
         return exception_error(exc)
 
-    payload = {"project": project, "query": args.query, "results": results}
     if args.format == "json":
         print(json.dumps(payload, indent=2, default=json_default, ensure_ascii=False))
         return 0
 
     print(f"Search results for {project['slug']}: {args.query}")
-    print(search_results_markdown(results))
+    print(search_results_markdown(payload["results"]))
     return 0
 
 

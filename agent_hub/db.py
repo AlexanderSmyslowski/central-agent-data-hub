@@ -20,6 +20,9 @@ def get_database_url() -> str:
     return database_url
 
 
-def connect() -> psycopg.Connection:
+def connect(*, read_only: bool = False) -> psycopg.Connection:
     """Open a PostgreSQL connection that returns rows as dictionaries."""
-    return psycopg.connect(get_database_url(), row_factory=dict_row)
+    kwargs: dict[str, object] = {"row_factory": dict_row}
+    if read_only:
+        kwargs["options"] = "-c default_transaction_read_only=on"
+    return psycopg.connect(get_database_url(), **kwargs)
