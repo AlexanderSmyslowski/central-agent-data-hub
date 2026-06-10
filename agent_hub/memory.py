@@ -9,6 +9,7 @@ import json
 from agent_hub.errors import NotFoundError
 from agent_hub.importing.constants import TYPE_COLUMNS, TYPE_TABLES
 from agent_hub.rendering import truncate
+from agent_hub.statuses import DRAFT_MEMORY_STATUSES
 from agent_hub.writeback_routing import (
     card_for_item,
     candidate_type,
@@ -24,13 +25,7 @@ REMEMBER_TYPES = (
     "report",
 )
 
-DRAFT_STATUSES = {
-    "fact": "draft",
-    "decision": "draft",
-    "open_question": "draft",
-    "risk": "draft",
-    "report": "draft",
-}
+DRAFT_STATUSES = DRAFT_MEMORY_STATUSES
 
 
 class HumanReviewRequired(Exception):

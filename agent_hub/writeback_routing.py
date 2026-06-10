@@ -6,6 +6,7 @@ import re
 from typing import Any
 
 from agent_hub.importing.constants import SENSITIVE_PATTERN
+from agent_hub.statuses import REVIEWED_MEMORY_STATUSES
 
 
 MONEY_PATTERN = re.compile(
@@ -45,11 +46,8 @@ TYPE_CARD_PHRASES = {
 }
 
 REVIEWED_STATUSES = {
-    "fact": {"verified"},
-    "decision": {"accepted"},
-    "risk": {"open", "mitigating", "accepted"},
-    "open_question": {"open", "answered"},
-    "report": {"published"},
+    memory_type: set(values)
+    for memory_type, values in REVIEWED_MEMORY_STATUSES.items()
 }
 
 CORE_FIELDS = {

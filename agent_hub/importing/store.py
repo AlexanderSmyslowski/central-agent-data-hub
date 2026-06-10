@@ -18,16 +18,11 @@ from agent_hub.importing.identity import (
     row_values,
 )
 from agent_hub.importing.models import ImportItem
+from agent_hub.statuses import DRAFT_MEMORY_STATUSES
 from agent_hub.writeback_routing import route_candidate
 
 
-DRAFT_STATUSES = {
-    "fact": "draft",
-    "decision": "draft",
-    "open_question": "draft",
-    "risk": "draft",
-    "report": "draft",
-}
+DRAFT_STATUSES = DRAFT_MEMORY_STATUSES
 
 def fetch_project(cur, project_slug: str) -> dict[str, Any]:
     cur.execute("SELECT id, name, slug FROM projects WHERE slug = %s", (project_slug,))

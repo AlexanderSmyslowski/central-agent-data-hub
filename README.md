@@ -200,7 +200,8 @@ New memory candidates are routed before they touch reviewed memory:
 - `draft`: ordinary unreviewed candidates
 
 Drafts are stored with status `draft` and remain outside reviewed memory until a
-human explicitly accepts them:
+human explicitly accepts them. The draft status is supported for facts,
+decisions, risks, open questions, and reports:
 
 ```bash
 agent-hub inbox

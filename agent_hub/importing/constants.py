@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import re
 
+from agent_hub.statuses import MEMORY_STATUS_VALUES
+
 ALLOWED_TYPES = ("fact", "decision", "open_question", "risk", "report")
 SENSITIVE_PATTERN = re.compile(
     r"("
@@ -52,11 +54,7 @@ FIELD_OWNERS = {
 }
 
 STATUS_VALUES = {
-    "fact": {"draft", "proposed", "verified", "disputed", "deprecated", "archived"},
-    "decision": {"draft", "proposed", "accepted", "rejected", "superseded", "archived"},
-    "open_question": {"draft", "open", "answered", "deferred", "closed", "archived"},
-    "risk": {"draft", "open", "mitigating", "accepted", "resolved", "archived"},
-    "report": {"draft", "published", "superseded", "archived"},
+    memory_type: set(values) for memory_type, values in MEMORY_STATUS_VALUES.items()
 }
 
 REQUIRED_FIELDS = {

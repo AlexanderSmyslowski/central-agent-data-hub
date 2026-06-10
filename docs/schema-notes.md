@@ -27,12 +27,24 @@ Migrations are applied in file order from `migrations/`.
 - `001_init.sql`: baseline schema
 - `002_schema_migrations.sql`: migration tracking table
 - `003_relation_agent_actions.sql`: allows relations to reference agent actions
+- `004_draft_status.sql`: allows `draft` status for core memory review inboxes
 
 `agent-hub migrate --status` shows open, failed, or changed migrations.
 `agent-hub migrate --apply` applies the pending set.
 
 If an older database already has the base schema, the migration runner can mark
 the baseline as applied and add tracking without rebuilding the database.
+
+## Draft And Proposed Statuses
+
+`draft` means an unreviewed memory candidate was stored by tiered writeback and
+is waiting for explicit Inbox review. Drafts are visible to prepare and Inbox
+flows, but they are not reviewed memory and should not count as reviewed
+project quality.
+
+`proposed` remains the existing domain status for reviewed workflows that want
+to track a proposal as such. Existing `proposed` rows are not migrated to
+`draft`, and the two statuses should not be merged by implication.
 
 ## Project Taxonomy
 

@@ -116,6 +116,7 @@ def fetch_low_confidence_facts(cur) -> list[dict[str, object]]:
         SELECT id, statement, confidence, status
         FROM facts
         WHERE confidence < 0.6
+          AND status <> 'draft'
         ORDER BY confidence, created_at, id
         """
     )
@@ -127,7 +128,7 @@ def fetch_open_questions(cur) -> list[dict[str, object]]:
         """
         SELECT id, question, status
         FROM open_questions
-        WHERE status NOT IN ('answered', 'closed', 'resolved', 'archived')
+        WHERE status NOT IN ('draft', 'answered', 'closed', 'resolved', 'archived')
         ORDER BY created_at, id
         """
     )
@@ -142,7 +143,7 @@ def fetch_memory_quality_warnings(cur) -> list[dict[str, object]]:
         SELECT id, 'fact' AS type, statement AS title,
                'missing source' AS issue
         FROM facts
-        WHERE status <> 'archived'
+        WHERE status NOT IN ('draft', 'archived')
           AND NULLIF(BTRIM(COALESCE(source, '')), '') IS NULL
         ORDER BY updated_at DESC, created_at DESC, id
         """
@@ -154,7 +155,7 @@ def fetch_memory_quality_warnings(cur) -> list[dict[str, object]]:
         SELECT id, 'decision' AS type, decision AS title,
                'missing rationale' AS issue
         FROM decisions
-        WHERE status <> 'archived'
+        WHERE status NOT IN ('draft', 'archived')
           AND NULLIF(BTRIM(COALESCE(rationale, '')), '') IS NULL
         ORDER BY updated_at DESC, created_at DESC, id
         """
@@ -166,7 +167,7 @@ def fetch_memory_quality_warnings(cur) -> list[dict[str, object]]:
         SELECT id, 'risk' AS type, title,
                'missing impact or mitigation' AS issue
         FROM risks
-        WHERE status NOT IN ('resolved', 'archived')
+        WHERE status NOT IN ('draft', 'resolved', 'archived')
           AND (
             NULLIF(BTRIM(COALESCE(impact, '')), '') IS NULL
             OR NULLIF(BTRIM(COALESCE(mitigation, '')), '') IS NULL
@@ -181,7 +182,7 @@ def fetch_memory_quality_warnings(cur) -> list[dict[str, object]]:
         SELECT id, 'report' AS type, title,
                'missing summary' AS issue
         FROM reports
-        WHERE status <> 'archived'
+        WHERE status NOT IN ('draft', 'archived')
           AND NULLIF(BTRIM(COALESCE(summary, '')), '') IS NULL
         ORDER BY updated_at DESC, created_at DESC, id
         """
@@ -213,7 +214,7 @@ def fetch_memory_quality_warnings(cur) -> list[dict[str, object]]:
             SELECT id, %s AS type, {title_column} AS title,
                    'very long memory entry; consider distilling' AS issue
             FROM {table}
-            WHERE status <> 'archived'
+            WHERE status NOT IN ('draft', 'archived')
               AND length(COALESCE({text_column}, '')) > 1200
             ORDER BY updated_at DESC, created_at DESC, id
             LIMIT 20
@@ -227,11 +228,11 @@ def fetch_memory_quality_warnings(cur) -> list[dict[str, object]]:
         SELECT id, 'fact' AS type, statement AS title,
                'possible duplicate fact' AS issue
         FROM facts
-        WHERE status <> 'archived'
+        WHERE status NOT IN ('draft', 'archived')
           AND lower(BTRIM(statement)) IN (
             SELECT lower(BTRIM(statement))
             FROM facts
-            WHERE status <> 'archived'
+            WHERE status NOT IN ('draft', 'archived')
             GROUP BY lower(BTRIM(statement))
             HAVING count(*) > 1
           )
@@ -246,7 +247,7 @@ def fetch_memory_quality_warnings(cur) -> list[dict[str, object]]:
         SELECT oq.id, 'open_question' AS type, oq.question AS title,
                'possibly answered by a decision' AS issue
         FROM open_questions oq
-        WHERE oq.status NOT IN ('answered', 'closed', 'archived')
+        WHERE oq.status NOT IN ('draft', 'answered', 'closed', 'resolved', 'archived')
           AND EXISTS (
             SELECT 1
             FROM relations r
@@ -287,16 +288,38 @@ def fetch_project_counts(cur, project_id: object) -> dict[str, int]:
         """
         SELECT
           (SELECT count(*) FROM documents WHERE project_id = %(project_id)s) AS documents,
-          (SELECT count(*) FROM facts WHERE project_id = %(project_id)s AND status <> 'archived') AS facts,
-          (SELECT count(*) FROM decisions WHERE project_id = %(project_id)s AND status <> 'archived') AS decisions,
+          (
+            SELECT count(*)
+            FROM facts
+            WHERE project_id = %(project_id)s
+              AND status NOT IN ('draft', 'archived')
+          ) AS facts,
+          (
+            SELECT count(*)
+            FROM decisions
+            WHERE project_id = %(project_id)s
+              AND status NOT IN ('draft', 'archived')
+          ) AS decisions,
           (
             SELECT count(*)
             FROM open_questions
             WHERE project_id = %(project_id)s
-              AND status NOT IN ('answered', 'closed', 'resolved', 'archived')
+              AND status NOT IN (
+                'draft', 'answered', 'closed', 'resolved', 'archived'
+              )
           ) AS open_questions,
-          (SELECT count(*) FROM risks WHERE project_id = %(project_id)s AND status NOT IN ('resolved', 'archived')) AS risks,
-          (SELECT count(*) FROM reports WHERE project_id = %(project_id)s AND status <> 'archived') AS reports
+          (
+            SELECT count(*)
+            FROM risks
+            WHERE project_id = %(project_id)s
+              AND status NOT IN ('draft', 'resolved', 'archived')
+          ) AS risks,
+          (
+            SELECT count(*)
+            FROM reports
+            WHERE project_id = %(project_id)s
+              AND status NOT IN ('draft', 'archived')
+          ) AS reports
         """,
         {"project_id": project_id},
     )
@@ -310,7 +333,7 @@ def fetch_project_quality(cur, project: dict[str, object]) -> dict[str, object]:
         SELECT id, 'fact' AS type, statement AS title, 'missing source' AS issue
         FROM facts
         WHERE project_id = %s
-          AND status <> 'archived'
+          AND status NOT IN ('draft', 'archived')
           AND NULLIF(BTRIM(COALESCE(source, '')), '') IS NULL
         ORDER BY updated_at DESC, created_at DESC, id
         """,
@@ -323,7 +346,7 @@ def fetch_project_quality(cur, project: dict[str, object]) -> dict[str, object]:
         SELECT id, 'decision' AS type, decision AS title, 'missing rationale' AS issue
         FROM decisions
         WHERE project_id = %s
-          AND status <> 'archived'
+          AND status NOT IN ('draft', 'archived')
           AND NULLIF(BTRIM(COALESCE(rationale, '')), '') IS NULL
         ORDER BY updated_at DESC, created_at DESC, id
         """,
@@ -336,7 +359,7 @@ def fetch_project_quality(cur, project: dict[str, object]) -> dict[str, object]:
         SELECT id, 'risk' AS type, title, 'missing impact or mitigation' AS issue
         FROM risks
         WHERE project_id = %s
-          AND status NOT IN ('resolved', 'archived')
+          AND status NOT IN ('draft', 'resolved', 'archived')
           AND (
             NULLIF(BTRIM(COALESCE(impact, '')), '') IS NULL
             OR NULLIF(BTRIM(COALESCE(mitigation, '')), '') IS NULL
@@ -352,7 +375,7 @@ def fetch_project_quality(cur, project: dict[str, object]) -> dict[str, object]:
         SELECT id, question, status, updated_at
         FROM open_questions
         WHERE project_id = %s
-          AND status NOT IN ('answered', 'closed', 'archived')
+          AND status NOT IN ('draft', 'answered', 'closed', 'archived')
         ORDER BY updated_at DESC, created_at DESC, id
         """,
         (project_id,),
@@ -364,7 +387,7 @@ def fetch_project_quality(cur, project: dict[str, object]) -> dict[str, object]:
         SELECT id, question, status, updated_at, metadata->>'suggestion' AS suggestion
         FROM open_questions
         WHERE project_id = %s
-          AND status NOT IN ('answered', 'closed', 'resolved', 'archived')
+          AND status NOT IN ('draft', 'answered', 'closed', 'resolved', 'archived')
           AND metadata->>'schema_friction' = 'true'
         ORDER BY updated_at DESC, created_at DESC, id
         """,

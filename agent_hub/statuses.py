@@ -2,6 +2,35 @@
 
 from __future__ import annotations
 
+DRAFT_STATUS = "draft"
+
+MEMORY_STATUS_VALUES = {
+    "fact": ("draft", "proposed", "verified", "disputed", "deprecated", "archived"),
+    "decision": (
+        "draft",
+        "proposed",
+        "accepted",
+        "rejected",
+        "superseded",
+        "archived",
+    ),
+    "open_question": ("draft", "open", "answered", "deferred", "closed", "archived"),
+    "risk": ("draft", "open", "mitigating", "accepted", "resolved", "archived"),
+    "report": ("draft", "published", "superseded", "archived"),
+}
+
+DRAFT_MEMORY_STATUSES = {
+    memory_type: DRAFT_STATUS for memory_type in MEMORY_STATUS_VALUES
+}
+
+REVIEWED_MEMORY_STATUSES = {
+    "fact": ("verified",),
+    "decision": ("accepted",),
+    "risk": ("open", "mitigating", "accepted"),
+    "open_question": ("open", "answered"),
+    "report": ("published",),
+}
+
 INACTIVE_OPEN_QUESTION_STATUSES = ("answered", "closed", "resolved", "archived")
 
 
