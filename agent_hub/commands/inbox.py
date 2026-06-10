@@ -62,7 +62,7 @@ def fetch_drafts(
     cur,
     *,
     project_slug: str | None = None,
-    limit: int = 20,
+    limit: int | None = 20,
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for item_type, spec in INBOX_TABLES.items():
@@ -71,7 +71,10 @@ def fetch_drafts(
         if project_slug:
             project_filter = "AND p.slug = %s"
             params.append(project_slug)
-        params.append(limit)
+        limit_clause = ""
+        if limit is not None:
+            limit_clause = "LIMIT %s"
+            params.append(limit)
         cur.execute(
             f"""
             SELECT {spec['columns']}, p.slug AS project, p.name AS project_name
@@ -80,13 +83,13 @@ def fetch_drafts(
             WHERE memory.status = %s
               {project_filter}
             ORDER BY memory.updated_at DESC, memory.created_at DESC, memory.id DESC
-            LIMIT %s
+            {limit_clause}
             """,
             tuple(params),
         )
         rows.extend(row_with_type(row, item_type) for row in cur.fetchall())
     rows.sort(key=row_sort_key, reverse=True)
-    return rows[:limit]
+    return rows[:limit] if limit is not None else rows
 
 
 def find_draft(
@@ -128,17 +131,21 @@ def review_draft(
     decision: str,
     agent_slug: str,
     agent_name: str,
+    review_source: str | None = None,
 ) -> dict[str, Any]:
     item_type = row["type"]
     spec = INBOX_TABLES[item_type]
     table = spec["table"]
     next_status = spec["reviewed_status"] if decision == "accept" else "archived"
     metadata = dict(row.get("metadata") or {})
-    metadata["agent_hub_review"] = {
+    review_state = {
         "decision": decision,
         "previous_status": row["status"],
         "next_status": next_status,
     }
+    if review_source:
+        review_state["review_source"] = review_source
+    metadata["agent_hub_review"] = review_state
     cur.execute(
         f"""
         UPDATE {table}
@@ -155,17 +162,21 @@ def review_draft(
         raise ValueError(f"draft disappeared before review: {row['id']}")
 
     agent = ensure_agent(cur, row["project_id"], agent_slug, agent_name)
+    action_metadata = {
+        "command": "inbox",
+        "decision": decision,
+        "project": row["project"],
+    }
+    if review_source:
+        action_metadata["review_source"] = review_source
+
     log_agent_action(
         cur,
         agent["id"],
         f"inbox_{decision}",
         item_type,
         row["id"],
-        {
-            "command": "inbox",
-            "decision": decision,
-            "project": row["project"],
-        },
+        action_metadata,
         {
             "project_id": row["project_id"],
             "previous_status": row["status"],
@@ -179,6 +190,32 @@ def review_draft(
         "decision": decision,
         "status": next_status,
     }
+
+
+def review_draft_by_id(
+    cur,
+    draft_id: str,
+    *,
+    decision: str,
+    item_type: str | None = None,
+    project_slug: str | None = None,
+    agent_slug: str,
+    agent_name: str,
+    review_source: str | None = None,
+) -> dict[str, Any] | None:
+    row = find_draft(cur, draft_id, project_slug=project_slug)
+    if not row:
+        return None
+    if item_type and row["type"] != item_type:
+        raise ValueError("draft type does not match the selected review action")
+    return review_draft(
+        cur,
+        row,
+        decision=decision,
+        agent_slug=agent_slug,
+        agent_name=agent_name,
+        review_source=review_source,
+    )
 
 
 def print_draft_cards(rows: list[dict[str, Any]]) -> None:
@@ -224,19 +261,18 @@ def run_inbox(args: argparse.Namespace) -> int:
                 reviewed = []
                 missing = []
                 for draft_id in review_ids:
-                    row = find_draft(cur, draft_id, project_slug=args.project)
-                    if not row:
+                    result = review_draft_by_id(
+                        cur,
+                        draft_id,
+                        decision=decision or "reject",
+                        project_slug=args.project,
+                        agent_slug=args.agent,
+                        agent_name=args.agent_name,
+                    )
+                    if not result:
                         missing.append(str(draft_id))
                         continue
-                    reviewed.append(
-                        review_draft(
-                            cur,
-                            row,
-                            decision=decision or "reject",
-                            agent_slug=args.agent,
-                            agent_name=args.agent_name,
-                        )
-                    )
+                    reviewed.append(result)
     except Exception as exc:
         return exception_error(exc)
 

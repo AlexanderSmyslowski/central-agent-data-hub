@@ -130,6 +130,23 @@
         background: var(--surface-strong);
       }
 
+      .sidebar-action {
+        display: block;
+        margin: 0 0 10px;
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.5);
+        color: var(--text);
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .sidebar-action.active {
+        border-color: var(--line-strong);
+        background: var(--surface-strong);
+      }
+
       .project-name {
         margin: 0;
         font-size: 17px;
@@ -301,6 +318,91 @@
         font-size: 14px;
       }
 
+      .notice,
+      .flash {
+        margin: 0 0 18px;
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.62);
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      .flash.good {
+        color: #244a33;
+        border-color: rgba(36, 74, 51, 0.22);
+      }
+
+      .flash.bad {
+        color: #7a2e2e;
+        border-color: rgba(122, 46, 46, 0.24);
+      }
+
+      .draft-group + .draft-group {
+        margin-top: 24px;
+      }
+
+      .draft-card {
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.5);
+      }
+
+      .draft-card + .draft-card {
+        margin-top: 12px;
+      }
+
+      .draft-card p {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      .draft-card p + p {
+        margin-top: 5px;
+      }
+
+      .draft-meta {
+        margin-bottom: 10px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .draft-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .draft-actions form {
+        margin: 0;
+      }
+
+      .button {
+        appearance: none;
+        border: 1px solid var(--line-strong);
+        border-radius: 8px;
+        background: var(--surface-strong);
+        color: var(--text);
+        cursor: pointer;
+        font: inherit;
+        font-size: 13px;
+        padding: 8px 11px;
+      }
+
+      .button.reject {
+        color: #6c3434;
+      }
+
+      .button:disabled {
+        cursor: default;
+        opacity: 0.55;
+      }
+
       @media (max-width: 980px) {
         .layout {
           grid-template-columns: 1fr;
@@ -345,38 +447,99 @@
           <h1>{{ app_name }}</h1>
           <p class="claim">{{ claim }}</p>
         </div>
-        <div class="read-only">Read-only review surface</div>
+        <div class="read-only">Read surface + review actions</div>
       </header>
 
       <div class="layout">
         <aside class="panel sidebar">
-          <div class="sidebar-title">Active projects</div>
-          {% if projects %}
-            {% for project in projects %}
-              <a class="project-link{% if selected_project and selected_project.slug == project.slug %} active{% endif %}" href="/projects/{{ project.slug }}">
-                <p class="project-name">{{ project.name }}</p>
-                <div class="project-meta">{{ project.slug }}{% if project.project_type %} · {{ project.project_type }}{% endif %}</div>
-                {% if project.description %}
-                  <p class="project-blurb">{{ project.description }}</p>
-                {% endif %}
-                <div class="project-counts">
-                  <span>{{ project.counts.facts }} facts</span>
-                  <span>{{ project.counts.decisions }} decisions</span>
-                  <span>{{ project.counts.risks }} risks</span>
-                  <span>{{ project.counts.open_questions }} open questions</span>
-                </div>
-                {% if project.latest_report_title %}
-                  <p class="project-blurb">{{ project.latest_report_title }}</p>
-                {% endif %}
-              </a>
-            {% endfor %}
-          {% else %}
-            <p class="empty">No active projects are visible.</p>
+          <a class="sidebar-action{% if view_name == 'inbox' %} active{% endif %}" href="/inbox">Review Inbox</a>
+          {% if view_name != 'inbox' %}
+            <div class="sidebar-title">Active projects</div>
+            {% if projects %}
+              {% for project in projects %}
+                <a class="project-link{% if selected_project and selected_project.slug == project.slug %} active{% endif %}" href="/projects/{{ project.slug }}">
+                  <p class="project-name">{{ project.name }}</p>
+                  <div class="project-meta">{{ project.slug }}{% if project.project_type %} · {{ project.project_type }}{% endif %}</div>
+                  {% if project.description %}
+                    <p class="project-blurb">{{ project.description }}</p>
+                  {% endif %}
+                  <div class="project-counts">
+                    <span>{{ project.counts.facts }} facts</span>
+                    <span>{{ project.counts.decisions }} decisions</span>
+                    <span>{{ project.counts.risks }} risks</span>
+                    <span>{{ project.counts.open_questions }} open questions</span>
+                  </div>
+                  {% if project.latest_report_title %}
+                    <p class="project-blurb">{{ project.latest_report_title }}</p>
+                  {% endif %}
+                </a>
+              {% endfor %}
+            {% else %}
+              <p class="empty">No active projects are visible.</p>
+            {% endif %}
           {% endif %}
         </aside>
 
         <section class="panel content">
-          {% if not_found_slug %}
+          {% if view_name == 'inbox' %}
+            <div class="detail-header">
+              <div>
+                <h2 class="detail-title">Review Inbox</h2>
+                <p class="detail-description">Drafts stay unconfirmed until a human accepts or rejects them here.</p>
+              </div>
+            </div>
+
+            {% if inbox.message %}
+              <p class="flash good">{{ inbox.message }}</p>
+            {% endif %}
+            {% if inbox.error %}
+              <p class="flash bad">{{ inbox.error }}</p>
+            {% endif %}
+            {% if not inbox.enabled %}
+              <p class="notice">Review actions are disabled because Hub View is not bound to a loopback address.</p>
+            {% endif %}
+
+            <section class="section">
+              {% if inbox.groups %}
+                {% for group in inbox.groups %}
+                  <div class="draft-group">
+                    <h2>{{ group.project_name }}</h2>
+                    <div class="list">
+                      {% for draft in group.drafts %}
+                        <article class="draft-card">
+                          <div class="draft-meta">{{ draft.project }} · {{ draft.type_label }}{% if draft.updated_at %} · {{ draft.updated_at }}{% endif %}</div>
+                          {% for line in draft.card_lines %}
+                            <p>{{ line }}</p>
+                          {% endfor %}
+                          <div class="draft-actions">
+                            {% if inbox.enabled %}
+                              <form method="post" action="/inbox/accept">
+                                <input type="hidden" name="csrf_token" value="{{ inbox.csrf_token }}">
+                                <input type="hidden" name="draft_id" value="{{ draft.id }}">
+                                <input type="hidden" name="type" value="{{ draft.type }}">
+                                <button class="button" type="submit">Merken</button>
+                              </form>
+                              <form method="post" action="/inbox/reject">
+                                <input type="hidden" name="csrf_token" value="{{ inbox.csrf_token }}">
+                                <input type="hidden" name="draft_id" value="{{ draft.id }}">
+                                <input type="hidden" name="type" value="{{ draft.type }}">
+                                <button class="button reject" type="submit">Verwerfen</button>
+                              </form>
+                            {% else %}
+                              <button class="button" type="button" disabled>Merken</button>
+                              <button class="button reject" type="button" disabled>Verwerfen</button>
+                            {% endif %}
+                          </div>
+                        </article>
+                      {% endfor %}
+                    </div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <p class="empty">Nichts zu prüfen.</p>
+              {% endif %}
+            </section>
+          {% elif not_found_slug %}
             <div class="detail-header">
               <div>
                 <h2 class="detail-title">Project not found</h2>

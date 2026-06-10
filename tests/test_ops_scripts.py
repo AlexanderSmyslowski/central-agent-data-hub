@@ -142,7 +142,7 @@ def test_public_demo_smoke_verifies_demo_exports() -> None:
     assert 'HUB_VIEW_SMOKE_PORT:-9876' in script
     assert 'scripts/hub_view.sh" --host 127.0.0.1 --port "$hub_view_smoke_port"' in script
     assert "urllib.request" in script
-    assert "read-only review surface" in script
+    assert "local review surface" in script
 
 
 def test_public_hub_view_entrypoint_is_public_safe() -> None:

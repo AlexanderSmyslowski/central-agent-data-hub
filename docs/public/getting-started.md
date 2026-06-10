@@ -71,8 +71,9 @@ Start Hub View:
 scripts/hub_view.sh
 ```
 
-Hub View is a local read-only review surface. PostgreSQL remains the reviewed
-source of truth.
+Hub View is a local review surface. It reads reviewed memory and can accept or
+reject draft candidates as explicit review actions. PostgreSQL remains the
+reviewed source of truth.
 
 ## Important Note About Startup Paths
 

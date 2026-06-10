@@ -1,11 +1,112 @@
 from __future__ import annotations
 
+from io import BytesIO
 from datetime import datetime, timezone
+import re
+from urllib.parse import urlencode
+import uuid
 
 from agent_hub import hub_view
+from agent_hub.commands import inbox
+from agent_hub.writeback_routing import lint_card_text
 
 
-def test_render_page_includes_read_only_claim() -> None:
+DRAFT_ID = uuid.UUID("10000000-0000-4000-8000-000000000701")
+
+
+def draft_row(*, status: str = "draft") -> dict[str, object]:
+    return {
+        "id": DRAFT_ID,
+        "project_id": uuid.UUID("10000000-0000-4000-8000-000000000001"),
+        "project": "central-agent-data-hub",
+        "project_name": "Central Agent Data Hub",
+        "type": "fact",
+        "statement": "Drafts require explicit review.",
+        "source": "test",
+        "confidence": 0.9,
+        "status": status,
+        "metadata": {"created_by": "test"},
+        "created_at": "2026-06-10T10:00:00Z",
+        "updated_at": "2026-06-10T10:00:00Z",
+    }
+
+
+def call_app(
+    app,
+    *,
+    method: str = "GET",
+    path: str = "/",
+    form: dict[str, str] | None = None,
+    query: str = "",
+    origin: str | None = None,
+) -> tuple[dict[str, object], str]:
+    captured: dict[str, object] = {}
+    body = urlencode(form or {}).encode("utf-8")
+
+    def start_response(status: str, headers: list[tuple[str, str]]) -> None:
+        captured["status"] = status
+        captured["headers"] = headers
+
+    environ: dict[str, object] = {
+        "REQUEST_METHOD": method,
+        "PATH_INFO": path,
+        "QUERY_STRING": query,
+        "wsgi.input": BytesIO(body),
+        "CONTENT_LENGTH": str(len(body)),
+        "CONTENT_TYPE": "application/x-www-form-urlencoded",
+    }
+    if origin:
+        environ["HTTP_ORIGIN"] = origin
+
+    response = b"".join(app(environ, start_response)).decode("utf-8")
+    return captured, response
+
+
+class ReviewCursor:
+    def __init__(self, row: dict[str, object]) -> None:
+        self.row = row
+        self.last_sql = ""
+        self.params = None
+        self.update_count = 0
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_args):
+        return None
+
+    def execute(self, sql, params=None) -> None:
+        self.last_sql = sql
+        self.params = params
+        if sql.lstrip().upper().startswith("UPDATE"):
+            self.update_count += 1
+
+    def fetchone(self):
+        if "FROM facts" in self.last_sql and "memory.id = %s" in self.last_sql:
+            return self.row if self.row["status"] == "draft" else None
+        if self.last_sql.lstrip().upper().startswith("UPDATE"):
+            if self.row["status"] != "draft":
+                return None
+            self.row["status"] = self.params[0]
+            return {"id": self.row["id"], "status": self.params[0]}
+        return None
+
+
+class ReviewConnection:
+    def __init__(self, cursor: ReviewCursor) -> None:
+        self.cursor_obj = cursor
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_args):
+        return None
+
+    def cursor(self):
+        return self.cursor_obj
+
+
+def test_render_page_includes_local_review_claim() -> None:
     body = hub_view.render_page(
         {
             "projects": [],
@@ -16,8 +117,8 @@ def test_render_page_includes_read_only_claim() -> None:
     ).decode("utf-8")
 
     assert "Hub View" in body
-    assert "read-only review surface for Agent Data Hub" in body
-    assert "Read-only review surface" in body
+    assert "local review surface for Agent Data Hub" in body
+    assert "Read surface + review actions" in body
 
 
 def test_application_rejects_non_get_requests() -> None:
@@ -36,6 +137,258 @@ def test_application_rejects_non_get_requests() -> None:
 
     assert captured["status"] == "405 Method Not Allowed"
     assert body == b"Method Not Allowed"
+
+
+def test_inbox_page_lists_drafts_as_plain_cards() -> None:
+    groups = hub_view.group_draft_cards([draft_row()])
+    body = hub_view.render_page(
+        {
+            "projects": [],
+            "selected_project": None,
+            "not_found_slug": None,
+            "inbox": {
+                "groups": groups,
+                "csrf_token": "token",
+                "enabled": True,
+                "message": None,
+                "error": None,
+            },
+        },
+        200,
+        view_name="inbox",
+    ).decode("utf-8")
+
+    card = groups[0]["drafts"][0]["card"]
+    assert lint_card_text(card) == []
+    assert "Was merke ich mir:" in body
+    assert "Quelle: test." in body
+    assert "Folge bei Irrtum:" in body
+    assert 'action="/inbox/accept"' in body
+    assert 'action="/inbox/reject"' in body
+    assert 'name="csrf_token" value="token"' in body
+    assert "Merken" in body
+    assert "Verwerfen" in body
+
+
+def test_inbox_page_empty_state() -> None:
+    body = hub_view.render_page(
+        {
+            "projects": [],
+            "selected_project": None,
+            "not_found_slug": None,
+            "inbox": {
+                "groups": [],
+                "csrf_token": "token",
+                "enabled": True,
+                "message": None,
+                "error": None,
+            },
+        },
+        200,
+        view_name="inbox",
+    ).decode("utf-8")
+
+    assert "Nichts zu prüfen." in body
+
+
+def test_inbox_accept_promotes_and_audits(monkeypatch) -> None:
+    row = draft_row()
+    cur = ReviewCursor(row)
+    audit_calls = []
+    monkeypatch.setattr(hub_view, "connect", lambda: ReviewConnection(cur))
+    monkeypatch.setattr(inbox, "ensure_agent", lambda *_args: {"id": "agent-id"})
+    monkeypatch.setattr(inbox, "log_agent_action", lambda *args: audit_calls.append(args))
+
+    app = hub_view.create_application(bind_host="127.0.0.1", csrf_token="token")
+    captured, _body = call_app(
+        app,
+        method="POST",
+        path="/inbox/accept",
+        form={"csrf_token": "token", "draft_id": str(DRAFT_ID), "type": "fact"},
+        origin="http://127.0.0.1:8765",
+    )
+
+    headers = dict(captured["headers"])
+    assert captured["status"] == "303 See Other"
+    assert "Gemerkt" in headers["Location"]
+    assert row["status"] == "verified"
+    assert cur.update_count == 1
+    assert audit_calls[0][2] == "inbox_accept"
+    assert audit_calls[0][5]["review_source"] == "hub_view"
+
+
+def test_inbox_reject_archives_and_audits(monkeypatch) -> None:
+    row = draft_row()
+    cur = ReviewCursor(row)
+    audit_calls = []
+    monkeypatch.setattr(hub_view, "connect", lambda: ReviewConnection(cur))
+    monkeypatch.setattr(inbox, "ensure_agent", lambda *_args: {"id": "agent-id"})
+    monkeypatch.setattr(inbox, "log_agent_action", lambda *args: audit_calls.append(args))
+
+    app = hub_view.create_application(bind_host="127.0.0.1", csrf_token="token")
+    captured, _body = call_app(
+        app,
+        method="POST",
+        path="/inbox/reject",
+        form={"csrf_token": "token", "draft_id": str(DRAFT_ID), "type": "fact"},
+    )
+
+    headers = dict(captured["headers"])
+    assert captured["status"] == "303 See Other"
+    assert "Verworfen" in headers["Location"]
+    assert row["status"] == "archived"
+    assert cur.update_count == 1
+    assert audit_calls[0][2] == "inbox_reject"
+    assert audit_calls[0][5]["review_source"] == "hub_view"
+
+
+def test_inbox_post_without_or_wrong_csrf_is_forbidden_without_write(monkeypatch) -> None:
+    def fail_connect():
+        raise AssertionError("CSRF failure must not touch the database")
+
+    monkeypatch.setattr(hub_view, "connect", fail_connect)
+    app = hub_view.create_application(bind_host="127.0.0.1", csrf_token="token")
+
+    for form in (
+        {"draft_id": str(DRAFT_ID), "type": "fact"},
+        {"csrf_token": "wrong", "draft_id": str(DRAFT_ID), "type": "fact"},
+    ):
+        captured, body = call_app(
+            app,
+            method="POST",
+            path="/inbox/accept",
+            form=form,
+        )
+
+        assert captured["status"] == "403 Forbidden"
+        assert "Review token is missing or invalid." in body
+
+
+def test_inbox_post_with_bad_origin_is_forbidden_without_write(monkeypatch) -> None:
+    def fail_connect():
+        raise AssertionError("bad origin must not touch the database")
+
+    monkeypatch.setattr(hub_view, "connect", fail_connect)
+    app = hub_view.create_application(bind_host="127.0.0.1", csrf_token="token")
+
+    captured, body = call_app(
+        app,
+        method="POST",
+        path="/inbox/accept",
+        form={"csrf_token": "token", "draft_id": str(DRAFT_ID), "type": "fact"},
+        origin="https://example.com",
+    )
+
+    assert captured["status"] == "403 Forbidden"
+    assert "Origin is not allowed" in body
+
+
+def test_inbox_post_on_non_draft_shows_error_without_write(monkeypatch) -> None:
+    row = draft_row(status="verified")
+    cur = ReviewCursor(row)
+    audit_calls = []
+    monkeypatch.setattr(hub_view, "connect", lambda: ReviewConnection(cur))
+    monkeypatch.setattr(inbox, "ensure_agent", lambda *_args: {"id": "agent-id"})
+    monkeypatch.setattr(inbox, "log_agent_action", lambda *args: audit_calls.append(args))
+
+    app = hub_view.create_application(bind_host="127.0.0.1", csrf_token="token")
+    captured, _body = call_app(
+        app,
+        method="POST",
+        path="/inbox/accept",
+        form={"csrf_token": "token", "draft_id": str(DRAFT_ID), "type": "fact"},
+    )
+
+    headers = dict(captured["headers"])
+    assert captured["status"] == "303 See Other"
+    assert "Dieser%20Entwurf%20ist%20nicht%20mehr%20offen" in headers["Location"]
+    assert row["status"] == "verified"
+    assert cur.update_count == 0
+    assert audit_calls == []
+
+
+def test_inbox_get_paths_do_not_write(monkeypatch) -> None:
+    class ReadOnlyCursor:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        def execute(self, sql, *_params) -> None:
+            if re.search(r"\b(INSERT|UPDATE|DELETE)\b", sql.upper()):
+                raise AssertionError("GET /inbox must stay read-only")
+
+        def fetchall(self):
+            return []
+
+    class ReadOnlyConnection:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        def cursor(self):
+            return ReadOnlyCursor()
+
+    monkeypatch.setattr(hub_view, "connect", lambda: ReadOnlyConnection())
+    app = hub_view.create_application(bind_host="127.0.0.1", csrf_token="token")
+
+    captured, body = call_app(app, method="GET", path="/inbox")
+
+    assert captured["status"] == "200 OK"
+    assert "Nichts zu prüfen." in body
+
+
+def test_inbox_action_get_path_does_not_touch_database(monkeypatch) -> None:
+    def fail_connect():
+        raise AssertionError("GET action path must not touch the database")
+
+    monkeypatch.setattr(hub_view, "connect", fail_connect)
+    app = hub_view.create_application(bind_host="127.0.0.1", csrf_token="token")
+
+    captured, body = call_app(app, method="GET", path="/inbox/accept")
+
+    assert captured["status"] == "404 Not Found"
+    assert body == "Not Found"
+
+
+def test_non_loopback_bind_disables_inbox_actions(monkeypatch) -> None:
+    def fail_connect():
+        raise AssertionError("disabled POST must not touch the database")
+
+    monkeypatch.setattr(hub_view, "connect", fail_connect)
+    groups = hub_view.group_draft_cards([draft_row()])
+    body = hub_view.render_page(
+        {
+            "projects": [],
+            "selected_project": None,
+            "not_found_slug": None,
+            "inbox": {
+                "groups": groups,
+                "csrf_token": "token",
+                "enabled": False,
+                "message": None,
+                "error": None,
+            },
+        },
+        200,
+        view_name="inbox",
+        inbox_enabled=False,
+    ).decode("utf-8")
+    app = hub_view.create_application(bind_host="0.0.0.0", csrf_token="token")
+    captured, _post_body = call_app(
+        app,
+        method="POST",
+        path="/inbox/accept",
+        form={"csrf_token": "token", "draft_id": str(DRAFT_ID), "type": "fact"},
+    )
+
+    assert 'action="/inbox/accept"' not in body
+    assert "disabled>Merken</button>" in body
+    assert "Review actions are disabled" in body
+    assert captured["status"] == "403 Forbidden"
 
 
 def test_application_renders_project_detail(monkeypatch) -> None:

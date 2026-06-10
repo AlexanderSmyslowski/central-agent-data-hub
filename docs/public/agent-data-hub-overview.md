@@ -72,7 +72,7 @@ credential use require explicit human approval.
 Humans can inspect the same memory in two calmer forms:
 
 - Markdown and Obsidian projection for reading and graph navigation
-- Hub View as a small local read-only interface
+- Hub View as a small local review interface for reading and draft review
 
 These are review surfaces. They are not the operational source of truth.
 

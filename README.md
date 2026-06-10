@@ -26,7 +26,8 @@ Signal Inbox until they are triaged.
 
 The Hub stores curated facts, decisions, risks, open questions, reports, and
 relations. It can export a human-readable Markdown projection and show the same
-state in a small local read-only UI called Hub View.
+state in a small local review UI called Hub View. Hub View can also accept or
+reject draft memory candidates as explicit, audited human review actions.
 
 ## What It Is Not
 
@@ -57,7 +58,7 @@ What is already real:
 - start/finish wrappers for disciplined agent runs
 - quality checks, receipts, and backup verification
 - Markdown/Obsidian projection
-- a local read-only Hub View
+- a local Hub View for reading reviewed memory and reviewing drafts
 
 What is still rough:
 
@@ -132,7 +133,7 @@ scripts/db_start_public_demo.sh
 scripts/smoke_public_demo.sh
 ```
 
-4. Start the local read-only review UI:
+4. Start the local review UI:
 
 ```bash
 scripts/hub_view.sh
@@ -225,11 +226,13 @@ scripts/project_schema_friction.sh \
 
 Agent Data Hub can project reviewed memory into Markdown for human reading and
 Obsidian graph navigation. It can also render the same project set in Hub View.
+Hub View is mostly read-only; its only write actions are accepting or rejecting
+one draft at a time through the Review Inbox.
 
 The human-facing surfaces are for:
 
 - reading
-- review
+- explicit draft review
 - graph navigation
 - notes and handoff inspection
 

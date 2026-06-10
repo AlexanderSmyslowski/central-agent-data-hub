@@ -23,7 +23,7 @@ It separates three things:
 - working rules in repo-local files such as `AGENTS.md`
 
 It can project reviewed memory into Markdown/Obsidian and show the same state
-in a small local read-only app called Hub View.
+in a small local review app called Hub View.
 
 ## X / short post
 
@@ -57,7 +57,7 @@ The current public release includes:
 - disciplined start/finish wrappers for agent runs
 - quality checks, receipts, and backup verification
 - Markdown/Obsidian projection
-- Hub View as a local read-only review surface
+- Hub View as a local review surface
 - a neutral public demo path for first-time evaluation
 
 Recommended first run:

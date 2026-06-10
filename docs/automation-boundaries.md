@@ -86,6 +86,19 @@ agent-hub inbox --reject <draft-id>
 There is no time-based auto-accept and no silent promotion from draft to
 reviewed memory.
 
+Hub View may expose the same reviewed action in its local Review Inbox. This is
+not a general UI write boundary: the only allowed Hub View writes are accepting
+one draft or rejecting one draft. Both actions reuse the `agent-hub inbox`
+review path and write the same audit trail.
+
+Hub View review actions are guarded deliberately:
+
+- writes use `POST` only
+- each form includes a server-generated CSRF token
+- requests with an `Origin` header must come from loopback
+- review buttons are disabled when Hub View is not bound to loopback
+- there is no bulk accept and no silent promotion
+
 ### Human Review Required
 
 Some candidates are not written as drafts until a human looks at them. The Hub

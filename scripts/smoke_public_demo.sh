@@ -64,7 +64,7 @@ for _ in range(50):
             text
             for text in (
                 "Hub View",
-                "read-only review surface",
+                "local review surface",
                 "central-agent-data-hub-demo",
             )
             if text not in body
