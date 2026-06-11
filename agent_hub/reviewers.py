@@ -10,6 +10,7 @@ from typing import Any
 
 HANDLE_RE = re.compile(r"^[a-z0-9-]+$")
 UNASSIGNED_REVIEWER = "unassigned"
+VALID_REVIEW_SOURCES = frozenset({"cli", "hub_view", "telegram"})
 
 
 @dataclass(frozen=True)
@@ -48,6 +49,14 @@ def validate_reviewer_handle(value: object) -> str:
     if allowed is not None and handle not in allowed:
         raise ValueError(f"reviewer handle is not allowed: {handle}")
     return handle
+
+
+def validate_review_source(value: object) -> str:
+    source = str(value or "").strip()
+    if source not in VALID_REVIEW_SOURCES:
+        allowed = ", ".join(sorted(VALID_REVIEW_SOURCES))
+        raise ValueError(f"unknown review_source: {source or '<empty>'}; expected one of: {allowed}")
+    return source
 
 
 def resolve_required_reviewer(

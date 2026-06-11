@@ -262,6 +262,21 @@ Draft routing can suggest a responsible reviewer through
 local default, but it does not create permissions. Another reviewer can still
 accept the draft; the audit records both handles.
 
+## Integration Surface For External Review Adapters
+
+External review adapters must import only `agent_hub.review_api`. The supported
+functions are:
+
+- `connect`
+- `fetch_drafts`
+- `review_draft_by_id`
+- `validate_reviewer_handle`
+- `resolve_responsible_reviewer`
+
+Everything else in `agent_hub` is internal and may change without notice.
+Review adapters may submit only registered `review_source` values; ADH currently
+recognizes `cli`, `hub_view`, and `telegram`.
+
 If something useful does not fit an existing category, record a structure
 question instead of forcing it into the wrong type:
 

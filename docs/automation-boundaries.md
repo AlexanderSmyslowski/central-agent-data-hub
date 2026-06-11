@@ -112,6 +112,12 @@ permissions; the audit records the responsible reviewer and the reviewer who
 actually accepted or rejected the draft.
 A local `AGENT_HUB_REVIEWER` environment variable may provide the reviewer handle, but public templates leave it unset so review identity is chosen explicitly.
 
+Allowlisted internal chat channels, such as Telegram, are consciously approved
+review channels for draft cards. Telegram bot messages are not end-to-end
+encrypted and pass through Telegram servers; only content that is non-sensitive
+by Hub policy may appear in cards. Channel adapters live outside this repository
+and must use `agent_hub.review_api`. This is attribution, not authentication.
+
 ## Demo And Ops Database Boundary
 
 The public demo path and the maintainer local ops path are physically separate

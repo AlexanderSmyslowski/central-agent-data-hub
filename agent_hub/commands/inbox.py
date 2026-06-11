@@ -17,6 +17,7 @@ from agent_hub.memory import ensure_agent, log_agent_action
 from agent_hub.reviewers import (
     resolve_required_reviewer,
     resolve_responsible_reviewer,
+    validate_review_source,
     validate_reviewer_handle,
 )
 from agent_hub.writeback_routing import card_for_item
@@ -154,8 +155,7 @@ def review_draft(
     review_source: str,
 ) -> dict[str, Any]:
     reviewed_by = validate_reviewer_handle(reviewed_by)
-    if not review_source:
-        raise ValueError("review_source is required")
+    review_source = validate_review_source(review_source)
     if "responsible_reviewer" not in row or "resolution_reason" not in row:
         resolution = resolve_responsible_reviewer(row)
         row = {
@@ -253,6 +253,7 @@ def review_draft_by_id(
     reviewed_by: str,
     review_source: str,
 ) -> dict[str, Any] | None:
+    review_source = validate_review_source(review_source)
     row = find_draft(cur, draft_id, project_slug=project_slug)
     if not row:
         return None

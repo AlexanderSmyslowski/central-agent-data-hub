@@ -13,5 +13,6 @@ __all__ = [
     "receipts",
     "relations",
     "retrieval",
+    "review_api",
     "rendering",
 ]
