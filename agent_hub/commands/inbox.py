@@ -14,6 +14,11 @@ from agent_hub.commands.common import (
 )
 from agent_hub.db import connect
 from agent_hub.memory import ensure_agent, log_agent_action
+from agent_hub.reviewers import (
+    resolve_required_reviewer,
+    resolve_responsible_reviewer,
+    validate_reviewer_handle,
+)
 from agent_hub.writeback_routing import card_for_item
 
 
@@ -55,13 +60,19 @@ def row_sort_key(row: dict[str, Any]) -> tuple[str, str, str]:
 
 
 def row_with_type(row: dict[str, Any], item_type: str) -> dict[str, Any]:
-    return {**row, "type": item_type}
+    draft = {**row, "type": item_type}
+    resolution = resolve_responsible_reviewer(draft)
+    draft["responsible_reviewer"] = resolution.handle
+    draft["resolution_reason"] = resolution.reason
+    draft.pop("project_metadata", None)
+    return draft
 
 
 def fetch_drafts(
     cur,
     *,
     project_slug: str | None = None,
+    for_reviewer: str | None = None,
     limit: int | None = 20,
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
@@ -77,7 +88,10 @@ def fetch_drafts(
             params.append(limit)
         cur.execute(
             f"""
-            SELECT {spec['columns']}, p.slug AS project, p.name AS project_name
+            SELECT {spec['columns']},
+                   p.slug AS project,
+                   p.name AS project_name,
+                   p.metadata AS project_metadata
             FROM {spec['table']} AS memory
             JOIN projects AS p ON p.id = memory.project_id
             WHERE memory.status = %s
@@ -88,6 +102,8 @@ def fetch_drafts(
             tuple(params),
         )
         rows.extend(row_with_type(row, item_type) for row in cur.fetchall())
+    if for_reviewer:
+        rows = [row for row in rows if row["responsible_reviewer"] == for_reviewer]
     rows.sort(key=row_sort_key, reverse=True)
     return rows[:limit] if limit is not None else rows
 
@@ -107,7 +123,10 @@ def find_draft(
             params.append(project_slug)
         cur.execute(
             f"""
-            SELECT {spec['columns']}, p.slug AS project, p.name AS project_name
+            SELECT {spec['columns']},
+                   p.slug AS project,
+                   p.name AS project_name,
+                   p.metadata AS project_metadata
             FROM {spec['table']} AS memory
             JOIN projects AS p ON p.id = memory.project_id
             WHERE memory.id = %s
@@ -131,8 +150,19 @@ def review_draft(
     decision: str,
     agent_slug: str,
     agent_name: str,
-    review_source: str | None = None,
+    reviewed_by: str,
+    review_source: str,
 ) -> dict[str, Any]:
+    reviewed_by = validate_reviewer_handle(reviewed_by)
+    if not review_source:
+        raise ValueError("review_source is required")
+    if "responsible_reviewer" not in row or "resolution_reason" not in row:
+        resolution = resolve_responsible_reviewer(row)
+        row = {
+            **row,
+            "responsible_reviewer": resolution.handle,
+            "resolution_reason": resolution.reason,
+        }
     item_type = row["type"]
     spec = INBOX_TABLES[item_type]
     table = spec["table"]
@@ -142,9 +172,11 @@ def review_draft(
         "decision": decision,
         "previous_status": row["status"],
         "next_status": next_status,
+        "reviewed_by": reviewed_by,
+        "review_source": review_source,
+        "responsible_reviewer": row.get("responsible_reviewer"),
+        "resolution_reason": row.get("resolution_reason"),
     }
-    if review_source:
-        review_state["review_source"] = review_source
     metadata["agent_hub_review"] = review_state
     cur.execute(
         f"""
@@ -166,9 +198,11 @@ def review_draft(
         "command": "inbox",
         "decision": decision,
         "project": row["project"],
+        "reviewed_by": reviewed_by,
+        "review_source": review_source,
+        "responsible_reviewer": row.get("responsible_reviewer"),
+        "resolution_reason": row.get("resolution_reason"),
     }
-    if review_source:
-        action_metadata["review_source"] = review_source
 
     log_agent_action(
         cur,
@@ -181,6 +215,17 @@ def review_draft(
             "project_id": row["project_id"],
             "previous_status": row["status"],
             "next_status": next_status,
+            "reviewed_by": reviewed_by,
+            "review_source": review_source,
+            "responsible_reviewer": row.get("responsible_reviewer"),
+            "resolution_reason": row.get("resolution_reason"),
+        },
+        {
+            "created_by": "agent-hub inbox",
+            "reviewed_by": reviewed_by,
+            "review_source": review_source,
+            "responsible_reviewer": row.get("responsible_reviewer"),
+            "resolution_reason": row.get("resolution_reason"),
         },
     )
     return {
@@ -189,6 +234,10 @@ def review_draft(
         "type": item_type,
         "decision": decision,
         "status": next_status,
+        "reviewed_by": reviewed_by,
+        "review_source": review_source,
+        "responsible_reviewer": row.get("responsible_reviewer"),
+        "resolution_reason": row.get("resolution_reason"),
     }
 
 
@@ -201,7 +250,8 @@ def review_draft_by_id(
     project_slug: str | None = None,
     agent_slug: str,
     agent_name: str,
-    review_source: str | None = None,
+    reviewed_by: str,
+    review_source: str,
 ) -> dict[str, Any] | None:
     row = find_draft(cur, draft_id, project_slug=project_slug)
     if not row:
@@ -214,6 +264,7 @@ def review_draft_by_id(
         decision=decision,
         agent_slug=agent_slug,
         agent_name=agent_name,
+        reviewed_by=reviewed_by,
         review_source=review_source,
     )
 
@@ -224,6 +275,10 @@ def print_draft_cards(rows: list[dict[str, Any]]) -> None:
         return
     for row in rows:
         print(f"{row['id']} [{row['project']} / {row['type']}]")
+        print(
+            "Responsible reviewer: "
+            f"{row['responsible_reviewer']} ({row['resolution_reason']})"
+        )
         print(card_for_item(row))
         print()
 
@@ -236,12 +291,19 @@ def run_inbox(args: argparse.Namespace) -> int:
     decision = "accept" if args.accept else "reject" if args.reject else None
 
     try:
+        for_reviewer = None
+        if args.for_reviewer:
+            for_reviewer = validate_reviewer_handle(args.for_reviewer)
+        reviewed_by = None
+        if review_ids:
+            reviewed_by = resolve_required_reviewer(args.reviewer)
         with connect() as conn:
             with conn.cursor() as cur:
                 if not review_ids:
                     rows = fetch_drafts(
                         cur,
                         project_slug=args.project,
+                        for_reviewer=for_reviewer,
                         limit=args.limit,
                     )
                     if args.format == "json":
@@ -268,6 +330,8 @@ def run_inbox(args: argparse.Namespace) -> int:
                         project_slug=args.project,
                         agent_slug=args.agent,
                         agent_name=args.agent_name,
+                        review_source="cli",
+                        reviewed_by=reviewed_by,
                     )
                     if not result:
                         missing.append(str(draft_id))

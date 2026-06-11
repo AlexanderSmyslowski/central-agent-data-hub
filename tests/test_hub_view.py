@@ -25,7 +25,7 @@ def draft_row(*, status: str = "draft") -> dict[str, object]:
         "source": "test",
         "confidence": 0.9,
         "status": status,
-        "metadata": {"created_by": "test"},
+        "metadata": {"created_by": "test", "assigned_reviewer": "alice"},
         "created_at": "2026-06-10T10:00:00Z",
         "updated_at": "2026-06-10T10:00:00Z",
     }
@@ -163,6 +163,7 @@ def test_inbox_page_lists_drafts_as_plain_cards() -> None:
     assert "Was merke ich mir:" in body
     assert "Quelle: test." in body
     assert "Folge bei Irrtum:" in body
+    assert "zuständig: alice" in body
     assert 'action="/inbox/accept"' in body
     assert 'action="/inbox/reject"' in body
     assert 'name="csrf_token" value="token"' in body
@@ -199,7 +200,11 @@ def test_inbox_accept_promotes_and_audits(monkeypatch) -> None:
     monkeypatch.setattr(inbox, "ensure_agent", lambda *_args: {"id": "agent-id"})
     monkeypatch.setattr(inbox, "log_agent_action", lambda *args: audit_calls.append(args))
 
-    app = hub_view.create_application(bind_host="127.0.0.1", csrf_token="token")
+    app = hub_view.create_application(
+        bind_host="127.0.0.1",
+        csrf_token="token",
+        reviewer_handle="bob",
+    )
     captured, _body = call_app(
         app,
         method="POST",
@@ -215,6 +220,10 @@ def test_inbox_accept_promotes_and_audits(monkeypatch) -> None:
     assert cur.update_count == 1
     assert audit_calls[0][2] == "inbox_accept"
     assert audit_calls[0][5]["review_source"] == "hub_view"
+    assert audit_calls[0][5]["reviewed_by"] == "bob"
+    assert audit_calls[0][5]["responsible_reviewer"] == "alice"
+    assert audit_calls[0][7]["review_source"] == "hub_view"
+    assert audit_calls[0][7]["reviewed_by"] == "bob"
 
 
 def test_inbox_reject_archives_and_audits(monkeypatch) -> None:
@@ -225,7 +234,11 @@ def test_inbox_reject_archives_and_audits(monkeypatch) -> None:
     monkeypatch.setattr(inbox, "ensure_agent", lambda *_args: {"id": "agent-id"})
     monkeypatch.setattr(inbox, "log_agent_action", lambda *args: audit_calls.append(args))
 
-    app = hub_view.create_application(bind_host="127.0.0.1", csrf_token="token")
+    app = hub_view.create_application(
+        bind_host="127.0.0.1",
+        csrf_token="token",
+        reviewer_handle="bob",
+    )
     captured, _body = call_app(
         app,
         method="POST",
@@ -240,6 +253,9 @@ def test_inbox_reject_archives_and_audits(monkeypatch) -> None:
     assert cur.update_count == 1
     assert audit_calls[0][2] == "inbox_reject"
     assert audit_calls[0][5]["review_source"] == "hub_view"
+    assert audit_calls[0][5]["reviewed_by"] == "bob"
+    assert audit_calls[0][7]["review_source"] == "hub_view"
+    assert audit_calls[0][7]["reviewed_by"] == "bob"
 
 
 def test_inbox_post_without_or_wrong_csrf_is_forbidden_without_write(monkeypatch) -> None:
@@ -247,7 +263,11 @@ def test_inbox_post_without_or_wrong_csrf_is_forbidden_without_write(monkeypatch
         raise AssertionError("CSRF failure must not touch the database")
 
     monkeypatch.setattr(hub_view, "connect", fail_connect)
-    app = hub_view.create_application(bind_host="127.0.0.1", csrf_token="token")
+    app = hub_view.create_application(
+        bind_host="127.0.0.1",
+        csrf_token="token",
+        reviewer_handle="bob",
+    )
 
     for form in (
         {"draft_id": str(DRAFT_ID), "type": "fact"},
@@ -269,7 +289,11 @@ def test_inbox_post_with_bad_origin_is_forbidden_without_write(monkeypatch) -> N
         raise AssertionError("bad origin must not touch the database")
 
     monkeypatch.setattr(hub_view, "connect", fail_connect)
-    app = hub_view.create_application(bind_host="127.0.0.1", csrf_token="token")
+    app = hub_view.create_application(
+        bind_host="127.0.0.1",
+        csrf_token="token",
+        reviewer_handle="bob",
+    )
 
     captured, body = call_app(
         app,
@@ -291,7 +315,11 @@ def test_inbox_post_on_non_draft_shows_error_without_write(monkeypatch) -> None:
     monkeypatch.setattr(inbox, "ensure_agent", lambda *_args: {"id": "agent-id"})
     monkeypatch.setattr(inbox, "log_agent_action", lambda *args: audit_calls.append(args))
 
-    app = hub_view.create_application(bind_host="127.0.0.1", csrf_token="token")
+    app = hub_view.create_application(
+        bind_host="127.0.0.1",
+        csrf_token="token",
+        reviewer_handle="bob",
+    )
     captured, _body = call_app(
         app,
         method="POST",
@@ -305,6 +333,50 @@ def test_inbox_post_on_non_draft_shows_error_without_write(monkeypatch) -> None:
     assert row["status"] == "verified"
     assert cur.update_count == 0
     assert audit_calls == []
+
+
+def test_hub_view_without_reviewer_disables_buttons_and_blocks_post(monkeypatch) -> None:
+    def fail_connect():
+        raise AssertionError("missing reviewer POST must not touch the database")
+
+    monkeypatch.setattr(hub_view, "connect", fail_connect)
+    groups = hub_view.group_draft_cards([draft_row()])
+    body = hub_view.render_page(
+        {
+            "projects": [],
+            "selected_project": None,
+            "not_found_slug": None,
+            "inbox": {
+                "groups": groups,
+                "csrf_token": "token",
+                "enabled": True,
+                "review_enabled": False,
+                "reviewer": None,
+                "reviewer_error": "reviewer handle is required; set HUB_VIEW_REVIEWER",
+                "message": None,
+                "error": None,
+            },
+        },
+        200,
+        view_name="inbox",
+    ).decode("utf-8")
+
+    app = hub_view.create_application(
+        bind_host="127.0.0.1",
+        csrf_token="token",
+        reviewer_error="reviewer handle is required; set HUB_VIEW_REVIEWER",
+    )
+    captured, post_body = call_app(
+        app,
+        method="POST",
+        path="/inbox/accept",
+        form={"csrf_token": "token", "draft_id": str(DRAFT_ID), "type": "fact"},
+    )
+
+    assert "reviewer handle is required; set HUB_VIEW_REVIEWER" in body
+    assert "disabled>Merken</button>" in body
+    assert captured["status"] == "403 Forbidden"
+    assert "HUB_VIEW_REVIEWER" in post_body
 
 
 def test_inbox_get_paths_do_not_write(monkeypatch) -> None:

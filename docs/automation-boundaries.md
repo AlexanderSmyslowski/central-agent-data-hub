@@ -104,6 +104,13 @@ Hub View review actions are guarded deliberately:
 - review buttons are disabled when Hub View is not bound to loopback
 - there is no bulk accept and no silent promotion
 
+Agent Data Hub v0.1.x uses attribution instead of access control: everyone in
+the trusted local workspace can see the review inbox, but every accept/reject
+decision must carry a reviewer handle. This is not an authentication system.
+Routing can name a responsible reviewer for a draft, but it does not enforce
+permissions; the audit records the responsible reviewer and the reviewer who
+actually accepted or rejected the draft.
+
 ## Demo And Ops Database Boundary
 
 The public demo path and the maintainer local ops path are physically separate

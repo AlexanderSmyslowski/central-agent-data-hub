@@ -246,12 +246,21 @@ decisions, risks, open questions, and reports:
 
 ```bash
 agent-hub inbox
-agent-hub inbox --accept <draft-id>
-agent-hub inbox --reject <draft-id>
+agent-hub inbox --for alice
+agent-hub inbox --accept <draft-id> --reviewer bob
+agent-hub inbox --reject <draft-id> --reviewer bob
 ```
 
 There is no time-based auto-accept and no silent promotion from draft to
 reviewed memory.
+
+Agent Data Hub v0.1.x uses attribution instead of access control: everyone in
+the trusted local workspace can see the review inbox, but every accept/reject
+decision must carry a reviewer handle. This is not an authentication system.
+Draft routing can suggest a responsible reviewer through
+`--metadata assigned_reviewer=alice`, `projects.metadata.default_reviewer`, or a
+local default, but it does not create permissions. Another reviewer can still
+accept the draft; the audit records both handles.
 
 If something useful does not fit an existing category, record a structure
 question instead of forcing it into the wrong type:

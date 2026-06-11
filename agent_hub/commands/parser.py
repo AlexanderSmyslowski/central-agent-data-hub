@@ -418,6 +418,15 @@ def build_parser() -> argparse.ArgumentParser:
         default="Codex",
         help="Agent display name to attribute accept/reject actions to.",
     )
+    inbox_parser.add_argument(
+        "--reviewer",
+        help="Reviewer handle for accept/reject. Falls back to AGENT_HUB_REVIEWER.",
+    )
+    inbox_parser.add_argument(
+        "--for",
+        dest="for_reviewer",
+        help="Show drafts assigned to this reviewer handle only.",
+    )
     review_group = inbox_parser.add_mutually_exclusive_group()
     review_group.add_argument(
         "--accept",

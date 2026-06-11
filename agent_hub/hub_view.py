@@ -26,6 +26,7 @@ from agent_hub.commands.summaries import fetch_compiled_payload
 from agent_hub.db import connect
 from agent_hub.quality import fetch_project_quality
 from agent_hub.rendering import truncate
+from agent_hub.reviewers import resolve_required_reviewer, resolve_responsible_reviewer
 from agent_hub.writeback_routing import card_for_item
 
 
@@ -169,6 +170,16 @@ def origin_is_loopback(origin: str | None) -> bool:
 
 def draft_card(row: dict[str, object]) -> dict[str, object]:
     card = card_for_item(row)
+    resolution = (
+        None
+        if "responsible_reviewer" in row and "resolution_reason" in row
+        else resolve_responsible_reviewer(row)
+    )
+    responsible_reviewer = row.get("responsible_reviewer")
+    resolution_reason = row.get("resolution_reason")
+    if resolution is not None:
+        responsible_reviewer = resolution.handle
+        resolution_reason = resolution.reason
     return {
         "id": str(row["id"]),
         "type": row["type"],
@@ -176,6 +187,8 @@ def draft_card(row: dict[str, object]) -> dict[str, object]:
         "project": row["project"],
         "project_name": row["project_name"],
         "updated_at": format_timestamp(row.get("updated_at")),
+        "responsible_reviewer": responsible_reviewer or "unassigned",
+        "resolution_reason": resolution_reason or "no reviewer assigned",
         "card": card,
         "card_lines": card.splitlines(),
     }
@@ -229,6 +242,8 @@ def load_inbox_view_model(
     *,
     csrf_token: str,
     inbox_enabled: bool,
+    reviewer_handle: str | None,
+    reviewer_error: str | None,
     message: str | None = None,
     error_message: str | None = None,
 ) -> tuple[int, dict[str, object]]:
@@ -243,6 +258,9 @@ def load_inbox_view_model(
             "groups": group_draft_cards(drafts),
             "csrf_token": csrf_token,
             "enabled": inbox_enabled,
+            "review_enabled": inbox_enabled and reviewer_handle is not None,
+            "reviewer": reviewer_handle,
+            "reviewer_error": reviewer_error,
             "message": message,
             "error": error_message,
         },
@@ -341,10 +359,19 @@ def inbox_redirect(param: str, message: str) -> str:
 
 
 class HubViewApplication:
-    def __init__(self, *, bind_host: str, csrf_token: str) -> None:
+    def __init__(
+        self,
+        *,
+        bind_host: str,
+        csrf_token: str,
+        reviewer_handle: str | None,
+        reviewer_error: str | None,
+    ) -> None:
         self.bind_host = bind_host
         self.csrf_token = csrf_token
         self.inbox_enabled = is_loopback_host(bind_host)
+        self.reviewer_handle = reviewer_handle
+        self.reviewer_error = reviewer_error
 
     def __call__(
         self,
@@ -380,6 +407,8 @@ class HubViewApplication:
             status_code, view_model = load_inbox_view_model(
                 csrf_token=self.csrf_token,
                 inbox_enabled=self.inbox_enabled,
+                reviewer_handle=self.reviewer_handle,
+                reviewer_error=self.reviewer_error,
                 message=query_value(environ, "message"),
                 error_message=query_value(environ, "error"),
             )
@@ -416,6 +445,12 @@ class HubViewApplication:
                 "403 Forbidden",
                 "Review actions are only available on loopback.",
             )
+        if self.reviewer_handle is None:
+            return text_response(
+                start_response,
+                "403 Forbidden",
+                self.reviewer_error or "Reviewer handle is required for this review action.",
+            )
         if not origin_is_loopback(environ.get("HTTP_ORIGIN")):
             return text_response(
                 start_response,
@@ -451,6 +486,7 @@ class HubViewApplication:
                         agent_slug="hub-view",
                         agent_name="Hub View",
                         review_source="hub_view",
+                        reviewed_by=self.reviewer_handle,
                     )
         except ValueError:
             return redirect_response(
@@ -480,10 +516,19 @@ def create_application(
     *,
     bind_host: str = "127.0.0.1",
     csrf_token: str | None = None,
+    reviewer_handle: str | None = None,
+    reviewer_error: str | None = None,
 ) -> HubViewApplication:
+    if reviewer_handle is None and reviewer_error is None:
+        try:
+            reviewer_handle = resolve_required_reviewer(env_var="HUB_VIEW_REVIEWER")
+        except ValueError as exc:
+            reviewer_error = str(exc)
     return HubViewApplication(
         bind_host=bind_host,
         csrf_token=csrf_token or secrets.token_urlsafe(32),
+        reviewer_handle=reviewer_handle,
+        reviewer_error=reviewer_error,
     )
 
 

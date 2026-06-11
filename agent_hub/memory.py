@@ -121,7 +121,9 @@ def log_agent_action(
     object_id: object,
     input_payload: dict[str, object],
     output: dict[str, object],
+    metadata: dict[str, object] | None = None,
 ) -> None:
+    action_metadata = metadata or {"created_by": "agent-hub remember"}
     cur.execute(
         """
         INSERT INTO agent_actions (
@@ -137,7 +139,7 @@ def log_agent_action(
             object_id,
             json.dumps(input_payload),
             json.dumps(output, default=json_default),
-            json.dumps({"created_by": "agent-hub remember"}),
+            json.dumps(action_metadata, default=json_default),
         ),
     )
 

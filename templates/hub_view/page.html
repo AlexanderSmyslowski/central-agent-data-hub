@@ -482,6 +482,7 @@
 
         <section class="panel content">
           {% if view_name == 'inbox' %}
+            {% set review_enabled = inbox.review_enabled if inbox.review_enabled is defined else inbox.enabled %}
             <div class="detail-header">
               <div>
                 <h2 class="detail-title">Review Inbox</h2>
@@ -498,6 +499,11 @@
             {% if not inbox.enabled %}
               <p class="notice">Review actions are disabled because Hub View is not bound to a loopback address.</p>
             {% endif %}
+            {% if inbox.reviewer_error %}
+              <p class="notice">{{ inbox.reviewer_error }}</p>
+            {% elif inbox.reviewer %}
+              <p class="notice">Review actions are attributed to {{ inbox.reviewer }}.</p>
+            {% endif %}
 
             <section class="section">
               {% if inbox.groups %}
@@ -507,12 +513,15 @@
                     <div class="list">
                       {% for draft in group.drafts %}
                         <article class="draft-card">
-                          <div class="draft-meta">{{ draft.project }} · {{ draft.type_label }}{% if draft.updated_at %} · {{ draft.updated_at }}{% endif %}</div>
+                          <div class="draft-meta">
+                            {{ draft.project }} · {{ draft.type_label }} · zuständig: {{ draft.responsible_reviewer }}
+                            {% if draft.updated_at %} · {{ draft.updated_at }}{% endif %}
+                          </div>
                           {% for line in draft.card_lines %}
                             <p>{{ line }}</p>
                           {% endfor %}
                           <div class="draft-actions">
-                            {% if inbox.enabled %}
+                            {% if review_enabled %}
                               <form method="post" action="/inbox/accept">
                                 <input type="hidden" name="csrf_token" value="{{ inbox.csrf_token }}">
                                 <input type="hidden" name="draft_id" value="{{ draft.id }}">
