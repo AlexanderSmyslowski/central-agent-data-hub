@@ -6,7 +6,12 @@ from datetime import date, datetime, time, timedelta, timezone
 import math
 from typing import Any
 
-from agent_hub.statuses import INACTIVE_OPEN_QUESTION_STATUSES
+from agent_hub.statuses import (
+    DRAFT_STATUS,
+    INACTIVE_OPEN_QUESTION_STATUSES,
+    INBOX_REVIEW_TYPES,
+    table_for_item_type,
+)
 from agent_hub.writeback_routing import REVIEWED_STATUSES
 
 
@@ -115,7 +120,7 @@ def collect_unanswered_questions(
         if not isinstance(row, dict):
             continue
         status = str(row.get("status") or "")
-        if status == "draft" or status in INACTIVE_OPEN_QUESTION_STATUSES:
+        if status == DRAFT_STATUS or status in INACTIVE_OPEN_QUESTION_STATUSES:
             continue
         age = item_age(row, now)
         if age is None:
@@ -140,7 +145,7 @@ def collect_empty_types(compiled: dict[str, object]) -> list[dict[str, object]]:
         item_type: [
             row
             for row in compiled.get(payload_key, [])
-            if isinstance(row, dict) and row.get("status") != "draft"
+            if isinstance(row, dict) and row.get("status") != DRAFT_STATUS
         ]
         for payload_key, item_type in PREPARE_TYPE_KEYS
     }
@@ -168,7 +173,7 @@ def collect_task_blind_spots(
         rows = [
             row
             for row in compiled.get(payload_key, [])
-            if isinstance(row, dict) and row.get("status") != "draft"
+            if isinstance(row, dict) and row.get("status") != DRAFT_STATUS
         ]
         if not rows:
             continue
@@ -254,22 +259,17 @@ def gap_summary(gaps: dict[str, object]) -> dict[str, object]:
 
 def fetch_pending_draft_counts(cur, project_id: object) -> dict[str, int]:
     counts: dict[str, int] = {}
-    tables = {
-        "facts": "facts",
-        "decisions": "decisions",
-        "risks": "risks",
-        "open_questions": "open_questions",
-        "reports": "reports",
-    }
-    for key, table in tables.items():
+    for item_type in INBOX_REVIEW_TYPES:
+        table = table_for_item_type(item_type)
+        key = "open_questions" if item_type == "open_question" else f"{item_type}s"
         cur.execute(
             f"""
             SELECT count(*) AS count
             FROM {table}
             WHERE project_id = %s
-              AND status = 'draft'
+              AND status = %s
             """,
-            (project_id,),
+            (project_id, DRAFT_STATUS),
         )
         counts[key] = int(cur.fetchone()["count"])
     return counts

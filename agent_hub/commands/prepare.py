@@ -24,7 +24,8 @@ from agent_hub.quality import fetch_project_counts
 from agent_hub.relations import fetch_project_relations
 from agent_hub.rendering import markdown_list
 from agent_hub.statuses import (
-    INACTIVE_OPEN_QUESTION_STATUSES,
+    DRAFT_STATUS,
+    prepare_excluded_statuses,
     unresolved_open_questions,
 )
 
@@ -79,31 +80,31 @@ PREPARE_SPECS = {
         "table": "facts",
         "columns": "id, statement, source, confidence",
         "search": "concat_ws(' ', statement, source)",
-        "excluded_statuses": ("archived", "deprecated"),
+        "excluded_statuses": prepare_excluded_statuses("fact"),
     },
     "decisions": {
         "table": "decisions",
         "columns": "id, decision, rationale, consequences",
         "search": "concat_ws(' ', decision, rationale, consequences)",
-        "excluded_statuses": ("archived", "rejected"),
+        "excluded_statuses": prepare_excluded_statuses("decision"),
     },
     "risks": {
         "table": "risks",
         "columns": "id, title, severity, impact, mitigation",
         "search": "concat_ws(' ', title, severity, impact, mitigation)",
-        "excluded_statuses": ("archived", "resolved"),
+        "excluded_statuses": prepare_excluded_statuses("risk"),
     },
     "open_questions": {
         "table": "open_questions",
         "columns": "id, question, answer",
         "search": "concat_ws(' ', question, answer)",
-        "excluded_statuses": INACTIVE_OPEN_QUESTION_STATUSES,
+        "excluded_statuses": prepare_excluded_statuses("open_question"),
     },
     "reports": {
         "table": "reports",
         "columns": "id, title, report_type, summary",
         "search": "concat_ws(' ', title, report_type, summary, body)",
-        "excluded_statuses": ("archived",),
+        "excluded_statuses": prepare_excluded_statuses("report"),
     },
 }
 
@@ -120,7 +121,7 @@ def annotate_prepare_row(
 ) -> dict[str, object]:
     annotated = dict(row)
     annotated["prepare_reason"] = (
-        DRAFT_PREPARE_REASON if row.get("status") == "draft" else reason
+        DRAFT_PREPARE_REASON if row.get("status") == DRAFT_STATUS else reason
     )
     if task_score is not None:
         annotated["task_score"] = float(task_score)
@@ -128,26 +129,30 @@ def annotate_prepare_row(
 
 
 def review_status(row: dict[str, object]) -> str:
-    return "draft" if row.get("status") == "draft" else "verified"
+    return DRAFT_STATUS if row.get("status") == DRAFT_STATUS else "verified"
 
 
 def non_draft_rows(rows: list[dict[str, object]]) -> list[dict[str, object]]:
-    return [row for row in rows if review_status(row) != "draft"]
+    return [row for row in rows if review_status(row) != DRAFT_STATUS]
 
 
 def draft_rows_by_type(
     compiled: dict[str, object],
 ) -> dict[str, list[dict[str, object]]]:
     return {
-        "facts": [row for row in compiled["facts"] if review_status(row) == "draft"],
+        "facts": [row for row in compiled["facts"] if review_status(row) == DRAFT_STATUS],
         "decisions": [
-            row for row in compiled["decisions"] if review_status(row) == "draft"
+            row for row in compiled["decisions"] if review_status(row) == DRAFT_STATUS
         ],
-        "risks": [row for row in compiled["risks"] if review_status(row) == "draft"],
+        "risks": [row for row in compiled["risks"] if review_status(row) == DRAFT_STATUS],
         "open_questions": [
-            row for row in compiled["open_questions"] if review_status(row) == "draft"
+            row
+            for row in compiled["open_questions"]
+            if review_status(row) == DRAFT_STATUS
         ],
-        "reports": [row for row in compiled["reports"] if review_status(row) == "draft"],
+        "reports": [
+            row for row in compiled["reports"] if review_status(row) == DRAFT_STATUS
+        ],
     }
 
 

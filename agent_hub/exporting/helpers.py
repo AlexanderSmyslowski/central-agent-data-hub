@@ -11,6 +11,7 @@ from typing import Any, Iterable
 from uuid import UUID
 
 from agent_hub.errors import ConfigurationError
+from agent_hub.statuses import DRAFT_STATUS
 
 def get_export_dir() -> Path:
     export_dir = os.environ.get("OBSIDIAN_EXPORT_DIR")
@@ -36,7 +37,14 @@ def normalize_value(value: Any) -> Any:
 
 
 def normalize_row(row: dict[str, Any]) -> dict[str, Any]:
-    return {key: normalize_value(value) for key, value in row.items()}
+    normalized = {key: normalize_value(value) for key, value in row.items()}
+    if normalized.get("status") == DRAFT_STATUS:
+        normalized["review_status"] = DRAFT_STATUS
+        normalized["draft_warning"] = "Unreviewed draft — not part of reviewed memory"
+    else:
+        normalized["review_status"] = "reviewed"
+        normalized["draft_warning"] = ""
+    return normalized
 
 
 def slugify(value: str) -> str:

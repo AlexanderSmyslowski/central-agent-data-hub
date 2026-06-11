@@ -52,7 +52,7 @@ def fetch_relation_object(
     if object_type == "agent_action":
         cur.execute(
             f"""
-            SELECT aa.id, a.project_id, aa.{summary_column} AS summary
+            SELECT aa.id, a.project_id, aa.{summary_column} AS summary, aa.status
             FROM agent_actions aa
             LEFT JOIN agents a ON a.id = aa.agent_id
             WHERE aa.id = %s
@@ -65,7 +65,7 @@ def fetch_relation_object(
         )
         cur.execute(
             f"""
-            SELECT id, {select_project_id}, {summary_column} AS summary
+            SELECT id, {select_project_id}, {summary_column} AS summary, status
             FROM {table}
             WHERE id = %s
             """,
@@ -165,6 +165,37 @@ def relation_summary_expression(side: str) -> str:
     return "CASE " + " ".join(parts) + " END"
 
 
+def relation_status_exclusion_clauses(
+    side: str,
+    excluded_statuses_by_type: dict[str, tuple[str, ...]],
+    params: dict[str, object],
+) -> list[str]:
+    clauses = []
+    for object_type, statuses in excluded_statuses_by_type.items():
+        table = RELATION_TARGETS.get(object_type)
+        if not table or not statuses:
+            continue
+        status_names = []
+        for index, status in enumerate(statuses):
+            name = f"{side}_{object_type}_status_{index}"
+            status_names.append(f"%({name})s")
+            params[name] = status
+        placeholders = ", ".join(status_names)
+        clauses.append(
+            f"""
+            NOT (
+              r.{side}_type = '{object_type}'
+              AND EXISTS (
+                SELECT 1 FROM {table} t
+                WHERE t.id = r.{side}_id
+                  AND t.status IN ({placeholders})
+              )
+            )
+            """
+        )
+    return clauses
+
+
 def fetch_project_relations(
     cur,
     project_id: object,
@@ -172,9 +203,25 @@ def fetch_project_relations(
     object_id: str | None = None,
     since: datetime | None = None,
     limit: int | None = None,
+    excluded_statuses_by_type: dict[str, tuple[str, ...]] | None = None,
 ) -> list[dict[str, object]]:
     project_where, params = relation_project_filter(project_id)
     clauses = [project_where]
+    if excluded_statuses_by_type:
+        clauses.extend(
+            relation_status_exclusion_clauses(
+                "source",
+                excluded_statuses_by_type,
+                params,
+            )
+        )
+        clauses.extend(
+            relation_status_exclusion_clauses(
+                "target",
+                excluded_statuses_by_type,
+                params,
+            )
+        )
     if object_type and object_id:
         clauses.append(
             """

@@ -24,9 +24,10 @@ from agent_hub.relations import fetch_project_relations
 from agent_hub.retrieval import (
     fetch_activity_snapshot,
     fetch_brief_rows,
+    fetch_drafts_awaiting_review,
     write_daily_report,
 )
-from agent_hub.statuses import INACTIVE_OPEN_QUESTION_STATUSES
+from agent_hub.statuses import agent_read_excluded_statuses_by_type
 from agent_hub.rendering import (
     compiled_markdown,
     daily_markdown,
@@ -48,12 +49,12 @@ def fetch_compiled_payload(
     payload = {
         "project": project,
         "counts": fetch_project_counts(cur, project_id),
+        "drafts_awaiting_review": fetch_drafts_awaiting_review(cur, project_id),
         "facts": fetch_brief_rows(
             cur,
             "facts",
             project_id,
             "id, statement, source, confidence",
-            excluded_statuses=("archived", "deprecated"),
             limit=limit,
         ),
         "decisions": fetch_brief_rows(
@@ -61,7 +62,6 @@ def fetch_compiled_payload(
             "decisions",
             project_id,
             "id, decision, rationale, consequences",
-            excluded_statuses=("archived", "rejected"),
             limit=limit,
         ),
         "risks": fetch_brief_rows(
@@ -69,7 +69,6 @@ def fetch_compiled_payload(
             "risks",
             project_id,
             "id, title, severity, impact, mitigation",
-            excluded_statuses=("archived", "resolved"),
             limit=limit,
         ),
         "open_questions": fetch_brief_rows(
@@ -77,7 +76,6 @@ def fetch_compiled_payload(
             "open_questions",
             project_id,
             "id, question, answer",
-            excluded_statuses=INACTIVE_OPEN_QUESTION_STATUSES,
             limit=limit,
         ),
         "reports": fetch_brief_rows(
@@ -85,14 +83,24 @@ def fetch_compiled_payload(
             "reports",
             project_id,
             "id, title, report_type, summary",
-            excluded_statuses=("archived",),
             limit=max(3, min(limit, 5)),
         ),
-        "relations": fetch_project_relations(cur, project_id, limit=limit),
+        "relations": fetch_project_relations(
+            cur,
+            project_id,
+            limit=limit,
+            excluded_statuses_by_type=agent_read_excluded_statuses_by_type(),
+        ),
     }
     if since:
         payload["since"] = since
-        payload["recent_changes"] = fetch_activity_snapshot(cur, project, since, limit)
+        payload["recent_changes"] = fetch_activity_snapshot(
+            cur,
+            project,
+            since,
+            limit,
+            surface="compile",
+        )
     if with_receipt_status:
         export_dir = get_export_dir_or_none()
         receipt_since = since or parse_since("24h")
@@ -136,11 +144,29 @@ def run_daily(args: argparse.Namespace) -> int:
                 project = fetch_project(cur, args.project)
                 if not project:
                     return project_not_found(args.project)
-                payload = fetch_activity_snapshot(cur, project, since, args.limit)
+                payload = fetch_activity_snapshot(
+                    cur,
+                    project,
+                    since,
+                    args.limit,
+                    surface="daily",
+                )
                 report = None
                 body = daily_markdown(payload)
                 if args.write_report:
-                    report = write_daily_report(cur, project, payload, body)
+                    report_payload = fetch_activity_snapshot(
+                        cur,
+                        project,
+                        since,
+                        args.limit,
+                        surface="daily_report",
+                    )
+                    report = write_daily_report(
+                        cur,
+                        project,
+                        report_payload,
+                        daily_markdown(report_payload),
+                    )
                     payload["written_report"] = report
     except Exception as exc:
         return exception_error(exc)
@@ -170,7 +196,13 @@ def run_handoff(args: argparse.Namespace) -> int:
                 project = fetch_project(cur, args.project)
                 if not project:
                     return project_not_found(args.project)
-                payload = fetch_activity_snapshot(cur, project, since, args.limit)
+                payload = fetch_activity_snapshot(
+                    cur,
+                    project,
+                    since,
+                    args.limit,
+                    surface="handoff",
+                )
     except Exception as exc:
         return exception_error(exc)
 
@@ -196,7 +228,6 @@ def run_review(args: argparse.Namespace) -> int:
                     "decisions",
                     project["id"],
                     "id, decision, rationale",
-                    excluded_statuses=("archived", "rejected"),
                     limit=args.limit,
                 )
                 risks = fetch_brief_rows(
@@ -204,7 +235,6 @@ def run_review(args: argparse.Namespace) -> int:
                     "risks",
                     project["id"],
                     "id, title, severity, impact, mitigation",
-                    excluded_statuses=("archived", "resolved"),
                     limit=args.limit,
                 )
                 questions = fetch_brief_rows(
@@ -212,10 +242,14 @@ def run_review(args: argparse.Namespace) -> int:
                     "open_questions",
                     project["id"],
                     "id, question, answer",
-                    excluded_statuses=INACTIVE_OPEN_QUESTION_STATUSES,
                     limit=args.limit,
                 )
-                relations = fetch_project_relations(cur, project["id"], limit=args.limit)
+                relations = fetch_project_relations(
+                    cur,
+                    project["id"],
+                    limit=args.limit,
+                    excluded_statuses_by_type=agent_read_excluded_statuses_by_type(),
+                )
     except Exception as exc:
         return exception_error(exc)
 

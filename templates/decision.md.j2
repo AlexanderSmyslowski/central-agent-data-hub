@@ -4,6 +4,7 @@ db_id: "{{ id | default('', true) }}"
 {% if slug is defined and slug %}slug: "{{ slug }}"
 {% endif %}{% if project_id is defined and project_id %}project_id: "{{ project_id }}"
 {% endif %}status: "{{ status | default('unknown', true) }}"
+review_status: "{{ review_status | default('reviewed', true) }}"
 source: "{{ source | default('database', true) }}"
 {% if confidence is defined and confidence is not none %}confidence: {{ confidence }}
 {% endif %}created_at: "{{ created_at | default('', true) }}"
@@ -15,6 +16,10 @@ last_exported_at: "{{ last_exported_at | default('', true) }}"
 
 <!-- AUTO-GENERATED:START -->
 
+{% if draft_warning is defined and draft_warning %}
+> [!warning] {{ draft_warning }}
+
+{% endif %}
 {% if decision is defined and decision %}
 {{ decision }}
 {% else %}

@@ -83,6 +83,8 @@ def search_memory_payload(
     project: str,
     query: str,
     limit: int | None = None,
+    include_drafts: bool = False,
+    include_archived: bool = False,
 ) -> dict[str, object]:
     resolved_limit = positive_limit(limit, default=10)
     project_row = project_or_error(cur, project)
@@ -92,6 +94,8 @@ def search_memory_payload(
         query,
         "all",
         resolved_limit,
+        include_drafts=include_drafts,
+        include_archived=include_archived,
     )
 
 
@@ -169,15 +173,30 @@ def create_mcp_server():
         )
 
     @server.tool(
-        description="Search reviewed project memory using the same shape as agent-hub search JSON.",
+        description=(
+            "Search project memory using the same shape as agent-hub search JSON. "
+            "Drafts and inactive statuses are hidden unless include_drafts or "
+            "include_archived is true."
+        ),
         structured_output=True,
     )
     def search_memory(
         project: str,
         query: str,
         limit: int | None = None,
+        include_drafts: bool = False,
+        include_archived: bool = False,
     ) -> dict[str, object]:
-        return tool_result(lambda cur: search_memory_payload(cur, project, query, limit))
+        return tool_result(
+            lambda cur: search_memory_payload(
+                cur,
+                project,
+                query,
+                limit,
+                include_drafts,
+                include_archived,
+            )
+        )
 
     @server.tool(
         description="Return the compact project brief JSON used by agent-hub brief.",

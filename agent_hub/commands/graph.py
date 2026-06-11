@@ -22,6 +22,7 @@ from agent_hub.relations import (
     validate_relation_object,
 )
 from agent_hub.rendering import truncate
+from agent_hub.statuses import DRAFT_STATUS
 
 
 def run_relations(args: argparse.Namespace) -> int:
@@ -108,6 +109,14 @@ def run_relate(args: argparse.Namespace) -> int:
         "relation": relation,
         "source_summary": source["summary"],
         "target_summary": target["summary"],
+        "warnings": [
+            f"{role} {item_type}:{item_id} has status=draft; relation stored but not part of reviewed memory until review."
+            for role, item_type, item_id, row in (
+                ("source", args.source_type, args.source_id, source),
+                ("target", args.target_type, args.target_id, target),
+            )
+            if row.get("status") == DRAFT_STATUS
+        ],
     }
     if args.format == "json":
         print(json.dumps(payload, indent=2, default=json_default, ensure_ascii=False))
@@ -121,4 +130,6 @@ def run_relate(args: argparse.Namespace) -> int:
         f"{relation['target_type']}:{relation['target_id']} "
         f"({truncate(target['summary'], 72)})"
     )
+    for warning in payload["warnings"]:
+        print(f"Warning: {warning}")
     return 0

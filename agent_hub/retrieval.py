@@ -6,6 +6,26 @@ from datetime import datetime, timezone
 import json
 
 from agent_hub.relations import fetch_project_relations
+from agent_hub.statuses import (
+    DRAFT_STATUS,
+    INBOX_REVIEW_TYPES,
+    agent_read_excluded_statuses,
+    agent_read_excluded_statuses_by_type,
+    format_draft_review_count,
+    item_type_for_table,
+    search_excluded_statuses,
+    table_for_item_type,
+)
+
+
+def _status_filter(
+    column: str,
+    excluded_statuses: tuple[str, ...],
+) -> tuple[str, tuple[str, ...]]:
+    if not excluded_statuses:
+        return "", ()
+    placeholders = ", ".join(["%s"] * len(excluded_statuses))
+    return f"AND {column} NOT IN ({placeholders})", excluded_statuses
 
 
 def fetch_recent_rows(
@@ -15,17 +35,20 @@ def fetch_recent_rows(
     columns: str,
     since: datetime,
     limit: int,
+    excluded_statuses: tuple[str, ...] = (),
 ) -> list[dict[str, object]]:
+    status_clause, status_params = _status_filter("status", excluded_statuses)
     cur.execute(
         f"""
         SELECT id, {columns}, status, created_at, updated_at
         FROM {table}
         WHERE project_id = %s
           AND updated_at >= %s
+          {status_clause}
         ORDER BY updated_at DESC, created_at DESC, id DESC
         LIMIT %s
         """,
-        (project_id, since, limit),
+        (project_id, since, *status_params, limit),
     )
     return list(cur.fetchall())
 
@@ -75,11 +98,16 @@ def fetch_activity_snapshot(
     project: dict[str, object],
     since: datetime,
     limit: int,
+    *,
+    surface: str = "daily",
 ) -> dict[str, object]:
     project_id = project["id"]
+    agent_surface = surface != "daily"
+    relation_exclusions = agent_read_excluded_statuses_by_type() if agent_surface else None
     return {
         "project": project,
         "since": since,
+        "drafts_awaiting_review": fetch_drafts_awaiting_review(cur, project_id),
         "facts": fetch_recent_rows(
             cur,
             "facts",
@@ -87,6 +115,7 @@ def fetch_activity_snapshot(
             "statement, source, confidence",
             since,
             limit,
+            agent_read_excluded_statuses("fact") if agent_surface else (),
         ),
         "decisions": fetch_recent_rows(
             cur,
@@ -95,6 +124,7 @@ def fetch_activity_snapshot(
             "decision, rationale, consequences",
             since,
             limit,
+            agent_read_excluded_statuses("decision") if agent_surface else (),
         ),
         "risks": fetch_recent_rows(
             cur,
@@ -103,6 +133,7 @@ def fetch_activity_snapshot(
             "title, severity, impact, mitigation",
             since,
             limit,
+            agent_read_excluded_statuses("risk") if agent_surface else (),
         ),
         "open_questions": fetch_recent_rows(
             cur,
@@ -111,6 +142,7 @@ def fetch_activity_snapshot(
             "question, answer",
             since,
             limit,
+            agent_read_excluded_statuses("open_question") if agent_surface else (),
         ),
         "reports": fetch_recent_rows(
             cur,
@@ -119,12 +151,14 @@ def fetch_activity_snapshot(
             "title, report_type, summary",
             since,
             limit,
+            agent_read_excluded_statuses("report") if agent_surface else (),
         ),
         "relations": fetch_project_relations(
             cur,
             project_id,
             since=since,
             limit=limit,
+            excluded_statuses_by_type=relation_exclusions,
         ),
         "agent_actions": fetch_recent_agent_actions(cur, project_id, since, limit),
         "sync_events": fetch_recent_sync_events(cur, since, limit),
@@ -136,22 +170,47 @@ def fetch_brief_rows(
     table: str,
     project_id: object,
     columns: str,
-    excluded_statuses: tuple[str, ...] = ("archived",),
+    excluded_statuses: tuple[str, ...] | None = None,
     limit: int = 8,
 ) -> list[dict[str, object]]:
-    placeholders = ", ".join(["%s"] * len(excluded_statuses))
+    if excluded_statuses is None:
+        excluded_statuses = agent_read_excluded_statuses(item_type_for_table(table))
+    status_clause, status_params = _status_filter("status", excluded_statuses)
     cur.execute(
         f"""
         SELECT {columns}, status, updated_at
         FROM {table}
         WHERE project_id = %s
-          AND status NOT IN ({placeholders})
+          {status_clause}
         ORDER BY updated_at DESC, created_at DESC, id DESC
         LIMIT %s
         """,
-        (project_id, *excluded_statuses, limit),
+        (project_id, *status_params, limit),
     )
     return list(cur.fetchall())
+
+
+def fetch_drafts_awaiting_review(cur, project_id: object) -> dict[str, object]:
+    by_type: dict[str, int] = {}
+    for item_type in INBOX_REVIEW_TYPES:
+        table = table_for_item_type(item_type)
+        cur.execute(
+            f"""
+            SELECT count(*) AS count
+            FROM {table}
+            WHERE project_id = %s
+              AND status = %s
+            """,
+            (project_id, DRAFT_STATUS),
+        )
+        count_key = "open_questions" if item_type == "open_question" else f"{item_type}s"
+        by_type[count_key] = int(cur.fetchone()["count"])
+    total = sum(by_type.values())
+    return {
+        "total": total,
+        "by_type": by_type,
+        "label": format_draft_review_count(total),
+    }
 
 
 def write_daily_report(
@@ -200,6 +259,9 @@ def search_project_memory(
     query: str,
     memory_type: str,
     limit: int,
+    *,
+    include_drafts: bool = False,
+    include_archived: bool = False,
 ) -> list[dict[str, object]]:
     like = f"%{query}%"
     specs = {
@@ -234,16 +296,23 @@ def search_project_memory(
     for item_type in selected:
         table, select_expr, where_expr = specs[item_type]
         param_count = where_expr.count("%s")
+        excluded_statuses = search_excluded_statuses(
+            item_type,
+            include_drafts=include_drafts,
+            include_archived=include_archived,
+        )
+        status_clause, status_params = _status_filter("status", excluded_statuses)
         cur.execute(
             f"""
             SELECT id, %s AS type, {select_expr}, status, updated_at
             FROM {table}
             WHERE project_id = %s
               AND {where_expr}
+              {status_clause}
             ORDER BY updated_at DESC, created_at DESC, id DESC
             LIMIT %s
             """,
-            (item_type, project_id, *([like] * param_count), limit),
+            (item_type, project_id, *([like] * param_count), *status_params, limit),
         )
         results.extend(cur.fetchall())
     results.sort(key=lambda row: row["updated_at"], reverse=True)

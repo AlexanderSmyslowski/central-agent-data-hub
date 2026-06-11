@@ -254,6 +254,19 @@ agent-hub inbox --reject <draft-id> --reviewer bob
 There is no time-based auto-accept and no silent promotion from draft to
 reviewed memory.
 
+Draft visibility is intentionally split by surface:
+
+- agent-facing reads (`brief`, `compile`, `handoff`, `context`, MCP
+  `project_brief`, and default `search`) exclude drafts and inactive memory
+  statuses
+- `search --include-drafts` can show unreviewed drafts, and
+  `search --include-archived` can show archived or inactive statuses
+- daily human summaries still show draft activity and include a
+  `N drafts awaiting review (agent-hub inbox)` line
+- Obsidian export keeps draft pages, adds `review_status: draft`, and marks
+  them as unreviewed; compiled overview pages show only the draft count and
+  inbox pointer, not draft items in the main reviewed lists
+
 Agent Data Hub v0.1.x uses attribution instead of access control: everyone in
 the trusted local workspace can see the review inbox, but every accept/reject
 decision must carry a reviewer handle. This is not an authentication system.

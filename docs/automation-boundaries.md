@@ -58,6 +58,11 @@ truth.
 
 Ordinary unreviewed candidates may be stored as `draft`. A draft is visible to
 `agent-hub prepare` and `agent-hub inbox`, but it is not reviewed memory.
+Agent-facing read automation must use the shared status policy: briefs,
+compiled memory, handoffs, context/search defaults, and MCP project briefs hide
+drafts and inactive statuses. Search may include them only when the caller asks
+with the explicit include flags. Human projection surfaces may show drafts as
+review work, but they must label them as unreviewed.
 
 ### Reviewed
 
@@ -90,6 +95,10 @@ agent-hub inbox --reject <draft-id> --reviewer alice
 
 There is no time-based auto-accept and no silent promotion from draft to
 reviewed memory.
+
+Relations may be created while either endpoint is still a draft, but the
+command warns about that state. Agent-facing relation reads hide relations that
+would expose draft or inactive endpoint summaries.
 
 Hub View may expose the same reviewed action in its local Review Inbox. This is
 not a general UI write boundary: the only allowed Hub View writes are accepting

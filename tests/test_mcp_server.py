@@ -66,7 +66,7 @@ class ReadOnlyFakeCursor:
                     "agent_actions": 0,
                 }
             ]
-        elif "SELECT count(*) AS count" in query and "status = 'draft'" in query:
+        elif "SELECT count(*) AS count" in query:
             self.results = [{"count": 0}]
         elif "FROM relations r" in query:
             self.results = [self.relation()]
@@ -224,9 +224,19 @@ def test_search_memory_payload_matches_cli_json_shape() -> None:
         limit=5,
     )
 
-    assert set(payload) == {"project", "query", "results"}
+    assert set(payload) == {
+        "project",
+        "query",
+        "include_drafts",
+        "include_archived",
+        "drafts_awaiting_review",
+        "results",
+    }
     assert payload["project"]["slug"] == "central-agent-data-hub-demo"
     assert payload["query"] == "reviewed memory"
+    assert payload["include_drafts"] is False
+    assert payload["include_archived"] is False
+    assert payload["drafts_awaiting_review"]["total"] == 0
     assert payload["results"][0]["type"] == "fact"
     assert payload["results"][0]["title"] == "Agent Data Hub stores reviewed memory."
 
@@ -243,6 +253,7 @@ def test_project_brief_payload_uses_compact_brief_shape() -> None:
     assert set(payload) == {
         "project",
         "counts",
+        "drafts_awaiting_review",
         "decisions",
         "facts",
         "open_questions",
@@ -251,6 +262,7 @@ def test_project_brief_payload_uses_compact_brief_shape() -> None:
         "relations",
     }
     assert payload["project"]["slug"] == "central-agent-data-hub-demo"
+    assert payload["drafts_awaiting_review"]["total"] == 0
     assert payload["facts"][0]["source"] == "README.md"
     assert payload["relations"] == []
 

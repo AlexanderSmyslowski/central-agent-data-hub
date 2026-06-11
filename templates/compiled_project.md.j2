@@ -23,6 +23,7 @@ last_exported_at: "{{ last_exported_at | default('', true) }}"
 - risks: {{ risks | length }}
 - open questions: {{ open_questions | length }}
 - reports: {{ reports | length }}
+- drafts awaiting review: {{ drafts_awaiting_review.total }} (`{{ drafts_awaiting_review.link }}`)
 
 ## What Is Decided
 

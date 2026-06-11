@@ -279,6 +279,16 @@ def build_parser() -> argparse.ArgumentParser:
         default="all",
         help="Memory type filter.",
     )
+    search_parser.add_argument(
+        "--include-drafts",
+        action="store_true",
+        help="Include unreviewed draft memory in search results.",
+    )
+    search_parser.add_argument(
+        "--include-archived",
+        action="store_true",
+        help="Include archived and inactive memory statuses in search results.",
+    )
     add_limit_argument(search_parser, 10, "Maximum search results.")
     add_format_argument(search_parser, ("text", "json"), "text")
     search_parser.set_defaults(func=run_search)

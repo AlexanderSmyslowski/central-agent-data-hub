@@ -9,6 +9,7 @@ from agent_hub.migrations import migration_file_by_id, migration_parts
 from agent_hub.quality import fetch_memory_quality_warnings, fetch_project_counts
 from agent_hub.statuses import (
     DRAFT_STATUS,
+    INBOX_REVIEW_TYPES,
     MEMORY_STATUS_VALUES,
     REVIEWED_MEMORY_STATUSES,
 )
@@ -26,13 +27,16 @@ PLURAL_TO_TYPE = {
 def test_status_lists_include_draft_for_all_prepare_and_inbox_types() -> None:
     prepare_types = {PLURAL_TO_TYPE[key] for key in PREPARE_SPECS}
     inbox_types = set(INBOX_TABLES)
+    review_types = set(INBOX_REVIEW_TYPES)
 
-    assert prepare_types == set(MEMORY_STATUS_VALUES)
-    assert inbox_types == set(MEMORY_STATUS_VALUES)
+    assert prepare_types == review_types
+    assert inbox_types == review_types
+    assert set(MEMORY_STATUS_VALUES) == review_types | {"document"}
     for memory_type, values in MEMORY_STATUS_VALUES.items():
         assert DRAFT_STATUS in values
         assert STATUS_VALUES[memory_type] == set(values)
-        assert INBOX_TABLES[memory_type]["reviewed_status"] in values
+        if memory_type in INBOX_TABLES:
+            assert INBOX_TABLES[memory_type]["reviewed_status"] in values
         for reviewed_status in REVIEWED_MEMORY_STATUSES[memory_type]:
             assert reviewed_status in values
 

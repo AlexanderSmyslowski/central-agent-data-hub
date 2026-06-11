@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
-from agent_hub.statuses import format_open_question_count, unresolved_open_questions
+from agent_hub.statuses import (
+    DRAFT_STATUS,
+    format_draft_review_count,
+    format_open_question_count,
+    unresolved_open_questions,
+)
 
 
 def truncate(value: object, limit: int = 96) -> str:
@@ -86,6 +91,24 @@ def all_empty(*sections: list[dict[str, object]]) -> bool:
     return all(not section for section in sections)
 
 
+def draft_review_line(payload: dict[str, object]) -> str:
+    drafts = payload.get("drafts_awaiting_review")
+    if isinstance(drafts, dict) and drafts.get("label"):
+        return f"- {drafts['label']}"
+    return f"- {format_draft_review_count(0)}"
+
+
+def daily_open_questions(rows: list[dict[str, object]]) -> list[dict[str, object]]:
+    unresolved = unresolved_open_questions(rows)
+    unresolved_ids = {row.get("id") for row in unresolved}
+    drafts = [
+        row
+        for row in rows
+        if row.get("status") == DRAFT_STATUS and row.get("id") not in unresolved_ids
+    ]
+    return [*drafts, *unresolved]
+
+
 def recommended_steps_markdown(payload: dict[str, object]) -> str:
     steps = []
     for row in unresolved_open_questions(payload["open_questions"])[:3]:
@@ -106,7 +129,7 @@ def daily_markdown(payload: dict[str, object]) -> str:
         payload["facts"],
         payload["decisions"],
         payload["risks"],
-        unresolved_open_questions(payload["open_questions"]),
+        daily_open_questions(payload["open_questions"]),
         payload["reports"],
         payload["relations"],
         payload["agent_actions"],
@@ -118,6 +141,7 @@ def daily_markdown(payload: dict[str, object]) -> str:
                 "",
                 f"- project: {project['slug']}",
                 f"- since: {since.isoformat()}",
+                draft_review_line(payload),
                 "",
                 "## Activity Summary",
                 "- No new reviewed facts, decisions, risks, open questions, reports, relations, agent actions, or sync events in this window.",
@@ -129,6 +153,7 @@ def daily_markdown(payload: dict[str, object]) -> str:
             "",
             f"- project: {project['slug']}",
             f"- since: {since.isoformat()}",
+            draft_review_line(payload),
             "",
             "## New Facts",
             markdown_list(payload["facts"], "statement", ("source", "confidence")),
@@ -141,7 +166,7 @@ def daily_markdown(payload: dict[str, object]) -> str:
             "",
             "## Open Questions",
             markdown_list(
-                unresolved_open_questions(payload["open_questions"]),
+                daily_open_questions(payload["open_questions"]),
                 "question",
                 ("answer",),
             ),
@@ -178,6 +203,7 @@ def handoff_markdown(payload: dict[str, object]) -> str:
                 "",
                 f"- project: {project['slug']}",
                 f"- since: {since.isoformat()}",
+                draft_review_line(payload),
                 "",
                 "## Handoff Summary",
                 "- No new decisions, risks, open questions, evidence, or relation changes need handoff from this window.",
@@ -189,6 +215,7 @@ def handoff_markdown(payload: dict[str, object]) -> str:
             "",
             f"- project: {project['slug']}",
             f"- since: {since.isoformat()}",
+            draft_review_line(payload),
             "",
             "## What Is Decided",
             markdown_list(payload["decisions"], "decision", ("rationale", "consequences")),
@@ -276,10 +303,11 @@ def compiled_markdown(payload: dict[str, object]) -> str:
         "",
         f"- project: {project['slug']}",
         f"- status: {project['status']}",
+        draft_review_line(payload),
     ]
     if project.get("description"):
         lines.append(f"- current_state: {truncate(project['description'], 220)}")
-        lines.extend(
+    lines.extend(
         [
             "- memory_counts: " + ", ".join(rendered_counts),
             "",

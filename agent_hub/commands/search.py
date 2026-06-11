@@ -16,12 +16,17 @@ from agent_hub.commands.common import (
 )
 from agent_hub.db import connect
 from agent_hub.relations import fetch_project_relations
-from agent_hub.retrieval import fetch_activity_snapshot, search_project_memory
+from agent_hub.retrieval import (
+    fetch_activity_snapshot,
+    fetch_drafts_awaiting_review,
+    search_project_memory,
+)
 from agent_hub.rendering import (
     markdown_list,
     relations_markdown,
     search_results_markdown,
 )
+from agent_hub.statuses import agent_read_excluded_statuses_by_type
 
 
 def fetch_search_payload(
@@ -30,6 +35,9 @@ def fetch_search_payload(
     query: str,
     memory_type: str,
     limit: int,
+    *,
+    include_drafts: bool = False,
+    include_archived: bool = False,
 ) -> dict[str, object]:
     results = search_project_memory(
         cur,
@@ -37,8 +45,17 @@ def fetch_search_payload(
         query,
         memory_type,
         limit,
+        include_drafts=include_drafts,
+        include_archived=include_archived,
     )
-    return {"project": project, "query": query, "results": results}
+    return {
+        "project": project,
+        "query": query,
+        "include_drafts": include_drafts,
+        "include_archived": include_archived,
+        "drafts_awaiting_review": fetch_drafts_awaiting_review(cur, project["id"]),
+        "results": results,
+    }
 
 
 def run_search(args: argparse.Namespace) -> int:
@@ -57,6 +74,8 @@ def run_search(args: argparse.Namespace) -> int:
                     args.query,
                     args.memory_type,
                     args.limit,
+                    include_drafts=args.include_drafts,
+                    include_archived=args.include_archived,
                 )
     except Exception as exc:
         return exception_error(exc)
@@ -66,6 +85,7 @@ def run_search(args: argparse.Namespace) -> int:
         return 0
 
     print(f"Search results for {project['slug']}: {args.query}")
+    print(f"- {payload['drafts_awaiting_review']['label']}")
     print(search_results_markdown(payload["results"]))
     return 0
 
@@ -81,7 +101,13 @@ def run_context(args: argparse.Namespace) -> int:
                 project = fetch_project(cur, args.project)
                 if not project:
                     return project_not_found(args.project)
-                snapshot = fetch_activity_snapshot(cur, project, since, args.limit)
+                snapshot = fetch_activity_snapshot(
+                    cur,
+                    project,
+                    since,
+                    args.limit,
+                    surface="context",
+                )
                 results = search_project_memory(
                     cur,
                     project["id"],
@@ -89,7 +115,12 @@ def run_context(args: argparse.Namespace) -> int:
                     "all",
                     args.limit,
                 )
-                relations = fetch_project_relations(cur, project["id"], limit=args.limit)
+                relations = fetch_project_relations(
+                    cur,
+                    project["id"],
+                    limit=args.limit,
+                    excluded_statuses_by_type=agent_read_excluded_statuses_by_type(),
+                )
     except ValueError as exc:
         return error(exc, 2)
     except Exception as exc:
@@ -102,6 +133,7 @@ def run_context(args: argparse.Namespace) -> int:
         "brief": snapshot,
         "search_results": results,
         "relations": relations,
+        "drafts_awaiting_review": snapshot["drafts_awaiting_review"],
     }
     if args.format == "json":
         print(json.dumps(payload, indent=2, default=json_default, ensure_ascii=False))
@@ -112,6 +144,7 @@ def run_context(args: argparse.Namespace) -> int:
     print(f"- project: {project['slug']}")
     print(f"- query: {args.query}")
     print(f"- since: {since.isoformat()}")
+    print(f"- {payload['drafts_awaiting_review']['label']}")
     print()
     print("## Search Results")
     print(

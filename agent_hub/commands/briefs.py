@@ -16,9 +16,10 @@ from agent_hub.commands.common import (
 )
 from agent_hub.db import connect
 from agent_hub.relations import fetch_project_relations
-from agent_hub.retrieval import fetch_brief_rows
+from agent_hub.retrieval import fetch_brief_rows, fetch_drafts_awaiting_review
 from agent_hub.statuses import (
-    INACTIVE_OPEN_QUESTION_STATUSES,
+    agent_read_excluded_statuses,
+    agent_read_excluded_statuses_by_type,
     format_open_question_count,
 )
 
@@ -30,8 +31,21 @@ def fetch_brief_payload(
     *,
     with_relations: bool = False,
 ) -> dict[str, object]:
+    open_question_excluded = agent_read_excluded_statuses("open_question")
+    placeholders = ", ".join(
+        f"%(open_question_excluded_{index})s"
+        for index, _status in enumerate(open_question_excluded)
+    )
+    status_filter = f"AND status NOT IN ({placeholders})" if placeholders else ""
+    params = {"project_id": project["id"]}
+    params.update(
+        {
+            f"open_question_excluded_{index}": status
+            for index, status in enumerate(open_question_excluded)
+        }
+    )
     cur.execute(
-        """
+        f"""
         SELECT
           (SELECT count(*) FROM documents WHERE project_id = %(project_id)s) AS documents,
           (SELECT count(*) FROM facts WHERE project_id = %(project_id)s) AS facts,
@@ -40,7 +54,7 @@ def fetch_brief_payload(
             SELECT count(*)
             FROM open_questions
             WHERE project_id = %(project_id)s
-              AND status NOT IN ('answered', 'closed', 'resolved', 'archived')
+              {status_filter}
           ) AS open_questions,
           (SELECT count(*) FROM open_questions WHERE project_id = %(project_id)s) AS open_questions_total,
           (SELECT count(*) FROM risks WHERE project_id = %(project_id)s) AS risks,
@@ -49,9 +63,10 @@ def fetch_brief_payload(
             JOIN agents a ON a.id = aa.agent_id
             WHERE a.project_id = %(project_id)s) AS agent_actions
         """,
-        {"project_id": project["id"]},
+        params,
     )
     counts = cur.fetchone()
+    drafts_awaiting_review = fetch_drafts_awaiting_review(cur, project["id"])
 
     decisions = fetch_brief_rows(
         cur,
@@ -65,7 +80,6 @@ def fetch_brief_payload(
         "facts",
         project["id"],
         "id, statement, source, confidence",
-        excluded_statuses=("archived", "deprecated"),
         limit=limit,
     )
     questions = fetch_brief_rows(
@@ -73,7 +87,6 @@ def fetch_brief_payload(
         "open_questions",
         project["id"],
         "id, question, answer",
-        excluded_statuses=INACTIVE_OPEN_QUESTION_STATUSES,
         limit=limit,
     )
     risks = fetch_brief_rows(
@@ -81,7 +94,6 @@ def fetch_brief_payload(
         "risks",
         project["id"],
         "id, title, severity, impact, mitigation",
-        excluded_statuses=("archived", "resolved"),
         limit=limit,
     )
     reports = fetch_brief_rows(
@@ -97,11 +109,13 @@ def fetch_brief_payload(
             cur,
             project["id"],
             limit=limit,
+            excluded_statuses_by_type=agent_read_excluded_statuses_by_type(),
         )
 
     return {
         "project": project,
         "counts": counts,
+        "drafts_awaiting_review": drafts_awaiting_review,
         "decisions": decisions,
         "facts": facts,
         "open_questions": questions,
@@ -140,6 +154,7 @@ def run_brief(args: argparse.Namespace) -> int:
     print(f"- status: {project['status']}")
     if project.get("description"):
         print(f"- description: {project['description']}")
+    print(f"- {brief['drafts_awaiting_review']['label']}")
     print()
     print("## Counts")
     counts = brief["counts"]

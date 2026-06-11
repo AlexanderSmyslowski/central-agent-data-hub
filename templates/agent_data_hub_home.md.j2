@@ -11,6 +11,8 @@ last_exported_at: "{{ last_exported_at | default('', true) }}"
 
 Verified memory for agentic work.
 
+Drafts awaiting review: {{ drafts_awaiting_review.total }} (`{{ drafts_awaiting_review.link }}`)
+
 ## Active Project Contexts
 
 {% if projects %}

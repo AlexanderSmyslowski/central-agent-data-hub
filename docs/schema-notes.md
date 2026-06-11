@@ -42,6 +42,12 @@ is waiting for explicit Inbox review. Drafts are visible to prepare and Inbox
 flows, but they are not reviewed memory and should not count as reviewed
 project quality.
 
+The durable schema does not enforce every read-surface visibility rule. The
+application policy in `agent_hub/statuses.py` is the source of truth for which
+statuses are treated as draft, active, inactive, or hidden on agent-facing read
+surfaces. That same policy keeps draft documents and reports visibly marked in
+exports without deleting their Markdown pages.
+
 `proposed` remains the existing domain status for reviewed workflows that want
 to track a proposal as such. Existing `proposed` rows are not migrated to
 `draft`, and the two statuses should not be merged by implication.
