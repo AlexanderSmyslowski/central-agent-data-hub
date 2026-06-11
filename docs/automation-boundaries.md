@@ -79,13 +79,13 @@ Draft promotion is a reviewed action. It happens only through an explicit review
 step such as:
 
 ```bash
-agent-hub inbox --accept <draft-id>
+agent-hub inbox --accept <draft-id> --reviewer alice
 ```
 
 Rejecting a draft is also explicit and audited:
 
 ```bash
-agent-hub inbox --reject <draft-id>
+agent-hub inbox --reject <draft-id> --reviewer alice
 ```
 
 There is no time-based auto-accept and no silent promotion from draft to
@@ -110,6 +110,7 @@ decision must carry a reviewer handle. This is not an authentication system.
 Routing can name a responsible reviewer for a draft, but it does not enforce
 permissions; the audit records the responsible reviewer and the reviewer who
 actually accepted or rejected the draft.
+A local `AGENT_HUB_REVIEWER` environment variable may provide the reviewer handle, but public templates leave it unset so review identity is chosen explicitly.
 
 ## Demo And Ops Database Boundary
 

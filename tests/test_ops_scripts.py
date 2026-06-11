@@ -10,6 +10,35 @@ def read_script(path: str) -> str:
     return (ROOT / path).read_text(encoding="utf-8")
 
 
+def test_public_templates_leave_reviewer_identity_explicit() -> None:
+    env_example = read_script(".env.example")
+    reviewer_vars = [
+        "AGENT_HUB_REVIEWERS",
+        "AGENT_HUB_REVIEWER",
+        "AGENT_HUB_DEFAULT_REVIEWER",
+        "HUB_VIEW_REVIEWER",
+    ]
+
+    for variable in reviewer_vars:
+        active_assignment = f"{variable}="
+        assert active_assignment in env_example
+        assert f"# {active_assignment}" in env_example
+        assert all(
+            line.lstrip().startswith("#") or not line.strip().startswith(active_assignment)
+            for line in env_example.splitlines()
+        )
+
+
+def test_automation_boundaries_show_required_reviewer_for_inbox_review() -> None:
+    docs = read_script("docs/automation-boundaries.md")
+
+    assert "agent-hub inbox --accept <draft-id> --reviewer alice" in docs
+    assert "agent-hub inbox --reject <draft-id> --reviewer alice" in docs
+    assert "agent-hub inbox --accept <draft-id>\n" not in docs
+    assert "agent-hub inbox --reject <draft-id>\n" not in docs
+    assert "public templates leave it unset so review identity is chosen explicitly" in docs
+
+
 def test_preflight_uses_bounded_docker_checks() -> None:
     common = read_script("scripts/db_common.sh")
     preflight = read_script("scripts/agent_preflight.sh")
