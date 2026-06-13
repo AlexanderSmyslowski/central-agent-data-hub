@@ -1247,6 +1247,7 @@ def test_prepare_markdown_outputs_task_specific_context(monkeypatch, capsys) -> 
     captured = capsys.readouterr()
     assert code == 0
     assert "# Agent Context Pack" in captured.out
+    assert "- context_pack_version: 1" in captured.out
     assert "- task: review release v0.1.1" in captured.out
     assert "## Verified Project State" in captured.out
     assert "## Relevant Decisions" in captured.out
@@ -1330,25 +1331,100 @@ def test_prepare_task_selection_is_deterministic_full_text(monkeypatch, capsys) 
 def test_prepare_json_output_is_stable(monkeypatch, capsys) -> None:
     patch_prepare_dependencies(monkeypatch)
 
-    code = cli.main(
-        [
-            "prepare",
-            "--project",
-            "central-agent-data-hub",
-            "--task",
-            "review release v0.1.1",
-            "--format",
-            "json",
-        ]
+    command = [
+        "prepare",
+        "--project",
+        "central-agent-data-hub",
+        "--task",
+        "review release v0.1.1",
+        "--format",
+        "json",
+    ]
+    outputs = []
+    for _ in range(2):
+        code = cli.main(command)
+        captured = capsys.readouterr()
+        assert code == 0
+        outputs.append(captured.out)
+
+    assert outputs[0] == outputs[1]
+    assert outputs[0].startswith('{\n  "context_pack_version": 1,')
+    payload = json.loads(outputs[0])
+    assert list(payload.keys())[0] == "context_pack_version"
+    assert payload["context_pack_version"] == 1
+    assert type(payload["context_pack_version"]) is int
+    assert {
+        "context_pack_version",
+        "project",
+        "task",
+        "goal",
+        "verified_project_state",
+        "relevant_decisions",
+        "constraints",
+        "risks",
+        "open_questions",
+        "reports",
+        "drafts_pending_review",
+        "gaps",
+        "relations",
+        "context_trail",
+    } <= set(payload)
+    assert payload["task"] == "review release v0.1.1"
+    assert isinstance(payload["drafts_pending_review"], dict)
+    assert '"requires_human_approval"' in outputs[0]
+    assert '"excluded"' in outputs[0]
+
+    fact_source = next(
+        source
+        for source in payload["context_trail"]["sources"]
+        if source["type"] == "fact"
+    )
+    assert fact_source == {
+        "type": "fact",
+        "id": "10000000-0000-4000-8000-000000000201",
+        "status": "verified",
+        "review_status": "verified",
+        "reason": "included by deterministic task text match",
+        "task_score": 0.42,
+    }
+
+
+def test_prepare_payload_keeps_drafts_out_of_reviewed_sections() -> None:
+    project = fake_prepare_project()
+    compiled = fake_prepare_compiled_payload(project)
+    draft_fact = {
+        "id": uuid.UUID("10000000-0000-4000-8000-000000000202"),
+        "statement": "Draft signal must stay pending review.",
+        "source": "signal inbox",
+        "confidence": 0.5,
+        "status": "draft",
+        "prepare_reason": prepare_commands.DRAFT_PREPARE_REASON,
+        "task_score": 0.99,
+    }
+    compiled["facts"].append(draft_fact)
+
+    payload = prepare_commands.build_prepare_payload(
+        project=project,
+        task="review release v0.1.1",
+        compiled=compiled,
     )
 
-    captured = capsys.readouterr()
-    assert code == 0
-    assert '"task": "review release v0.1.1"' in captured.out
-    assert '"verified_project_state"' in captured.out
-    assert '"requires_human_approval"' in captured.out
-    assert '"context_trail"' in captured.out
-    assert '"excluded"' in captured.out
+    assert isinstance(payload["drafts_pending_review"], dict)
+    assert payload["drafts_pending_review"]["facts"] == [draft_fact]
+    assert all(
+        row["id"] != draft_fact["id"]
+        for row in payload["verified_project_state"]
+    )
+    draft_source = next(
+        source
+        for source in payload["context_trail"]["sources"]
+        if source["id"] == draft_fact["id"]
+    )
+    assert draft_source["type"] == "fact"
+    assert draft_source["status"] == "draft"
+    assert draft_source["review_status"] == "draft"
+    assert draft_source["reason"] == prepare_commands.DRAFT_PREPARE_REASON
+    assert draft_source["task_score"] == 0.99
 
 
 def test_prepare_merge_prefers_task_matches_then_recent_fallback() -> None:

@@ -411,6 +411,7 @@ def build_prepare_payload(
         stale_after_days=stale_after_days,
     )
     payload = {
+        "context_pack_version": 1,
         "project": project,
         "task": task,
         "goal": task,
@@ -537,6 +538,7 @@ def prepare_markdown(payload: dict[str, object]) -> str:
             "# Agent Context Pack",
             "",
             f"- project: {project['slug']}",
+            f"- context_pack_version: {payload['context_pack_version']}",
             f"- task: {payload['task']}",
             "",
             "## Goal",

@@ -82,6 +82,12 @@ read-only context pack:
 agent-hub prepare --project <project-slug> --task "<current task>"
 ```
 
+`agent-hub prepare --format json` is a versioned, read-only, point-in-time
+context-pack snapshot for external tools. It is not a live ADH connection and
+does not sync or write back. Drafts in the pack are pending-review signals, not
+reviewed memory. Consumers should check `context_pack_version` before assuming
+they understand the JSON format.
+
 `prepare` includes the task goal, verified project state, relevant decisions,
 constraints, risks, open questions, allowed actions, actions that require human
 approval, suggested checks, and a Context Trail with included source counts and
