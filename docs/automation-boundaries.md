@@ -18,6 +18,7 @@ already reviewed state:
 - `agent-hub quality`
 - `agent-hub receipt`
 - `agent-hub export`
+- `agent-hub export-okf`
 - local backup health checks
 - local database backup after reviewed memory changes
 - read-only briefs, context packs, and compiled memory
@@ -29,6 +30,10 @@ The MCP server belongs in this read-only layer. It exposes reviewed Hub context
 over stdio for external agents, but it has no write tools, no HTTP transport,
 and no import, remember, accept, reject, or sync capability. The server asks
 Postgres for a read-only session; writes remain outside the MCP boundary.
+
+`agent-hub export-okf` also belongs in this read-only layer. It projects
+reviewed Hub memory into an OKF-style Markdown/YAML bundle and does not import,
+sync, promote drafts, or change Hub rows.
 
 The only write candidates that may use the automatic route are reversible
 evidence with strong provenance:

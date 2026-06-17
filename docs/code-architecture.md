@@ -75,6 +75,7 @@ The exporting package is split by output concern:
 - `helpers.py`: file names, titles, frontmatter, and human-note preservation.
 - `relations.py`: relation collection and Obsidian Wikilink rendering.
 - `overviews.py`: compiled project pages and the Hub start page.
+- `okf.py`: read-only OKF preview bundle export for reviewed project memory.
 - `workflow.py`: `export_all()` orchestration.
 
 The export pipeline should preserve existing file names, frontmatter, human

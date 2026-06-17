@@ -217,6 +217,22 @@ Generic stdio clients should launch `agent-hub mcp-serve` with `DATABASE_URL`
 set for the local Hub database. Writes stay behind the CLI and Hub View review
 paths, where the human review gate is explicit.
 
+## OKF Export Preview
+
+Agent Data Hub can export reviewed project memory as a small
+[Open Knowledge Format](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md)
+preview bundle:
+
+```bash
+agent-hub export-okf --project <project-slug> --out .local/okf/<project-slug>
+```
+
+The OKF export is read-only and deterministic. It writes Markdown files with
+YAML frontmatter for reviewed facts, accepted decisions, active risks, open or
+answered questions, and published reports. Drafts, proposed items, archived
+items, rejected decisions, resolved risks, and superseded reports are excluded.
+This is an export target, not a second source of truth or an import/sync layer.
+
 Submit only sourced, non-sensitive memory candidates:
 
 ```bash

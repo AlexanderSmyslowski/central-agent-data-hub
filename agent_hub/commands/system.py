@@ -20,6 +20,7 @@ from agent_hub.commands.common import (
 )
 from agent_hub.db import connect
 from agent_hub.export_obsidian import export_all
+from agent_hub.exporting.okf import export_project_okf
 from agent_hub.migrations import apply_migrations, describe_migrations, print_migration_report
 from agent_hub.quality import (
     fetch_latest_sync_event,
@@ -60,6 +61,21 @@ def run_export(_args: argparse.Namespace) -> int:
         return error(exc, 2)
 
     print(f"Export complete: wrote {len(written)} Markdown files.")
+    for path in written:
+        print(path)
+    return 0
+
+
+def run_export_okf(args: argparse.Namespace) -> int:
+    if error_code := require_database_url():
+        return error_code
+
+    try:
+        written = export_project_okf(args.project, Path(args.out))
+    except Exception as exc:
+        return exception_error(exc)
+
+    print(f"OKF export complete: wrote {len(written)} Markdown files.")
     for path in written:
         print(path)
     return 0

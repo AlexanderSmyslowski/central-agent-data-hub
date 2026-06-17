@@ -25,6 +25,7 @@ from agent_hub.commands.summaries import (
 from agent_hub.commands.system import (
     run_check,
     run_export,
+    run_export_okf,
     run_migrate,
     run_projects,
     run_setup,
@@ -147,6 +148,18 @@ def build_parser() -> argparse.ArgumentParser:
         "export",
         "Export database rows to Obsidian Markdown files.",
         run_export,
+    )
+    export_okf_parser = add_command(
+        subparsers,
+        "export-okf",
+        "Export reviewed project memory as an OKF preview bundle.",
+        run_export_okf,
+    )
+    add_project_argument(export_okf_parser)
+    export_okf_parser.add_argument(
+        "--out",
+        required=True,
+        help="Output directory for the OKF bundle.",
     )
     add_command(
         subparsers,

@@ -89,6 +89,7 @@ def test_parse_since_rejects_invalid_value() -> None:
         ["relations", "--help"],
         ["compile", "--help"],
         ["prepare", "--help"],
+        ["export-okf", "--help"],
         ["mcp-serve", "--help"],
         ["setup", "--help"],
     ],
@@ -135,6 +136,33 @@ def test_setup_command_has_clear_error_when_script_is_missing(
     captured = capsys.readouterr()
     assert code == 2
     assert "setup assistant script not found" in captured.err
+
+
+def test_export_okf_command_writes_preview_bundle(monkeypatch, tmp_path, capsys) -> None:
+    calls: list[tuple[str, Path]] = []
+
+    def fake_export_project_okf(project: str, output_dir: Path) -> list[Path]:
+        calls.append((project, output_dir))
+        return [output_dir / "index.md", output_dir / "facts" / "demo.md"]
+
+    monkeypatch.setenv("DATABASE_URL", "postgresql://example")
+    monkeypatch.setattr(system_commands, "export_project_okf", fake_export_project_okf)
+
+    code = cli.main(
+        [
+            "export-okf",
+            "--project",
+            "central-agent-data-hub-demo",
+            "--out",
+            str(tmp_path),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert calls == [("central-agent-data-hub-demo", tmp_path)]
+    assert "OKF export complete: wrote 2 Markdown files." in captured.out
+    assert str(tmp_path / "index.md") in captured.out
 
 
 def test_bootstrap_local_environment_loads_repo_env_and_expands_paths(
