@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -105,11 +105,18 @@ def _timestamp(value: object) -> str | None:
     return str(value)
 
 
-def _as_date(value: object) -> str:
-    timestamp = _timestamp(value)
-    if not timestamp:
-        return datetime.now(timezone.utc).date().isoformat()
-    return timestamp[:10]
+def _latest_timestamp(
+    project: dict[str, Any],
+    rows_by_type: dict[str, list[dict[str, Any]]],
+) -> str:
+    candidates = [
+        _timestamp(project.get("updated_at") or project.get("created_at")),
+    ]
+    for rows in rows_by_type.values():
+        for row in rows:
+            candidates.append(_timestamp(row.get("updated_at") or row.get("created_at")))
+    stable = sorted(candidate for candidate in candidates if candidate)
+    return stable[-1] if stable else "1970-01-01T00:00:00+00:00"
 
 
 def _metadata_tags(row: dict[str, Any], item_type: str, project_slug: str) -> list[str]:
@@ -235,7 +242,11 @@ def build_okf_files(
     rows_by_type: dict[str, list[dict[str, Any]]],
     generated_at: datetime | None = None,
 ) -> list[OkfFile]:
-    generated = generated_at or datetime.now(timezone.utc)
+    snapshot_timestamp = (
+        generated_at.isoformat()
+        if generated_at is not None
+        else _latest_timestamp(project, rows_by_type)
+    )
     files: list[OkfFile] = []
     directory_entries: dict[str, list[tuple[str, str, str]]] = {}
 
@@ -259,8 +270,14 @@ def build_okf_files(
         directory_entries[spec.folder] = entries
         files.append(OkfFile(Path(spec.folder) / "index.md", _directory_index(spec, entries)))
 
-    files.insert(0, OkfFile(Path("index.md"), _root_index(project, directory_entries, generated)))
-    files.append(OkfFile(Path("log.md"), _log_file(project, generated)))
+    files.insert(
+        0,
+        OkfFile(
+            Path("index.md"),
+            _root_index(project, directory_entries, snapshot_timestamp),
+        ),
+    )
+    files.append(OkfFile(Path("log.md"), _log_file(project, snapshot_timestamp)))
     return files
 
 
@@ -279,7 +296,7 @@ def _directory_index(spec: OkfSpec, entries: list[tuple[str, str, str]]) -> str:
 def _root_index(
     project: dict[str, Any],
     directory_entries: dict[str, list[tuple[str, str, str]]],
-    generated_at: datetime,
+    snapshot_timestamp: str,
 ) -> str:
     lines = [
         f"# {project['name']} OKF Export",
@@ -288,7 +305,7 @@ def _root_index(
         "",
         f"- OKF target: {OKF_VERSION}",
         f"- Project: `{project['slug']}`",
-        f"- Generated at: {generated_at.isoformat()}",
+        f"- Snapshot timestamp: {snapshot_timestamp}",
         "- Included: reviewed facts, accepted decisions, active risks, open or answered questions, and published reports.",
         "- Excluded: drafts, proposed items, archived items, rejected decisions, resolved risks, and superseded reports.",
         "",
@@ -302,12 +319,12 @@ def _root_index(
     return "\n".join(lines) + "\n"
 
 
-def _log_file(project: dict[str, Any], generated_at: datetime) -> str:
-    day = generated_at.date().isoformat()
+def _log_file(project: dict[str, Any], snapshot_timestamp: str) -> str:
+    day = snapshot_timestamp[:10]
     return (
         "# Directory Update Log\n\n"
         f"## {day}\n"
-        f"* **Export**: Generated OKF preview bundle for `{project['slug']}` from reviewed Agent Data Hub memory.\n"
+        f"* **Export**: OKF preview bundle reflects reviewed Agent Data Hub memory as of {snapshot_timestamp}.\n"
     )
 
 

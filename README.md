@@ -232,6 +232,9 @@ YAML frontmatter for reviewed facts, accepted decisions, active risks, open or
 answered questions, and published reports. Drafts, proposed items, archived
 items, rejected decisions, resolved risks, and superseded reports are excluded.
 This is an export target, not a second source of truth or an import/sync layer.
+Use a fresh output directory for preview exports. The command overwrites
+generated paths, but it does not remove stale files that may remain from an
+older bundle.
 
 Submit only sourced, non-sensitive memory candidates:
 

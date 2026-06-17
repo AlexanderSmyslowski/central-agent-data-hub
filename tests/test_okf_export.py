@@ -57,6 +57,8 @@ def test_build_okf_files_outputs_conformant_markdown_bundle() -> None:
 
     assert not by_path["index.md"].startswith("---")
     assert "OKF target: 0.1" in by_path["index.md"]
+    assert "Snapshot timestamp: 2026-06-05T12:00:00+00:00" in by_path["index.md"]
+    assert "Generated at" not in by_path["index.md"]
     assert "Excluded: drafts" in by_path["index.md"]
 
     match = re.match(r"---\n(.*?)\n---\n\n(.*)", fact, flags=re.S)
@@ -69,6 +71,26 @@ def test_build_okf_files_outputs_conformant_markdown_bundle() -> None:
     assert frontmatter["adh_status"] == "verified"
     assert "portable-context" in frontmatter["tags"]
     assert "# Summary" in match.group(2)
+
+
+def test_build_okf_files_without_generated_at_is_byte_stable() -> None:
+    kwargs = {
+        "project": PROJECT,
+        "rows_by_type": {"fact": [fact_row()]},
+    }
+
+    first = okf.build_okf_files(**kwargs)
+    second = okf.build_okf_files(**kwargs)
+
+    assert [
+        (item.relative_path, item.content) for item in first
+    ] == [
+        (item.relative_path, item.content) for item in second
+    ]
+    by_path = {str(item.relative_path): item.content for item in first}
+    assert "Snapshot timestamp: 2026-06-04T00:00:00+00:00" in by_path["index.md"]
+    assert "Generated at" not in by_path["index.md"]
+    assert "## 2026-06-04" in by_path["log.md"]
 
 
 def test_export_project_okf_reads_only_reviewed_statuses_and_writes_bundle(
