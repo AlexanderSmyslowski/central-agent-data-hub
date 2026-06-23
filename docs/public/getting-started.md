@@ -47,9 +47,11 @@ It does not wipe an existing local operator database. For the quietest first
 run, use it against a fresh local database or Docker volume.
 
 If you need to run a second local copy alongside an existing Agent Data Hub
-instance, adjust `.env` before starting the demo. Set a matching
-`DATABASE_URL`, `AGENT_HUB_DB_PORT`, `AGENT_HUB_DB_CONTAINER`, and
-`AGENT_HUB_DB_VOLUME`.
+instance, set demo overrides in the shell before starting the script. Use a
+database name containing `demo`, and set matching `AGENT_HUB_DB_NAME`,
+`AGENT_HUB_DB_PORT`, `AGENT_HUB_DB_CONTAINER`, `AGENT_HUB_DB_VOLUME`, and
+`AGENT_HUB_COMPOSE_PROJECT_NAME` values. The public demo path ignores
+`DATABASE_URL` from `.env` for its own process.
 
 ## 3. Run The End-To-End Demo Smoke
 
@@ -68,7 +70,7 @@ Export the Markdown projection:
 Start Hub View:
 
 ```bash
-scripts/hub_view.sh
+AGENT_HUB_PUBLIC_DEMO=1 scripts/hub_view.sh
 ```
 
 Hub View is a local review surface. It reads reviewed memory and can accept or

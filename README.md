@@ -399,6 +399,8 @@ local working data. It continues to use the configured `.env` database.
 
 - [Public overview](docs/public/agent-data-hub-overview.md)
 - [Public getting started](docs/public/getting-started.md)
+- [v0.1.2 release notes](docs/public/v0.1.2-release-notes.md)
+- [v0.1.1 release notes](https://github.com/AlexanderSmyslowski/central-agent-data-hub/releases/tag/v0.1.1)
 - [v0.1.0 release notes](docs/public/v0.1.0-release-notes.md)
 - [Announcement pack](docs/public/announcement-pack.md)
 - [Agent workflow](docs/agent-workflow.md)
