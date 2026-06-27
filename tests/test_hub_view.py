@@ -558,6 +558,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Connect an agent" in body
     assert 'action="/projects/central-agent-data-hub/agent-context"' in body
     assert "Create context pack" in body
+    assert "Local agents should be connected once" in body
     assert "Latest status" in body
     assert "all items to review" in body
     assert "Review suggested memory changes" in body
@@ -620,6 +621,15 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
                         "--query 'Review release readiness' --review"
                     ),
                 },
+                "local_agent": {
+                    "install_mcp": "pip install -e '.[mcp]'",
+                    "claude_mcp": "claude mcp add agent-data-hub -- agent-hub mcp-serve",
+                    "mcp_json": '{"mcpServers": {"agent-data-hub": {"command": "agent-hub"}}}',
+                    "startup_instruction": (
+                        "At the start of ADH-related work:\n"
+                        "- ask Agent Data Hub for reviewed context"
+                    ),
+                },
                 "markdown": "# Agent Context Pack\n\n## Goal\nReview release readiness\n",
             },
         }
@@ -646,6 +656,11 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "Reviewed decisions become task constraints" in body
     assert "Known gaps" in body
     assert "1 unanswered questions" in body
+    assert "Local agent" in body
+    assert "connected once" in body
+    assert "claude mcp add agent-data-hub" in body
+    assert "Terminal fallback" in body
+    assert "cannot prove that an unconnected agent used the context" in body
     assert "agent-hub prepare --project central-agent-data-hub" in body
     assert "scripts/agent_start.sh --project central-agent-data-hub" in body
     assert "# Agent Context Pack" in body
@@ -705,6 +720,14 @@ def test_agent_context_commands_are_shell_quoted_for_copy_paste(monkeypatch) -> 
         view["commands"]["agent_start"]
         == "scripts/agent_start.sh --project central-agent-data-hub --query 'Review Ronak'\"'\"'s release notes' --review"
     )
+    assert view["local_agent"]["install_mcp"] == "pip install -e '.[mcp]'"
+    assert (
+        view["local_agent"]["claude_mcp"]
+        == "claude mcp add agent-data-hub -- agent-hub mcp-serve"
+    )
+    assert '"mcpServers"' in view["local_agent"]["mcp_json"]
+    assert '"agent-data-hub"' in view["local_agent"]["mcp_json"]
+    assert "Review Ronak's release notes" in view["local_agent"]["startup_instruction"]
 
 
 def test_format_timestamp_for_datetime() -> None:
