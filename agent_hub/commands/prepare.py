@@ -13,6 +13,7 @@ from agent_hub.commands.common import (
     require_database_url,
     project_not_found,
 )
+from agent_hub.context_receipt import context_receipt_markdown, prepare_context_counts
 from agent_hub.db import connect
 from agent_hub.gaps import (
     DEFAULT_STALE_AFTER_DAYS,
@@ -540,6 +541,12 @@ def prepare_markdown(payload: dict[str, object]) -> str:
             f"- project: {project['slug']}",
             f"- context_pack_version: {payload['context_pack_version']}",
             f"- task: {payload['task']}",
+            "",
+            context_receipt_markdown(
+                project_slug=str(project["slug"]),
+                task=str(payload["task"]),
+                counts=prepare_context_counts(payload),
+            ),
             "",
             "## Goal",
             str(payload["goal"]),

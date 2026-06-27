@@ -35,9 +35,12 @@ For higher-risk or longer work, include the project review:
 scripts/agent_start.sh --project <project-slug> --query "<current work focus>" --review
 ```
 
-The start helper prints the working contract after loading context: keep the
-project boundary explicit, do not transfer assumptions between projects, do not
-store sensitive data, and treat uncertainty as an open question.
+The start helper prints an **ADH Context Loaded** receipt before the detailed
+memory sections. The receipt shows the project, task, reviewed-memory counts,
+and how reviewed facts, decisions, risks, open questions, and drafts should
+shape the agent run. It then prints the working contract: keep the project
+boundary explicit, do not transfer assumptions between projects, do not store
+sensitive data, and treat uncertainty as an open question.
 
 For single-project work, the start helper also creates a local working-tree run
 lock. This protects against two write-capable agents using the same checkout at
@@ -81,6 +84,10 @@ read-only context pack:
 ```bash
 agent-hub prepare --project <project-slug> --task "<current task>"
 ```
+
+The Markdown output starts with the same **ADH Context Loaded** receipt, so a
+human can see what context is being handed to a chatbot or agent before work
+starts.
 
 `agent-hub prepare --format json` is a versioned, read-only, point-in-time
 context-pack snapshot for external tools. It is not a live ADH connection and

@@ -161,6 +161,10 @@ scripts/agent_start.sh --project <project-slug> --query "<current focus>" --revi
 scripts/agent_finish.sh --project <project-slug> --review
 ```
 
+`agent_start.sh` prints an **ADH Context Loaded** receipt before the detailed
+memory sections. The receipt shows the project, task, reviewed-memory counts,
+and the same influence rules shown in Hub View.
+
 For a task-specific read-only context pack:
 
 ```bash

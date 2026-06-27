@@ -29,6 +29,7 @@ from agent_hub.commands.prepare import (
     prepare_markdown,
 )
 from agent_hub.commands.summaries import fetch_compiled_payload
+from agent_hub.context_receipt import INFLUENCE_LINES, prepare_context_counts
 from agent_hub.db import connect
 from agent_hub.quality import fetch_project_quality
 from agent_hub.rendering import truncate
@@ -176,19 +177,14 @@ def build_detail_view(
 
 
 def agent_context_counts(payload: dict[str, object]) -> dict[str, int]:
+    counts = prepare_context_counts(payload)
     drafts = payload.get("drafts_pending_review") or {}
     pending_drafts = 0
     if isinstance(drafts, dict):
         pending_drafts = sum(len(rows) for rows in drafts.values() if isinstance(rows, list))
-    return {
-        "facts": len(payload.get("verified_project_state") or []),
-        "decisions": len(payload.get("relevant_decisions") or []),
-        "risks": len(payload.get("risks") or []),
-        "open_questions": len(payload.get("open_questions") or []),
-        "reports": len(payload.get("reports") or []),
-        "relations": len(payload.get("relations") or []),
-        "pending_drafts": pending_drafts,
-    }
+    counts["relations"] = len(payload.get("relations") or [])
+    counts["pending_drafts"] = pending_drafts
+    return counts
 
 
 def shell_command(parts: list[object]) -> str:
@@ -215,12 +211,7 @@ def build_agent_context_view(payload: dict[str, object]) -> dict[str, object]:
             "blind_spots": gap_summary.get("blind_spots", 0),
             "pending_drafts": gap_summary.get("pending_drafts", 0),
         },
-        "influence": [
-            "Reviewed decisions become task constraints for the agent.",
-            "Verified facts may be used as project assumptions.",
-            "Active risks and open questions stay visible instead of being guessed away.",
-            "Drafts stay labelled as unconfirmed until a human reviews them.",
-        ],
+        "influence": list(INFLUENCE_LINES),
         "commands": {
             "prepare": shell_command(
                 [

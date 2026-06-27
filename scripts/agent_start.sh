@@ -154,6 +154,8 @@ fi
 if [[ -n "$PROJECT" ]]; then
   "$ROOT_DIR/scripts/agent_preflight.sh" --compact --allow-direct-db
   echo
+  (cd "$ROOT_DIR" && "$PYTHON_BIN" -m agent_hub.context_receipt --project "$PROJECT" --task "$QUERY" --limit "$LIMIT")
+  echo
   echo "== Compiled Project Memory: $PROJECT =="
   run_agent_hub compile --project "$PROJECT" --limit "$LIMIT"
 elif [[ "$ALL_PROJECTS" -eq 1 ]]; then
