@@ -207,6 +207,8 @@ End time:
 - Public demo check succeeded: yes/no
 - Hub View started: yes/no
 - Hub View opened in browser: yes/no
+- Found Connect an agent: yes/no
+- Created or inspected a context pack: yes/no
 
 Moderator diagnostics if needed:
 - script created `.venv`: yes/no/unknown
@@ -237,6 +239,8 @@ First place where tester wanted explanation:
 "What do you think a draft is?"
 > ...
 "What do you think Hub View is?"
+> ...
+"What do you think Connect an agent does?"
 > ...
 
 ## Safety / public-flow observations
@@ -298,6 +302,8 @@ These are the spots worth concentrated attention:
 8. Is there **any maintainer-local trace** visible in the public path?
 9. Do they get stuck on **Docker / Postgres**?
 10. Is the command `scripts/first_run_demo.sh` clear?
+11. Does **Connect an agent** make it visible that reviewed ADH context is being
+    handed to a chatbot or local agent?
 
 The current README deliberately frames Agent Data Hub as a local technical
 preview, not a hosted product or finished end-user app. Anything the tester says
@@ -313,6 +319,9 @@ The test succeeds if the tester, **without explanation**, can:
 - run `scripts/first_run_demo.sh`
 - see the public demo check pass
 - open Hub View
+- find **Connect an agent**
+- understand that a context pack is reviewed ADH context being handed to a
+  chatbot or local agent
 - roughly explain that ADH manages reviewed project context for humans and
   agents
 
@@ -375,6 +384,7 @@ At the end, without correcting them:
 - Welche Stelle war am unklarsten?
 - Welcher Befehl war am unsichersten?
 - Was hättest du früher wissen wollen?
+- Hast du erkannt, wie ADH Kontext an eine KI oder einen Agenten übergibt?
 - Was klang nach Produktversprechen, obwohl es vielleicht nur Preview ist?
 
 Only after their answers may you explain what ADH actually means.
