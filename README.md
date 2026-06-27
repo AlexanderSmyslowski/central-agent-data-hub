@@ -147,6 +147,12 @@ Hub View is a local review surface, not the operational source of truth.
 
 ## Agent Workflow
 
+Hub View can now make the agent handoff visible from the UI. Open a project,
+use **Connect an agent**, enter the task, and click **Create context pack**.
+The generated view shows which reviewed facts, decisions, risks, questions,
+reports, and trail entries would be handed to a chatbot or local agent. It also
+shows how that context should influence the work.
+
 The normal run rhythm is:
 
 ```bash

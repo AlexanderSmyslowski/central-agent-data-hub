@@ -102,6 +102,11 @@ Hub View is a local review surface. It reads reviewed memory and can accept or
 reject draft candidates as explicit review actions. PostgreSQL remains the
 reviewed source of truth.
 
+To see how an agent would use ADH, open a project in Hub View and use
+**Connect an agent**. Enter a task and click **Create context pack**. Hub View
+will show the reviewed context being handed to the agent and provide a
+copy-ready pack for chatbots or local agent runs.
+
 Optional: export the Markdown projection manually if you want to inspect the
 generated files:
 
