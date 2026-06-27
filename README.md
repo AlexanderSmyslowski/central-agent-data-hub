@@ -403,6 +403,7 @@ local working data. It continues to use the configured `.env` database.
 - [v0.1.1 release notes](https://github.com/AlexanderSmyslowski/central-agent-data-hub/releases/tag/v0.1.1)
 - [v0.1.0 release notes](docs/public/v0.1.0-release-notes.md)
 - [Announcement pack](docs/public/announcement-pack.md)
+- [First-run test protocol](docs/first-run-test-protocol.md)
 - [Agent workflow](docs/agent-workflow.md)
 - [Automation boundaries](docs/automation-boundaries.md)
 - [Code architecture](docs/code-architecture.md)
