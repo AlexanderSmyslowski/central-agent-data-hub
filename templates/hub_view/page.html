@@ -1018,13 +1018,13 @@
                 </article>
                 <article class="connection-card">
                   <h3>Codex</h3>
-                  <p>One-time setup: install the ADH block into the project's <code>AGENTS.md</code>. Codex reads that file before work and uses it as the repo-local startup rule.</p>
+                  <p>One-time setup: open a terminal in the project repo and run this command. It installs the ADH block into <code>AGENTS.md</code>, which Codex reads before work.</p>
                   <div class="copy-row">
                     <code id="codex-setup-command" class="command-box">{{ agent_context.local_agent.codex_command }}</code>
                     <button class="button copy-button" type="button" data-copy-target="codex-setup-command">Copy Codex setup</button>
                   </div>
-                  {% if agent_context.local_agent.codex_needs_repo_path %}
-                    <p class="setup-note">Replace <code>&lt;project-repo-path&gt;</code> with the repo path before running this command.</p>
+                  {% if agent_context.local_agent.codex_uses_current_directory %}
+                    <p class="setup-note">Run this from the project repository. The command uses the current folder as the repo.</p>
                   {% endif %}
                 </article>
                 <article class="connection-card">

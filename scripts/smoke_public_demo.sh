@@ -111,6 +111,8 @@ for _ in range(50):
                 "is instructed to request ADH context",
                 "Add ADH as a local MCP server once",
                 "AGENTS.md",
+                'Run this from the project repository',
+                '$PWD',
                 "Manual fallback",
                 "claude mcp add agent-data-hub",
                 "agent_hub.cli mcp-serve",
