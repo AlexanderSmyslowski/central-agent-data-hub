@@ -628,7 +628,7 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
                     "mcp_json": '{"mcpServers": {"agent-data-hub": {"command": "agent-hub"}}}',
                     "startup_instruction": (
                         "At the start of ADH-related work:\n"
-                        "- ask Agent Data Hub for reviewed context"
+                        "- request reviewed context from Agent Data Hub"
                     ),
                 },
                 "markdown": "# Agent Context Pack\n\n## Goal\nReview release readiness\n",
@@ -659,11 +659,20 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "1 unanswered questions" in body
     assert "Local agent" in body
     assert "One-time setup" in body
+    assert "is instructed to request ADH context" in body
     assert "Add ADH as a local MCP server once" in body
     assert "claude mcp add agent-data-hub" in body
     assert "Manual fallback" in body
     assert "it is not automation" in body
     assert "ADH cannot prove that an unconnected agent read the context" in body
+    assert 'data-copy-target="install-mcp-command"' in body
+    assert 'data-copy-target="claude-mcp-command"' in body
+    assert 'data-copy-target="mcp-json-config"' in body
+    assert 'data-copy-target="startup-instruction"' in body
+    assert 'data-copy-target="agent-start-command"' in body
+    assert 'data-copy-target="prepare-command"' in body
+    assert 'data-copy-target="chatbot-context-pack"' in body
+    assert "Copy context pack" in body
     assert "agent-hub prepare --project central-agent-data-hub" in body
     assert "scripts/agent_start.sh --project central-agent-data-hub" in body
     assert "# Agent Context Pack" in body
@@ -730,6 +739,7 @@ def test_agent_context_commands_are_shell_quoted_for_copy_paste(monkeypatch) -> 
     )
     assert '"mcpServers"' in view["local_agent"]["mcp_json"]
     assert '"agent-data-hub"' in view["local_agent"]["mcp_json"]
+    assert "request reviewed context from Agent Data Hub" in view["local_agent"]["startup_instruction"]
     assert "Review Ronak's release notes" in view["local_agent"]["startup_instruction"]
 
 

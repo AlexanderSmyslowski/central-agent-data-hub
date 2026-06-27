@@ -107,8 +107,10 @@ To see how an agent would use ADH, open a project in Hub View and use
 will show the reviewed context being handed to the agent and provide a
 copy-ready pack for chatbots. For local agents, Hub View shows the one-time MCP
 or startup-rule setup. Hub View does not connect the agent by itself; the local
-agent must be configured once before it can request ADH context when work
-starts.
+agent must be configured once. After setup, the local agent is instructed to
+request ADH context when work starts. Hub View provides copy buttons for the
+setup command, MCP config, startup instruction, terminal fallback, and chatbot
+context pack.
 
 Optional: export the Markdown projection manually if you want to inspect the
 generated files:
