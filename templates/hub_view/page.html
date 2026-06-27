@@ -454,6 +454,17 @@
         font-weight: 700;
       }
 
+      .copy-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+        align-items: start;
+      }
+
+      .copy-button {
+        white-space: nowrap;
+      }
+
       .command-box {
         display: block;
         padding: 10px 12px;
@@ -738,6 +749,14 @@
         .agent-form {
           grid-template-columns: 1fr;
         }
+
+        .copy-row {
+          grid-template-columns: 1fr;
+        }
+
+        .copy-button {
+          justify-self: start;
+        }
       }
     </style>
   </head>
@@ -944,38 +963,57 @@
                 </article>
                 <article class="connection-card">
                   <h3>Local agent</h3>
-                  <p>One-time setup: add ADH to the local agent's own configuration. After setup, the agent can ask ADH for reviewed context when a task starts.</p>
+                  <p>One-time setup: add ADH to the local agent's own configuration. Once connected, the local agent is instructed to request ADH context at the start of each ADH-related task.</p>
                   <ol class="setup-steps">
                     <li>
                       <span class="setup-step-title">1. Install MCP support once</span>
-                      <code class="command-box">{{ agent_context.local_agent.install_mcp }}</code>
+                      <div class="copy-row">
+                        <code id="install-mcp-command" class="command-box">{{ agent_context.local_agent.install_mcp }}</code>
+                        <button class="button copy-button" type="button" data-copy-target="install-mcp-command">Copy</button>
+                      </div>
                     </li>
                     <li>
                       <span class="setup-step-title">2. Add ADH as a local MCP server once</span>
-                      <code class="command-box">{{ agent_context.local_agent.claude_mcp }}</code>
+                      <div class="copy-row">
+                        <code id="claude-mcp-command" class="command-box">{{ agent_context.local_agent.claude_mcp }}</code>
+                        <button class="button copy-button" type="button" data-copy-target="claude-mcp-command">Copy</button>
+                      </div>
                     </li>
                     <li>
                       <span class="setup-step-title">3. Or use this MCP config shape</span>
-                      <code class="command-box">{{ agent_context.local_agent.mcp_json }}</code>
+                      <div class="copy-row">
+                        <code id="mcp-json-config" class="command-box">{{ agent_context.local_agent.mcp_json }}</code>
+                        <button class="button copy-button" type="button" data-copy-target="mcp-json-config">Copy</button>
+                      </div>
                     </li>
                     <li>
                       <span class="setup-step-title">4. Tell the agent what to do at task start</span>
-                      <code class="command-box">{{ agent_context.local_agent.startup_instruction }}</code>
+                      <div class="copy-row">
+                        <code id="startup-instruction" class="command-box">{{ agent_context.local_agent.startup_instruction }}</code>
+                        <button class="button copy-button" type="button" data-copy-target="startup-instruction">Copy</button>
+                      </div>
                     </li>
                   </ol>
                 </article>
                 <article class="connection-card">
                   <h3>Terminal fallback</h3>
                   <p>Manual fallback: use this only until the local agent is connected. It starts one visible ADH-backed run, but it is not automation.</p>
-                  <code class="command-box">{{ agent_context.commands.agent_start }}</code>
+                  <div class="copy-row">
+                    <code id="agent-start-command" class="command-box">{{ agent_context.commands.agent_start }}</code>
+                    <button class="button copy-button" type="button" data-copy-target="agent-start-command">Copy</button>
+                  </div>
                 </article>
               </div>
               <p>Hub View shows what ADH handed off and the counts behind it. An agent must either be connected or receive the copied pack; ADH cannot prove that an unconnected agent read the context.</p>
               <h3>Context pack for chatbot copy/paste</h3>
               <div class="command-list">
-                <code class="command-box">{{ agent_context.commands.prepare }}</code>
+                <div class="copy-row">
+                  <code id="prepare-command" class="command-box">{{ agent_context.commands.prepare }}</code>
+                  <button class="button copy-button" type="button" data-copy-target="prepare-command">Copy</button>
+                </div>
               </div>
-              <textarea class="context-pack" readonly aria-label="Agent context pack">{{ agent_context.markdown }}</textarea>
+              <button class="button copy-button" type="button" data-copy-target="chatbot-context-pack">Copy context pack</button>
+              <textarea id="chatbot-context-pack" class="context-pack" readonly aria-label="Agent context pack">{{ agent_context.markdown }}</textarea>
             </section>
           {% elif selected_project %}
             <div class="detail-header">
@@ -1182,5 +1220,54 @@
         </section>
       </div>
     </main>
+    <script>
+      (function () {
+        function markCopied(button) {
+          var original = button.getAttribute("data-copy-label") || button.textContent;
+          button.setAttribute("data-copy-label", original);
+          button.textContent = "Copied";
+          window.setTimeout(function () {
+            button.textContent = original;
+          }, 1200);
+        }
+
+        function fallbackCopy(text, button) {
+          var area = document.createElement("textarea");
+          area.value = text;
+          area.setAttribute("readonly", "");
+          area.style.position = "absolute";
+          area.style.left = "-9999px";
+          document.body.appendChild(area);
+          area.select();
+          try {
+            document.execCommand("copy");
+            markCopied(button);
+          } finally {
+            document.body.removeChild(area);
+          }
+        }
+
+        document.addEventListener("click", function (event) {
+          var button = event.target.closest("[data-copy-target]");
+          if (!button) {
+            return;
+          }
+          var target = document.getElementById(button.getAttribute("data-copy-target"));
+          if (!target) {
+            return;
+          }
+          var text = target.value || target.textContent || "";
+          if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(function () {
+              markCopied(button);
+            }).catch(function () {
+              fallbackCopy(text, button);
+            });
+          } else {
+            fallbackCopy(text, button);
+          }
+        });
+      }());
+    </script>
   </body>
 </html>

@@ -211,7 +211,7 @@ def build_agent_context_view(payload: dict[str, object]) -> dict[str, object]:
     startup_instruction = "\n".join(
         [
             "At the start of ADH-related work:",
-            f'- ask Agent Data Hub for reviewed context for project "{project["slug"]}"',
+            f'- request reviewed context from Agent Data Hub for project "{project["slug"]}"',
             f'- use the current task as the context-pack task: "{task}"',
             "- show the ADH Context Loaded receipt or equivalent counts before acting",
             "- treat reviewed decisions as constraints",
