@@ -1,4 +1,4 @@
-# First-Run Test Protocol (v0.1.2)
+# First-Run Test Protocol (current main after v0.1.2)
 
 A moderator playbook for running a structured first-run usability test of Agent
 Data Hub with a real person.
@@ -18,12 +18,14 @@ the rest of `docs/`.
 
 ## 0. What This Tests Against
 
-The tester should rely only on the public surface:
+This protocol tests the current `main` branch after the published v0.1.2
+release. It does **not** test the historical `v0.1.2` tag.
+
+The tester should rely only on the current public surface:
 
 - Repo landing page: <https://github.com/AlexanderSmyslowski/central-agent-data-hub>
 - [`README.md`](../README.md), section **Public Quickstart**
 - [`docs/public/getting-started.md`](public/getting-started.md)
-- [`docs/public/v0.1.2-release-notes.md`](public/v0.1.2-release-notes.md)
 
 The moderator should know the expected path, but should not hand it to the
 tester up front. The point is to learn whether the public docs can carry the
@@ -35,11 +37,11 @@ first run.
 
 Open with (spoken, German):
 
-> Ich möchte prüfen, ob Agent Data Hub v0.1.2 für jemanden ohne Vorwissen
-> verständlich und ausführbar ist. Bitte denke laut. Wenn etwas unklar ist, sag
-> es einfach. Ich werde nicht erklären, sondern nur beobachten und mitschreiben.
-> Es geht nicht darum, ob du etwas falsch machst. Es geht darum, ob die Anleitung
-> gut genug ist.
+> Ich möchte prüfen, ob der aktuelle öffentliche Stand von Agent Data Hub für
+> jemanden ohne Vorwissen verständlich und ausführbar ist. Bitte denke laut.
+> Wenn etwas unklar ist, sag es einfach. Ich werde nicht erklären, sondern nur
+> beobachten und mitschreiben. Es geht nicht darum, ob du etwas falsch machst.
+> Es geht darum, ob die Anleitung gut genug ist.
 
 Do **not** say things like:
 
@@ -113,7 +115,7 @@ Then you may stop the test or give one minimal technical unblock.
 Give this block to the tester.
 
 ````markdown
-# Agent Data Hub v0.1.2 First Run
+# Agent Data Hub First Run
 
 Goal:
 Start from the public GitHub page, use the README and Getting Started, and try
@@ -138,19 +140,18 @@ Start:
 
 ---
 
-## 5. Moderator Reference: Expected v0.1.2 Public Path
+## 5. Moderator Reference: Expected Current Main Public Path
 
 This command sequence is for the moderator's reference. Do not give it to the
 tester unless the run is already technically blocked and you decide to unblock
 once.
 
-The expected public first run from the v0.1.2 release notes and getting-started
-is:
+The expected public first run from the current `main` README and Getting
+Started is:
 
 ```bash
 git clone https://github.com/AlexanderSmyslowski/central-agent-data-hub.git
 cd central-agent-data-hub
-git checkout v0.1.2
 scripts/first_run_demo.sh
 ```
 
@@ -168,13 +169,13 @@ Create this file **locally, outside the repo** — it can contain tester PII and
 run-specific notes that do not belong in version control:
 
 ```text
-~/adh-first-run-observations/adh-v0.1.2-first-run-observation-YYYY-MM-DD.md
+~/adh-first-run-observations/adh-main-first-run-observation-YYYY-MM-DD.md
 ```
 
 Template:
 
 ````markdown
-# ADH v0.1.2 First-Run Observation
+# ADH Current Main First-Run Observation
 
 Date: YYYY-MM-DD
 
@@ -187,7 +188,7 @@ Tester:
 
 Environment:
 - Fresh clone: yes/no
-- Checked out tag: v0.1.2
+- Target branch: main
 - Used README: yes/no
 - Used Getting Started: yes/no
 - Took guided `agent-hub setup` path: yes/no
@@ -202,13 +203,17 @@ End time:
 
 ## Results
 - Clone succeeded: yes/no
-- venv succeeded: yes/no
-- pip install succeeded: yes/no
-- .env copied: yes/no
-- public demo DB started: yes/no
-- smoke_public_demo succeeded: yes/no
+- scripts/first_run_demo.sh succeeded: yes/no
+- Public demo check succeeded: yes/no
 - Hub View started: yes/no
 - Hub View opened in browser: yes/no
+
+Moderator diagnostics if needed:
+- script created `.venv`: yes/no/unknown
+- script created `.env`: yes/no/unknown
+- script started demo DB: yes/no/unknown
+- script ran smoke check: yes/no/unknown
+- script started Hub View: yes/no/unknown
 
 ## First friction
 First unclear word or phrase:
@@ -292,13 +297,11 @@ These are the spots worth concentrated attention:
 7. Do **MCP** or **OKF** confuse the first run?
 8. Is there **any maintainer-local trace** visible in the public path?
 9. Do they get stuck on **Docker / Postgres**?
-10. Is the command `AGENT_HUB_PUBLIC_DEMO=1 scripts/hub_view.sh` clear?
+10. Is the command `scripts/first_run_demo.sh` clear?
 
-The v0.1.2 release notes deliberately frame the release as a local technical
-preview — not a hosted product or finished end-user app — and call out draft
-review, read-only integration surfaces, `prepare --format json` with
-`context_pack_version: 1`, and a deterministic OKF export preview. Anything the
-tester says that contradicts that framing is a high-value observation.
+The current README deliberately frames Agent Data Hub as a local technical
+preview, not a hosted product or finished end-user app. Anything the tester says
+that contradicts that framing is a high-value observation.
 
 ---
 
@@ -307,15 +310,15 @@ tester says that contradicts that framing is a high-value observation.
 The test succeeds if the tester, **without explanation**, can:
 
 - clone the repo
-- create a venv
-- run `pip install -e .`
-- start the public demo DB
-- run the smoke test
+- run `scripts/first_run_demo.sh`
+- see the public demo check pass
 - open Hub View
 - roughly explain that ADH manages reviewed project context for humans and
   agents
 
-Individual terms being unclear is fine — that is exactly what you are testing.
+Individual terms being unclear is fine. The older granular steps — venv, pip
+install, `.env`, demo DB start, smoke check, Hub View start — are moderator
+diagnostics only.
 
 ---
 
