@@ -195,12 +195,19 @@ def shell_command(parts: list[object]) -> str:
 
 def build_agent_context_view(payload: dict[str, object]) -> dict[str, object]:
     project = payload["project"]
+    metadata = project.get("metadata") or {}
+    if not isinstance(metadata, dict):
+        metadata = {}
     trail = payload.get("context_trail") or {}
     gap_summary = trail.get("gap_summary") if isinstance(trail, dict) else {}
     if not isinstance(gap_summary, dict):
         gap_summary = {}
     counts = agent_context_counts(payload)
     task = str(payload["task"])
+    repo_root = Path(__file__).resolve().parents[1]
+    project_repo_path = metadata.get("local_path")
+    if not isinstance(project_repo_path, str) or not project_repo_path.strip():
+        project_repo_path = "<project-repo-path>"
     mcp_server_command = [sys.executable, "-m", "agent_hub.cli", "mcp-serve"]
     install_mcp_command = [sys.executable, "-m", "pip", "install", "-e", ".[mcp]"]
     mcp_json = {
@@ -261,6 +268,16 @@ def build_agent_context_view(payload: dict[str, object]) -> dict[str, object]:
                 f"{shell_command(install_mcp_command)} && "
                 f"{shell_command(['claude', 'mcp', 'add', 'agent-data-hub', '--', *mcp_server_command])}"
             ),
+            "codex_command": shell_command(
+                [
+                    str(repo_root / "scripts" / "install_repo_agent_memory.sh"),
+                    "--repo",
+                    project_repo_path,
+                    "--project",
+                    project["slug"],
+                ]
+            ),
+            "codex_needs_repo_path": project_repo_path == "<project-repo-path>",
             "install_mcp": shell_command(install_mcp_command),
             "claude_mcp": shell_command(
                 [

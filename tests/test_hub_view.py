@@ -628,6 +628,11 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
                         "python -m pip install -e '.[mcp]' && "
                         "claude mcp add agent-data-hub -- python -m agent_hub.cli mcp-serve"
                     ),
+                    "codex_command": (
+                        "scripts/install_repo_agent_memory.sh --repo /path/to/project "
+                        "--project central-agent-data-hub"
+                    ),
+                    "codex_needs_repo_path": True,
                     "install_mcp": "pip install -e '.[mcp]'",
                     "claude_mcp": "claude mcp add agent-data-hub -- agent-hub mcp-serve",
                     "mcp_json": '{"mcpServers": {"agent-data-hub": {"command": "agent-hub"}}}',
@@ -662,18 +667,29 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "Reviewed decisions become task constraints" in body
     assert "Known gaps" in body
     assert "1 unanswered questions" in body
-    assert "Local agent" in body
+    assert "Claude Code" in body
+    assert "Codex" in body
+    assert "Hermes or custom agent" in body
+    assert "Other MCP-compatible agent" in body
     assert "One-time setup" in body
-    assert "Copy setup command" in body
-    assert "Show manual setup pieces" in body
-    assert "does not run it or write the agent configuration by itself" in body
+    assert "Copy Claude setup" in body
+    assert "Copy Codex setup" in body
+    assert "Copy startup rule" in body
+    assert "Copy MCP config" in body
+    assert "Show Claude manual setup pieces" in body
+    assert "does not run commands or write an agent configuration by itself" in body
     assert "is instructed to request ADH context" in body
+    assert "AGENTS.md" in body
+    assert "Replace" in body
+    assert "&lt;project-repo-path&gt;" in body
     assert "Add ADH as a local MCP server once" in body
     assert "claude mcp add agent-data-hub" in body
     assert "Manual fallback" in body
     assert "it is not automation" in body
     assert "ADH cannot prove that an unconnected agent read the context" in body
-    assert 'data-copy-target="local-agent-setup-command"' in body
+    assert 'data-copy-target="claude-code-setup-command"' in body
+    assert 'data-copy-target="codex-setup-command"' in body
+    assert 'data-copy-target="custom-startup-instruction"' in body
     assert 'data-copy-target="install-mcp-command"' in body
     assert 'data-copy-target="claude-mcp-command"' in body
     assert 'data-copy-target="mcp-json-config"' in body
@@ -749,6 +765,16 @@ def test_agent_context_commands_are_shell_quoted_for_copy_paste(monkeypatch) -> 
     assert view["local_agent"]["install_mcp"] == hub_view.shell_command(
         [sys.executable, "-m", "pip", "install", "-e", ".[mcp]"]
     )
+    assert view["local_agent"]["codex_command"] == hub_view.shell_command(
+        [
+            str(hub_view.Path(hub_view.__file__).resolve().parents[1] / "scripts" / "install_repo_agent_memory.sh"),
+            "--repo",
+            "<project-repo-path>",
+            "--project",
+            "central-agent-data-hub",
+        ]
+    )
+    assert view["local_agent"]["codex_needs_repo_path"] is True
     assert (
         view["local_agent"]["claude_mcp"]
         == hub_view.shell_command(
