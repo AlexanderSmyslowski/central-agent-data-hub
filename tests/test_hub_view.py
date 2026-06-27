@@ -652,6 +652,61 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert 'href="/projects/central-agent-data-hub"' in body
 
 
+def test_agent_context_commands_are_shell_quoted_for_copy_paste(monkeypatch) -> None:
+    monkeypatch.setattr(hub_view, "prepare_markdown", lambda _payload: "# Agent Context Pack")
+
+    view = hub_view.build_agent_context_view(
+        {
+            "project": {
+                "id": "project-id",
+                "slug": "central-agent-data-hub",
+                "name": "Central Agent Data Hub",
+            },
+            "task": "Review Ronak's release notes",
+            "verified_project_state": [],
+            "relevant_decisions": [],
+            "risks": [],
+            "open_questions": [],
+            "reports": [],
+            "relations": [],
+            "drafts_pending_review": {},
+            "context_trail": {
+                "included_counts": {
+                    "facts": 0,
+                    "decisions": 0,
+                    "risks": 0,
+                    "open_questions": 0,
+                    "reports": 0,
+                    "relations": 0,
+                },
+                "sources": [],
+                "excluded": {"note": "none"},
+                "task_selection": {
+                    "mode": "deterministic",
+                    "note": "test",
+                    "tie_breaking": "test",
+                },
+                "gap_summary": {},
+            },
+            "goal": "Review Ronak's release notes",
+            "constraints": [],
+            "allowed_actions": [],
+            "requires_human_approval": [],
+            "suggested_checks": [],
+            "gaps": {"summary": {}},
+        }
+    )
+
+    assert (
+        view["commands"]["prepare"]
+        == "agent-hub prepare --project central-agent-data-hub --task 'Review Ronak'\"'\"'s release notes'"
+    )
+    assert (
+        view["commands"]["agent_start"]
+        == "scripts/agent_start.sh --project central-agent-data-hub --query 'Review Ronak'\"'\"'s release notes' --review"
+    )
+
+
 def test_format_timestamp_for_datetime() -> None:
     value = datetime(2026, 6, 5, 8, 0, tzinfo=timezone.utc)
     assert hub_view.format_timestamp(value) == "2026-06-05 08:00 UTC"

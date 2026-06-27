@@ -9,6 +9,7 @@ import ipaddress
 import os
 from pathlib import Path
 import secrets
+import shlex
 import socket
 from typing import Any, Callable
 from urllib.parse import parse_qs, quote, urlparse
@@ -190,6 +191,10 @@ def agent_context_counts(payload: dict[str, object]) -> dict[str, int]:
     }
 
 
+def shell_command(parts: list[object]) -> str:
+    return " ".join(shlex.quote(str(part)) for part in parts)
+
+
 def build_agent_context_view(payload: dict[str, object]) -> dict[str, object]:
     project = payload["project"]
     trail = payload.get("context_trail") or {}
@@ -217,13 +222,25 @@ def build_agent_context_view(payload: dict[str, object]) -> dict[str, object]:
             "Drafts stay labelled as unconfirmed until a human reviews them.",
         ],
         "commands": {
-            "prepare": (
-                f"agent-hub prepare --project {project['slug']} "
-                f"--task {task!r}"
+            "prepare": shell_command(
+                [
+                    "agent-hub",
+                    "prepare",
+                    "--project",
+                    project["slug"],
+                    "--task",
+                    task,
+                ]
             ),
-            "agent_start": (
-                f"scripts/agent_start.sh --project {project['slug']} "
-                f"--query {task!r} --review"
+            "agent_start": shell_command(
+                [
+                    "scripts/agent_start.sh",
+                    "--project",
+                    project["slug"],
+                    "--query",
+                    task,
+                    "--review",
+                ]
             ),
         },
         "markdown": prepare_markdown(payload),
