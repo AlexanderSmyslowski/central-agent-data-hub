@@ -35,6 +35,15 @@
         text-decoration: none;
       }
 
+      .brand-home {
+        display: block;
+      }
+
+      .brand-home:hover h1,
+      .brand-home:focus-visible h1 {
+        color: var(--accent);
+      }
+
       .shell {
         width: min(1280px, calc(100vw - 48px));
         margin: 0 auto;
@@ -255,16 +264,23 @@
 
       .summary-grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
         gap: 12px;
         margin: 24px 0 28px;
       }
 
       .summary-tile {
+        display: block;
         padding: 16px 18px;
         border: 1px solid var(--line);
         border-radius: 8px;
         background: rgba(255, 255, 255, 0.56);
+      }
+
+      .summary-tile:hover,
+      .summary-tile:focus-visible {
+        border-color: rgba(45, 74, 95, 0.36);
+        background: var(--surface-strong);
       }
 
       .summary-label {
@@ -330,10 +346,24 @@
         margin-top: 20px;
       }
 
+      .section[id] {
+        scroll-margin-top: 18px;
+      }
+
       h2 {
         margin: 0 0 14px;
         font-size: 18px;
         font-weight: 600;
+      }
+
+      h3 {
+        margin: 18px 0 10px;
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      h2 + h3 {
+        margin-top: 0;
       }
 
       .list {
@@ -400,6 +430,10 @@
         align-items: center;
         gap: 6px;
         margin-bottom: 14px;
+        padding: 8px 10px;
+        border: 1px solid rgba(45, 74, 95, 0.18);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.56);
         color: var(--accent);
         font-size: 14px;
         font-weight: 600;
@@ -560,12 +594,12 @@
   <body>
     <main class="shell">
       <header class="masthead">
-        <div>
+        <a class="brand-home" href="/" aria-label="Back to project overview">
           <p class="eyebrow">Agent Data Hub</p>
           <h1>{{ app_name }}</h1>
           <p class="claim">{{ claim }}</p>
-          <p class="prototype-note">Prototype language: English. This local demo shows reviewed project memory, open drafts, risks, questions, and latest status.</p>
-        </div>
+          <p class="prototype-note">Prototype language: English. This local demo shows reviewed project memory, suggested memory changes, risks, questions, and latest status.</p>
+        </a>
         <div class="read-only">Read surface + review actions</div>
       </header>
 
@@ -573,7 +607,7 @@
         <aside class="panel sidebar">
           <a class="sidebar-action{% if view_name == 'inbox' %} active{% endif %}" href="/inbox">
             Review Inbox
-            <span class="sidebar-action-meta">{{ draft_total | default(0) }} drafts awaiting review</span>
+            <span class="sidebar-action-meta">{{ draft_total | default(0) }} items to review</span>
           </a>
           {% if view_name != 'inbox' %}
             <div class="sidebar-title">Active projects</div>
@@ -593,7 +627,7 @@
                     <span>{{ project.counts.decisions }} decisions</span>
                     <span>{{ project.counts.risks }} risks</span>
                     <span>{{ project.counts.open_questions }} open questions</span>
-                    <span>{{ project.draft_count }} drafts</span>
+                    <span>{{ project.draft_count }} review items</span>
                   </div>
                   {% if project.latest_report_title %}
                     <p class="project-blurb">{{ project.latest_report_title }}</p>
@@ -613,7 +647,7 @@
             <div class="detail-header">
               <div>
                 <h2 class="detail-title">Review Inbox</h2>
-                <p class="detail-description">Drafts stay unconfirmed until a human accepts or rejects them here.</p>
+                <p class="detail-description">Suggested memory changes stay unconfirmed until a human accepts or rejects them here.</p>
               </div>
             </div>
 
@@ -673,8 +707,8 @@
                 {% endfor %}
               {% else %}
                 <div class="empty-state">
-                  <p>No drafts awaiting review.</p>
-                  <p>When agents propose memory changes, they appear here until a human accepts or rejects them.</p>
+                  <p>No items to review.</p>
+                  <p>When agents suggest memory changes, they appear here until a human accepts or rejects them.</p>
                   <a href="/">Back to project overview</a>
                 </div>
               {% endif %}
@@ -704,41 +738,43 @@
             </div>
 
             <div class="summary-grid">
-              <div class="summary-tile">
+              <a class="summary-tile" href="#reviewed-memory">
                 <div class="summary-label">Reviewed memory</div>
                 <div class="summary-value">{{ selected_project.counts.facts + selected_project.counts.decisions + selected_project.counts.risks + selected_project.counts.open_questions + selected_project.counts.reports }}</div>
                 <div class="summary-subtle">{{ selected_project.counts.facts }} facts · {{ selected_project.counts.decisions }} decisions · {{ selected_project.counts.reports }} reports</div>
-              </div>
-              <div class="summary-tile">
+              </a>
+              <a class="summary-tile" href="#risks-and-questions">
                 <div class="summary-label">Risks and questions</div>
                 <div class="summary-value">{{ selected_project.counts.open_questions + selected_project.counts.risks }}</div>
                 <div class="summary-subtle">{{ selected_project.counts.open_questions }} open questions · {{ selected_project.counts.risks }} active risks</div>
-              </div>
-              <div class="summary-tile">
+              </a>
+              <a class="summary-tile" href="#latest-status">
+                <div class="summary-label">Latest status</div>
+                <div class="summary-value">{{ selected_project.counts.reports }}</div>
+                <div class="summary-subtle">{% if selected_project.reports %}{{ selected_project.reports[0].title }}{% else %}No reports yet{% endif %}</div>
+              </a>
+              <a class="summary-tile" href="#quality">
                 <div class="summary-label">Quality</div>
                 <div class="summary-value">{{ selected_project.quality.score }}</div>
                 <div class="summary-subtle">{{ selected_project.quality.status }} · relation coverage {{ selected_project.quality.relation_coverage }}</div>
-              </div>
+              </a>
+              <a class="summary-tile" href="/inbox">
+                <div class="summary-label">Review Inbox</div>
+                <div class="summary-value">{{ draft_total | default(0) }}</div>
+                <div class="summary-subtle">all items to review</div>
+              </a>
             </div>
 
-            <p class="overview-note">This overview reads reviewed project memory from the local Hub database. Drafts are separate until a human accepts or rejects them.</p>
+            <p class="overview-note">This overview reads reviewed project memory from the local Hub database. Suggested memory changes are separate until a human accepts or rejects them.</p>
 
             <a class="review-callout" href="/inbox">
-              <strong>{{ selected_project.draft_count }} drafts awaiting review</strong>
-              <span>Drafts are proposed memory changes. Open the Review Inbox to accept or reject them.</span>
+              <strong>Review suggested memory changes</strong>
+              <span>Drafts are proposed memory changes across projects. They are not reviewed memory until accepted.</span>
             </a>
 
-            <section class="section">
-              <h2>Quality snapshot</h2>
-              <div class="project-counts">
-                {% for label, count in selected_project.quality.gaps %}
-                  <span>{{ count }} {{ label }}</span>
-                {% endfor %}
-              </div>
-            </section>
-
-            <section class="section">
-              <h2>Decisions</h2>
+            <section class="section" id="reviewed-memory">
+              <h2>Reviewed memory</h2>
+              <h3>Decisions</h3>
               {% if selected_project.decisions %}
                 <div class="list">
                   {% for row in selected_project.decisions %}
@@ -753,10 +789,44 @@
               {% else %}
                 <p class="empty">No active decisions are visible.</p>
               {% endif %}
+
+              <h3>Facts</h3>
+              {% if selected_project.facts %}
+                <div class="list">
+                  {% for row in selected_project.facts %}
+                    <article class="item">
+                      <p class="item-title">{{ row.statement }}</p>
+                      <div class="item-meta">
+                        {% if row.source %}{{ row.source }}{% endif %}
+                        {% if row.confidence is not none %}{% if row.source %} · {% endif %}confidence {{ row.confidence }}{% endif %}
+                      </div>
+                    </article>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <p class="empty">No reviewed facts are visible.</p>
+              {% endif %}
+
+              <h3>Recent reports</h3>
+              {% if selected_project.reports %}
+                <div class="list">
+                  {% for row in selected_project.reports %}
+                    <article class="item">
+                      <p class="item-title">{{ row.title }}</p>
+                      {% if row.summary %}
+                        <div class="item-meta">{{ row.summary }}</div>
+                      {% endif %}
+                    </article>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <p class="empty">No reports are visible.</p>
+              {% endif %}
             </section>
 
-            <section class="section">
-              <h2>Risks</h2>
+            <section class="section" id="risks-and-questions">
+              <h2>Risks and questions</h2>
+              <h3>Risks</h3>
               {% if selected_project.risks %}
                 <div class="list">
                   {% for row in selected_project.risks %}
@@ -769,10 +839,8 @@
               {% else %}
                 <p class="empty">No active risks are visible.</p>
               {% endif %}
-            </section>
 
-            <section class="section">
-              <h2>Open questions</h2>
+              <h3>Open questions</h3>
               {% if selected_project.open_questions %}
                 <div class="list">
                   {% for row in selected_project.open_questions %}
@@ -789,41 +857,36 @@
               {% endif %}
             </section>
 
-            <section class="section">
-              <h2>Facts</h2>
-              {% if selected_project.facts %}
-                <div class="list">
-                  {% for row in selected_project.facts %}
-                    <article class="item">
-                      <p class="item-title">{{ row.statement }}</p>
-                      <div class="item-meta">
-                        {% if row.source %}{{ row.source }}{% endif %}
-                        {% if row.confidence is not none %}{% if row.source %} · {% endif %}confidence {{ row.confidence }}{% endif %}
-                      </div>
-                    </article>
-                  {% endfor %}
-                </div>
-              {% else %}
-                <p class="empty">No reviewed facts are visible.</p>
+            <section class="section" id="latest-status">
+              <h2>Latest status</h2>
+              {% if selected_project.updated_at %}
+                <p class="item-meta">Project updated {{ selected_project.updated_at }}.</p>
               {% endif %}
-            </section>
-
-            <section class="section">
-              <h2>Recent reports</h2>
               {% if selected_project.reports %}
                 <div class="list">
                   {% for row in selected_project.reports %}
-                    <article class="item">
-                      <p class="item-title">{{ row.title }}</p>
-                      {% if row.summary %}
-                        <div class="item-meta">{{ row.summary }}</div>
-                      {% endif %}
-                    </article>
+                    {% if loop.first %}
+                      <article class="item">
+                        <p class="item-title">{{ row.title }}</p>
+                        {% if row.summary %}
+                          <div class="item-meta">{{ row.summary }}</div>
+                        {% endif %}
+                      </article>
+                    {% endif %}
                   {% endfor %}
                 </div>
               {% else %}
-                <p class="empty">No reports are visible.</p>
+                <p class="empty">No status report is visible.</p>
               {% endif %}
+            </section>
+
+            <section class="section" id="quality">
+              <h2>Quality snapshot</h2>
+              <div class="project-counts">
+                {% for label, count in selected_project.quality.gaps %}
+                  <span>{{ count }} {{ label }}</span>
+                {% endfor %}
+              </div>
             </section>
 
             <section class="section">

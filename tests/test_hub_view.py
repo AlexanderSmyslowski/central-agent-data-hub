@@ -117,6 +117,7 @@ def test_render_page_includes_local_review_claim() -> None:
     ).decode("utf-8")
 
     assert "Hub View" in body
+    assert 'class="brand-home" href="/"' in body
     assert "local review surface for Agent Data Hub" in body
     assert "Read surface + review actions" in body
     assert "Prototype language: English." in body
@@ -192,8 +193,10 @@ def test_inbox_page_empty_state() -> None:
         view_name="inbox",
     ).decode("utf-8")
 
-    assert "No drafts awaiting review." in body
-    assert "When agents propose memory changes" in body
+    assert "No items to review." in body
+    assert "When agents suggest memory changes" in body
+    assert "Suggested memory changes stay unconfirmed" in body
+    assert "Drafts stay unconfirmed" not in body
     assert 'href="/">Back to project overview</a>' in body
 
 
@@ -415,7 +418,7 @@ def test_inbox_get_paths_do_not_write(monkeypatch) -> None:
     captured, body = call_app(app, method="GET", path="/inbox")
 
     assert captured["status"] == "200 OK"
-    assert "No drafts awaiting review." in body
+    assert "No items to review." in body
 
 
 def test_inbox_action_get_path_does_not_touch_database(monkeypatch) -> None:
@@ -543,11 +546,26 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert captured["status"] == "200 OK"
     assert "Central Agent Data Hub" in body
     assert "Selected" in body
-    assert "2 drafts awaiting review" in body
+    assert "2 items to review" in body
+    assert 'href="#reviewed-memory"' in body
+    assert 'href="#risks-and-questions"' in body
+    assert 'href="#latest-status"' in body
+    assert 'href="#quality"' in body
+    assert 'id="reviewed-memory"' in body
+    assert 'id="risks-and-questions"' in body
+    assert 'id="latest-status"' in body
+    assert 'id="quality"' in body
+    assert "Latest status" in body
+    assert "all items to review" in body
+    assert "Review suggested memory changes" in body
+    assert "suggested memory changes" in body
+    assert "Drafts are proposed memory changes across projects. They are not reviewed memory until accepted." in body
     assert 'href="/inbox"' in body
     assert "Treat the Hub as verified context." in body
     assert "Fact A" in body
     assert "supports" in body
+    assert "alexander" not in body.lower()
+    assert "ronak" not in body.lower()
 
 
 def test_format_timestamp_for_datetime() -> None:
