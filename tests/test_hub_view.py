@@ -119,6 +119,7 @@ def test_render_page_includes_local_review_claim() -> None:
     assert "Hub View" in body
     assert "local review surface for Agent Data Hub" in body
     assert "Read surface + review actions" in body
+    assert "Prototype language: English." in body
 
 
 def test_application_rejects_non_get_requests() -> None:
@@ -160,15 +161,17 @@ def test_inbox_page_lists_drafts_as_plain_cards() -> None:
 
     card = groups[0]["drafts"][0]["card"]
     assert lint_card_text(card) == []
-    assert "Was merke ich mir:" in body
-    assert "Quelle: test." in body
-    assert "Folge bei Irrtum:" in body
-    assert "zuständig: alice" in body
+    assert "Remember:" in body
+    assert "Source: test." in body
+    assert "If wrong:" in body
+    assert "owner: alice" in body
     assert 'action="/inbox/accept"' in body
     assert 'action="/inbox/reject"' in body
     assert 'name="csrf_token" value="token"' in body
-    assert "Merken" in body
-    assert "Verwerfen" in body
+    assert "Accept" in body
+    assert "Reject" in body
+    assert "Merken" not in body
+    assert "Verwerfen" not in body
 
 
 def test_inbox_page_empty_state() -> None:
@@ -189,7 +192,9 @@ def test_inbox_page_empty_state() -> None:
         view_name="inbox",
     ).decode("utf-8")
 
-    assert "Nichts zu prüfen." in body
+    assert "No drafts awaiting review." in body
+    assert "When agents propose memory changes" in body
+    assert 'href="/">Back to project overview</a>' in body
 
 
 def test_inbox_accept_promotes_and_audits(monkeypatch) -> None:
@@ -215,7 +220,7 @@ def test_inbox_accept_promotes_and_audits(monkeypatch) -> None:
 
     headers = dict(captured["headers"])
     assert captured["status"] == "303 See Other"
-    assert "Gemerkt" in headers["Location"]
+    assert "Accepted" in headers["Location"]
     assert row["status"] == "verified"
     assert cur.update_count == 1
     assert audit_calls[0][2] == "inbox_accept"
@@ -248,7 +253,7 @@ def test_inbox_reject_archives_and_audits(monkeypatch) -> None:
 
     headers = dict(captured["headers"])
     assert captured["status"] == "303 See Other"
-    assert "Verworfen" in headers["Location"]
+    assert "Rejected" in headers["Location"]
     assert row["status"] == "archived"
     assert cur.update_count == 1
     assert audit_calls[0][2] == "inbox_reject"
@@ -329,7 +334,7 @@ def test_inbox_post_on_non_draft_shows_error_without_write(monkeypatch) -> None:
 
     headers = dict(captured["headers"])
     assert captured["status"] == "303 See Other"
-    assert "Dieser%20Entwurf%20ist%20nicht%20mehr%20offen" in headers["Location"]
+    assert "This%20draft%20is%20no%20longer%20open" in headers["Location"]
     assert row["status"] == "verified"
     assert cur.update_count == 0
     assert audit_calls == []
@@ -374,7 +379,7 @@ def test_hub_view_without_reviewer_disables_buttons_and_blocks_post(monkeypatch)
     )
 
     assert "reviewer handle is required; set HUB_VIEW_REVIEWER" in body
-    assert "disabled>Merken</button>" in body
+    assert "disabled>Accept</button>" in body
     assert captured["status"] == "403 Forbidden"
     assert "HUB_VIEW_REVIEWER" in post_body
 
@@ -410,7 +415,7 @@ def test_inbox_get_paths_do_not_write(monkeypatch) -> None:
     captured, body = call_app(app, method="GET", path="/inbox")
 
     assert captured["status"] == "200 OK"
-    assert "Nichts zu prüfen." in body
+    assert "No drafts awaiting review." in body
 
 
 def test_inbox_action_get_path_does_not_touch_database(monkeypatch) -> None:
@@ -458,7 +463,7 @@ def test_non_loopback_bind_disables_inbox_actions(monkeypatch) -> None:
     )
 
     assert 'action="/inbox/accept"' not in body
-    assert "disabled>Merken</button>" in body
+    assert "disabled>Accept</button>" in body
     assert "Review actions are disabled" in body
     assert captured["status"] == "403 Forbidden"
 
@@ -486,6 +491,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
                     "latest_report_title": "Daily",
                     "latest_report_summary": "summary",
                     "updated_at": "2026-06-05 08:00 UTC",
+                    "draft_count": 2,
                 }
             ],
             "selected_project": {
@@ -495,6 +501,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
                 "status": "active",
                 "project_type": "ops",
                 "updated_at": "2026-06-05 08:00 UTC",
+                "draft_count": 2,
                 "counts": {
                     "facts": 3,
                     "decisions": 1,
@@ -516,6 +523,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
                 "relations": [{"source": "Fact A", "relation_type": "supports", "target": "Decision B"}],
             },
             "not_found_slug": None,
+            "draft_total": 2,
         }
 
     monkeypatch.setattr(hub_view, "load_view_model", fake_load_view_model)
@@ -534,6 +542,9 @@ def test_application_renders_project_detail(monkeypatch) -> None:
 
     assert captured["status"] == "200 OK"
     assert "Central Agent Data Hub" in body
+    assert "Selected" in body
+    assert "2 drafts awaiting review" in body
+    assert 'href="/inbox"' in body
     assert "Treat the Hub as verified context." in body
     assert "Fact A" in body
     assert "supports" in body

@@ -55,34 +55,44 @@ from urllib.request import urlopen
 
 port = sys.argv[1]
 log_path = Path(sys.argv[2])
-url = f"http://127.0.0.1:{port}/"
+base_url = f"http://127.0.0.1:{port}"
 last_error: Exception | None = None
 
 for _ in range(50):
     try:
-        with urlopen(url, timeout=1) as response:
-            body = response.read().decode("utf-8", errors="replace")
-        missing = [
-            text
-            for text in (
+        checks = {
+            "/": (
                 "Hub View",
                 "local review surface",
                 "central-agent-data-hub-demo",
-            )
-            if text not in body
-        ]
-        if missing:
-            print(
-                f"Error: Hub View response missing expected text: {', '.join(missing)}",
-                file=sys.stderr,
-            )
-            sys.exit(1)
+                "Reviewed memory",
+                "Review Inbox",
+                "drafts awaiting review",
+            ),
+            "/inbox": (
+                "Review Inbox",
+                "No drafts awaiting review.",
+                "When agents propose memory changes",
+                "Back to project overview",
+            ),
+        }
+        for path, expected_texts in checks.items():
+            with urlopen(f"{base_url}{path}", timeout=1) as response:
+                body = response.read().decode("utf-8", errors="replace")
+            missing = [text for text in expected_texts if text not in body]
+            if missing:
+                print(
+                    "Error: Hub View response missing expected text at "
+                    f"{path}: {', '.join(missing)}",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
         sys.exit(0)
     except URLError as exc:
         last_error = exc
         time.sleep(0.1)
 
-print(f"Error: Hub View did not answer at {url}.", file=sys.stderr)
+print(f"Error: Hub View did not answer at {base_url}/.", file=sys.stderr)
 if last_error is not None:
     print(f"Last error: {last_error}", file=sys.stderr)
 if log_path.exists():

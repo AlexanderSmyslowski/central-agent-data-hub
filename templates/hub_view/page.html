@@ -9,8 +9,8 @@
       :root {
         color-scheme: light;
         --bg: #f4f1eb;
-        --surface: rgba(255, 255, 255, 0.72);
-        --surface-strong: rgba(255, 255, 255, 0.9);
+        --surface: rgba(255, 255, 255, 0.82);
+        --surface-strong: rgba(255, 255, 255, 0.96);
         --line: rgba(38, 38, 36, 0.12);
         --line-strong: rgba(38, 38, 36, 0.2);
         --text: #181816;
@@ -25,9 +25,7 @@
       body {
         margin: 0;
         min-height: 100vh;
-        background:
-          radial-gradient(circle at top left, rgba(255, 255, 255, 0.88), transparent 32rem),
-          linear-gradient(180deg, #f8f6f1 0%, var(--bg) 100%);
+        background: linear-gradient(180deg, #faf9f6 0%, var(--bg) 100%);
         color: var(--text);
         font-family: "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
       }
@@ -63,9 +61,9 @@
       h1 {
         margin: 0;
         font-family: "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
-        font-size: clamp(36px, 5vw, 56px);
+        font-size: clamp(32px, 4vw, 44px);
         font-weight: 600;
-        line-height: 0.98;
+        line-height: 1.05;
       }
 
       .claim {
@@ -75,10 +73,18 @@
         max-width: 36rem;
       }
 
+      .prototype-note {
+        margin: 10px 0 0;
+        max-width: 42rem;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
       .read-only {
         padding: 10px 14px;
         border: 1px solid var(--line);
-        border-radius: 999px;
+        border-radius: 8px;
         background: rgba(255, 255, 255, 0.54);
         color: var(--muted);
         font-size: 13px;
@@ -94,9 +100,8 @@
 
       .panel {
         border: 1px solid var(--line);
-        border-radius: 22px;
+        border-radius: 8px;
         background: var(--surface);
-        backdrop-filter: blur(18px);
       }
 
       .sidebar {
@@ -110,9 +115,10 @@
       }
 
       .project-link {
+        position: relative;
         display: block;
         padding: 14px;
-        border-radius: 16px;
+        border-radius: 8px;
         border: 1px solid transparent;
       }
 
@@ -126,8 +132,21 @@
       }
 
       .project-link.active {
-        border-color: var(--line-strong);
+        border-color: rgba(45, 74, 95, 0.36);
         background: var(--surface-strong);
+        box-shadow: 0 0 0 1px rgba(45, 74, 95, 0.08);
+        cursor: default;
+      }
+
+      .project-link.active::before {
+        position: absolute;
+        top: 12px;
+        bottom: 12px;
+        left: 8px;
+        width: 3px;
+        border-radius: 999px;
+        background: var(--accent);
+        content: "";
       }
 
       .sidebar-action {
@@ -135,7 +154,7 @@
         margin: 0 0 10px;
         padding: 12px 14px;
         border: 1px solid var(--line);
-        border-radius: 12px;
+        border-radius: 8px;
         background: rgba(255, 255, 255, 0.5);
         color: var(--text);
         font-size: 14px;
@@ -147,10 +166,33 @@
         background: var(--surface-strong);
       }
 
+      .sidebar-action-meta {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.35;
+      }
+
       .project-name {
         margin: 0;
         font-size: 17px;
         font-weight: 600;
+      }
+
+      .selected-badge {
+        display: inline-block;
+        margin-bottom: 8px;
+        padding: 3px 7px;
+        border: 1px solid rgba(45, 74, 95, 0.24);
+        border-radius: 999px;
+        background: rgba(45, 74, 95, 0.08);
+        color: var(--accent);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
       }
 
       .project-meta,
@@ -221,7 +263,7 @@
       .summary-tile {
         padding: 16px 18px;
         border: 1px solid var(--line);
-        border-radius: 18px;
+        border-radius: 8px;
         background: rgba(255, 255, 255, 0.56);
       }
 
@@ -242,6 +284,41 @@
         margin-top: 6px;
         color: var(--muted);
         font-size: 13px;
+      }
+
+      .overview-note {
+        margin: -12px 0 24px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .review-callout {
+        display: block;
+        margin: -8px 0 28px;
+        padding: 14px 16px;
+        border: 1px solid rgba(45, 74, 95, 0.2);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.58);
+      }
+
+      .review-callout:hover {
+        border-color: rgba(45, 74, 95, 0.36);
+        background: var(--surface-strong);
+      }
+
+      .review-callout strong {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--text);
+        font-size: 15px;
+      }
+
+      .review-callout span {
+        display: block;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
       }
 
       .section {
@@ -297,7 +374,7 @@
         align-items: center;
         padding: 12px 14px;
         border: 1px solid var(--line);
-        border-radius: 16px;
+        border-radius: 8px;
         background: rgba(255, 255, 255, 0.44);
       }
 
@@ -316,6 +393,47 @@
 
       .empty {
         font-size: 14px;
+      }
+
+      .nav-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 14px;
+        color: var(--accent);
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .empty-state {
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.52);
+      }
+
+      .empty-state p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .empty-state p:first-child {
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      .empty-state p + p {
+        margin-top: 6px;
+      }
+
+      .empty-state a {
+        display: inline-block;
+        margin-top: 12px;
+        color: var(--accent);
+        font-size: 14px;
+        font-weight: 600;
       }
 
       .notice,
@@ -446,18 +564,25 @@
           <p class="eyebrow">Agent Data Hub</p>
           <h1>{{ app_name }}</h1>
           <p class="claim">{{ claim }}</p>
+          <p class="prototype-note">Prototype language: English. This local demo shows reviewed project memory, open drafts, risks, questions, and latest status.</p>
         </div>
         <div class="read-only">Read surface + review actions</div>
       </header>
 
       <div class="layout">
         <aside class="panel sidebar">
-          <a class="sidebar-action{% if view_name == 'inbox' %} active{% endif %}" href="/inbox">Review Inbox</a>
+          <a class="sidebar-action{% if view_name == 'inbox' %} active{% endif %}" href="/inbox">
+            Review Inbox
+            <span class="sidebar-action-meta">{{ draft_total | default(0) }} drafts awaiting review</span>
+          </a>
           {% if view_name != 'inbox' %}
             <div class="sidebar-title">Active projects</div>
             {% if projects %}
               {% for project in projects %}
-                <a class="project-link{% if selected_project and selected_project.slug == project.slug %} active{% endif %}" href="/projects/{{ project.slug }}">
+                <a class="project-link{% if selected_project and selected_project.slug == project.slug %} active{% endif %}" href="/projects/{{ project.slug }}"{% if selected_project and selected_project.slug == project.slug %} aria-current="page"{% endif %}>
+                  {% if selected_project and selected_project.slug == project.slug %}
+                    <span class="selected-badge">Selected</span>
+                  {% endif %}
                   <p class="project-name">{{ project.name }}</p>
                   <div class="project-meta">{{ project.slug }}{% if project.project_type %} · {{ project.project_type }}{% endif %}</div>
                   {% if project.description %}
@@ -468,6 +593,7 @@
                     <span>{{ project.counts.decisions }} decisions</span>
                     <span>{{ project.counts.risks }} risks</span>
                     <span>{{ project.counts.open_questions }} open questions</span>
+                    <span>{{ project.draft_count }} drafts</span>
                   </div>
                   {% if project.latest_report_title %}
                     <p class="project-blurb">{{ project.latest_report_title }}</p>
@@ -483,6 +609,7 @@
         <section class="panel content">
           {% if view_name == 'inbox' %}
             {% set review_enabled = inbox.review_enabled if inbox.review_enabled is defined else inbox.enabled %}
+            <a class="nav-link" href="/">Back to project overview</a>
             <div class="detail-header">
               <div>
                 <h2 class="detail-title">Review Inbox</h2>
@@ -514,7 +641,7 @@
                       {% for draft in group.drafts %}
                         <article class="draft-card">
                           <div class="draft-meta">
-                            {{ draft.project }} · {{ draft.type_label }} · zuständig: {{ draft.responsible_reviewer }}
+                            {{ draft.project }} · {{ draft.type_label }} · owner: {{ draft.responsible_reviewer }}
                             {% if draft.updated_at %} · {{ draft.updated_at }}{% endif %}
                           </div>
                           {% for line in draft.card_lines %}
@@ -526,17 +653,17 @@
                                 <input type="hidden" name="csrf_token" value="{{ inbox.csrf_token }}">
                                 <input type="hidden" name="draft_id" value="{{ draft.id }}">
                                 <input type="hidden" name="type" value="{{ draft.type }}">
-                                <button class="button" type="submit">Merken</button>
+                                <button class="button" type="submit">Accept</button>
                               </form>
                               <form method="post" action="/inbox/reject">
                                 <input type="hidden" name="csrf_token" value="{{ inbox.csrf_token }}">
                                 <input type="hidden" name="draft_id" value="{{ draft.id }}">
                                 <input type="hidden" name="type" value="{{ draft.type }}">
-                                <button class="button reject" type="submit">Verwerfen</button>
+                                <button class="button reject" type="submit">Reject</button>
                               </form>
                             {% else %}
-                              <button class="button" type="button" disabled>Merken</button>
-                              <button class="button reject" type="button" disabled>Verwerfen</button>
+                              <button class="button" type="button" disabled>Accept</button>
+                              <button class="button reject" type="button" disabled>Reject</button>
                             {% endif %}
                           </div>
                         </article>
@@ -545,7 +672,11 @@
                   </div>
                 {% endfor %}
               {% else %}
-                <p class="empty">Nichts zu prüfen.</p>
+                <div class="empty-state">
+                  <p>No drafts awaiting review.</p>
+                  <p>When agents propose memory changes, they appear here until a human accepts or rejects them.</p>
+                  <a href="/">Back to project overview</a>
+                </div>
               {% endif %}
             </section>
           {% elif not_found_slug %}
@@ -574,12 +705,12 @@
 
             <div class="summary-grid">
               <div class="summary-tile">
-                <div class="summary-label">Memory</div>
+                <div class="summary-label">Reviewed memory</div>
                 <div class="summary-value">{{ selected_project.counts.facts + selected_project.counts.decisions + selected_project.counts.risks + selected_project.counts.open_questions + selected_project.counts.reports }}</div>
                 <div class="summary-subtle">{{ selected_project.counts.facts }} facts · {{ selected_project.counts.decisions }} decisions · {{ selected_project.counts.reports }} reports</div>
               </div>
               <div class="summary-tile">
-                <div class="summary-label">Open work</div>
+                <div class="summary-label">Risks and questions</div>
                 <div class="summary-value">{{ selected_project.counts.open_questions + selected_project.counts.risks }}</div>
                 <div class="summary-subtle">{{ selected_project.counts.open_questions }} open questions · {{ selected_project.counts.risks }} active risks</div>
               </div>
@@ -589,6 +720,13 @@
                 <div class="summary-subtle">{{ selected_project.quality.status }} · relation coverage {{ selected_project.quality.relation_coverage }}</div>
               </div>
             </div>
+
+            <p class="overview-note">This overview reads reviewed project memory from the local Hub database. Drafts are separate until a human accepts or rejects them.</p>
+
+            <a class="review-callout" href="/inbox">
+              <strong>{{ selected_project.draft_count }} drafts awaiting review</strong>
+              <span>Drafts are proposed memory changes. Open the Review Inbox to accept or reject them.</span>
+            </a>
 
             <section class="section">
               <h2>Quality snapshot</h2>

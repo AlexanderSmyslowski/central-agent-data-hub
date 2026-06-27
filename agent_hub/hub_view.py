@@ -31,11 +31,17 @@ from agent_hub.writeback_routing import card_for_item
 
 
 DRAFT_TYPE_LABELS = {
-    "fact": "Fakt",
-    "decision": "Entscheidung",
-    "risk": "Risiko",
-    "open_question": "Offene Frage",
-    "report": "Bericht",
+    "fact": "Fact",
+    "decision": "Decision",
+    "risk": "Risk",
+    "open_question": "Open question",
+    "report": "Report",
+}
+
+CARD_LINE_PREFIXES = {
+    "Was merke ich mir:": "Remember:",
+    "Quelle:": "Source:",
+    "Folge bei Irrtum:": "If wrong:",
 }
 
 
@@ -87,7 +93,12 @@ def fetch_latest_report(cur, project_id: object) -> dict[str, object] | None:
     return cur.fetchone()
 
 
-def build_project_card(cur, project: dict[str, object]) -> dict[str, object]:
+def build_project_card(
+    cur,
+    project: dict[str, object],
+    *,
+    draft_count: int = 0,
+) -> dict[str, object]:
     metadata = project.get("metadata") or {}
     latest_report = fetch_latest_report(cur, project["id"])
     payload = fetch_compiled_payload(cur, project, limit=3)
@@ -98,6 +109,7 @@ def build_project_card(cur, project: dict[str, object]) -> dict[str, object]:
         "description": truncate(project.get("description") or "", 120),
         "project_type": metadata.get("project_type"),
         "counts": payload["counts"],
+        "draft_count": draft_count,
         "latest_report_title": latest_report["title"] if latest_report else None,
         "latest_report_summary": (
             truncate(latest_report.get("summary") or "", 96) if latest_report else None
@@ -106,7 +118,12 @@ def build_project_card(cur, project: dict[str, object]) -> dict[str, object]:
     }
 
 
-def build_detail_view(cur, project: dict[str, object]) -> dict[str, object]:
+def build_detail_view(
+    cur,
+    project: dict[str, object],
+    *,
+    draft_count: int = 0,
+) -> dict[str, object]:
     metadata = project.get("metadata") or {}
     compiled = fetch_compiled_payload(cur, project, limit=8)
     quality = fetch_project_quality(cur, project)
@@ -119,6 +136,7 @@ def build_detail_view(cur, project: dict[str, object]) -> dict[str, object]:
         "project_type": metadata.get("project_type"),
         "work_mode": metadata.get("work_mode"),
         "counts": compiled["counts"],
+        "draft_count": draft_count,
         "quality": {
             "score": quality["score"],
             "status": quality["status"],
@@ -147,6 +165,14 @@ def build_detail_view(cur, project: dict[str, object]) -> dict[str, object]:
         ],
         "updated_at": format_timestamp(project.get("updated_at")),
     }
+
+
+def draft_counts_by_project(rows: list[dict[str, object]]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for row in rows:
+        slug = str(row["project"])
+        counts[slug] = counts.get(slug, 0) + 1
+    return counts
 
 
 def is_loopback_host(host: str | None) -> bool:
@@ -190,8 +216,15 @@ def draft_card(row: dict[str, object]) -> dict[str, object]:
         "responsible_reviewer": responsible_reviewer or "unassigned",
         "resolution_reason": resolution_reason or "no reviewer assigned",
         "card": card,
-        "card_lines": card.splitlines(),
+        "card_lines": [translate_card_line_for_ui(line) for line in card.splitlines()],
     }
+
+
+def translate_card_line_for_ui(line: str) -> str:
+    for source, target in CARD_LINE_PREFIXES.items():
+        if line.startswith(source):
+            return f"{target}{line.removeprefix(source)}"
+    return line
 
 
 def group_draft_cards(rows: list[dict[str, object]]) -> list[dict[str, object]]:
@@ -214,12 +247,23 @@ def load_view_model(selected_slug: str | None) -> tuple[int, dict[str, object]]:
     with connect() as conn:
         with conn.cursor() as cur:
             projects = fetch_active_projects(cur)
-            cards = [build_project_card(cur, project) for project in projects]
+            drafts = fetch_drafts(cur, limit=None)
+            draft_counts = draft_counts_by_project(drafts)
+            draft_total = sum(draft_counts.values())
+            cards = [
+                build_project_card(
+                    cur,
+                    project,
+                    draft_count=draft_counts.get(str(project["slug"]), 0),
+                )
+                for project in projects
+            ]
             if not projects:
                 return 200, {
                     "projects": [],
                     "selected_project": None,
                     "not_found_slug": None,
+                    "draft_total": draft_total,
                 }
 
             selected = selected_slug or str(projects[0]["slug"])
@@ -229,12 +273,18 @@ def load_view_model(selected_slug: str | None) -> tuple[int, dict[str, object]]:
                     "projects": cards,
                     "selected_project": None,
                     "not_found_slug": selected,
+                    "draft_total": draft_total,
                 }
 
             return 200, {
                 "projects": cards,
-                "selected_project": build_detail_view(cur, project),
+                "selected_project": build_detail_view(
+                    cur,
+                    project,
+                    draft_count=draft_counts.get(str(project["slug"]), 0),
+                ),
                 "not_found_slug": None,
+                "draft_total": draft_total,
             }
 
 
@@ -254,6 +304,7 @@ def load_inbox_view_model(
         "projects": [],
         "selected_project": None,
         "not_found_slug": None,
+        "draft_total": len(drafts),
         "inbox": {
             "groups": group_draft_cards(drafts),
             "csrf_token": csrf_token,
@@ -472,7 +523,7 @@ class HubViewApplication:
         if not draft_id or not item_type:
             return redirect_response(
                 start_response,
-                inbox_redirect("error", "Der Entwurf konnte nicht geprüft werden."),
+                inbox_redirect("error", "The draft could not be reviewed."),
             )
 
         try:
@@ -491,24 +542,24 @@ class HubViewApplication:
         except ValueError:
             return redirect_response(
                 start_response,
-                inbox_redirect("error", "Der Entwurf passt nicht zur Review-Aktion."),
+                inbox_redirect("error", "The draft does not match this review action."),
             )
         except Exception:
             return redirect_response(
                 start_response,
-                inbox_redirect("error", "Die Review-Aktion konnte nicht gespeichert werden."),
+                inbox_redirect("error", "The review action could not be saved."),
             )
 
         if not result:
             return redirect_response(
                 start_response,
-                inbox_redirect("error", "Dieser Entwurf ist nicht mehr offen."),
+                inbox_redirect("error", "This draft is no longer open."),
             )
 
-        label = "Gemerkt" if decision == "accept" else "Verworfen"
+        label = "Accepted" if decision == "accept" else "Rejected"
         return redirect_response(
             start_response,
-            inbox_redirect("message", f"{label}: Entwurf {result['id']}."),
+            inbox_redirect("message", f"{label}: draft {result['id']}."),
         )
 
 
