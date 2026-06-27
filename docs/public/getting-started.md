@@ -110,7 +110,8 @@ or startup-rule setup. Hub View does not connect the agent by itself; the local
 agent must be configured once. After setup, the local agent is instructed to
 request ADH context when work starts. Hub View provides copy buttons for the
 setup command, MCP config, startup instruction, terminal fallback, and chatbot
-context pack.
+context pack. For Claude Code, the main path is one copyable setup command; the
+manual MCP pieces stay available for inspection.
 
 Optional: export the Markdown projection manually if you want to inspect the
 generated files:

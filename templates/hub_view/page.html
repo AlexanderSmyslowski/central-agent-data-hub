@@ -465,6 +465,26 @@
         white-space: nowrap;
       }
 
+      .setup-note {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .setup-details {
+        margin-top: 14px;
+      }
+
+      .setup-details summary {
+        cursor: pointer;
+        color: var(--link);
+        font-weight: 700;
+      }
+
+      .setup-details summary:hover {
+        text-decoration: underline;
+      }
+
       .command-box {
         display: block;
         padding: 10px 12px;
@@ -963,37 +983,45 @@
                 </article>
                 <article class="connection-card">
                   <h3>Local agent</h3>
-                  <p>One-time setup: add ADH to the local agent's own configuration. Once connected, the local agent is instructed to request ADH context at the start of each ADH-related task.</p>
-                  <ol class="setup-steps">
-                    <li>
-                      <span class="setup-step-title">1. Install MCP support once</span>
-                      <div class="copy-row">
-                        <code id="install-mcp-command" class="command-box">{{ agent_context.local_agent.install_mcp }}</code>
-                        <button class="button copy-button" type="button" data-copy-target="install-mcp-command">Copy</button>
-                      </div>
-                    </li>
-                    <li>
-                      <span class="setup-step-title">2. Add ADH as a local MCP server once</span>
-                      <div class="copy-row">
-                        <code id="claude-mcp-command" class="command-box">{{ agent_context.local_agent.claude_mcp }}</code>
-                        <button class="button copy-button" type="button" data-copy-target="claude-mcp-command">Copy</button>
-                      </div>
-                    </li>
-                    <li>
-                      <span class="setup-step-title">3. Or use this MCP config shape</span>
-                      <div class="copy-row">
-                        <code id="mcp-json-config" class="command-box">{{ agent_context.local_agent.mcp_json }}</code>
-                        <button class="button copy-button" type="button" data-copy-target="mcp-json-config">Copy</button>
-                      </div>
-                    </li>
-                    <li>
-                      <span class="setup-step-title">4. Tell the agent what to do at task start</span>
-                      <div class="copy-row">
-                        <code id="startup-instruction" class="command-box">{{ agent_context.local_agent.startup_instruction }}</code>
-                        <button class="button copy-button" type="button" data-copy-target="startup-instruction">Copy</button>
-                      </div>
-                    </li>
-                  </ol>
+                  <p>One-time setup: copy and run this command once for Claude Code. It installs ADH's optional MCP support and registers ADH as a local read-only context server.</p>
+                  <div class="copy-row">
+                    <code id="local-agent-setup-command" class="command-box">{{ agent_context.local_agent.setup_command }}</code>
+                    <button class="button copy-button" type="button" data-copy-target="local-agent-setup-command">Copy setup command</button>
+                  </div>
+                  <p class="setup-note">After setup, the local agent is instructed to request ADH context at the start of each ADH-related task. Hub View shows the command, but does not run it or write the agent configuration by itself.</p>
+                  <details class="setup-details">
+                    <summary>Show manual setup pieces</summary>
+                    <ol class="setup-steps">
+                      <li>
+                        <span class="setup-step-title">Install MCP support once</span>
+                        <div class="copy-row">
+                          <code id="install-mcp-command" class="command-box">{{ agent_context.local_agent.install_mcp }}</code>
+                          <button class="button copy-button" type="button" data-copy-target="install-mcp-command">Copy</button>
+                        </div>
+                      </li>
+                      <li>
+                        <span class="setup-step-title">Add ADH as a local MCP server once</span>
+                        <div class="copy-row">
+                          <code id="claude-mcp-command" class="command-box">{{ agent_context.local_agent.claude_mcp }}</code>
+                          <button class="button copy-button" type="button" data-copy-target="claude-mcp-command">Copy</button>
+                        </div>
+                      </li>
+                      <li>
+                        <span class="setup-step-title">Or use this MCP config shape</span>
+                        <div class="copy-row">
+                          <code id="mcp-json-config" class="command-box">{{ agent_context.local_agent.mcp_json }}</code>
+                          <button class="button copy-button" type="button" data-copy-target="mcp-json-config">Copy</button>
+                        </div>
+                      </li>
+                      <li>
+                        <span class="setup-step-title">Tell the agent what to do at task start</span>
+                        <div class="copy-row">
+                          <code id="startup-instruction" class="command-box">{{ agent_context.local_agent.startup_instruction }}</code>
+                          <button class="button copy-button" type="button" data-copy-target="startup-instruction">Copy</button>
+                        </div>
+                      </li>
+                    </ol>
+                  </details>
                 </article>
                 <article class="connection-card">
                   <h3>Terminal fallback</h3>
