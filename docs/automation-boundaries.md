@@ -36,6 +36,11 @@ human click from a project to a visible task context pack, using the same
 reviewed prepare path as the CLI. It may show how reviewed memory should shape
 an agent run, but it must not create, promote, or modify memory.
 
+The `ADH Context Loaded` receipt in `agent_start.sh`, `agent-hub prepare`, and
+Hub View is also read-only. It confirms which reviewed context is being handed
+to an agent or chatbot; it is not proof that an agent has already used that
+context.
+
 `agent-hub export-okf` also belongs in this read-only layer. It projects
 reviewed Hub memory into an OKF-style Markdown/YAML bundle and does not import,
 sync, promote drafts, or change Hub rows.

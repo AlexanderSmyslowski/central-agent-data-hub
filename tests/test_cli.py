@@ -1277,6 +1277,10 @@ def test_prepare_markdown_outputs_task_specific_context(monkeypatch, capsys) -> 
     assert "# Agent Context Pack" in captured.out
     assert "- context_pack_version: 1" in captured.out
     assert "- task: review release v0.1.1" in captured.out
+    assert "## ADH Context Loaded" in captured.out
+    assert "- using reviewed memory: 1 facts · 1 decisions · 1 risks · 1 open questions · 0 reports" in captured.out
+    assert "How this influences the work:" in captured.out
+    assert "Reviewed decisions become task constraints for the agent." in captured.out
     assert "## Verified Project State" in captured.out
     assert "## Relevant Decisions" in captured.out
     assert "## Constraints" in captured.out

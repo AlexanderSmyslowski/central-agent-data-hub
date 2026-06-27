@@ -129,6 +129,14 @@ def test_agent_start_runs_project_guard_before_lock() -> None:
     assert guard_index < lock_index
 
 
+def test_agent_start_prints_context_receipt_before_compiled_memory() -> None:
+    start = read_script("scripts/agent_start.sh")
+
+    receipt = '"$PYTHON_BIN" -m agent_hub.context_receipt --project "$PROJECT" --task "$QUERY" --limit "$LIMIT"'
+    assert receipt in start
+    assert start.index(receipt) < start.index('"== Compiled Project Memory: $PROJECT =="')
+
+
 def test_agent_guard_checks_project_paths_and_git_remote() -> None:
     guard = read_script("scripts/agent_guard.sh")
 
