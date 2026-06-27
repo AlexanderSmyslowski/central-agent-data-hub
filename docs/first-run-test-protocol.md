@@ -25,27 +25,9 @@ The tester should rely only on the public surface:
 - [`docs/public/getting-started.md`](public/getting-started.md)
 - [`docs/public/v0.1.2-release-notes.md`](public/v0.1.2-release-notes.md)
 
-The recommended public first run (from the v0.1.2 release notes and
-getting-started) is:
-
-```bash
-git clone https://github.com/AlexanderSmyslowski/central-agent-data-hub.git
-cd central-agent-data-hub
-git checkout v0.1.2
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e .
-cp .env.example .env
-scripts/db_start_public_demo.sh
-bash scripts/smoke_public_demo.sh
-AGENT_HUB_PUBLIC_DEMO=1 scripts/hub_view.sh
-```
-
-> Note: the getting-started guide also documents an optional guided setup
-> (`agent-hub setup`) and a separate Markdown export step
-> (`.venv/bin/python -m agent_hub.cli export`). Do not push the tester toward
-> these. Let them find whichever path the docs lead them to, and note which one
-> they take.
+The moderator should know the expected path, but should not hand it to the
+tester up front. The point is to learn whether the public docs can carry the
+first run.
 
 ---
 
@@ -128,14 +110,14 @@ Then you may stop the test or give one minimal technical unblock.
 
 ## 4. Tester Handout
 
-Give this block to the tester (it is self-contained; copy from here).
+Give this block to the tester.
 
 ````markdown
 # Agent Data Hub v0.1.2 First Run
 
 Goal:
-Install Agent Data Hub from a fresh clone, start the public demo, run the smoke
-test, and open Hub View.
+Start from the public GitHub page, use the README and Getting Started, and try
+to understand and run the public demo path without extra explanation.
 
 Please think out loud:
 - What is clear?
@@ -150,12 +132,22 @@ Start:
 1. Open the GitHub page:
    https://github.com/AlexanderSmyslowski/central-agent-data-hub
 2. Use the README and Getting Started.
-3. Work in a fresh folder.
+3. Work in a fresh folder, not in an existing checkout.
+4. Afterwards, explain in your own words what Agent Data Hub does.
+````
 
-Recommended flow:
+---
+
+## 5. Moderator Reference: Expected v0.1.2 Public Path
+
+This command sequence is for the moderator's reference. Do not give it to the
+tester unless the run is already technically blocked and you decide to unblock
+once.
+
+The expected public first run from the v0.1.2 release notes and getting-started
+is:
+
 ```bash
-mkdir -p ~/adh-first-run-test
-cd ~/adh-first-run-test
 git clone https://github.com/AlexanderSmyslowski/central-agent-data-hub.git
 cd central-agent-data-hub
 git checkout v0.1.2
@@ -168,21 +160,21 @@ bash scripts/smoke_public_demo.sh
 AGENT_HUB_PUBLIC_DEMO=1 scripts/hub_view.sh
 ```
 
-Then:
-- Open the local Hub View address shown in the terminal in your browser.
-- Look at what you understand there.
-- Afterwards, explain in your own words what Agent Data Hub does.
-````
+The getting-started guide also documents an optional guided setup
+(`agent-hub setup`) and a separate Markdown export step
+(`.venv/bin/python -m agent_hub.cli export`). Do not push the tester toward
+these. Let them find whichever path the docs lead them to, and note which one
+they take.
 
 ---
 
-## 5. Observation Sheet (for the moderator)
+## 6. Observation Sheet (for the moderator)
 
 Create this file **locally, outside the repo** — it can contain tester PII and
 run-specific notes that do not belong in version control:
 
 ```text
-~/.hermes/operator-notes/adh-v0.1.2-first-run-observation-YYYY-MM-DD.md
+~/adh-first-run-observations/adh-v0.1.2-first-run-observation-YYYY-MM-DD.md
 ```
 
 Template:
@@ -270,7 +262,7 @@ Needs second tester:
 
 ---
 
-## 6. Standard Moderator Replies During The Test
+## 7. Standard Moderator Replies During The Test
 
 When the tester asks "Was ist reviewed memory?":
 
@@ -292,7 +284,7 @@ When they are genuinely blocked after that:
 
 ---
 
-## 7. What To Watch Actively
+## 8. What To Watch Actively
 
 These are the spots worth concentrated attention:
 
@@ -316,7 +308,7 @@ tester says that contradicts that framing is a high-value observation.
 
 ---
 
-## 8. When The Test Succeeds
+## 9. When The Test Succeeds
 
 The test succeeds if the tester, **without explanation**, can:
 
@@ -333,7 +325,7 @@ Individual terms being unclear is fine — that is exactly what you are testing.
 
 ---
 
-## 9. When It Is A Real Blocker
+## 10. When It Is A Real Blocker
 
 Blocker:
 
@@ -356,7 +348,7 @@ Not a blocker (but still an observation):
 
 ---
 
-## 10. After The Test
+## 11. After The Test
 
 Do not change everything immediately. Sort first:
 
@@ -376,7 +368,7 @@ Priority order:
 
 ---
 
-## 11. Debrief Questions For The Tester
+## 12. Debrief Questions For The Tester
 
 At the end, without correcting them:
 
@@ -392,7 +384,7 @@ Only after their answers may you explain what ADH actually means.
 
 ---
 
-## 12. Short Moderator Script
+## 13. Short Moderator Script
 
 Start:
 
@@ -415,7 +407,7 @@ End:
 
 ---
 
-## 13. Choosing The First Tester
+## 14. Choosing The First Tester
 
 Do not pick someone completely non-technical. Pick someone technical enough for
 terminal, Git, Python, and Docker, but **without ADH prior knowledge**:
@@ -430,7 +422,7 @@ Python basics, not ADH.
 
 ---
 
-## 14. Exit Criterion
+## 15. Exit Criterion
 
 After the test, a real observation note should exist containing:
 
