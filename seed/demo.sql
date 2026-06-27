@@ -8,7 +8,7 @@ VALUES (
   '00000000-0000-4000-8000-000000000001',
   'Central Agent Data Hub Demo',
   'central-agent-data-hub-demo',
-  'Demo project for validating the Central Agent Data Hub v0 schema.',
+  'Neutral demo project for showing how reviewed context is stored and read locally.',
   'active',
   '{"demo": true, "source": "seed/demo.sql"}'::jsonb
 )
@@ -22,14 +22,15 @@ INSERT INTO agents (id, project_id, name, slug, role, status, metadata)
 VALUES (
   '00000000-0000-4000-8000-000000000010',
   '00000000-0000-4000-8000-000000000001',
-  'Architecture Agent',
-  'architecture-agent',
-  'Maintains schema decisions, reports, and knowledge-base projections.',
+  'Demo Review Agent',
+  'demo-review-agent',
+  'Creates neutral sample memory for the public demo.',
   'active',
-  '{"demo": true, "profile": "architecture"}'::jsonb
+  '{"demo": true, "profile": "public-demo"}'::jsonb
 )
-ON CONFLICT (project_id, slug) DO UPDATE SET
+ON CONFLICT (id) DO UPDATE SET
   name = EXCLUDED.name,
+  slug = EXCLUDED.slug,
   role = EXCLUDED.role,
   status = EXCLUDED.status,
   metadata = EXCLUDED.metadata;
@@ -39,10 +40,10 @@ VALUES
 (
   '00000000-0000-4000-8000-000000000101',
   '00000000-0000-4000-8000-000000000001',
-  'Concept: Central Agent Data Hub',
-  'concept-central-agent-data-hub',
-  'docs/concepts/central-agent-data-hub.md',
-  '# Central Agent Data Hub\n\nA shared schema for project knowledge, agent reports, decisions, risks, and sync events.',
+  'Concept: Reviewed Context',
+  'concept-reviewed-context',
+  'docs/demo/reviewed-context.md',
+  '# Reviewed Context\n\nAgent Data Hub keeps small pieces of project knowledge only after they have a source and a review status.',
   '{"type": "concept", "demo": true}'::jsonb,
   'demo-hash-concept-001',
   'active',
@@ -51,17 +52,18 @@ VALUES
 (
   '00000000-0000-4000-8000-000000000102',
   '00000000-0000-4000-8000-000000000001',
-  'Technical Report: v0 Schema Smoke',
-  'technical-report-v0-schema-smoke',
-  'reports/technical/v0-schema-smoke.md',
-  '# v0 Schema Smoke\n\nMigration and demo seed validate core entities, relations, audit events, and sync events.',
-  '{"type": "technical-report", "demo": true}'::jsonb,
+  'Demo Note: Review Flow',
+  'demo-note-review-flow',
+  'reports/demo/review-flow.md',
+  '# Review Flow\n\nUnreviewed notes stay separate until a person accepts or rejects them. Reviewed memory is then available to agents as context.',
+  '{"type": "demo-note", "demo": true}'::jsonb,
   'demo-hash-report-001',
   'active',
   '{"demo": true}'::jsonb
 )
-ON CONFLICT (project_id, slug) DO UPDATE SET
+ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
+  slug = EXCLUDED.slug,
   path = EXCLUDED.path,
   content = EXCLUDED.content,
   frontmatter = EXCLUDED.frontmatter,
@@ -74,8 +76,8 @@ VALUES
 (
   '00000000-0000-4000-8000-000000000201',
   '00000000-0000-4000-8000-000000000001',
-  'The v0 schema stores documents, facts, decisions, open questions, risks, reports, and audit trails.',
-  'docs/concepts/central-agent-data-hub.md',
+  'Reviewed memory is context with a source and a review status before agents use it.',
+  'docs/demo/reviewed-context.md',
   0.950,
   'verified',
   '{"demo": true, "confidence_label": "high"}'::jsonb
@@ -83,8 +85,8 @@ VALUES
 (
   '00000000-0000-4000-8000-000000000202',
   '00000000-0000-4000-8000-000000000001',
-  'A later Obsidian export can map frontmatter and markdown paths without additional core tables.',
-  'reports/technical/v0-schema-smoke.md',
+  'A Signal Inbox can hold interesting but unreviewed notes until someone decides whether they matter.',
+  'reports/demo/review-flow.md',
   0.650,
   'proposed',
   '{"demo": true, "confidence_label": "medium"}'::jsonb
@@ -100,8 +102,8 @@ INSERT INTO open_questions (id, project_id, question, answer, status, resolved_a
 VALUES (
   '00000000-0000-4000-8000-000000000301',
   '00000000-0000-4000-8000-000000000001',
-  'Should Obsidian export remain file-based in v0 or get a dedicated sync worker immediately?',
-  'Keep v0 file-based. Revisit a dedicated sync worker only after the schema, receipts, and review flow stay stable in real local use.',
+  'Should every useful note become reviewed memory?',
+  'No. Only durable, sourceable context should be promoted. Temporary notes can stay in chat or in a Signal Inbox until reviewed.',
   'answered',
   CURRENT_TIMESTAMP,
   '{"demo": true}'::jsonb
@@ -117,9 +119,9 @@ INSERT INTO decisions (id, project_id, decision, rationale, consequences, status
 VALUES (
   '00000000-0000-4000-8000-000000000401',
   '00000000-0000-4000-8000-000000000001',
-  'Keep v0 focused on schema, relations, audit, and sync events before adding application code.',
-  'The first phase should validate the data model with deterministic migrations and seeds.',
-  'No API, UI, worker, or search extension is introduced in v0.',
+  'Keep the public demo small and focused on reviewed context.',
+  'A first-time user should see the memory model without maintainer-local projects or old test artifacts.',
+  'The demo uses one neutral project with a few facts, decisions, questions, risks, and reports.',
   'accepted',
   '{"demo": true}'::jsonb
 )
@@ -134,10 +136,10 @@ INSERT INTO risks (id, project_id, title, severity, impact, mitigation, status, 
 VALUES (
   '00000000-0000-4000-8000-000000000501',
   '00000000-0000-4000-8000-000000000001',
-  'Knowledge graph drift',
+  'Unreviewed notes treated as facts',
   'medium',
-  'Relations may become stale if documents, facts, and reports are updated independently.',
-  'Use sync_events, content_hash checks, and agent_actions to audit later reconciliation runs.',
+  'Agents may act on weak or stale assumptions if rough notes are promoted too early.',
+  'Keep drafts and Signal Inbox items separate until a reviewer accepts them.',
   'open',
   '{"demo": true}'::jsonb
 )
@@ -153,10 +155,10 @@ INSERT INTO reports (id, project_id, title, report_type, summary, body, status, 
 VALUES (
   '00000000-0000-4000-8000-000000000601',
   '00000000-0000-4000-8000-000000000001',
-  'Demo Schema Validation Report',
+  'Public Demo Context Report',
   'status',
-  'Demo data validates core project, document, fact, decision, risk, relation, audit, and sync flows.',
-  'The Architecture Agent created this report as a deterministic seed artifact for local schema checks.',
+  'The demo shows how a small set of reviewed project memory can become agent context.',
+  'This report is neutral sample data. It exists only to make the local demo readable during a first run.',
   'published',
   '{"demo": true}'::jsonb
 )
@@ -210,7 +212,7 @@ VALUES
   'document', '00000000-0000-4000-8000-000000000102',
   'references',
   'decision', '00000000-0000-4000-8000-000000000401',
-  '{"demo": true, "label": "technical report references decision"}'::jsonb
+  '{"demo": true, "label": "demo note references decision"}'::jsonb
 )
 ON CONFLICT (id) DO UPDATE SET
   source_type = EXCLUDED.source_type,
@@ -227,7 +229,7 @@ VALUES (
   'create_demo_report',
   'report',
   '00000000-0000-4000-8000-000000000601',
-  '{"source_documents": ["docs/concepts/central-agent-data-hub.md"]}'::jsonb,
+  '{"source_documents": ["docs/demo/reviewed-context.md"]}'::jsonb,
   '{"report_id": "00000000-0000-4000-8000-000000000601", "status": "published"}'::jsonb,
   'succeeded',
   NULL,
@@ -248,7 +250,7 @@ INSERT INTO event_log (id, agent_id, event_type, object_type, object_id, payload
 VALUES (
   '00000000-0000-4000-8000-000000000901',
   '00000000-0000-4000-8000-000000000010',
-  'demo_seed_loaded',
+  'public_demo_seed_loaded',
   'project',
   '00000000-0000-4000-8000-000000000001',
   '{"tables_seeded": ["projects", "agents", "documents", "facts", "open_questions", "decisions", "risks", "reports", "relations", "agent_actions", "event_log", "sync_events"]}'::jsonb,
@@ -267,7 +269,7 @@ ON CONFLICT (id) DO UPDATE SET
 INSERT INTO sync_events (id, source, direction, status, payload, error, metadata)
 VALUES (
   '00000000-0000-4000-8000-000000001001',
-  'obsidian-demo-export',
+  'public-demo-export',
   'outbound',
   'succeeded',
   '{"vault": "Demo Vault", "exported_documents": 2, "target": "obsidian/central-agent-data-hub-demo"}'::jsonb,

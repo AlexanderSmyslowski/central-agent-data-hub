@@ -159,11 +159,63 @@ def test_public_demo_start_is_separate_from_maintainer_seed_path() -> None:
     assert 'echo "  scripts/smoke_public_demo.sh"' in script
     assert 'echo "  AGENT_HUB_PUBLIC_DEMO=1 scripts/hub_view.sh"' in script
     assert 'apply_sql_file "seed/demo.sql"' in script
+    assert "verify_public_demo_hygiene" in script
     assert 'run_agent_hub brief --project central-agent-data-hub-demo --limit 4' in script
     assert 'run_agent_hub compile --project central-agent-data-hub-demo --limit 4' in script
     assert 'run_agent_hub quality --project central-agent-data-hub-demo' in script
     assert 'apply_sql_file "seed/business_sites.sql"' not in script
     assert 'apply_sql_file "seed/agentic_projects.sql"' not in script
+
+
+def test_public_demo_seed_is_neutral_and_public_safe() -> None:
+    seed = read_script("seed/demo.sql")
+    lower_seed = seed.lower()
+    forbidden_terms = [
+        "hermes",
+        "ronak",
+        "telegram",
+        "review_api",
+        "review api",
+        "commcats-de",
+        "the-one-catering",
+        "lamour",
+        "smoke",
+    ]
+
+    for term in forbidden_terms:
+        assert term not in lower_seed
+
+    assert "Neutral demo project for showing how reviewed context is stored and read locally." in seed
+    assert "Reviewed memory is context with a source and a review status" in seed
+    assert "A Signal Inbox can hold interesting but unreviewed notes" in seed
+    assert "Public Demo Context Report" in seed
+
+
+def test_public_demo_start_refuses_stale_operator_artifacts_without_cleanup() -> None:
+    script = read_script("scripts/db_start_public_demo.sh")
+
+    assert "public demo database contains old smoke or operator traces" in script
+    assert "This script will not clean or overwrite existing local data automatically." in script
+    assert "Use a fresh isolated demo instance" in script
+    assert "AGENT_HUB_COMPOSE_PROJECT_NAME=adh-demo-fresh" in script
+    assert "AGENT_HUB_DB_VOLUME" in script
+    assert "docker volume rm" not in script
+    assert "DROP DATABASE" not in script
+    assert "DROP SCHEMA" not in script
+    assert "Findings:" not in script
+    assert "table_name || ':' || item" not in script
+
+    for term in (
+        "'hermes'",
+        "'ronak'",
+        "'telegram'",
+        "'review_api'",
+        "'commcats-de'",
+        "'the-one-catering'",
+        "'lamour'",
+        "'smoke'",
+    ):
+        assert term in script
 
 
 def test_first_run_demo_script_wraps_public_demo_path() -> None:
@@ -283,6 +335,24 @@ def test_public_demo_smoke_verifies_demo_exports() -> None:
     assert "local review surface" in script
 
 
+def test_public_demo_smoke_does_not_write_durable_fake_memory() -> None:
+    script = read_script("scripts/smoke_public_demo.sh")
+
+    forbidden_write_markers = [
+        " remember ",
+        "project_remember",
+        "review_draft",
+        "inbox --accept",
+        "inbox --reject",
+        "INSERT INTO",
+        "UPDATE ",
+        "DELETE ",
+    ]
+
+    for marker in forbidden_write_markers:
+        assert marker not in script
+
+
 def test_public_hub_view_entrypoint_is_public_safe() -> None:
     script = read_script("scripts/hub_view.sh")
 
@@ -298,13 +368,16 @@ def test_public_entrypoints_do_not_reference_maintainer_projects() -> None:
     public_scripts = [
         "scripts/hub_view.sh",
         "scripts/smoke_public_demo.sh",
-        "scripts/db_start_public_demo.sh",
     ]
 
     for path in public_scripts:
         script = read_script(path)
         assert "commcats-de" not in script
         assert "the-one-catering" not in script
+
+    demo_start = read_script("scripts/db_start_public_demo.sh")
+    assert "apply_sql_file \"seed/business_sites.sql\"" not in demo_start
+    assert "run_agent_hub brief --project commcats-de" not in demo_start
 
 
 def test_signal_inbox_init_script_is_lazy_by_default() -> None:
