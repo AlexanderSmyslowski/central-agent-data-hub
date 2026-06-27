@@ -975,22 +975,22 @@
 
             <section class="section agent-context">
               <h2>Use it with an agent</h2>
-              <p>Pick the path that matches your agent. This page creates a visible handoff; it does not connect an agent by itself.</p>
+              <p>Pick the path that matches your agent. This page creates a visible handoff and setup material; it does not run commands or write an agent configuration by itself.</p>
               <div class="connection-grid">
                 <article class="connection-card">
                   <h3>Chatbot</h3>
                   <p>Every task: copy the context pack below into the chat before the task. This is manual, but it makes the handoff visible.</p>
                 </article>
                 <article class="connection-card">
-                  <h3>Local agent</h3>
-                  <p>One-time setup: copy and run this command once for Claude Code. It installs ADH's optional MCP support and registers ADH as a local read-only context server.</p>
+                  <h3>Claude Code</h3>
+                  <p>One-time setup: copy and run this command once. It installs ADH's optional MCP support and registers ADH as a local read-only context server for Claude Code.</p>
                   <div class="copy-row">
-                    <code id="local-agent-setup-command" class="command-box">{{ agent_context.local_agent.setup_command }}</code>
-                    <button class="button copy-button" type="button" data-copy-target="local-agent-setup-command">Copy setup command</button>
+                    <code id="claude-code-setup-command" class="command-box">{{ agent_context.local_agent.setup_command }}</code>
+                    <button class="button copy-button" type="button" data-copy-target="claude-code-setup-command">Copy Claude setup</button>
                   </div>
-                  <p class="setup-note">After setup, the local agent is instructed to request ADH context at the start of each ADH-related task. Hub View shows the command, but does not run it or write the agent configuration by itself.</p>
+                  <p class="setup-note">After setup, Claude Code is instructed to request ADH context at the start of ADH-related work.</p>
                   <details class="setup-details">
-                    <summary>Show manual setup pieces</summary>
+                    <summary>Show Claude manual setup pieces</summary>
                     <ol class="setup-steps">
                       <li>
                         <span class="setup-step-title">Install MCP support once</span>
@@ -1007,13 +1007,6 @@
                         </div>
                       </li>
                       <li>
-                        <span class="setup-step-title">Or use this MCP config shape</span>
-                        <div class="copy-row">
-                          <code id="mcp-json-config" class="command-box">{{ agent_context.local_agent.mcp_json }}</code>
-                          <button class="button copy-button" type="button" data-copy-target="mcp-json-config">Copy</button>
-                        </div>
-                      </li>
-                      <li>
                         <span class="setup-step-title">Tell the agent what to do at task start</span>
                         <div class="copy-row">
                           <code id="startup-instruction" class="command-box">{{ agent_context.local_agent.startup_instruction }}</code>
@@ -1022,6 +1015,33 @@
                       </li>
                     </ol>
                   </details>
+                </article>
+                <article class="connection-card">
+                  <h3>Codex</h3>
+                  <p>One-time setup: install the ADH block into the project's <code>AGENTS.md</code>. Codex reads that file before work and uses it as the repo-local startup rule.</p>
+                  <div class="copy-row">
+                    <code id="codex-setup-command" class="command-box">{{ agent_context.local_agent.codex_command }}</code>
+                    <button class="button copy-button" type="button" data-copy-target="codex-setup-command">Copy Codex setup</button>
+                  </div>
+                  {% if agent_context.local_agent.codex_needs_repo_path %}
+                    <p class="setup-note">Replace <code>&lt;project-repo-path&gt;</code> with the repo path before running this command.</p>
+                  {% endif %}
+                </article>
+                <article class="connection-card">
+                  <h3>Hermes or custom agent</h3>
+                  <p>One-time setup: copy this startup rule into the agent's own persistent instruction or runtime configuration.</p>
+                  <div class="copy-row">
+                    <code id="custom-startup-instruction" class="command-box">{{ agent_context.local_agent.startup_instruction }}</code>
+                    <button class="button copy-button" type="button" data-copy-target="custom-startup-instruction">Copy startup rule</button>
+                  </div>
+                </article>
+                <article class="connection-card">
+                  <h3>Other MCP-compatible agent</h3>
+                  <p>Use this stdio MCP config shape when the agent can launch local MCP servers but is not Claude Code.</p>
+                  <div class="copy-row">
+                    <code id="mcp-json-config" class="command-box">{{ agent_context.local_agent.mcp_json }}</code>
+                    <button class="button copy-button" type="button" data-copy-target="mcp-json-config">Copy MCP config</button>
+                  </div>
                 </article>
                 <article class="connection-card">
                   <h3>Terminal fallback</h3>

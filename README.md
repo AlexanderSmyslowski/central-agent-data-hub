@@ -157,10 +157,11 @@ For chatbots, the practical path is copy and paste. For local agents, the
 better path is one-time connection: configure the agent to request ADH context
 at task start through the read-only MCP surface or an equivalent startup rule.
 Hub View shows the setup steps, but it does not connect the agent by itself.
-It also provides copy buttons for the setup command, MCP config shape, startup
-instruction, terminal fallback, and chatbot context pack.
-For Claude Code, Hub View shows a single copyable setup command first, with the
-manual MCP pieces available only if someone needs to inspect them.
+It separates setup paths for Claude Code, Codex, Hermes or custom startup
+rules, and generic MCP-compatible agents, with copy buttons for each path.
+Claude Code gets a single copyable setup command; Codex gets the repo-local
+`AGENTS.md` setup command; Hermes/custom agents get a startup-rule block; other
+MCP clients get the config shape.
 The terminal start command remains useful as a manual fallback until the local
 agent is connected, not as the intended long-term daily UX.
 
