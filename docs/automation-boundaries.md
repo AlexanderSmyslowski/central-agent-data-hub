@@ -31,6 +31,11 @@ over stdio for external agents, but it has no write tools, no HTTP transport,
 and no import, remember, accept, reject, or sync capability. The server asks
 Postgres for a read-only session; writes remain outside the MCP boundary.
 
+Hub View's agent context screen also belongs in this read-only layer. It lets a
+human click from a project to a visible task context pack, using the same
+reviewed prepare path as the CLI. It may show how reviewed memory should shape
+an agent run, but it must not create, promote, or modify memory.
+
 `agent-hub export-okf` also belongs in this read-only layer. It projects
 reviewed Hub memory into an OKF-style Markdown/YAML bundle and does not import,
 sync, promote drafts, or change Hub rows.

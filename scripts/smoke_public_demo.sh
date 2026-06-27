@@ -51,6 +51,7 @@ import sys
 import time
 from pathlib import Path
 from urllib.error import URLError
+from urllib.parse import quote
 from urllib.request import urlopen
 
 port = sys.argv[1]
@@ -65,6 +66,9 @@ for _ in range(50):
                 "Hub View",
                 "local review surface",
                 "central-agent-data-hub-demo",
+                "Connect an agent",
+                "Create context pack",
+                "/projects/central-agent-data-hub-demo/agent-context",
                 "Reviewed memory",
                 "#reviewed-memory",
                 "#risks-and-questions",
@@ -82,6 +86,19 @@ for _ in range(50):
                 "No items to review.",
                 "When agents suggest memory changes",
                 "Back to project overview",
+            ),
+            (
+                "/projects/central-agent-data-hub-demo/agent-context"
+                f"?task={quote('Review the public demo with ADH context')}"
+            ): (
+                "ADH context loaded",
+                "Review the public demo with ADH context",
+                "Source of truth: local Agent Data Hub database",
+                "How this should influence the agent",
+                "Known gaps",
+                "agent-hub prepare --project central-agent-data-hub-demo",
+                "scripts/agent_start.sh --project central-agent-data-hub-demo",
+                "# Agent Context Pack",
             ),
         }
         for path, expected_texts in checks.items():

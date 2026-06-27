@@ -555,6 +555,9 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert 'id="risks-and-questions"' in body
     assert 'id="latest-status"' in body
     assert 'id="quality"' in body
+    assert "Connect an agent" in body
+    assert 'action="/projects/central-agent-data-hub/agent-context"' in body
+    assert "Create context pack" in body
     assert "Latest status" in body
     assert "all items to review" in body
     assert "Review suggested memory changes" in body
@@ -566,6 +569,142 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "supports" in body
     assert "alexander" not in body.lower()
     assert "ronak" not in body.lower()
+
+
+def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> None:
+    def fake_load_agent_context_view_model(
+        selected_slug: str,
+        task: str,
+    ) -> tuple[int, dict[str, object]]:
+        assert selected_slug == "central-agent-data-hub"
+        assert task == "Review release readiness"
+        return 200, {
+            "projects": [],
+            "selected_project": {
+                "name": "Central Agent Data Hub",
+                "slug": "central-agent-data-hub",
+            },
+            "not_found_slug": None,
+            "draft_total": 0,
+            "agent_context": {
+                "project_slug": "central-agent-data-hub",
+                "project_name": "Central Agent Data Hub",
+                "task": task,
+                "counts": {
+                    "facts": 3,
+                    "decisions": 2,
+                    "risks": 1,
+                    "open_questions": 1,
+                    "reports": 1,
+                    "relations": 2,
+                    "pending_drafts": 0,
+                },
+                "source_count": 7,
+                "gap_summary": {
+                    "stale": 0,
+                    "unanswered": 1,
+                    "blind_spots": 0,
+                    "pending_drafts": 0,
+                },
+                "influence": [
+                    "Reviewed decisions become task constraints for the agent.",
+                    "Verified facts may be used as project assumptions.",
+                ],
+                "commands": {
+                    "prepare": (
+                        "agent-hub prepare --project central-agent-data-hub "
+                        "--task 'Review release readiness'"
+                    ),
+                    "agent_start": (
+                        "scripts/agent_start.sh --project central-agent-data-hub "
+                        "--query 'Review release readiness' --review"
+                    ),
+                },
+                "markdown": "# Agent Context Pack\n\n## Goal\nReview release readiness\n",
+            },
+        }
+
+    monkeypatch.setattr(
+        hub_view,
+        "load_agent_context_view_model",
+        fake_load_agent_context_view_model,
+    )
+    app = hub_view.create_application(bind_host="127.0.0.1", csrf_token="token")
+
+    captured, body = call_app(
+        app,
+        path="/projects/central-agent-data-hub/agent-context",
+        query=urlencode({"task": "Review release readiness"}),
+    )
+
+    assert captured["status"] == "200 OK"
+    assert "ADH context loaded" in body
+    assert "This is the visible handoff" in body
+    assert "Review release readiness" in body
+    assert "Source of truth: local Agent Data Hub database" in body
+    assert "How this should influence the agent" in body
+    assert "Reviewed decisions become task constraints" in body
+    assert "Known gaps" in body
+    assert "1 unanswered questions" in body
+    assert "agent-hub prepare --project central-agent-data-hub" in body
+    assert "scripts/agent_start.sh --project central-agent-data-hub" in body
+    assert "# Agent Context Pack" in body
+    assert 'href="/projects/central-agent-data-hub"' in body
+
+
+def test_agent_context_commands_are_shell_quoted_for_copy_paste(monkeypatch) -> None:
+    monkeypatch.setattr(hub_view, "prepare_markdown", lambda _payload: "# Agent Context Pack")
+
+    view = hub_view.build_agent_context_view(
+        {
+            "project": {
+                "id": "project-id",
+                "slug": "central-agent-data-hub",
+                "name": "Central Agent Data Hub",
+            },
+            "task": "Review Ronak's release notes",
+            "verified_project_state": [],
+            "relevant_decisions": [],
+            "risks": [],
+            "open_questions": [],
+            "reports": [],
+            "relations": [],
+            "drafts_pending_review": {},
+            "context_trail": {
+                "included_counts": {
+                    "facts": 0,
+                    "decisions": 0,
+                    "risks": 0,
+                    "open_questions": 0,
+                    "reports": 0,
+                    "relations": 0,
+                },
+                "sources": [],
+                "excluded": {"note": "none"},
+                "task_selection": {
+                    "mode": "deterministic",
+                    "note": "test",
+                    "tie_breaking": "test",
+                },
+                "gap_summary": {},
+            },
+            "goal": "Review Ronak's release notes",
+            "constraints": [],
+            "allowed_actions": [],
+            "requires_human_approval": [],
+            "suggested_checks": [],
+            "gaps": {"summary": {}},
+        }
+    )
+
+    assert (
+        view["commands"]["prepare"]
+        == "agent-hub prepare --project central-agent-data-hub --task 'Review Ronak'\"'\"'s release notes'"
+    )
+    assert (
+        view["commands"]["agent_start"]
+        == "scripts/agent_start.sh --project central-agent-data-hub --query 'Review Ronak'\"'\"'s release notes' --review"
+    )
 
 
 def test_format_timestamp_for_datetime() -> None:

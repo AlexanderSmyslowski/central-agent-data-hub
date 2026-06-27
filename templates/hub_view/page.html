@@ -337,6 +337,115 @@
         line-height: 1.45;
       }
 
+      .agent-connect {
+        margin: 0 0 28px;
+        padding: 18px;
+        border: 1px solid rgba(45, 74, 95, 0.22);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.66);
+      }
+
+      .agent-connect h2,
+      .agent-context h2 {
+        margin-bottom: 8px;
+      }
+
+      .agent-connect p,
+      .agent-context p {
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .agent-form {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .agent-input {
+        width: 100%;
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface-strong);
+        color: var(--text);
+        font: inherit;
+        font-size: 14px;
+        padding: 10px 12px;
+      }
+
+      .agent-status {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 10px;
+        margin: 18px 0;
+      }
+
+      .agent-status-item {
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.56);
+      }
+
+      .agent-status-label {
+        color: var(--muted);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .agent-status-value {
+        margin-top: 6px;
+        font-size: 22px;
+        font-weight: 600;
+      }
+
+      .agent-list {
+        margin: 10px 0 0;
+        padding-left: 18px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.55;
+      }
+
+      .command-list {
+        display: grid;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .command-box {
+        display: block;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.58);
+        color: var(--text);
+        font-family: "SF Mono", Menlo, Consolas, monospace;
+        font-size: 12px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .context-pack {
+        width: 100%;
+        min-height: 360px;
+        margin-top: 12px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface-strong);
+        color: var(--text);
+        font-family: "SF Mono", Menlo, Consolas, monospace;
+        font-size: 12px;
+        line-height: 1.45;
+        resize: vertical;
+      }
+
       .section {
         padding-top: 20px;
         border-top: 1px solid var(--line);
@@ -588,6 +697,10 @@
         .relation-row {
           grid-template-columns: 1fr;
         }
+
+        .agent-form {
+          grid-template-columns: 1fr;
+        }
       }
     </style>
   </head>
@@ -720,6 +833,79 @@
                 <p class="detail-description">No active project with the slug <code>{{ not_found_slug }}</code> is visible in this Hub.</p>
               </div>
             </div>
+          {% elif view_name == 'agent_context' and selected_project and agent_context %}
+            <a class="nav-link" href="/projects/{{ selected_project.slug }}">Back to {{ selected_project.name }}</a>
+            <div class="detail-header">
+              <div>
+                <h2 class="detail-title">ADH context loaded</h2>
+                <p class="detail-description">This is the visible handoff from reviewed Agent Data Hub memory to a chatbot or local agent before work starts.</p>
+              </div>
+              <div class="project-meta">
+                <div>{{ agent_context.project_slug }}</div>
+                <div>reviewed context pack</div>
+              </div>
+            </div>
+
+            <section class="section agent-context">
+              <h2>Task</h2>
+              <p>{{ agent_context.task }}</p>
+              <div class="agent-status">
+                <div class="agent-status-item">
+                  <div class="agent-status-label">Facts</div>
+                  <div class="agent-status-value">{{ agent_context.counts.facts }}</div>
+                </div>
+                <div class="agent-status-item">
+                  <div class="agent-status-label">Decisions</div>
+                  <div class="agent-status-value">{{ agent_context.counts.decisions }}</div>
+                </div>
+                <div class="agent-status-item">
+                  <div class="agent-status-label">Risks</div>
+                  <div class="agent-status-value">{{ agent_context.counts.risks }}</div>
+                </div>
+                <div class="agent-status-item">
+                  <div class="agent-status-label">Open questions</div>
+                  <div class="agent-status-value">{{ agent_context.counts.open_questions }}</div>
+                </div>
+                <div class="agent-status-item">
+                  <div class="agent-status-label">Reports</div>
+                  <div class="agent-status-value">{{ agent_context.counts.reports }}</div>
+                </div>
+                <div class="agent-status-item">
+                  <div class="agent-status-label">Trail entries</div>
+                  <div class="agent-status-value">{{ agent_context.source_count }}</div>
+                </div>
+              </div>
+              <p>Source of truth: local Agent Data Hub database. Review status: reviewed memory is usable; suggested changes remain unconfirmed until a human reviews them.</p>
+            </section>
+
+            <section class="section agent-context">
+              <h2>How this should influence the agent</h2>
+              <ul class="agent-list">
+                {% for line in agent_context.influence %}
+                  <li>{{ line }}</li>
+                {% endfor %}
+              </ul>
+            </section>
+
+            <section class="section agent-context">
+              <h2>Known gaps</h2>
+              <div class="project-counts">
+                <span>{{ agent_context.gap_summary.stale }} stale items</span>
+                <span>{{ agent_context.gap_summary.unanswered }} unanswered questions</span>
+                <span>{{ agent_context.gap_summary.blind_spots }} task blind spots</span>
+                <span>{{ agent_context.gap_summary.pending_drafts }} items pending review</span>
+              </div>
+            </section>
+
+            <section class="section agent-context">
+              <h2>Use it with an agent</h2>
+              <p>For a chatbot, paste the context pack below before the task. For a local agent, use one of these commands so the start of work is visible.</p>
+              <div class="command-list">
+                <code class="command-box">{{ agent_context.commands.prepare }}</code>
+                <code class="command-box">{{ agent_context.commands.agent_start }}</code>
+              </div>
+              <textarea class="context-pack" readonly aria-label="Agent context pack">{{ agent_context.markdown }}</textarea>
+            </section>
           {% elif selected_project %}
             <div class="detail-header">
               <div>
@@ -766,6 +952,15 @@
             </div>
 
             <p class="overview-note">This overview reads reviewed project memory from the local Hub database. Suggested memory changes are separate until a human accepts or rejects them.</p>
+
+            <section class="agent-connect" id="connect-agent">
+              <h2>Connect an agent</h2>
+              <p>Make ADH visible before work starts. Enter the task, then create a context pack showing which reviewed memory the agent should use.</p>
+              <form class="agent-form" method="get" action="/projects/{{ selected_project.slug }}/agent-context">
+                <input class="agent-input" type="text" name="task" value="Review this project with ADH context" aria-label="Task for the agent">
+                <button class="button" type="submit">Create context pack</button>
+              </form>
+            </section>
 
             <a class="review-callout" href="/inbox">
               <strong>Review suggested memory changes</strong>

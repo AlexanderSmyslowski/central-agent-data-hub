@@ -9,6 +9,7 @@ import ipaddress
 import os
 from pathlib import Path
 import secrets
+import shlex
 import socket
 from typing import Any, Callable
 from urllib.parse import parse_qs, quote, urlparse
@@ -21,6 +22,11 @@ from agent_hub.commands.common import fetch_project
 from agent_hub.commands.inbox import (
     fetch_drafts,
     review_draft_by_id,
+)
+from agent_hub.commands.prepare import (
+    build_prepare_payload,
+    fetch_prepare_payload as fetch_agent_prepare_payload,
+    prepare_markdown,
 )
 from agent_hub.commands.summaries import fetch_compiled_payload
 from agent_hub.db import connect
@@ -43,6 +49,8 @@ CARD_LINE_PREFIXES = {
     "Quelle:": "Source:",
     "Folge bei Irrtum:": "If wrong:",
 }
+
+DEFAULT_AGENT_TASK = "Use reviewed Agent Data Hub context for this project."
 
 
 def hub_view_templates_dir() -> Path:
@@ -165,6 +173,122 @@ def build_detail_view(
         ],
         "updated_at": format_timestamp(project.get("updated_at")),
     }
+
+
+def agent_context_counts(payload: dict[str, object]) -> dict[str, int]:
+    drafts = payload.get("drafts_pending_review") or {}
+    pending_drafts = 0
+    if isinstance(drafts, dict):
+        pending_drafts = sum(len(rows) for rows in drafts.values() if isinstance(rows, list))
+    return {
+        "facts": len(payload.get("verified_project_state") or []),
+        "decisions": len(payload.get("relevant_decisions") or []),
+        "risks": len(payload.get("risks") or []),
+        "open_questions": len(payload.get("open_questions") or []),
+        "reports": len(payload.get("reports") or []),
+        "relations": len(payload.get("relations") or []),
+        "pending_drafts": pending_drafts,
+    }
+
+
+def shell_command(parts: list[object]) -> str:
+    return " ".join(shlex.quote(str(part)) for part in parts)
+
+
+def build_agent_context_view(payload: dict[str, object]) -> dict[str, object]:
+    project = payload["project"]
+    trail = payload.get("context_trail") or {}
+    gap_summary = trail.get("gap_summary") if isinstance(trail, dict) else {}
+    if not isinstance(gap_summary, dict):
+        gap_summary = {}
+    counts = agent_context_counts(payload)
+    task = str(payload["task"])
+    return {
+        "project_slug": project["slug"],
+        "project_name": project["name"],
+        "task": task,
+        "counts": counts,
+        "source_count": len(trail.get("sources") or []) if isinstance(trail, dict) else 0,
+        "gap_summary": {
+            "stale": gap_summary.get("stale", 0),
+            "unanswered": gap_summary.get("unanswered", 0),
+            "blind_spots": gap_summary.get("blind_spots", 0),
+            "pending_drafts": gap_summary.get("pending_drafts", 0),
+        },
+        "influence": [
+            "Reviewed decisions become task constraints for the agent.",
+            "Verified facts may be used as project assumptions.",
+            "Active risks and open questions stay visible instead of being guessed away.",
+            "Drafts stay labelled as unconfirmed until a human reviews them.",
+        ],
+        "commands": {
+            "prepare": shell_command(
+                [
+                    "agent-hub",
+                    "prepare",
+                    "--project",
+                    project["slug"],
+                    "--task",
+                    task,
+                ]
+            ),
+            "agent_start": shell_command(
+                [
+                    "scripts/agent_start.sh",
+                    "--project",
+                    project["slug"],
+                    "--query",
+                    task,
+                    "--review",
+                ]
+            ),
+        },
+        "markdown": prepare_markdown(payload),
+    }
+
+
+def load_agent_context_view_model(selected_slug: str, task: str) -> tuple[int, dict[str, object]]:
+    clean_task = task.strip() or DEFAULT_AGENT_TASK
+    with connect() as conn:
+        with conn.cursor() as cur:
+            projects = fetch_active_projects(cur)
+            drafts = fetch_drafts(cur, limit=None)
+            draft_counts = draft_counts_by_project(drafts)
+            draft_total = sum(draft_counts.values())
+            cards = [
+                build_project_card(
+                    cur,
+                    project,
+                    draft_count=draft_counts.get(str(project["slug"]), 0),
+                )
+                for project in projects
+            ]
+            project = fetch_project(cur, selected_slug)
+            if project is None or project.get("status") != "active":
+                return 404, {
+                    "projects": cards,
+                    "selected_project": None,
+                    "not_found_slug": selected_slug,
+                    "draft_total": draft_total,
+                    "agent_context": None,
+                }
+            compiled = fetch_agent_prepare_payload(cur, project, clean_task, limit=8)
+            payload = build_prepare_payload(
+                project=project,
+                task=clean_task,
+                compiled=compiled,
+            )
+            return 200, {
+                "projects": cards,
+                "selected_project": build_detail_view(
+                    cur,
+                    project,
+                    draft_count=draft_counts.get(str(project["slug"]), 0),
+                ),
+                "not_found_slug": None,
+                "draft_total": draft_total,
+                "agent_context": build_agent_context_view(payload),
+            }
 
 
 def draft_counts_by_project(rows: list[dict[str, object]]) -> dict[str, int]:
@@ -451,6 +575,23 @@ class HubViewApplication:
         view_name = "projects"
         if path == "/":
             selected_slug = None
+        elif path.startswith("/projects/") and path.endswith("/agent-context"):
+            view_name = "agent_context"
+            selected_slug = path.removeprefix("/projects/").removesuffix("/agent-context").strip("/")
+            if not selected_slug:
+                return text_response(start_response, "404 Not Found", "Not Found")
+            status_code, view_model = load_agent_context_view_model(
+                selected_slug,
+                query_value(environ, "task") or DEFAULT_AGENT_TASK,
+            )
+            body = render_page(
+                view_model,
+                status_code,
+                view_name=view_name,
+                csrf_token=self.csrf_token,
+                inbox_enabled=self.inbox_enabled,
+            )
+            return html_response(start_response, status_code, body)
         elif path.startswith("/projects/"):
             selected_slug = path.removeprefix("/projects/").strip("/") or None
         elif path == "/inbox":
