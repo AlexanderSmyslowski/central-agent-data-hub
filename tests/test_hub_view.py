@@ -558,7 +558,8 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Connect an agent" in body
     assert 'action="/projects/central-agent-data-hub/agent-context"' in body
     assert "Create context pack" in body
-    assert "Local agents should be connected once" in body
+    assert "Local agents need one-time setup" in body
+    assert "terminal command is only a manual fallback" in body
     assert "Latest status" in body
     assert "all items to review" in body
     assert "Review suggested memory changes" in body
@@ -657,10 +658,12 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "Known gaps" in body
     assert "1 unanswered questions" in body
     assert "Local agent" in body
-    assert "connected once" in body
+    assert "One-time setup" in body
+    assert "Add ADH as a local MCP server once" in body
     assert "claude mcp add agent-data-hub" in body
-    assert "Terminal fallback" in body
-    assert "cannot prove that an unconnected agent used the context" in body
+    assert "Manual fallback" in body
+    assert "it is not automation" in body
+    assert "ADH cannot prove that an unconnected agent read the context" in body
     assert "agent-hub prepare --project central-agent-data-hub" in body
     assert "scripts/agent_start.sh --project central-agent-data-hub" in body
     assert "# Agent Context Pack" in body
