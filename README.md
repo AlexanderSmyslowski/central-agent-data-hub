@@ -156,8 +156,9 @@ shows how that context should influence the work.
 For chatbots, the practical path is copy and paste. For local agents, the
 better path is one-time connection: configure the agent to request ADH context
 at task start through the read-only MCP surface or an equivalent startup rule.
-The terminal start command remains useful as a visible fallback, not as the
-intended long-term daily UX.
+Hub View shows the setup steps, but it does not connect the agent by itself.
+The terminal start command remains useful as a manual fallback until the local
+agent is connected, not as the intended long-term daily UX.
 
 The normal run rhythm is:
 
@@ -212,7 +213,8 @@ remember, import, accept, reject, sync, or modify memory.
 
 For stdio MCP, the local agent normally launches `agent-hub mcp-serve` when it
 needs context. Hub View can show the setup and the context handoff, but ADH does
-not silently inject context into an unconfigured agent.
+not silently inject context into an unconfigured agent. A local agent must be
+configured once before it can request ADH context automatically at task start.
 
 Example Claude Code setup from this checkout:
 
