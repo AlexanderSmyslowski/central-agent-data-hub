@@ -417,6 +417,28 @@
         margin-top: 12px;
       }
 
+      .connection-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+        margin-top: 14px;
+      }
+
+      .connection-card {
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.52);
+      }
+
+      .connection-card h3 {
+        margin-top: 0;
+      }
+
+      .connection-card p:last-child {
+        margin-bottom: 0;
+      }
+
       .command-box {
         display: block;
         padding: 10px 12px;
@@ -899,10 +921,32 @@
 
             <section class="section agent-context">
               <h2>Use it with an agent</h2>
-              <p>For a chatbot, paste the context pack below before the task. For a local agent, use one of these commands so the start of work is visible.</p>
+              <p>Chatbots need copy and paste. Local agents should be connected once, then ask ADH for reviewed context at task start.</p>
+              <div class="connection-grid">
+                <article class="connection-card">
+                  <h3>Chatbot</h3>
+                  <p>Copy the context pack below into the chat before the task. This is manual, but it makes the handoff visible.</p>
+                </article>
+                <article class="connection-card">
+                  <h3>Local agent</h3>
+                  <p>Use MCP or the startup instruction once in the agent's local configuration. After that, the agent can request ADH context when work starts.</p>
+                  <div class="command-list">
+                    <code class="command-box">{{ agent_context.local_agent.install_mcp }}</code>
+                    <code class="command-box">{{ agent_context.local_agent.claude_mcp }}</code>
+                    <code class="command-box">{{ agent_context.local_agent.mcp_json }}</code>
+                    <code class="command-box">{{ agent_context.local_agent.startup_instruction }}</code>
+                  </div>
+                </article>
+                <article class="connection-card">
+                  <h3>Terminal fallback</h3>
+                  <p>Use this when the local agent is not connected yet. It keeps the start visible, but it should not be the long-term daily UX.</p>
+                  <code class="command-box">{{ agent_context.commands.agent_start }}</code>
+                </article>
+              </div>
+              <p>Hub View shows the handoff and the counts. It cannot prove that an unconnected agent used the context.</p>
+              <h3>Context pack for chatbot copy/paste</h3>
               <div class="command-list">
                 <code class="command-box">{{ agent_context.commands.prepare }}</code>
-                <code class="command-box">{{ agent_context.commands.agent_start }}</code>
               </div>
               <textarea class="context-pack" readonly aria-label="Agent context pack">{{ agent_context.markdown }}</textarea>
             </section>
@@ -955,7 +999,7 @@
 
             <section class="agent-connect" id="connect-agent">
               <h2>Connect an agent</h2>
-              <p>Make ADH visible before work starts. Enter the task, then create a context pack showing which reviewed memory the agent should use.</p>
+              <p>Make ADH visible before work starts. Chatbots get a copyable context pack. Local agents should be connected once, then ask ADH for reviewed context at task start.</p>
               <form class="agent-form" method="get" action="/projects/{{ selected_project.slug }}/agent-context">
                 <input class="agent-input" type="text" name="task" value="Review this project with ADH context" aria-label="Task for the agent">
                 <button class="button" type="submit">Create context pack</button>

@@ -153,6 +153,12 @@ The generated view shows which reviewed facts, decisions, risks, questions,
 reports, and trail entries would be handed to a chatbot or local agent. It also
 shows how that context should influence the work.
 
+For chatbots, the practical path is copy and paste. For local agents, the
+better path is one-time connection: configure the agent to request ADH context
+at task start through the read-only MCP surface or an equivalent startup rule.
+The terminal start command remains useful as a visible fallback, not as the
+intended long-term daily UX.
+
 The normal run rhythm is:
 
 ```bash
@@ -203,6 +209,10 @@ The MCP server is deliberately read-only. It can list projects, build the same
 JSON context pack as `agent-hub prepare --format json`, search reviewed memory,
 and return the compact `agent-hub brief --format json` shape. It cannot
 remember, import, accept, reject, sync, or modify memory.
+
+For stdio MCP, the local agent normally launches `agent-hub mcp-serve` when it
+needs context. Hub View can show the setup and the context handoff, but ADH does
+not silently inject context into an unconfigured agent.
 
 Example Claude Code setup from this checkout:
 

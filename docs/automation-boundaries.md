@@ -36,6 +36,10 @@ human click from a project to a visible task context pack, using the same
 reviewed prepare path as the CLI. It may show how reviewed memory should shape
 an agent run, but it must not create, promote, or modify memory.
 
+Hub View may show one-time local agent connection instructions, such as MCP
+configuration or startup-rule text. These instructions make the handoff visible;
+they do not launch, control, or silently feed an unconfigured agent.
+
 The `ADH Context Loaded` receipt in `agent_start.sh`, `agent-hub prepare`, and
 Hub View is also read-only. It confirms which reviewed context is being handed
 to an agent or chatbot; it is not proof that an agent has already used that

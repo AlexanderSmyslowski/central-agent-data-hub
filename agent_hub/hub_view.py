@@ -6,6 +6,7 @@ import argparse
 from datetime import datetime, timezone
 import errno
 import ipaddress
+import json
 import os
 from pathlib import Path
 import secrets
@@ -199,6 +200,24 @@ def build_agent_context_view(payload: dict[str, object]) -> dict[str, object]:
         gap_summary = {}
     counts = agent_context_counts(payload)
     task = str(payload["task"])
+    mcp_json = {
+        "mcpServers": {
+            "agent-data-hub": {
+                "command": "agent-hub",
+                "args": ["mcp-serve"],
+            }
+        }
+    }
+    startup_instruction = "\n".join(
+        [
+            "At the start of ADH-related work:",
+            f'- ask Agent Data Hub for reviewed context for project "{project["slug"]}"',
+            f'- use the current task as the context-pack task: "{task}"',
+            "- show the ADH Context Loaded receipt or equivalent counts before acting",
+            "- treat reviewed decisions as constraints",
+            "- keep drafts and gaps labelled as unconfirmed",
+        ]
+    )
     return {
         "project_slug": project["slug"],
         "project_name": project["name"],
@@ -233,6 +252,22 @@ def build_agent_context_view(payload: dict[str, object]) -> dict[str, object]:
                     "--review",
                 ]
             ),
+        },
+        "local_agent": {
+            "install_mcp": shell_command(["pip", "install", "-e", ".[mcp]"]),
+            "claude_mcp": shell_command(
+                [
+                    "claude",
+                    "mcp",
+                    "add",
+                    "agent-data-hub",
+                    "--",
+                    "agent-hub",
+                    "mcp-serve",
+                ]
+            ),
+            "mcp_json": json.dumps(mcp_json, indent=2),
+            "startup_instruction": startup_instruction,
         },
         "markdown": prepare_markdown(payload),
     }
