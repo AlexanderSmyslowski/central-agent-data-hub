@@ -95,33 +95,45 @@ flowchart TD
 
 ## Public Quickstart
 
-For a public smoke test, use the dedicated neutral demo path:
+For the public demo path, start from a fresh clone and run one script:
 
-1. Create a virtual environment and install the local CLI:
+```bash
+git clone https://github.com/AlexanderSmyslowski/central-agent-data-hub.git
+cd central-agent-data-hub
+scripts/first_run_demo.sh
+```
+
+The script creates `.venv` if needed, installs the local CLI, creates `.env`
+from `.env.example` if missing, starts the isolated public demo database, runs
+the public demo check, then starts Hub View and prints the local URL to open.
+It does not overwrite an existing `.env`.
+
+For a non-blocking check without starting Hub View:
+
+```bash
+scripts/first_run_demo.sh --no-hub-view
+```
+
+Manual path:
 
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate
-pip install -e .
+.venv/bin/python -m pip install -e .
 cp .env.example .env
+scripts/db_start_public_demo.sh
+scripts/smoke_public_demo.sh
+AGENT_HUB_PUBLIC_DEMO=1 scripts/hub_view.sh
 ```
 
-For a guided local setup with calm defaults, run:
+For a later guided local operator setup with calm defaults, run:
 
 ```bash
 agent-hub setup
 ```
 
-The assistant asks only a few questions, shows the planned local changes, and
-writes a small local setup file before you start the demo path.
+The setup assistant is optional and is not required for the public demo.
 
-You can still run the underlying script directly:
-
-```bash
-scripts/setup_assistant.sh
-```
-
-2. Start the public demo database path:
+The public demo database path can also be started directly:
 
 ```bash
 scripts/db_start_public_demo.sh
@@ -130,18 +142,6 @@ scripts/db_start_public_demo.sh
 This path forces a separate local demo database (`agent_hub_demo` by default).
 It ignores `DATABASE_URL` from `.env` for the demo process so a maintainer's
 configured working database cannot be migrated or seeded by a public demo start.
-
-3. Run the end-to-end demo smoke:
-
-```bash
-scripts/smoke_public_demo.sh
-```
-
-4. Start the local review UI:
-
-```bash
-AGENT_HUB_PUBLIC_DEMO=1 scripts/hub_view.sh
-```
 
 Hub View is a local review surface, not the operational source of truth.
 

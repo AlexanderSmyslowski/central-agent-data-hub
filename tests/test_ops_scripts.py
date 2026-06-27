@@ -166,6 +166,49 @@ def test_public_demo_start_is_separate_from_maintainer_seed_path() -> None:
     assert 'apply_sql_file "seed/agentic_projects.sql"' not in script
 
 
+def test_first_run_demo_script_wraps_public_demo_path() -> None:
+    path = ROOT / "scripts/first_run_demo.sh"
+    script = read_script("scripts/first_run_demo.sh")
+
+    assert path.exists()
+    assert os.access(path, os.X_OK)
+    assert "set -euo pipefail" in script
+    assert "--no-hub-view" in script
+    assert '"$ROOT_DIR/.venv/bin/python" -m pip install -e "$ROOT_DIR"' in script
+    assert '"$ROOT_DIR/scripts/db_start_public_demo.sh"' in script
+    assert '"$ROOT_DIR/scripts/smoke_public_demo.sh"' in script
+    assert '"$ROOT_DIR/scripts/hub_view.sh" --host 127.0.0.1' in script
+    assert "AGENT_HUB_PUBLIC_DEMO=1" in script
+    assert "http://127.0.0.1:${hub_view_port}" in script
+    assert "HUB_VIEW_PORT:-8765" in script
+
+
+def test_first_run_demo_preserves_existing_env_and_venv_contract() -> None:
+    script = read_script("scripts/first_run_demo.sh")
+
+    assert 'if [[ ! -f "$ROOT_DIR/.env" ]]' in script
+    assert 'cp "$ROOT_DIR/.env.example" "$ROOT_DIR/.env"' in script
+    assert "Keeping existing .env" in script
+    assert "source .venv/bin/activate" not in script
+    assert ".venv/bin/activate" not in script
+    assert "docker info" in script
+    assert "sys.version_info >= (3, 11)" in script
+
+
+def test_first_run_demo_stays_public_and_docs_reference_it() -> None:
+    script = read_script("scripts/first_run_demo.sh")
+    readme = read_script("README.md")
+    getting_started = read_script("docs/public/getting-started.md")
+
+    for text in (script, readme, getting_started):
+        assert "commcats-de" not in text
+        assert "the-one-catering" not in text
+        assert "lamour" not in text
+
+    assert "scripts/first_run_demo.sh" in readme
+    assert "scripts/first_run_demo.sh" in getting_started
+
+
 def test_public_demo_mode_forces_demo_database_when_database_url_is_set() -> None:
     env = os.environ.copy()
     env.pop("AGENT_HUB_DB_NAME", None)

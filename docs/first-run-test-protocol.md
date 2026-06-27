@@ -151,20 +151,14 @@ is:
 git clone https://github.com/AlexanderSmyslowski/central-agent-data-hub.git
 cd central-agent-data-hub
 git checkout v0.1.2
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e .
-cp .env.example .env
-scripts/db_start_public_demo.sh
-bash scripts/smoke_public_demo.sh
-AGENT_HUB_PUBLIC_DEMO=1 scripts/hub_view.sh
+scripts/first_run_demo.sh
 ```
 
-The getting-started guide also documents an optional guided setup
-(`agent-hub setup`) and a separate Markdown export step
-(`.venv/bin/python -m agent_hub.cli export`). Do not push the tester toward
-these. Let them find whichever path the docs lead them to, and note which one
-they take.
+The getting-started guide also documents a manual troubleshooting path, an
+optional guided local operator setup (`agent-hub setup`), and a separate
+Markdown export step (`.venv/bin/python -m agent_hub.cli export`). Do not push
+the tester toward these. Let them find whichever path the docs lead them to,
+and note which one they take.
 
 ---
 

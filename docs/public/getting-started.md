@@ -3,29 +3,57 @@
 This path is the recommended public preview path for the repository. It uses
 the neutral demo dataset, not the maintainer's own daily project seeds.
 
-## 1. Prepare Environment
+## 1. Run The Public Demo
 
 Use Python 3.11+, Docker, and Docker Compose. Make sure Docker is running
 before starting the local database.
 
-From a fresh checkout:
+From a fresh folder:
+
+```bash
+git clone https://github.com/AlexanderSmyslowski/central-agent-data-hub.git
+cd central-agent-data-hub
+scripts/first_run_demo.sh
+```
+
+The script creates `.venv` if needed, installs the local CLI, creates `.env`
+from `.env.example` if missing, starts the isolated public demo database, runs
+the public demo check, then starts Hub View and prints the local URL to open.
+It does not overwrite an existing `.env`.
+
+For a non-blocking check without starting Hub View:
+
+```bash
+scripts/first_run_demo.sh --no-hub-view
+```
+
+## 2. Manual Path For Troubleshooting
+
+If you want to run the same path step by step, use:
 
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate
-pip install -e .
+.venv/bin/python -m pip install -e .
 cp .env.example .env
+scripts/db_start_public_demo.sh
+bash scripts/smoke_public_demo.sh
+AGENT_HUB_PUBLIC_DEMO=1 scripts/hub_view.sh
 ```
 
-For the guided path, start here:
+The `.env.example` file contains local defaults. Copying it to `.env` creates
+your local configuration file. Existing `.env` files are local and should not be
+committed.
+
+Pip may print upgrade notices. You can ignore those during the first demo run
+as long as the install command finishes successfully.
+
+For a later guided local operator setup, run:
 
 ```bash
 agent-hub setup
 ```
 
-The assistant asks only a few questions, proposes defaults, can create a
-Signal Inbox, shows a summary before writing, and stores a local setup file
-without touching the database or silently registering projects.
+The setup assistant is optional and is not required for the public demo.
 
 If you prefer not to create `.env`, export the required variables manually:
 
@@ -34,7 +62,7 @@ export DATABASE_URL="postgresql://postgres:changeme@localhost:55432/agent_hub"
 export OBSIDIAN_EXPORT_DIR=".local/obsidian-export"
 ```
 
-## 2. Start The Public Demo Path
+## 3. Direct Public Demo Database Start
 
 ```bash
 scripts/db_start_public_demo.sh
@@ -53,19 +81,16 @@ database name containing `demo`, and set matching `AGENT_HUB_DB_NAME`,
 `AGENT_HUB_COMPOSE_PROJECT_NAME` values. The public demo path ignores
 `DATABASE_URL` from `.env` for its own process.
 
-## 3. Run The End-To-End Demo Smoke
+## 4. Run The Demo Check
 
 ```bash
 bash scripts/smoke_public_demo.sh
 ```
 
-## 4. Open Human Views
+This checks the demo database, core read paths, Markdown export, and Hub View
+startup. `Public demo smoke: ok` means the demo path is working.
 
-Export the Markdown projection:
-
-```bash
-.venv/bin/python -m agent_hub.cli export
-```
+## 5. Open Hub View
 
 Start Hub View:
 
@@ -76,6 +101,13 @@ AGENT_HUB_PUBLIC_DEMO=1 scripts/hub_view.sh
 Hub View is a local review surface. It reads reviewed memory and can accept or
 reject draft candidates as explicit review actions. PostgreSQL remains the
 reviewed source of truth.
+
+Optional: export the Markdown projection manually if you want to inspect the
+generated files:
+
+```bash
+.venv/bin/python -m agent_hub.cli export
+```
 
 ## Important Note About Startup Paths
 
