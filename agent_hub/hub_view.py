@@ -12,6 +12,7 @@ from pathlib import Path
 import secrets
 import shlex
 import socket
+import sys
 from typing import Any, Callable
 from urllib.parse import parse_qs, quote, urlparse
 from wsgiref.simple_server import make_server
@@ -200,11 +201,13 @@ def build_agent_context_view(payload: dict[str, object]) -> dict[str, object]:
         gap_summary = {}
     counts = agent_context_counts(payload)
     task = str(payload["task"])
+    mcp_server_command = [sys.executable, "-m", "agent_hub.cli", "mcp-serve"]
+    install_mcp_command = [sys.executable, "-m", "pip", "install", "-e", ".[mcp]"]
     mcp_json = {
         "mcpServers": {
             "agent-data-hub": {
-                "command": "agent-hub",
-                "args": ["mcp-serve"],
+                "command": sys.executable,
+                "args": ["-m", "agent_hub.cli", "mcp-serve"],
             }
         }
     }
@@ -254,7 +257,11 @@ def build_agent_context_view(payload: dict[str, object]) -> dict[str, object]:
             ),
         },
         "local_agent": {
-            "install_mcp": shell_command(["pip", "install", "-e", ".[mcp]"]),
+            "setup_command": (
+                f"{shell_command(install_mcp_command)} && "
+                f"{shell_command(['claude', 'mcp', 'add', 'agent-data-hub', '--', *mcp_server_command])}"
+            ),
+            "install_mcp": shell_command(install_mcp_command),
             "claude_mcp": shell_command(
                 [
                     "claude",
@@ -262,8 +269,7 @@ def build_agent_context_view(payload: dict[str, object]) -> dict[str, object]:
                     "add",
                     "agent-data-hub",
                     "--",
-                    "agent-hub",
-                    "mcp-serve",
+                    *mcp_server_command,
                 ]
             ),
             "mcp_json": json.dumps(mcp_json, indent=2),
