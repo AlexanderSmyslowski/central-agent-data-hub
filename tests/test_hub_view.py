@@ -629,10 +629,10 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
                         "claude mcp add agent-data-hub -- python -m agent_hub.cli mcp-serve"
                     ),
                     "codex_command": (
-                        "scripts/install_repo_agent_memory.sh --repo /path/to/project "
+                        'scripts/install_repo_agent_memory.sh --repo "$PWD" '
                         "--project central-agent-data-hub"
                     ),
-                    "codex_needs_repo_path": True,
+                    "codex_uses_current_directory": True,
                     "install_mcp": "pip install -e '.[mcp]'",
                     "claude_mcp": "claude mcp add agent-data-hub -- agent-hub mcp-serve",
                     "mcp_json": '{"mcpServers": {"agent-data-hub": {"command": "agent-hub"}}}',
@@ -680,8 +680,9 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "does not run commands or write an agent configuration by itself" in body
     assert "is instructed to request ADH context" in body
     assert "AGENTS.md" in body
-    assert "Replace" in body
-    assert "&lt;project-repo-path&gt;" in body
+    assert "Run this from the project repository" in body
+    assert "$PWD" in body
+    assert "project-repo-path" not in body
     assert "Add ADH as a local MCP server once" in body
     assert "claude mcp add agent-data-hub" in body
     assert "Manual fallback" in body
@@ -766,15 +767,9 @@ def test_agent_context_commands_are_shell_quoted_for_copy_paste(monkeypatch) -> 
         [sys.executable, "-m", "pip", "install", "-e", ".[mcp]"]
     )
     assert view["local_agent"]["codex_command"] == hub_view.shell_command(
-        [
-            str(hub_view.Path(hub_view.__file__).resolve().parents[1] / "scripts" / "install_repo_agent_memory.sh"),
-            "--repo",
-            "<project-repo-path>",
-            "--project",
-            "central-agent-data-hub",
-        ]
-    )
-    assert view["local_agent"]["codex_needs_repo_path"] is True
+        [str(hub_view.Path(hub_view.__file__).resolve().parents[1] / "scripts" / "install_repo_agent_memory.sh")]
+    ) + ' --repo "$PWD" --project central-agent-data-hub'
+    assert view["local_agent"]["codex_uses_current_directory"] is True
     assert (
         view["local_agent"]["claude_mcp"]
         == hub_view.shell_command(
