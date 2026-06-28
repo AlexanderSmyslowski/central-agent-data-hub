@@ -224,6 +224,47 @@
         line-height: 1.45;
       }
 
+      .action-strip {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 10px;
+        margin: 22px 0 18px;
+      }
+
+      .action-link {
+        display: block;
+        min-height: 82px;
+        padding: 14px 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.5);
+      }
+
+      .action-link.primary {
+        border-color: rgba(45, 74, 95, 0.34);
+        background: rgba(255, 255, 255, 0.72);
+      }
+
+      .action-link:hover,
+      .action-link:focus-visible {
+        border-color: rgba(45, 74, 95, 0.42);
+        background: var(--surface-strong);
+      }
+
+      .action-title {
+        display: block;
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .action-copy {
+        display: block;
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
       .project-counts {
         display: flex;
         flex-wrap: wrap;

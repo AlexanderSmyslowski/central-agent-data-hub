@@ -14,6 +14,25 @@
   </div>
 </div>
 
+<nav class="action-strip" aria-label="Project actions">
+  <a class="action-link primary" href="#connect-agent">
+    <span class="action-title">Hand context to an agent</span>
+    <span class="action-copy">Create a visible context pack before work starts.</span>
+  </a>
+  <a class="action-link" href="/inbox">
+    <span class="action-title">Review suggested changes</span>
+    <span class="action-copy">{{ draft_total | default(0) }} items waiting across projects.</span>
+  </a>
+  <a class="action-link" href="#reviewed-memory">
+    <span class="action-title">Inspect reviewed memory</span>
+    <span class="action-copy">Read the facts, decisions, and reports agents can use.</span>
+  </a>
+  <a class="action-link" href="#quality">
+    <span class="action-title">Check memory quality</span>
+    <span class="action-copy">See gaps, relations, and review-health signals.</span>
+  </a>
+</nav>
+
 <div class="summary-grid">
   <a class="summary-tile" href="#reviewed-memory">
     <div class="summary-label">Reviewed memory</div>

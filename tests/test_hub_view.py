@@ -764,6 +764,13 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Central Agent Data Hub" in body
     assert "Selected" in body
     assert "2 items to review" in body
+    assert 'aria-label="Project actions"' in body
+    assert "Hand context to an agent" in body
+    assert "Create a visible context pack before work starts." in body
+    assert "Review suggested changes" in body
+    assert "Inspect reviewed memory" in body
+    assert "Check memory quality" in body
+    assert 'href="#connect-agent"' in body
     assert 'href="#reviewed-memory"' in body
     assert 'href="#risks-and-questions"' in body
     assert 'href="#latest-status"' in body
