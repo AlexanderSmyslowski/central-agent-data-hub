@@ -472,6 +472,20 @@
         background: rgba(255, 255, 255, 0.52);
       }
 
+      .connection-card.featured {
+        border-color: rgba(45, 74, 95, 0.3);
+        background: rgba(255, 255, 255, 0.74);
+      }
+
+      .connection-card-label {
+        margin-bottom: 8px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
       .connection-card h3 {
         margin-top: 0;
       }
@@ -502,6 +516,14 @@
         align-items: start;
       }
 
+      .connection-card .copy-row {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .connection-card .copy-button {
+        justify-self: start;
+      }
+
       .copy-button {
         white-space: nowrap;
       }
@@ -510,6 +532,10 @@
         margin: 8px 0 0;
         color: var(--muted);
         font-size: 0.92rem;
+      }
+
+      .setup-note code {
+        overflow-wrap: anywhere;
       }
 
       .setup-feedback {

@@ -72,45 +72,12 @@
   {% endif %}
   <div class="connection-grid">
     <article class="connection-card">
+      <div class="connection-card-label">Manual every task</div>
       <h3>Chatbot</h3>
       <p>Every task: copy the context pack below into the chat before the task. This is manual, but it makes the handoff visible.</p>
     </article>
-    <article class="connection-card">
-      <h3>Claude Code</h3>
-      <p>One-time setup: copy and run this command once. It installs ADH's optional MCP support and registers ADH as a local read-only context server for Claude Code.</p>
-      <div class="copy-row">
-        <code id="claude-code-setup-command" class="command-box">{{ agent_context.local_agent.setup_command }}</code>
-        <button class="button copy-button" type="button" data-copy-target="claude-code-setup-command">Copy Claude setup</button>
-      </div>
-      <p class="setup-note">After setup, Claude Code is instructed to request ADH context at the start of ADH-related work.</p>
-      <details class="setup-details">
-        <summary>Show Claude manual setup pieces</summary>
-        <ol class="setup-steps">
-          <li>
-            <span class="setup-step-title">Install MCP support once</span>
-            <div class="copy-row">
-              <code id="install-mcp-command" class="command-box">{{ agent_context.local_agent.install_mcp }}</code>
-              <button class="button copy-button" type="button" data-copy-target="install-mcp-command">Copy</button>
-            </div>
-          </li>
-          <li>
-            <span class="setup-step-title">Add ADH as a local MCP server once</span>
-            <div class="copy-row">
-              <code id="claude-mcp-command" class="command-box">{{ agent_context.local_agent.claude_mcp }}</code>
-              <button class="button copy-button" type="button" data-copy-target="claude-mcp-command">Copy</button>
-            </div>
-          </li>
-          <li>
-            <span class="setup-step-title">Tell the agent what to do at task start</span>
-            <div class="copy-row">
-              <code id="startup-instruction" class="command-box">{{ agent_context.local_agent.startup_instruction }}</code>
-              <button class="button copy-button" type="button" data-copy-target="startup-instruction">Copy</button>
-            </div>
-          </li>
-        </ol>
-      </details>
-    </article>
-    <article class="connection-card">
+    <article class="connection-card featured">
+      <div class="connection-card-label">One local click</div>
       <h3>Codex</h3>
       {% if agent_context.local_agent.codex.preview %}
         {% if agent_context.local_agent.codex.can_install %}
@@ -154,6 +121,43 @@
       {% endif %}
     </article>
     <article class="connection-card">
+      <div class="connection-card-label">One copied command</div>
+      <h3>Claude Code</h3>
+      <p>One-time setup: copy and run this command once. It installs ADH's optional MCP support and registers ADH as a local read-only context server for Claude Code.</p>
+      <div class="copy-row">
+        <code id="claude-code-setup-command" class="command-box">{{ agent_context.local_agent.setup_command }}</code>
+        <button class="button copy-button" type="button" data-copy-target="claude-code-setup-command">Copy Claude setup</button>
+      </div>
+      <p class="setup-note">After setup, Claude Code is instructed to request ADH context at the start of ADH-related work.</p>
+      <details class="setup-details">
+        <summary>Show Claude manual setup pieces</summary>
+        <ol class="setup-steps">
+          <li>
+            <span class="setup-step-title">Install MCP support once</span>
+            <div class="copy-row">
+              <code id="install-mcp-command" class="command-box">{{ agent_context.local_agent.install_mcp }}</code>
+              <button class="button copy-button" type="button" data-copy-target="install-mcp-command">Copy</button>
+            </div>
+          </li>
+          <li>
+            <span class="setup-step-title">Add ADH as a local MCP server once</span>
+            <div class="copy-row">
+              <code id="claude-mcp-command" class="command-box">{{ agent_context.local_agent.claude_mcp }}</code>
+              <button class="button copy-button" type="button" data-copy-target="claude-mcp-command">Copy</button>
+            </div>
+          </li>
+          <li>
+            <span class="setup-step-title">Tell the agent what to do at task start</span>
+            <div class="copy-row">
+              <code id="startup-instruction" class="command-box">{{ agent_context.local_agent.startup_instruction }}</code>
+              <button class="button copy-button" type="button" data-copy-target="startup-instruction">Copy</button>
+            </div>
+          </li>
+        </ol>
+      </details>
+    </article>
+    <article class="connection-card">
+      <div class="connection-card-label">Persistent instruction</div>
       <h3>Hermes or custom agent</h3>
       <p>One-time setup: copy this startup rule into the agent's own persistent instruction or runtime configuration.</p>
       <div class="copy-row">
@@ -162,6 +166,7 @@
       </div>
     </article>
     <article class="connection-card">
+      <div class="connection-card-label">Config shape</div>
       <h3>Other MCP-compatible agent</h3>
       <p>Use this stdio MCP config shape when the agent can launch local MCP servers but is not Claude Code.</p>
       <div class="copy-row">
@@ -170,6 +175,7 @@
       </div>
     </article>
     <article class="connection-card">
+      <div class="connection-card-label">Temporary fallback</div>
       <h3>Terminal fallback</h3>
       <p>Manual fallback: use this only until the local agent is connected. It starts one visible ADH-backed run, but it is not automation.</p>
       <div class="copy-row">

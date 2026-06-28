@@ -901,8 +901,15 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "1 unanswered questions" in body
     assert "Claude Code" in body
     assert "Codex" in body
+    assert body.index("<h3>Codex</h3>") < body.index("<h3>Claude Code</h3>")
     assert "Hermes or custom agent" in body
     assert "Other MCP-compatible agent" in body
+    assert "Manual every task" in body
+    assert "One local click" in body
+    assert "One copied command" in body
+    assert "Persistent instruction" in body
+    assert "Config shape" in body
+    assert "Temporary fallback" in body
     assert "One-time setup" in body
     assert "Copy Claude setup" in body
     assert "Install Codex setup" in body
