@@ -9,103 +9,104 @@
     <div>{{ selected_project.slug }}</div>
     <div>{{ selected_project.status }}{% if selected_project.project_type %} · {{ selected_project.project_type }}{% endif %}</div>
     {% if selected_project.updated_at %}
-      <div>Updated {{ selected_project.updated_at }}</div>
+      <div>{{ t('project_updated', updated_at=selected_project.updated_at) }}</div>
     {% endif %}
   </div>
 </div>
 
-<nav class="action-strip" aria-label="Project actions">
+<nav class="action-strip" aria-label="{{ t('project_actions') }}">
   <a class="action-link primary" href="#connect-agent">
-    <span class="action-title">Use ADH with an agent</span>
-    <span class="action-copy">Prepare the reviewed context before work starts.</span>
+    <span class="action-title">{{ t('use_adh_agent') }}</span>
+    <span class="action-copy">{{ t('use_adh_agent_copy') }}</span>
   </a>
-  <a class="action-link" href="/inbox">
-    <span class="action-title">Review suggested changes</span>
-    <span class="action-copy">{{ draft_total | default(0) }} items waiting across projects.</span>
+  <a class="action-link" href="{{ url_for('/inbox') }}">
+    <span class="action-title">{{ t('review_suggested_changes') }}</span>
+    <span class="action-copy">{{ t('review_suggested_changes_copy', count=draft_total | default(0)) }}</span>
   </a>
   <a class="action-link" href="#memory-explorer">
-    <span class="action-title">Find reviewed memory</span>
-    <span class="action-copy">Filter visible facts, decisions, risks, questions, reports, and relations.</span>
+    <span class="action-title">{{ t('find_reviewed_memory') }}</span>
+    <span class="action-copy">{{ t('reviewed_memory_copy') }}</span>
   </a>
   <a class="action-link" href="#quality">
-    <span class="action-title">Check memory quality</span>
-    <span class="action-copy">See gaps, relations, and review-health signals.</span>
+    <span class="action-title">{{ t('check_memory_quality') }}</span>
+    <span class="action-copy">{{ t('check_memory_quality_copy') }}</span>
   </a>
 </nav>
 
 <div class="summary-grid">
   <a class="summary-tile" href="#reviewed-memory">
-    <div class="summary-label">Reviewed memory</div>
+    <div class="summary-label">{{ t('reviewed_memory') }}</div>
     <div class="summary-value">{{ selected_project.counts.facts + selected_project.counts.decisions + selected_project.counts.risks + selected_project.counts.open_questions + selected_project.counts.reports }}</div>
-    <div class="summary-subtle">{{ selected_project.counts.facts }} facts · {{ selected_project.counts.decisions }} decisions · {{ selected_project.counts.reports }} reports</div>
+    <div class="summary-subtle">{{ selected_project.counts.facts }} {{ t('facts') }} · {{ selected_project.counts.decisions }} {{ t('agent_status_decisions') | lower }} · {{ selected_project.counts.reports }} {{ t('reports') }}</div>
   </a>
   <a class="summary-tile" href="#risks-and-questions">
-    <div class="summary-label">Risks and questions</div>
+    <div class="summary-label">{{ t('risks_and_questions') }}</div>
     <div class="summary-value">{{ selected_project.counts.open_questions + selected_project.counts.risks }}</div>
-    <div class="summary-subtle">{{ selected_project.counts.open_questions }} open questions · {{ selected_project.counts.risks }} active risks</div>
+    <div class="summary-subtle">{{ selected_project.counts.open_questions }} {{ t('open_questions') }} · {{ selected_project.counts.risks }} {{ t('risks') }}</div>
   </a>
   <a class="summary-tile" href="#latest-status">
-    <div class="summary-label">Latest status</div>
+    <div class="summary-label">{{ t('latest_status') }}</div>
     <div class="summary-value">{{ selected_project.counts.reports }}</div>
-    <div class="summary-subtle">{% if selected_project.reports %}{{ selected_project.reports[0].title }}{% else %}No reports yet{% endif %}</div>
+    <div class="summary-subtle">{% if selected_project.reports %}{{ selected_project.reports[0].title }}{% else %}{{ t('no_reports') }}{% endif %}</div>
   </a>
   <a class="summary-tile" href="#quality">
-    <div class="summary-label">Quality</div>
+    <div class="summary-label">{{ t('quality') }}</div>
     <div class="summary-value">{{ selected_project.quality.score }}</div>
     <div class="summary-subtle">{{ selected_project.quality.status }} · relation coverage {{ selected_project.quality.relation_coverage }}</div>
   </a>
-  <a class="summary-tile" href="/inbox">
-    <div class="summary-label">Review Inbox</div>
+  <a class="summary-tile" href="{{ url_for('/inbox') }}">
+    <div class="summary-label">{{ t('review_inbox') }}</div>
     <div class="summary-value">{{ draft_total | default(0) }}</div>
-    <div class="summary-subtle">all items to review</div>
+    <div class="summary-subtle">{{ t('all_items_to_review') }}</div>
   </a>
 </div>
 
-<p class="overview-note">This overview reads reviewed project memory from the local Hub database. Suggested memory changes are separate until a human accepts or rejects them.</p>
+<p class="overview-note">{{ t('overview_note') }}</p>
 
-<section class="memory-explorer" id="memory-explorer" data-memory-explorer>
+<section class="memory-explorer" id="memory-explorer" data-memory-explorer data-showing-template="{{ t('memory_search_showing', count='__count__') }}" data-result-template="{{ t('memory_search_result', count='__count__', query='__query__') }}">
   <div>
-    <h2>Find reviewed memory</h2>
-    <p>Search the reviewed items already shown on this page. Matches appear below while the page sections are filtered.</p>
+    <h2>{{ t('find_reviewed_memory') }}</h2>
+    <p>{{ t('memory_search_description') }}</p>
   </div>
   <div class="memory-filter-row">
-    <label class="memory-filter-label" for="memory-filter">Search this page</label>
+    <label class="memory-filter-label" for="memory-filter">{{ t('memory_search_label') }}</label>
     <div class="memory-filter-control">
-      <input id="memory-filter" class="memory-filter-input" type="search" data-memory-filter placeholder="risk, decision, source, report..." autocomplete="off" enterkeyhint="done">
-      <button class="memory-filter-clear" type="button" data-memory-clear hidden>Show all</button>
+      <input id="memory-filter" class="memory-filter-input" type="search" data-memory-filter placeholder="{{ t('memory_search_placeholder') }}" autocomplete="off" enterkeyhint="done">
+      <button class="memory-filter-clear" type="button" data-memory-clear hidden>{{ t('memory_search_clear') }}</button>
     </div>
   </div>
-  <p class="memory-filter-meta" data-memory-results>Showing visible reviewed memory on this page.</p>
+  <p class="memory-filter-meta" data-memory-results>{{ t('memory_search_initial') }}</p>
   <div class="memory-filter-hits" data-memory-hits hidden></div>
-  <p class="empty" data-memory-empty hidden>No visible memory matches this filter.</p>
-  <div class="memory-type-links" aria-label="Memory sections">
-    <a href="#reviewed-memory">Reviewed memory</a>
-    <a href="#risks-and-questions">Risks and questions</a>
-    <a href="#latest-status">Latest status</a>
-    <a href="#relations">Relations</a>
+  <p class="empty" data-memory-empty hidden>{{ t('memory_search_empty') }}</p>
+  <div class="memory-type-links" aria-label="{{ t('reviewed_memory') }}">
+    <a href="#reviewed-memory">{{ t('reviewed_memory') }}</a>
+    <a href="#risks-and-questions">{{ t('risks_and_questions') }}</a>
+    <a href="#latest-status">{{ t('latest_status') }}</a>
+    <a href="#relations">{{ t('relations') }}</a>
   </div>
 </section>
 
 <section class="agent-connect" id="connect-agent">
-  <h2>Connect an agent</h2>
-  <p>Prepare a visible handoff before work starts. The next screen shows what ADH would give the agent, what it can verify, and which setup path fits your agent.</p>
+  <h2>{{ t('connect_an_agent') }}</h2>
+  <p>{{ t('agent_handoff_form_help') }}</p>
   <form class="agent-form" method="get" action="/projects/{{ selected_project.slug }}/agent-context">
-    <label class="agent-form-label" for="agent-task">Task for the agent</label>
+    <input type="hidden" name="lang" value="{{ language }}">
+    <label class="agent-form-label" for="agent-task">{{ t('task_for_agent') }}</label>
     <div class="agent-form-row">
-      <input id="agent-task" class="agent-input" type="text" name="task" value="Review this project with ADH context" aria-label="Task for the agent">
-      <button class="button primary-button" type="submit">Prepare agent handoff</button>
+      <input id="agent-task" class="agent-input" type="text" name="task" value="{{ t('default_agent_task') }}" aria-label="{{ t('task_for_agent') }}">
+      <button class="button primary-button" type="submit">{{ t('prepare_agent_handoff') }}</button>
     </div>
   </form>
 </section>
 
-<a class="review-callout" href="/inbox">
-  <strong>Review suggested memory changes</strong>
-  <span>Drafts are proposed memory changes across projects. They are not reviewed memory until accepted.</span>
+<a class="review-callout" href="{{ url_for('/inbox') }}">
+  <strong>{{ t('review_suggested_changes') }}</strong>
+  <span>{{ t('drafts_review_note') }}</span>
 </a>
 
 <section class="section" id="reviewed-memory">
-  <h2>Reviewed memory</h2>
-  <h3>Decisions</h3>
+  <h2>{{ t('reviewed_memory') }}</h2>
+  <h3>{{ t('agent_status_decisions') }}</h3>
   {% if selected_project.decisions %}
     <div class="list">
       {% for row in selected_project.decisions %}
@@ -118,10 +119,10 @@
       {% endfor %}
     </div>
   {% else %}
-    <p class="empty">No active decisions are visible.</p>
+    <p class="empty">{{ t('no_active_decisions') }}</p>
   {% endif %}
 
-  <h3>Facts</h3>
+  <h3>{{ t('agent_status_facts') }}</h3>
   {% if selected_project.facts %}
     <div class="list">
       {% for row in selected_project.facts %}
@@ -135,10 +136,10 @@
       {% endfor %}
     </div>
   {% else %}
-    <p class="empty">No reviewed facts are visible.</p>
+    <p class="empty">{{ t('no_reviewed_facts') }}</p>
   {% endif %}
 
-  <h3>Recent reports</h3>
+  <h3>{{ t('agent_status_reports') }}</h3>
   {% if selected_project.reports %}
     <div class="list">
       {% for row in selected_project.reports %}
@@ -151,13 +152,13 @@
       {% endfor %}
     </div>
   {% else %}
-    <p class="empty">No reports are visible.</p>
+    <p class="empty">{{ t('no_reports') }}</p>
   {% endif %}
 </section>
 
 <section class="section" id="risks-and-questions">
-  <h2>Risks and questions</h2>
-  <h3>Risks</h3>
+  <h2>{{ t('risks_and_questions') }}</h2>
+  <h3>{{ t('agent_status_risks') }}</h3>
   {% if selected_project.risks %}
     <div class="list">
       {% for row in selected_project.risks %}
@@ -168,10 +169,10 @@
       {% endfor %}
     </div>
   {% else %}
-    <p class="empty">No active risks are visible.</p>
+    <p class="empty">{{ t('no_active_risks') }}</p>
   {% endif %}
 
-  <h3>Open questions</h3>
+  <h3>{{ t('agent_status_open_questions') }}</h3>
   {% if selected_project.open_questions %}
     <div class="list">
       {% for row in selected_project.open_questions %}
@@ -184,14 +185,14 @@
       {% endfor %}
     </div>
   {% else %}
-    <p class="empty">No unresolved questions are visible.</p>
+    <p class="empty">{{ t('no_unresolved_questions') }}</p>
   {% endif %}
 </section>
 
 <section class="section" id="latest-status">
-  <h2>Latest status</h2>
+  <h2>{{ t('latest_status') }}</h2>
   {% if selected_project.updated_at %}
-    <p class="item-meta">Project updated {{ selected_project.updated_at }}.</p>
+    <p class="item-meta">{{ t('project_updated', updated_at=selected_project.updated_at) }}</p>
   {% endif %}
   {% if selected_project.reports %}
     <div class="list">
@@ -207,12 +208,12 @@
       {% endfor %}
     </div>
   {% else %}
-    <p class="empty">No status report is visible.</p>
+    <p class="empty">{{ t('latest_status_empty') }}</p>
   {% endif %}
 </section>
 
 <section class="section" id="quality">
-  <h2>Quality snapshot</h2>
+  <h2>{{ t('quality_snapshot') }}</h2>
   <div class="project-counts">
     {% for label, count in selected_project.quality.gaps %}
       <span>{{ count }} {{ label }}</span>
@@ -221,7 +222,7 @@
 </section>
 
 <section class="section" id="relations">
-  <h2>Relations</h2>
+  <h2>{{ t('relations') }}</h2>
   {% if selected_project.relations %}
     <div class="relation-list">
       {% for row in selected_project.relations %}
@@ -233,6 +234,6 @@
       {% endfor %}
     </div>
   {% else %}
-    <p class="empty">No relations are visible.</p>
+    <p class="empty">{{ t('no_relations') }}</p>
   {% endif %}
 </section>

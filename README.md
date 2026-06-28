@@ -155,7 +155,9 @@ This path forces a separate local demo database (`agent_hub_demo` by default).
 It ignores `DATABASE_URL` from `.env` for the demo process so a maintainer's
 configured working database cannot be migrated or seeded by a public demo start.
 
-Hub View is a local review surface, not the operational source of truth.
+Hub View is a local review surface, not the operational source of truth. The
+interface can be switched between English and German; stored memory stays in
+its original language.
 
 ## Agent Workflow
 
@@ -446,6 +448,7 @@ local working data. It continues to use the configured `.env` database.
 
 - [Public overview](docs/public/agent-data-hub-overview.md)
 - [Public getting started](docs/public/getting-started.md)
+- [v0.1.10 release notes](docs/public/v0.1.10-release-notes.md)
 - [v0.1.9 release notes](docs/public/v0.1.9-release-notes.md)
 - [v0.1.8 release notes](docs/public/v0.1.8-release-notes.md)
 - [v0.1.7 release notes](docs/public/v0.1.7-release-notes.md)

@@ -2,8 +2,9 @@
   (function () {
     function markCopied(button) {
       var original = button.getAttribute("data-copy-label") || button.textContent;
+      var copied = document.body.getAttribute("data-copied-label") || "Copied";
       button.setAttribute("data-copy-label", original);
-      button.textContent = "Copied";
+      button.textContent = copied;
       window.setTimeout(function () {
         button.textContent = original;
       }, 1200);
@@ -54,6 +55,8 @@
       var hits = memoryExplorer.querySelector("[data-memory-hits]");
       var clear = memoryExplorer.querySelector("[data-memory-clear]");
       var items = Array.prototype.slice.call(document.querySelectorAll("[data-memory-item]"));
+      var showingTemplate = memoryExplorer.getAttribute("data-showing-template") || "Showing __count__ visible memory items on this page.";
+      var resultTemplate = memoryExplorer.getAttribute("data-result-template") || '__count__ matches for "__query__".';
 
       items.forEach(function (item, index) {
         if (!item.id) {
@@ -70,6 +73,12 @@
       function itemHaystack(item) {
         var type = item.getAttribute("data-memory-type") || "";
         return (type + " " + (item.textContent || "")).toLowerCase();
+      }
+
+      function fillTemplate(template, count, query) {
+        return template
+          .replace(/__count__/g, String(count))
+          .replace(/__query__/g, query || "");
       }
 
       function renderHits(matches, query) {
@@ -118,9 +127,9 @@
 
         if (result) {
           if (query) {
-            result.textContent = visible + " matches for \"" + filter.value.trim() + "\".";
+            result.textContent = fillTemplate(resultTemplate, visible, filter.value.trim());
           } else {
-            result.textContent = "Showing " + visible + " visible memory items on this page.";
+            result.textContent = fillTemplate(showingTemplate, visible, "");
           }
         }
         renderHits(matches, query);

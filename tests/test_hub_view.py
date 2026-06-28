@@ -127,6 +127,27 @@ def test_render_page_includes_local_review_claim() -> None:
     assert "Prototype language: English." in body
 
 
+def test_render_page_can_switch_to_german_chrome() -> None:
+    body = hub_view.render_page(
+        {
+            "projects": [],
+            "selected_project": None,
+            "not_found_slug": None,
+        },
+        200,
+        language="de",
+        current_path="/",
+        query_string="lang=de",
+    ).decode("utf-8")
+
+    assert '<html lang="de">' in body
+    assert "lokale Review-Oberfläche für Agent Data Hub" in body
+    assert "Leseoberfläche + Review-Aktionen" in body
+    assert "Aktive Projekte" in body
+    assert "Deutsch" in body
+    assert 'href="/"' in body
+
+
 def test_application_rejects_non_get_requests() -> None:
     captured: dict[str, object] = {}
 
@@ -764,7 +785,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert captured["status"] == "200 OK"
     assert "Central Agent Data Hub" in body
     assert "Selected" in body
-    assert "2 items to review" in body
+    assert "2 review items" in body
     assert 'aria-label="Project actions"' in body
     assert "Use ADH with an agent" in body
     assert "Prepare the reviewed context before work starts." in body
@@ -794,7 +815,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Search this page" in body
     assert "Matches appear below while the page sections are filtered." in body
     assert "Showing visible reviewed memory on this page." in body
-    assert "No visible memory matches this filter." in body
+    assert "No visible memory matches this search." in body
     assert "itemHaystack" in body
     assert 'getAttribute("data-memory-type")' in body
     assert "memory-filter-hit" in body
@@ -814,7 +835,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "primary-button" in body
     assert "Latest status" in body
     assert "all items to review" in body
-    assert "Review suggested memory changes" in body
+    assert "Review suggested changes" in body
     assert "suggested memory changes" in body
     assert "Drafts are proposed memory changes across projects. They are not reviewed memory until accepted." in body
     assert 'href="/inbox"' in body
@@ -824,6 +845,71 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "supports" in body
     assert "alexander" not in body.lower()
     assert "ronak" not in body.lower()
+
+
+def test_project_detail_can_render_german_chrome_without_translating_memory() -> None:
+    body = hub_view.render_page(
+        {
+            "projects": [],
+            "selected_project": {
+                "name": "Central Agent Data Hub Demo",
+                "slug": "central-agent-data-hub-demo",
+                "description": "Neutral demo project.",
+                "status": "active",
+                "project_type": "demo",
+                "updated_at": "2026-06-05 08:00 UTC",
+                "counts": {
+                    "facts": 1,
+                    "decisions": 0,
+                    "risks": 1,
+                    "open_questions": 0,
+                    "reports": 0,
+                },
+                "quality": {
+                    "score": 80,
+                    "status": "ok",
+                    "relation_count": 0,
+                    "relation_coverage": "0.00",
+                    "gaps": [],
+                },
+                "decisions": [],
+                "facts": [
+                    {
+                        "statement": "Reviewed facts are visible in Hub View.",
+                        "source": "demo",
+                        "confidence": 0.9,
+                    }
+                ],
+                "risks": [
+                    {
+                        "title": "Demo risk stays in the original stored language.",
+                        "severity": "low",
+                        "impact": "test",
+                    }
+                ],
+                "open_questions": [],
+                "reports": [],
+                "relations": [],
+            },
+            "not_found_slug": None,
+            "draft_total": 0,
+        },
+        200,
+        language="de",
+        current_path="/projects/central-agent-data-hub-demo",
+        query_string="lang=de",
+    ).decode("utf-8")
+
+    assert '<html lang="de">' in body
+    assert "Geprüftes Memory finden" in body
+    assert "Diese Seite durchsuchen" in body
+    assert "Agent verbinden" in body
+    assert "Dieses Projekt mit ADH-Kontext prüfen" in body
+    assert "Reviewed facts are visible in Hub View." in body
+    assert "Demo risk stays in the original stored language." in body
+    assert 'href="/inbox?lang=de"' in body
+    assert 'action="/projects/central-agent-data-hub-demo/agent-context"' in body
+    assert 'name="lang" value="de"' in body
 
 
 def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> None:
@@ -937,8 +1023,8 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert 'aria-label="Agent connection steps"' in body
     assert "Choose agent" in body
     assert "Connect once" in body
-    assert "Check handoff" in body
-    assert "Choose your agent" in body
+    assert "Check the handoff" in body
+    assert "Choose agent" in body
     assert 'href="#agent-chatbot"' in body
     assert 'href="#agent-codex"' in body
     assert 'href="#agent-claude"' in body

@@ -25,6 +25,7 @@ from agent_hub.hub_view_models import (
     metadata_project_local_path,
     render_page,
 )
+from agent_hub.hub_view_i18n import resolve_language, with_language
 from agent_hub.repo_agent_memory import (
     DEFAULT_TARGET_FILE,
     RepoAgentMemoryError,
@@ -114,13 +115,21 @@ def query_value(environ: dict[str, object], key: str) -> str | None:
     values = parsed.get(key)
     return values[-1] if values else None
 
-def inbox_redirect(param: str, message: str) -> str:
-    return f"/inbox?{param}={quote(message)}"
+def inbox_redirect(param: str, message: str, *, language: str = "en") -> str:
+    return with_language(f"/inbox?{param}={quote(message)}", language)
 
-def agent_context_redirect(slug: str, task: str, param: str, message: str) -> str:
-    return (
+def agent_context_redirect(
+    slug: str,
+    task: str,
+    param: str,
+    message: str,
+    *,
+    language: str = "en",
+) -> str:
+    return with_language(
         f"/projects/{quote(slug, safe='')}/agent-context"
-        f"?task={quote(task)}&{param}={quote(message)}"
+        f"?task={quote(task)}&{param}={quote(message)}",
+        language,
     )
 
 def project_action_slug(path: str, suffix: str) -> str | None:
@@ -151,9 +160,10 @@ class HubViewApplication:
     ) -> list[bytes]:
         method = str(environ.get("REQUEST_METHOD") or "GET").upper()
         path = str(environ.get("PATH_INFO") or "/")
+        language = resolve_language(query_value(environ, "lang"))
 
         if method == "GET":
-            return self.handle_get(path, environ, start_response)
+            return self.handle_get(path, environ, start_response, language=language)
         if method == "POST" and path in {"/inbox/accept", "/inbox/reject"}:
             return self.handle_inbox_post(path, environ, start_response)
         if method == "POST" and project_action_slug(path, "/codex-setup") is not None:
@@ -168,6 +178,8 @@ class HubViewApplication:
         path: str,
         environ: dict[str, object],
         start_response: Callable[[str, list[tuple[str, str]]], Any],
+        *,
+        language: str,
     ) -> list[bytes]:
         selected_slug: str | None = None
         view_name = "projects"
@@ -194,6 +206,9 @@ class HubViewApplication:
                 view_name=view_name,
                 csrf_token=self.csrf_token,
                 inbox_enabled=self.inbox_enabled,
+                language=language,
+                current_path=path,
+                query_string=str(environ.get("QUERY_STRING") or ""),
             )
             return html_response(start_response, status_code, body)
         elif path.startswith("/projects/"):
@@ -217,6 +232,9 @@ class HubViewApplication:
                 view_name=view_name,
                 csrf_token=self.csrf_token,
                 inbox_enabled=self.inbox_enabled,
+                language=language,
+                current_path=path,
+                query_string=str(environ.get("QUERY_STRING") or ""),
             )
             return html_response(start_response, status_code, body)
         else:
@@ -231,6 +249,9 @@ class HubViewApplication:
             view_name=view_name,
             csrf_token=self.csrf_token,
             inbox_enabled=self.inbox_enabled,
+            language=language,
+            current_path=path,
+            query_string=str(environ.get("QUERY_STRING") or ""),
         )
         return html_response(start_response, status_code, body)
 
@@ -260,6 +281,7 @@ class HubViewApplication:
             )
 
         form = read_post_form(environ)
+        language = resolve_language(form.get("lang"))
         if form.get("csrf_token") != self.csrf_token:
             return text_response(
                 start_response,
@@ -273,7 +295,7 @@ class HubViewApplication:
         if not draft_id or not item_type:
             return redirect_response(
                 start_response,
-                inbox_redirect("error", "The draft could not be reviewed."),
+                inbox_redirect("error", "The draft could not be reviewed.", language=language),
             )
 
         try:
@@ -292,24 +314,32 @@ class HubViewApplication:
         except ValueError:
             return redirect_response(
                 start_response,
-                inbox_redirect("error", "The draft does not match this review action."),
+                inbox_redirect(
+                    "error",
+                    "The draft does not match this review action.",
+                    language=language,
+                ),
             )
         except Exception:
             return redirect_response(
                 start_response,
-                inbox_redirect("error", "The review action could not be saved."),
+                inbox_redirect(
+                    "error",
+                    "The review action could not be saved.",
+                    language=language,
+                ),
             )
 
         if not result:
             return redirect_response(
                 start_response,
-                inbox_redirect("error", "This draft is no longer open."),
+                inbox_redirect("error", "This draft is no longer open.", language=language),
             )
 
         label = "Accepted" if decision == "accept" else "Rejected"
         return redirect_response(
             start_response,
-            inbox_redirect("message", f"{label}: draft {result['id']}."),
+            inbox_redirect("message", f"{label}: draft {result['id']}.", language=language),
         )
 
     def handle_codex_setup_post(
@@ -324,6 +354,7 @@ class HubViewApplication:
 
         form = read_post_form(environ)
         task = (form.get("task") or DEFAULT_AGENT_TASK).strip() or DEFAULT_AGENT_TASK
+        language = resolve_language(form.get("lang"))
 
         if not self.inbox_enabled:
             return text_response(
@@ -355,7 +386,13 @@ class HubViewApplication:
             if project is None or project.get("status") != "active":
                 return redirect_response(
                     start_response,
-                    agent_context_redirect(selected_slug, task, "setup_error", "Project not found."),
+                    agent_context_redirect(
+                        selected_slug,
+                        task,
+                        "setup_error",
+                        "Project not found.",
+                        language=language,
+                    ),
                 )
             repo_root = Path(__file__).resolve().parents[1]
             project_path = _compat_attr(
@@ -370,6 +407,7 @@ class HubViewApplication:
                         task,
                         "setup_error",
                         "Codex setup needs a registered project folder.",
+                        language=language,
                     ),
                 )
             plan = _compat_attr("plan_repo_agent_memory", plan_repo_agent_memory)(
@@ -387,6 +425,7 @@ class HubViewApplication:
                     task,
                     "setup_error",
                     "Codex setup could not be installed.",
+                    language=language,
                 ),
             )
 
@@ -396,7 +435,7 @@ class HubViewApplication:
             message = f"Codex setup installed in {plan.target_file}."
         return redirect_response(
             start_response,
-            agent_context_redirect(selected_slug, task, "setup_message", message),
+            agent_context_redirect(selected_slug, task, "setup_message", message, language=language),
         )
 
 def create_application(

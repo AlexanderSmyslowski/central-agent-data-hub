@@ -22,6 +22,13 @@ from agent_hub.commands.prepare import (
 from agent_hub.commands.summaries import fetch_compiled_payload
 from agent_hub.context_receipt import INFLUENCE_LINES, prepare_context_counts
 from agent_hub.db import connect
+from agent_hub.hub_view_i18n import (
+    DEFAULT_LANGUAGE,
+    language_switch_links,
+    resolve_language,
+    translator,
+    with_language,
+)
 from agent_hub.quality import fetch_project_quality
 from agent_hub.rendering import truncate
 from agent_hub.repo_agent_memory import (
@@ -679,16 +686,25 @@ def render_page(
     view_name: str = "projects",
     csrf_token: str = "",
     inbox_enabled: bool = True,
+    language: str = DEFAULT_LANGUAGE,
+    current_path: str = "/",
+    query_string: str = "",
 ) -> bytes:
     env = load_environment()
     template = env.get_template("page.html")
+    resolved_language = resolve_language(language)
+    t = translator(resolved_language)
     return template.render(
-        page_title="Hub View",
-        app_name="Hub View",
-        claim="local review surface for Agent Data Hub",
+        page_title=t("hub_view"),
+        app_name=t("hub_view"),
+        claim=t("local_review_surface"),
         status_code=status_code,
         view_name=view_name,
         csrf_token=csrf_token,
         inbox_enabled=inbox_enabled,
+        language=resolved_language,
+        t=t,
+        url_for=lambda url: with_language(url, resolved_language),
+        language_links=language_switch_links(current_path, query_string),
         **view_model,
     ).encode("utf-8")

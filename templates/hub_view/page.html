@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{ language }}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -98,6 +98,34 @@
         color: var(--muted);
         font-size: 13px;
         white-space: nowrap;
+      }
+
+      .masthead-actions {
+        display: grid;
+        gap: 10px;
+        justify-items: end;
+      }
+
+      .language-switcher {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: end;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .language-switcher a,
+      .language-switcher span {
+        padding: 6px 8px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.54);
+      }
+
+      .language-switcher span {
+        color: var(--text);
+        font-weight: 700;
       }
 
       .layout {
@@ -1172,6 +1200,11 @@
           display: block;
         }
 
+        .masthead-actions {
+          justify-items: start;
+          margin-top: 14px;
+        }
+
         .read-only {
           display: inline-block;
           margin-top: 14px;
@@ -1200,31 +1233,42 @@
       }
     </style>
   </head>
-  <body>
+  <body data-copied-label="{{ t('copied') }}">
     <main class="shell">
       <header class="masthead">
-        <a class="brand-home" href="/" aria-label="Back to project overview">
+        <a class="brand-home" href="{{ url_for('/') }}" aria-label="{{ t('back_to_projects') }}">
           <p class="eyebrow">Agent Data Hub</p>
           <h1>{{ app_name }}</h1>
           <p class="claim">{{ claim }}</p>
-          <p class="prototype-note">Prototype language: English. This local demo shows reviewed project memory, suggested memory changes, risks, questions, and latest status.</p>
+          <p class="prototype-note">{{ t('prototype_note') }}</p>
         </a>
-        <div class="read-only">Read surface + review actions</div>
+        <div class="masthead-actions">
+          <nav class="language-switcher" aria-label="{{ t('language') }}">
+            {% for link in language_links %}
+              {% if link.code == language %}
+                <span aria-current="true">{{ link.label }}</span>
+              {% else %}
+                <a href="{{ link.url }}">{{ link.label }}</a>
+              {% endif %}
+            {% endfor %}
+          </nav>
+          <div class="read-only">{{ t('read_surface_review_actions') }}</div>
+        </div>
       </header>
 
       <div class="layout">
         <aside class="panel sidebar">
-          <a class="sidebar-action{% if view_name == 'inbox' %} active{% endif %}" href="/inbox">
-            Review Inbox
-            <span class="sidebar-action-meta">{{ draft_total | default(0) }} items to review</span>
+          <a class="sidebar-action{% if view_name == 'inbox' %} active{% endif %}" href="{{ url_for('/inbox') }}">
+            {{ t('review_inbox') }}
+            <span class="sidebar-action-meta">{{ draft_total | default(0) }} {{ t('review_items') }}</span>
           </a>
           {% if view_name != 'inbox' %}
-            <div class="sidebar-title">Active projects</div>
+            <div class="sidebar-title">{{ t('active_projects') }}</div>
             {% if projects %}
               {% for project in projects %}
-                <a class="project-link{% if selected_project and selected_project.slug == project.slug %} active{% endif %}" href="/projects/{{ project.slug }}"{% if selected_project and selected_project.slug == project.slug %} aria-current="page"{% endif %}>
+                <a class="project-link{% if selected_project and selected_project.slug == project.slug %} active{% endif %}" href="{{ url_for('/projects/' ~ project.slug) }}"{% if selected_project and selected_project.slug == project.slug %} aria-current="page"{% endif %}>
                   {% if selected_project and selected_project.slug == project.slug %}
-                    <span class="selected-badge">Selected</span>
+                    <span class="selected-badge">{{ t('selected') }}</span>
                   {% endif %}
                   <p class="project-name">{{ project.name }}</p>
                   <div class="project-meta">{{ project.slug }}{% if project.project_type %} · {{ project.project_type }}{% endif %}</div>
@@ -1232,11 +1276,11 @@
                     <p class="project-blurb">{{ project.description }}</p>
                   {% endif %}
                   <div class="project-counts">
-                    <span>{{ project.counts.facts }} facts</span>
-                    <span>{{ project.counts.decisions }} decisions</span>
-                    <span>{{ project.counts.risks }} risks</span>
-                    <span>{{ project.counts.open_questions }} open questions</span>
-                    <span>{{ project.draft_count }} review items</span>
+                    <span>{{ project.counts.facts }} {{ t('facts') }}</span>
+                    <span>{{ project.counts.decisions }} {{ t('agent_status_decisions') | lower }}</span>
+                    <span>{{ project.counts.risks }} {{ t('risks') }}</span>
+                    <span>{{ project.counts.open_questions }} {{ t('open_questions') }}</span>
+                    <span>{{ project.draft_count }} {{ t('review_items') }}</span>
                   </div>
                   {% if project.latest_report_title %}
                     <p class="project-blurb">{{ project.latest_report_title }}</p>
@@ -1244,7 +1288,7 @@
                 </a>
               {% endfor %}
             {% else %}
-              <p class="empty">No active projects are visible.</p>
+              <p class="empty">{{ t('no_active_projects') }}</p>
             {% endif %}
           {% endif %}
         </aside>
@@ -1255,8 +1299,8 @@
           {% elif not_found_slug %}
             <div class="detail-header">
               <div>
-                <h2 class="detail-title">Project not found</h2>
-                <p class="detail-description">No active project with the slug <code>{{ not_found_slug }}</code> is visible in this Hub.</p>
+                <h2 class="detail-title">{{ t('project_not_found') }}</h2>
+                <p class="detail-description">{{ t('project_not_found_body', slug=not_found_slug) }}</p>
               </div>
             </div>
           {% elif view_name == 'agent_context' and selected_project and agent_context %}
@@ -1266,8 +1310,8 @@
           {% else %}
             <div class="detail-header">
               <div>
-                <h2 class="detail-title">Hub View</h2>
-                <p class="detail-description">Select a project to inspect its reviewed memory, current risks, open questions, reports, and relations.</p>
+                <h2 class="detail-title">{{ t('hub_view') }}</h2>
+                <p class="detail-description">{{ t('hub_empty_body') }}</p>
               </div>
             </div>
           {% endif %}

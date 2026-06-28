@@ -1,9 +1,9 @@
 {% set review_enabled = inbox.review_enabled if inbox.review_enabled is defined else inbox.enabled %}
-<a class="nav-link" href="/">Back to project overview</a>
+<a class="nav-link" href="{{ url_for('/') }}">{{ t('back_to_projects') }}</a>
 <div class="detail-header">
   <div>
-    <h2 class="detail-title">Review Inbox</h2>
-    <p class="detail-description">Suggested memory changes stay unconfirmed until a human accepts or rejects them here.</p>
+    <h2 class="detail-title">{{ t('inbox_title') }}</h2>
+    <p class="detail-description">{{ t('suggested_memory_unconfirmed') }}</p>
   </div>
 </div>
 
@@ -14,12 +14,12 @@
   <p class="flash bad">{{ inbox.error }}</p>
 {% endif %}
 {% if not inbox.enabled %}
-  <p class="notice">Review actions are disabled because Hub View is not bound to a loopback address.</p>
+  <p class="notice">{{ t('inbox_review_disabled') }}</p>
 {% endif %}
 {% if inbox.reviewer_error %}
   <p class="notice">{{ inbox.reviewer_error }}</p>
 {% elif inbox.reviewer %}
-  <p class="notice">Review actions are attributed to {{ inbox.reviewer }}.</p>
+  <p class="notice">{{ t('inbox_review_attribution', reviewer=inbox.reviewer) }}</p>
 {% endif %}
 
 <section class="section">
@@ -40,20 +40,22 @@
               <div class="draft-actions">
                 {% if review_enabled %}
                   <form method="post" action="/inbox/accept">
+                    <input type="hidden" name="lang" value="{{ language }}">
                     <input type="hidden" name="csrf_token" value="{{ inbox.csrf_token }}">
                     <input type="hidden" name="draft_id" value="{{ draft.id }}">
                     <input type="hidden" name="type" value="{{ draft.type }}">
-                    <button class="button" type="submit">Accept</button>
+                    <button class="button" type="submit">{{ t('accept') }}</button>
                   </form>
                   <form method="post" action="/inbox/reject">
+                    <input type="hidden" name="lang" value="{{ language }}">
                     <input type="hidden" name="csrf_token" value="{{ inbox.csrf_token }}">
                     <input type="hidden" name="draft_id" value="{{ draft.id }}">
                     <input type="hidden" name="type" value="{{ draft.type }}">
-                    <button class="button reject" type="submit">Reject</button>
+                    <button class="button reject" type="submit">{{ t('reject') }}</button>
                   </form>
                 {% else %}
-                  <button class="button" type="button" disabled>Accept</button>
-                  <button class="button reject" type="button" disabled>Reject</button>
+                  <button class="button" type="button" disabled>{{ t('accept') }}</button>
+                  <button class="button reject" type="button" disabled>{{ t('reject') }}</button>
                 {% endif %}
               </div>
             </article>
@@ -63,9 +65,9 @@
     {% endfor %}
   {% else %}
     <div class="empty-state">
-      <p>No items to review.</p>
-      <p>When agents suggest memory changes, they appear here until a human accepts or rejects them.</p>
-      <a href="/">Back to project overview</a>
+      <p>{{ t('inbox_empty_title') }}</p>
+      <p>{{ t('inbox_empty_body') }}</p>
+      <a href="{{ url_for('/') }}">{{ t('back_to_projects') }}</a>
     </div>
   {% endif %}
 </section>
