@@ -813,6 +813,14 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "What can I do here?" in body
     assert "Use this project as a local work surface" in body
     assert "Recommended next" in body
+    assert "Current work state" in body
+    assert "Start here before handing work to an agent" in body
+    assert "Needs attention" in body
+    assert "1 risks · 0 open questions" in body
+    assert "Skipped preflight" in body
+    assert "Waiting for review" in body
+    assert "Quality snapshot" in body
+    assert "Relation coverage 0.60" in body
     assert "Use ADH with an agent" in body
     assert "Prepare reviewed context before a chatbot or local agent starts work." in body
     assert "Review suggested changes" in body
@@ -940,6 +948,10 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert "Was kann ich hier tun?" in body
     assert "Nutze dieses Projekt als lokale Arbeitsfläche" in body
     assert "Empfohlen" in body
+    assert "Aktueller Arbeitsstand" in body
+    assert "Beginne hier, bevor du Arbeit an einen Agenten übergibst" in body
+    assert "Braucht Aufmerksamkeit" in body
+    assert "Wartet auf Prüfung" in body
     assert "Agent verbinden" in body
     assert "Dieses Projekt mit ADH-Kontext prüfen" in body
     assert "Letzten Stand lesen" in body

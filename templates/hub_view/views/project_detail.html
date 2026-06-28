@@ -47,6 +47,50 @@
   </nav>
 </section>
 
+<section class="current-state" aria-labelledby="current-state-title">
+  <div class="state-header">
+    <div>
+      <p class="section-kicker">{{ t('current_state_title') }}</p>
+      <h2 id="current-state-title">{{ t('latest_status') }}</h2>
+    </div>
+    <p>{{ t('current_state_copy') }}</p>
+  </div>
+  <div class="state-list">
+    <a class="state-item" href="#latest-status">
+      <span class="state-label">{{ t('latest_status') }}</span>
+      {% if selected_project.reports %}
+        <strong>{{ selected_project.reports[0].title }}</strong>
+        {% if selected_project.reports[0].summary %}
+          <span>{{ selected_project.reports[0].summary }}</span>
+        {% endif %}
+      {% else %}
+        <strong>{{ t('latest_status_empty') }}</strong>
+      {% endif %}
+    </a>
+    <a class="state-item" href="#risks-and-questions">
+      <span class="state-label">{{ t('needs_attention') }}</span>
+      <strong>{{ selected_project.counts.risks }} {{ t('risks') }} · {{ selected_project.counts.open_questions }} {{ t('open_questions') }}</strong>
+      {% if selected_project.risks %}
+        <span>{{ selected_project.risks[0].title }}</span>
+      {% elif selected_project.open_questions %}
+        <span>{{ selected_project.open_questions[0].question }}</span>
+      {% else %}
+        <span>{{ t('needs_attention_empty') }}</span>
+      {% endif %}
+    </a>
+    <a class="state-item" href="{{ url_for('/inbox') }}">
+      <span class="state-label">{{ t('review_waiting') }}</span>
+      <strong>{{ draft_total | default(0) }} {{ t('review_items') }}</strong>
+      <span>{{ t('review_suggested_changes_action_copy', count=draft_total | default(0)) }}</span>
+    </a>
+    <a class="state-item" href="#quality">
+      <span class="state-label">{{ t('quality_snapshot') }}</span>
+      <strong>{{ selected_project.quality.score }} · {{ selected_project.quality.status }}</strong>
+      <span>{{ t('relation_coverage') }} {{ selected_project.quality.relation_coverage }}</span>
+    </a>
+  </div>
+</section>
+
 <div class="summary-grid">
   <a class="summary-tile" href="#reviewed-memory">
     <div class="summary-label">{{ t('reviewed_memory') }}</div>
