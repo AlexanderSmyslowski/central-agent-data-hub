@@ -133,7 +133,7 @@ def inbox_result_redirect(
         "reviewed_by": str(result.get("reviewed_by") or ""),
         "review_source": str(result.get("review_source") or ""),
     }
-    return with_language(f"/inbox?{urlencode(params)}", language)
+    return with_language(f"/inbox?{urlencode(params)}#review-result", language)
 
 def agent_context_redirect(
     slug: str,

@@ -422,6 +422,7 @@ def test_inbox_page_renders_accept_result_card() -> None:
     ).decode("utf-8")
 
     assert "Review result" in body
+    assert 'id="review-result"' in body
     assert "Saved as reviewed memory" in body
     assert "This Fact is no longer a draft. ADH can now hand it to agents as reviewed context." in body
     assert "New status: verified." in body
@@ -545,6 +546,7 @@ def test_inbox_accept_promotes_and_audits(monkeypatch) -> None:
     assert "review_status=verified" in headers["Location"]
     assert "reviewed_by=bob" in headers["Location"]
     assert "review_source=hub_view" in headers["Location"]
+    assert headers["Location"].endswith("#review-result")
     assert row["status"] == "verified"
     assert cur.update_count == 1
     assert audit_calls[0][2] == "inbox_accept"
@@ -582,6 +584,7 @@ def test_inbox_reject_archives_and_audits(monkeypatch) -> None:
     assert "review_status=archived" in headers["Location"]
     assert "reviewed_by=bob" in headers["Location"]
     assert "review_source=hub_view" in headers["Location"]
+    assert headers["Location"].endswith("#review-result")
     assert row["status"] == "archived"
     assert cur.update_count == 1
     assert audit_calls[0][2] == "inbox_reject"
