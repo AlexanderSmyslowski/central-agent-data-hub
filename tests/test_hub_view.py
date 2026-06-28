@@ -916,9 +916,13 @@ def test_application_renders_project_detail(monkeypatch) -> None:
 
     assert captured["status"] == "200 OK"
     assert "Central Agent Data Hub" in body
+    assert 'href="#main-content"' in body
+    assert 'id="main-content" tabindex="-1"' in body
+    assert "Skip to main content" in body
     assert "Selected" in body
     assert "2 review items" in body
     assert 'aria-label="App navigation"' in body
+    assert 'href="/projects/central-agent-data-hub" aria-current="page"' in body
     assert "Work state" in body
     assert "Memory" in body
     assert "Agent handoff" in body
@@ -1086,6 +1090,7 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     ).decode("utf-8")
 
     assert '<html lang="de">' in body
+    assert "Zum Hauptinhalt springen" in body
     assert "Geprüftes Projektgedächtnis finden" in body
     assert "Neutrales Demo-Projekt: Es zeigt, wie geprüfter Kontext lokal" in body
     assert "Neutral demo project for showing" not in body
@@ -1225,6 +1230,7 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert captured["status"] == "200 OK"
     assert "ADH context loaded" in body
     assert "This is the visible handoff" in body
+    assert 'href="/projects/central-agent-data-hub#connect-agent" aria-current="page"' in body
     assert "Review release readiness" in body
     assert "Source of truth: local Agent Data Hub database" in body
     assert "How this should influence the agent" in body

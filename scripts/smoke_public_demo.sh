@@ -64,6 +64,8 @@ for _ in range(50):
         checks = {
             "/": (
                 "Hub View",
+                "Skip to main content",
+                "id=\"main-content\" tabindex=\"-1\"",
                 "local review surface",
                 "App navigation",
                 "Work state",
@@ -215,6 +217,7 @@ for _ in range(50):
             ),
             "/projects/central-agent-data-hub-demo?lang=de": (
                 "<html lang=\"de\">",
+                "Zum Hauptinhalt springen",
                 "lokale Prüfoberfläche",
                 "App-Navigation",
                 "Arbeitsstand",

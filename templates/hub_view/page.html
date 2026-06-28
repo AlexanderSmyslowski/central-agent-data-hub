@@ -35,6 +35,31 @@
         text-decoration: none;
       }
 
+      :focus-visible {
+        outline: 3px solid rgba(45, 74, 95, 0.45);
+        outline-offset: 3px;
+      }
+
+      .skip-link {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        z-index: 20;
+        transform: translate(-50%, -160%);
+        padding: 10px 14px;
+        border: 1px solid rgba(45, 74, 95, 0.36);
+        border-radius: 8px;
+        background: var(--surface-strong);
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 700;
+        transition: transform 0.12s ease;
+      }
+
+      .skip-link:focus-visible {
+        transform: translate(-50%, 0);
+      }
+
       .brand-home {
         display: block;
       }
@@ -1653,6 +1678,7 @@
     </style>
   </head>
   <body data-copied-label="{{ t('copied') }}">
+    <a class="skip-link" href="#main-content">{{ t('skip_to_content') }}</a>
     <main class="shell">
       <header class="masthead">
         <a class="brand-home" href="{{ url_for('/') }}" aria-label="{{ t('back_to_projects') }}">
@@ -1677,14 +1703,14 @@
       </header>
 
       <nav class="app-nav" aria-label="{{ t('app_navigation') }}">
-        <a class="app-nav-link{% if not selected_project and view_name != 'inbox' %} active{% endif %}" href="{{ url_for('/') }}">{{ t('nav_projects') }}</a>
+        <a class="app-nav-link{% if not selected_project and view_name != 'inbox' %} active{% endif %}" href="{{ url_for('/') }}"{% if not selected_project and view_name != 'inbox' %} aria-current="page"{% endif %}>{{ t('nav_projects') }}</a>
         {% if selected_project %}
-          <a class="app-nav-link{% if view_name != 'agent_context' %} active{% endif %}" href="{{ url_for('/projects/' ~ selected_project.slug) }}">{{ t('nav_project') }}</a>
+          <a class="app-nav-link{% if view_name != 'agent_context' %} active{% endif %}" href="{{ url_for('/projects/' ~ selected_project.slug) }}"{% if view_name != 'agent_context' %} aria-current="page"{% endif %}>{{ t('nav_project') }}</a>
           <a class="app-nav-link" href="{{ url_for('/projects/' ~ selected_project.slug) }}#current-state-title">{{ t('nav_work_state') }}</a>
           <a class="app-nav-link" href="{{ url_for('/projects/' ~ selected_project.slug) }}#project-memory">{{ t('nav_memory') }}</a>
-          <a class="app-nav-link{% if view_name == 'agent_context' %} active{% endif %}" href="{{ url_for('/projects/' ~ selected_project.slug) }}#connect-agent">{{ t('nav_agent_handoff') }}</a>
+          <a class="app-nav-link{% if view_name == 'agent_context' %} active{% endif %}" href="{{ url_for('/projects/' ~ selected_project.slug) }}#connect-agent"{% if view_name == 'agent_context' %} aria-current="page"{% endif %}>{{ t('nav_agent_handoff') }}</a>
         {% endif %}
-        <a class="app-nav-link{% if view_name == 'inbox' %} active{% endif %}" href="{{ url_for('/inbox') }}">{{ t('nav_review') }}</a>
+        <a class="app-nav-link{% if view_name == 'inbox' %} active{% endif %}" href="{{ url_for('/inbox') }}"{% if view_name == 'inbox' %} aria-current="page"{% endif %}>{{ t('nav_review') }}</a>
       </nav>
 
       <div class="layout">
@@ -1724,7 +1750,7 @@
           {% endif %}
         </aside>
 
-        <section class="panel content">
+        <section class="panel content" id="main-content" tabindex="-1">
           {% if view_name == 'inbox' %}
             {% include "views/inbox.html" %}
           {% elif not_found_slug %}
