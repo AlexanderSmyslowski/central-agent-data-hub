@@ -882,11 +882,20 @@
       }
 
       .wizard-step p,
-      .agent-picker-card span:last-child {
+      .agent-picker-body,
+      .agent-picker-proof {
+        display: block;
         margin: 6px 0 0;
         color: var(--muted);
         font-size: 13px;
         line-height: 1.45;
+      }
+
+      .agent-picker-proof {
+        padding-top: 8px;
+        border-top: 1px solid rgba(38, 38, 36, 0.1);
+        color: var(--text);
+        font-weight: 600;
       }
 
       .agent-picker {

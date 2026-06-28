@@ -93,8 +93,8 @@
     <div class="verification-grid" aria-label="{{ t('connection_verification') }}">
       <div class="verification-card {{ agent_context.local_agent.codex.verification.state }}">
         <div class="verification-label">Codex</div>
-        <div class="verification-status">{{ agent_context.local_agent.codex.verification.label }}</div>
-        <p class="verification-detail">{{ agent_context.local_agent.codex.verification.detail }}</p>
+        <div class="verification-status">{{ ui_text(agent_context.local_agent.codex.verification.label) }}</div>
+        <p class="verification-detail">{{ ui_text(agent_context.local_agent.codex.verification.detail) }}</p>
       </div>
       <div class="verification-card manual">
         <div class="verification-label">{{ t('claude_code') }}</div>
@@ -118,32 +118,38 @@
     <a class="agent-picker-card" href="#agent-chatbot">
       <span class="agent-picker-label">{{ t('chatbot') }}</span>
       <strong>{{ t('agent_picker_chatbot_title') }}</strong>
-      <span>{{ t('agent_picker_chatbot_body') }}</span>
+      <span class="agent-picker-body">{{ t('agent_picker_chatbot_body') }}</span>
+      <span class="agent-picker-proof">{{ t('agent_picker_chatbot_proof') }}</span>
     </a>
     <a class="agent-picker-card featured" href="#agent-codex">
       <span class="agent-picker-label">{{ t('codex') }}</span>
-      <strong>{{ agent_context.local_agent.codex.verification.label }}</strong>
-      <span>{{ t('agent_picker_codex_body') }}</span>
+      <strong>{{ ui_text(agent_context.local_agent.codex.verification.label) }}</strong>
+      <span class="agent-picker-body">{{ t('agent_picker_codex_body') }}</span>
+      <span class="agent-picker-proof">{{ t('agent_picker_codex_proof') }}</span>
     </a>
     <a class="agent-picker-card" href="#agent-claude">
       <span class="agent-picker-label">{{ t('claude_code') }}</span>
       <strong>{{ t('agent_picker_claude_title') }}</strong>
-      <span>{{ t('agent_picker_claude_body') }}</span>
+      <span class="agent-picker-body">{{ t('agent_picker_claude_body') }}</span>
+      <span class="agent-picker-proof">{{ t('agent_picker_claude_proof') }}</span>
     </a>
     <a class="agent-picker-card" href="#agent-custom">
       <span class="agent-picker-label">{{ t('custom_agent_short') }}</span>
       <strong>{{ t('agent_picker_custom_title') }}</strong>
-      <span>{{ t('agent_picker_custom_body') }}</span>
+      <span class="agent-picker-body">{{ t('agent_picker_custom_body') }}</span>
+      <span class="agent-picker-proof">{{ t('agent_picker_custom_proof') }}</span>
     </a>
     <a class="agent-picker-card" href="#agent-mcp">
       <span class="agent-picker-label">{{ t('agent_picker_mcp_label') }}</span>
       <strong>{{ t('agent_picker_mcp_title') }}</strong>
-      <span>{{ t('agent_picker_mcp_body') }}</span>
+      <span class="agent-picker-body">{{ t('agent_picker_mcp_body') }}</span>
+      <span class="agent-picker-proof">{{ t('agent_picker_mcp_proof') }}</span>
     </a>
     <a class="agent-picker-card" href="#agent-terminal">
       <span class="agent-picker-label">{{ t('agent_picker_fallback_label') }}</span>
       <strong>{{ t('agent_picker_fallback_title') }}</strong>
-      <span>{{ t('agent_picker_fallback_body') }}</span>
+      <span class="agent-picker-body">{{ t('agent_picker_fallback_body') }}</span>
+      <span class="agent-picker-proof">{{ t('agent_picker_fallback_proof') }}</span>
     </a>
   </div>
   <div class="connection-grid">

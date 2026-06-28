@@ -10,7 +10,7 @@ import uuid
 import pytest
 
 from agent_hub import hub_view
-from agent_hub.hub_view_i18n import language_switch_links
+from agent_hub.hub_view_i18n import language_switch_links, localize_ui_text
 from agent_hub import hub_view_models
 from agent_hub.commands import inbox
 from agent_hub.writeback_routing import lint_card_text
@@ -65,6 +65,18 @@ def call_app(
 
     response = b"".join(app(environ, start_response)).decode("utf-8")
     return captured, response
+
+
+def test_hub_view_localizes_dynamic_codex_status_text() -> None:
+    assert localize_ui_text("Demo preview only", "de") == "Nur Demo-Vorschau"
+    assert (
+        localize_ui_text(
+            "Demo mode shows the target only; it does not write an AGENTS.md block.",
+            "de",
+        )
+        == "Der Demo-Modus zeigt nur das Ziel; er schreibt keinen AGENTS.md-Block."
+    )
+    assert localize_ui_text("Demo preview only", "en") == "Demo preview only"
 
 
 class ReviewCursor:
@@ -1190,7 +1202,7 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "One local click" in body
     assert "One copied command" in body
     assert "Persistent instruction" in body
-    assert "Config shape" in body
+    assert "Copy MCP config" in body
     assert "Temporary fallback" in body
     assert "One-time setup" in body
     assert "Copy Claude setup" in body
@@ -1199,7 +1211,11 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "Copy startup rule" in body
     assert "Copy MCP config" in body
     assert "Jump to chatbot text" in body
-    assert "ADH can check this setup here" in body
+    assert "Use this when ADH knows the local project folder" in body
+    assert "Check: Codex shows an ADH Context Loaded receipt at task start" in body
+    assert "Check: the context pack is visible in the chat before the task" in body
+    assert "Check: the agent shows an ADH receipt or matching counts" in body
+    assert "Check: the terminal prints one visible ADH-backed run" in body
     assert "Show Claude manual setup pieces" in body
     assert "It never runs an agent" in body
     assert "writes only after an explicit local click" in body
