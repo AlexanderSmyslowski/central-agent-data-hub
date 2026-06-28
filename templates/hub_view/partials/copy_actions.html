@@ -118,7 +118,7 @@
 
         if (result) {
           if (query) {
-            result.textContent = visible + " visible memory items match \"" + query + "\".";
+            result.textContent = visible + " matches for \"" + filter.value.trim() + "\".";
           } else {
             result.textContent = "Showing " + visible + " visible memory items on this page.";
           }
@@ -134,11 +134,17 @@
 
       if (filter) {
         filter.addEventListener("input", updateMemoryFilter);
+        filter.addEventListener("keydown", function (event) {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            filter.blur();
+          }
+        });
         if (clear) {
           clear.addEventListener("click", function () {
             filter.value = "";
-            filter.focus();
             updateMemoryFilter();
+            filter.blur();
           });
         }
         updateMemoryFilter();

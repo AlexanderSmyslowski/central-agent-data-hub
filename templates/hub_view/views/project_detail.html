@@ -71,19 +71,19 @@
   <div class="memory-filter-row">
     <label class="memory-filter-label" for="memory-filter">Search this page</label>
     <div class="memory-filter-control">
-      <input id="memory-filter" class="memory-filter-input" type="search" data-memory-filter placeholder="risk, decision, source, report..." autocomplete="off">
+      <input id="memory-filter" class="memory-filter-input" type="search" data-memory-filter placeholder="risk, decision, source, report..." autocomplete="off" enterkeyhint="done">
       <button class="memory-filter-clear" type="button" data-memory-clear hidden>Show all</button>
     </div>
   </div>
+  <p class="memory-filter-meta" data-memory-results>Showing visible reviewed memory on this page.</p>
+  <div class="memory-filter-hits" data-memory-hits hidden></div>
+  <p class="empty" data-memory-empty hidden>No visible memory matches this filter.</p>
   <div class="memory-type-links" aria-label="Memory sections">
     <a href="#reviewed-memory">Reviewed memory</a>
     <a href="#risks-and-questions">Risks and questions</a>
     <a href="#latest-status">Latest status</a>
     <a href="#relations">Relations</a>
   </div>
-  <p class="memory-filter-meta" data-memory-results>Showing visible reviewed memory on this page.</p>
-  <div class="memory-filter-hits" data-memory-hits hidden></div>
-  <p class="empty" data-memory-empty hidden>No visible memory matches this filter.</p>
 </section>
 
 <section class="agent-connect" id="connect-agent">

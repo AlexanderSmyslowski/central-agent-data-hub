@@ -790,6 +790,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert 'data-memory-results' in body
     assert 'data-memory-hits' in body
     assert 'data-memory-empty' in body
+    assert 'enterkeyhint="done"' in body
     assert "Search this page" in body
     assert "Matches appear below while the page sections are filtered." in body
     assert "Showing visible reviewed memory on this page." in body
@@ -797,6 +798,8 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "itemHaystack" in body
     assert 'getAttribute("data-memory-type")' in body
     assert "memory-filter-hit" in body
+    assert 'event.key === "Enter"' in body
+    assert "filter.blur()" in body
     assert 'data-memory-type="decision"' in body
     assert 'data-memory-type="fact"' in body
     assert 'data-memory-type="risk"' in body
