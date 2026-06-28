@@ -11,7 +11,7 @@ import secrets
 import socket
 import sys
 from typing import Any, Callable
-from urllib.parse import parse_qs, quote, urlparse
+from urllib.parse import parse_qs, quote, urlencode, urlparse
 from wsgiref.simple_server import make_server
 
 from agent_hub.commands.common import fetch_project
@@ -117,6 +117,23 @@ def query_value(environ: dict[str, object], key: str) -> str | None:
 
 def inbox_redirect(param: str, message: str, *, language: str = "en") -> str:
     return with_language(f"/inbox?{param}={quote(message)}", language)
+
+def inbox_result_redirect(
+    result: dict[str, Any],
+    *,
+    decision: str,
+    language: str = "en",
+) -> str:
+    params = {
+        "review_result": "accepted" if decision == "accept" else "rejected",
+        "review_item": str(result.get("id") or ""),
+        "review_type": str(result.get("type") or ""),
+        "review_status": str(result.get("status") or ""),
+        "review_project": str(result.get("project") or ""),
+        "reviewed_by": str(result.get("reviewed_by") or ""),
+        "review_source": str(result.get("review_source") or ""),
+    }
+    return with_language(f"/inbox?{urlencode(params)}", language)
 
 def agent_context_redirect(
     slug: str,
@@ -225,6 +242,13 @@ class HubViewApplication:
                 reviewer_error=self.reviewer_error,
                 message=query_value(environ, "message"),
                 error_message=query_value(environ, "error"),
+                review_result=query_value(environ, "review_result"),
+                review_item=query_value(environ, "review_item"),
+                review_type=query_value(environ, "review_type"),
+                review_status=query_value(environ, "review_status"),
+                review_project=query_value(environ, "review_project"),
+                reviewed_by=query_value(environ, "reviewed_by"),
+                review_source=query_value(environ, "review_source"),
             )
             body = _compat_attr("render_page", render_page)(
                 view_model,
@@ -336,10 +360,9 @@ class HubViewApplication:
                 inbox_redirect("error", "This draft is no longer open.", language=language),
             )
 
-        label = "Accepted" if decision == "accept" else "Rejected"
         return redirect_response(
             start_response,
-            inbox_redirect("message", f"{label}: draft {result['id']}.", language=language),
+            inbox_result_redirect(result, decision=decision, language=language),
         )
 
     def handle_codex_setup_post(

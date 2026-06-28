@@ -709,10 +709,29 @@ def load_inbox_view_model(
     reviewer_error: str | None,
     message: str | None = None,
     error_message: str | None = None,
+    review_result: str | None = None,
+    review_item: str | None = None,
+    review_type: str | None = None,
+    review_status: str | None = None,
+    review_project: str | None = None,
+    reviewed_by: str | None = None,
+    review_source: str | None = None,
 ) -> tuple[int, dict[str, object]]:
     with _compat_attr("connect", connect)() as conn:
         with conn.cursor() as cur:
             drafts = fetch_drafts(cur, limit=None)
+    result_card = None
+    if review_result in {"accepted", "rejected"}:
+        result_card = {
+            "result": review_result,
+            "item_id": review_item or "",
+            "type": review_type or "",
+            "type_label": DRAFT_TYPE_LABELS.get(str(review_type or ""), review_type or ""),
+            "status": review_status or "",
+            "project": review_project or "",
+            "reviewed_by": reviewed_by or "",
+            "review_source": "Hub View" if review_source == "hub_view" else review_source or "",
+        }
     return 200, {
         "projects": [],
         "selected_project": None,
@@ -727,6 +746,7 @@ def load_inbox_view_model(
             "reviewer_error": reviewer_error,
             "message": message,
             "error": error_message,
+            "review_result": result_card,
         },
     }
 

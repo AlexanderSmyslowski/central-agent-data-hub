@@ -66,6 +66,30 @@
 {% if inbox.error %}
   <p class="flash bad">{{ inbox.error }}</p>
 {% endif %}
+{% if inbox.review_result %}
+  <section class="review-result" aria-labelledby="review-result-title">
+    <p class="section-kicker">{{ t('review_result_kicker') }}</p>
+    {% if inbox.review_result.result == 'accepted' %}
+      <h2 id="review-result-title">{{ t('review_result_accept_title') }}</h2>
+      <p>{{ t('review_result_accept_body', type=ui_text(inbox.review_result.type_label)) }}</p>
+    {% else %}
+      <h2 id="review-result-title">{{ t('review_result_reject_title') }}</h2>
+      <p>{{ t('review_result_reject_body', type=ui_text(inbox.review_result.type_label)) }}</p>
+    {% endif %}
+    {% if inbox.review_result.status %}
+      <p>{{ t('review_result_status', status=ui_text(inbox.review_result.status)) }}</p>
+    {% endif %}
+    {% if inbox.review_result.reviewed_by or inbox.review_result.review_source %}
+      <p>{{ t('review_result_audit', reviewer=ui_text(inbox.review_result.reviewed_by), source=ui_text(inbox.review_result.review_source)) }}</p>
+    {% endif %}
+    <div class="review-result-actions" aria-label="{{ t('review_result_next') }}">
+      <a class="button primary-button" href="{{ url_for('/inbox') }}">{{ t('review_result_queue') }}</a>
+      {% if inbox.review_result.project %}
+        <a class="button" href="{{ url_for('/projects/' ~ inbox.review_result.project) }}">{{ t('review_result_project') }}</a>
+      {% endif %}
+    </div>
+  </section>
+{% endif %}
 {% if not inbox.enabled %}
   <p class="notice">{{ t('inbox_review_disabled') }}</p>
 {% endif %}

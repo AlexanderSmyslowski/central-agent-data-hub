@@ -393,6 +393,83 @@ def test_inbox_page_empty_state() -> None:
     assert 'href="/">Back to project overview</a>' in body
 
 
+def test_inbox_page_renders_accept_result_card() -> None:
+    body = hub_view.render_page(
+        {
+            "projects": [],
+            "selected_project": None,
+            "not_found_slug": None,
+            "inbox": {
+                "groups": [],
+                "csrf_token": "token",
+                "enabled": True,
+                "message": None,
+                "error": None,
+                "review_result": {
+                    "result": "accepted",
+                    "item_id": str(DRAFT_ID),
+                    "type": "fact",
+                    "type_label": "Fact",
+                    "status": "verified",
+                    "project": "central-agent-data-hub",
+                    "reviewed_by": "bob",
+                    "review_source": "Hub View",
+                },
+            },
+        },
+        200,
+        view_name="inbox",
+    ).decode("utf-8")
+
+    assert "Review result" in body
+    assert "Saved as reviewed memory" in body
+    assert "This Fact is no longer a draft. ADH can now hand it to agents as reviewed context." in body
+    assert "New status: verified." in body
+    assert "Audit trail: bob via Hub View." in body
+    assert "Review another item" in body
+    assert 'href="/projects/central-agent-data-hub">Open project</a>' in body
+
+
+def test_inbox_page_renders_german_reject_result_card() -> None:
+    body = hub_view.render_page(
+        {
+            "projects": [],
+            "selected_project": None,
+            "not_found_slug": None,
+            "inbox": {
+                "groups": [],
+                "csrf_token": "token",
+                "enabled": True,
+                "message": None,
+                "error": None,
+                "review_result": {
+                    "result": "rejected",
+                    "item_id": str(DRAFT_ID),
+                    "type": "fact",
+                    "type_label": "Fact",
+                    "status": "archived",
+                    "project": "central-agent-data-hub",
+                    "reviewed_by": "bob",
+                    "review_source": "hub_view",
+                },
+            },
+        },
+        200,
+        view_name="inbox",
+        language="de",
+        current_path="/inbox",
+        query_string="lang=de",
+    ).decode("utf-8")
+
+    assert "Prüfergebnis" in body
+    assert "Vorschlag verworfen" in body
+    assert "Dieser Eintrag vom Typ Fakt wurde archiviert" in body
+    assert "Neuer Status: archiviert." in body
+    assert "Prüfspur: bob über Hub View." in body
+    assert "Weiteren Eintrag prüfen" in body
+    assert 'href="/projects/central-agent-data-hub?lang=de">Projekt öffnen</a>' in body
+
+
 def test_inbox_page_renders_german_queue_language() -> None:
     groups = hub_view.group_draft_cards([draft_row()])
     body = hub_view.render_page(
@@ -463,7 +540,11 @@ def test_inbox_accept_promotes_and_audits(monkeypatch) -> None:
 
     headers = dict(captured["headers"])
     assert captured["status"] == "303 See Other"
-    assert "Accepted" in headers["Location"]
+    assert "review_result=accepted" in headers["Location"]
+    assert "review_type=fact" in headers["Location"]
+    assert "review_status=verified" in headers["Location"]
+    assert "reviewed_by=bob" in headers["Location"]
+    assert "review_source=hub_view" in headers["Location"]
     assert row["status"] == "verified"
     assert cur.update_count == 1
     assert audit_calls[0][2] == "inbox_accept"
@@ -496,7 +577,11 @@ def test_inbox_reject_archives_and_audits(monkeypatch) -> None:
 
     headers = dict(captured["headers"])
     assert captured["status"] == "303 See Other"
-    assert "Rejected" in headers["Location"]
+    assert "review_result=rejected" in headers["Location"]
+    assert "review_type=fact" in headers["Location"]
+    assert "review_status=archived" in headers["Location"]
+    assert "reviewed_by=bob" in headers["Location"]
+    assert "review_source=hub_view" in headers["Location"]
     assert row["status"] == "archived"
     assert cur.update_count == 1
     assert audit_calls[0][2] == "inbox_reject"
