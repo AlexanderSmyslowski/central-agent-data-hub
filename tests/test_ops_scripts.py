@@ -326,7 +326,8 @@ def test_public_demo_start_is_separate_from_maintainer_seed_path() -> None:
     assert "--dry-run" in script
     assert "Database:  $DB_NAME" in script
     assert 'echo "  scripts/smoke_public_demo.sh"' in script
-    assert 'echo "  AGENT_HUB_PUBLIC_DEMO=1 scripts/hub_view.sh"' in script
+    assert "AGENT_HUB_REVIEWERS=demo-reviewer" in script
+    assert "HUB_VIEW_REVIEWER=demo-reviewer" in script
     assert 'apply_sql_file "seed/demo.sql"' in script
     assert "verify_public_demo_hygiene" in script
     assert 'run_agent_hub brief --project central-agent-data-hub-demo --limit 4' in script
@@ -357,6 +358,12 @@ def test_public_demo_seed_is_neutral_and_public_safe() -> None:
     assert "Neutral demo project for showing how reviewed context is stored and read locally." in seed
     assert "Reviewed memory is context with a source and a review status" in seed
     assert "A Signal Inbox can hold interesting but unreviewed notes" in seed
+    assert "demo_review_card" in seed
+    assert '"assigned_reviewer": "demo-reviewer"' in seed
+    assert "'draft'" in seed
+    assert "Agents should use accepted demo memory as context" in seed
+    assert "WHERE facts.id <> '00000000-0000-4000-8000-000000000203'" in seed
+    assert "OR facts.status = 'draft';" in seed
     assert "Public Demo Context Report" in seed
 
 
@@ -404,6 +411,11 @@ def test_first_run_demo_script_wraps_public_demo_path() -> None:
     assert '"$ROOT_DIR/scripts/smoke_public_demo.sh"' in script
     assert 'hub_view_host="127.0.0.1"' in script
     assert 'hub_view_args=(--host "$hub_view_host")' in script
+    assert "hub_view_env=(AGENT_HUB_PUBLIC_DEMO=1)" in script
+    assert "HUB_VIEW_REVIEWER=demo-reviewer" in script
+    assert "AGENT_HUB_REVIEWERS=demo-reviewer" in script
+    assert "Demo Review Inbox actions use reviewer" in script
+    assert "This is local demo attribution, not authentication." in script
     assert '"$ROOT_DIR/scripts/hub_view.sh" "${hub_view_args[@]}"' in script
     assert "AGENT_HUB_PUBLIC_DEMO=1" in script
     assert "http://127.0.0.1:${hub_view_port}" in script
@@ -466,6 +478,12 @@ def test_first_run_demo_stays_public_and_docs_reference_it() -> None:
     assert "scripts/first_run_demo.sh" in getting_started
     assert "installs or reuses the local CLI" in readme
     assert "installs or reuses the local CLI" in getting_started
+    assert "one neutral suggested memory change" in readme
+    assert "one neutral suggested memory change" in getting_started
+    assert "demo-reviewer" in readme
+    assert "demo-reviewer" in getting_started
+    assert "not authentication" in readme
+    assert "not authentication" in getting_started
 
 
 def test_public_demo_mode_forces_demo_database_when_database_url_is_set() -> None:
@@ -537,7 +555,8 @@ def test_public_demo_smoke_verifies_demo_exports() -> None:
     assert 'Compiled/central-agent-data-hub-demo.md' in script
     assert 'HUB_VIEW_SMOKE_PORT:-9876' in script
     assert 'scripts/hub_view.sh" --host 127.0.0.1 --port "$hub_view_smoke_port"' in script
-    assert 'AGENT_HUB_PUBLIC_DEMO=1 "$ROOT_DIR/scripts/hub_view.sh"' in script
+    assert "AGENT_HUB_REVIEWERS=demo-reviewer" in script
+    assert "HUB_VIEW_REVIEWER=demo-reviewer" in script
     assert "urllib.request" in script
     assert "local review surface" in script
 

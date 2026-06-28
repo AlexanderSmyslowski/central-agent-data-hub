@@ -156,4 +156,4 @@ echo
 echo "Public demo Hub database is ready."
 echo "Next:"
 echo "  scripts/smoke_public_demo.sh"
-echo "  AGENT_HUB_PUBLIC_DEMO=1 scripts/hub_view.sh"
+echo "  AGENT_HUB_PUBLIC_DEMO=1 AGENT_HUB_REVIEWERS=demo-reviewer HUB_VIEW_REVIEWER=demo-reviewer scripts/hub_view.sh"

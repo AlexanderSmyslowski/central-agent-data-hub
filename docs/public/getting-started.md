@@ -21,6 +21,10 @@ The script creates `.venv` if needed, installs or reuses the local CLI, creates
 database, runs the public demo check, then starts Hub View and prints the local
 URL to open. It does not overwrite an existing `.env`.
 
+The demo includes one neutral suggested memory change in Review Inbox so you can
+see the review flow. The one-command path uses `demo-reviewer` only for local
+demo attribution; this is not authentication and is not written to `.env`.
+
 For a non-blocking check without starting Hub View:
 
 ```bash
@@ -50,7 +54,7 @@ python3 -m venv .venv
 cp .env.example .env
 scripts/db_start_public_demo.sh
 bash scripts/smoke_public_demo.sh
-AGENT_HUB_PUBLIC_DEMO=1 scripts/hub_view.sh
+AGENT_HUB_PUBLIC_DEMO=1 AGENT_HUB_REVIEWERS=demo-reviewer HUB_VIEW_REVIEWER=demo-reviewer scripts/hub_view.sh
 ```
 
 The `.env.example` file contains local defaults. Copying it to `.env` creates
@@ -108,7 +112,7 @@ startup. `Public demo smoke: ok` means the demo path is working.
 Start Hub View:
 
 ```bash
-AGENT_HUB_PUBLIC_DEMO=1 scripts/hub_view.sh
+AGENT_HUB_PUBLIC_DEMO=1 AGENT_HUB_REVIEWERS=demo-reviewer HUB_VIEW_REVIEWER=demo-reviewer scripts/hub_view.sh
 ```
 
 Hub View is a local review surface. It reads reviewed memory and can accept or

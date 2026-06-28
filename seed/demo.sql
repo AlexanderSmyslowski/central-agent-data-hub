@@ -10,7 +10,7 @@ VALUES (
   'central-agent-data-hub-demo',
   'Neutral demo project for showing how reviewed context is stored and read locally.',
   'active',
-  '{"demo": true, "source": "seed/demo.sql"}'::jsonb
+  '{"demo": true, "source": "seed/demo.sql", "default_reviewer": "demo-reviewer"}'::jsonb
 )
 ON CONFLICT (slug) DO UPDATE SET
   name = EXCLUDED.name,
@@ -90,13 +90,24 @@ VALUES
   0.650,
   'proposed',
   '{"demo": true, "confidence_label": "medium"}'::jsonb
+),
+(
+  '00000000-0000-4000-8000-000000000203',
+  '00000000-0000-4000-8000-000000000001',
+  'Agents should use accepted demo memory as context and leave unaccepted suggestions in the Review Inbox.',
+  'reports/demo/review-flow.md',
+  0.750,
+  'draft',
+  '{"demo": true, "confidence_label": "medium", "assigned_reviewer": "demo-reviewer", "demo_review_card": true}'::jsonb
 )
 ON CONFLICT (id) DO UPDATE SET
   statement = EXCLUDED.statement,
   source = EXCLUDED.source,
   confidence = EXCLUDED.confidence,
   status = EXCLUDED.status,
-  metadata = EXCLUDED.metadata;
+  metadata = EXCLUDED.metadata
+WHERE facts.id <> '00000000-0000-4000-8000-000000000203'
+   OR facts.status = 'draft';
 
 INSERT INTO open_questions (id, project_id, question, answer, status, resolved_at, metadata)
 VALUES (

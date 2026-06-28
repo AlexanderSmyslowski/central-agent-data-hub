@@ -189,7 +189,7 @@ if [[ "$DRY_RUN" -eq 1 ]]; then
   if [[ "$HUB_VIEW_CHOICE" == "yes" ]]; then
     has_next_steps=1
     if [[ "$PUBLIC_DEMO_CHOICE" == "yes" ]]; then
-      echo "  AGENT_HUB_PUBLIC_DEMO=1 scripts/hub_view.sh"
+      echo "  AGENT_HUB_PUBLIC_DEMO=1 AGENT_HUB_REVIEWERS=demo-reviewer HUB_VIEW_REVIEWER=demo-reviewer scripts/hub_view.sh"
     else
       echo "  scripts/hub_view.sh"
     fi
@@ -261,7 +261,7 @@ fi
 if [[ "$HUB_VIEW_CHOICE" == "yes" ]]; then
   has_next_steps=1
   if [[ "$PUBLIC_DEMO_CHOICE" == "yes" ]]; then
-    echo "  AGENT_HUB_PUBLIC_DEMO=1 scripts/hub_view.sh"
+    echo "  AGENT_HUB_PUBLIC_DEMO=1 AGENT_HUB_REVIEWERS=demo-reviewer HUB_VIEW_REVIEWER=demo-reviewer scripts/hub_view.sh"
   else
     echo "  scripts/hub_view.sh"
   fi

@@ -847,6 +847,12 @@ def test_lan_read_bind_returns_warning_when_explicitly_allowed() -> None:
     assert "writes stay disabled unless Hub View is bound to loopback" in warning
 
 
+def test_hub_view_parser_accepts_explicit_reviewer() -> None:
+    args = hub_view.build_parser().parse_args(["--reviewer", "demo-reviewer"])
+
+    assert args.reviewer == "demo-reviewer"
+
+
 def test_application_renders_project_detail(monkeypatch) -> None:
     def fake_load_view_model(
         selected_slug: str | None,

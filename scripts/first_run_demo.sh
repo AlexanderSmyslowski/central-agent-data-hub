@@ -193,6 +193,12 @@ fi
 hub_view_port="${HUB_VIEW_PORT:-8765}"
 hub_view_host="127.0.0.1"
 hub_view_args=(--host "$hub_view_host")
+hub_view_env=(AGENT_HUB_PUBLIC_DEMO=1)
+
+if [[ -z "${HUB_VIEW_REVIEWER:-}" ]]; then
+  hub_view_env+=(HUB_VIEW_REVIEWER=demo-reviewer)
+  hub_view_env+=(AGENT_HUB_REVIEWERS=demo-reviewer)
+fi
 
 echo
 echo "Public demo first run is ready."
@@ -219,9 +225,12 @@ if [[ "$MOBILE_PREVIEW" -eq 1 ]]; then
 else
   echo "Open this URL:"
   echo "  http://127.0.0.1:${hub_view_port}"
+  echo
+  echo "Demo Review Inbox actions use reviewer: ${HUB_VIEW_REVIEWER:-demo-reviewer}"
+  echo "This is local demo attribution, not authentication."
 fi
 echo
 echo "Press Ctrl-C in this terminal to stop Hub View."
 echo
 
-AGENT_HUB_PUBLIC_DEMO=1 "$ROOT_DIR/scripts/hub_view.sh" "${hub_view_args[@]}"
+env "${hub_view_env[@]}" "$ROOT_DIR/scripts/hub_view.sh" "${hub_view_args[@]}"

@@ -40,7 +40,10 @@ if [[ ! -f "$demo_compiled_export" ]]; then
   exit 1
 fi
 
-AGENT_HUB_PUBLIC_DEMO=1 "$ROOT_DIR/scripts/hub_view.sh" --host 127.0.0.1 --port "$hub_view_smoke_port" \
+AGENT_HUB_PUBLIC_DEMO=1 \
+AGENT_HUB_REVIEWERS=demo-reviewer \
+HUB_VIEW_REVIEWER=demo-reviewer \
+  "$ROOT_DIR/scripts/hub_view.sh" --host 127.0.0.1 --port "$hub_view_smoke_port" \
   >"$hub_view_log" 2>&1 &
 hub_view_pid="$!"
 
@@ -133,12 +136,13 @@ for _ in range(50):
             "/inbox": (
                 "Review Inbox",
                 "Suggested memory changes stay unconfirmed",
+                "Review queue",
                 "How to review",
                 "Would you want an agent to rely on this later?",
                 "Is the origin concrete enough to trust?",
                 "Accept stores it as reviewed memory. Reject archives it.",
-                "No items to review.",
-                "When agents suggest memory changes",
+                "Review is ready",
+                "demo-reviewer",
                 "Back to project overview",
             ),
             (
@@ -260,8 +264,12 @@ for _ in range(50):
                 "Prüf-Warteschlange",
                 "Prüfe jeweils eine vorgeschlagene Änderung",
                 "Nichts hier wird zu geprüftem Projektgedächtnis",
-                "Prüfer nicht gesetzt",
-                "Nichts zu prüfen.",
+                "So prüfst du",
+                "Soll ein Agent sich später darauf verlassen?",
+                "Ist die Herkunft konkret genug",
+                "Merken übernimmt es ins geprüfte Projektgedächtnis",
+                "Prüfung ist bereit",
+                "demo-reviewer",
                 "Zurück zur Projektübersicht",
             ),
             (

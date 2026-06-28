@@ -479,6 +479,13 @@ def build_parser() -> argparse.ArgumentParser:
         default=int(os.environ.get("HUB_VIEW_PORT", "8765")),
         help="Bind port.",
     )
+    parser.add_argument(
+        "--reviewer",
+        help=(
+            "Reviewer handle for local Review Inbox actions. This is "
+            "attribution, not authentication."
+        ),
+    )
     return parser
 
 def validate_lan_read_bind(host: str, *, allow_lan_read: bool) -> str | None:
@@ -525,7 +532,17 @@ def main(argv: list[str] | None = None) -> int:
             f"port {args.port} is already in use; retry with --port {args.port + 1}"
         )
 
-    app = create_application(bind_host=args.host)
+    reviewer_handle = None
+    if args.reviewer:
+        try:
+            reviewer_handle = resolve_required_reviewer(
+                args.reviewer,
+                env_var="HUB_VIEW_REVIEWER",
+            )
+        except ValueError as exc:
+            parser.error(str(exc))
+
+    app = create_application(bind_host=args.host, reviewer_handle=reviewer_handle)
     with make_server(args.host, args.port, app) as server:
         if lan_read_warning:
             print(f"Warning: {lan_read_warning}.", file=sys.stderr, flush=True)
