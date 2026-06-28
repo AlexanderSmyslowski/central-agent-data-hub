@@ -473,6 +473,33 @@
         line-height: 1.4;
       }
 
+      .workbench-area {
+        margin: 28px 0 0;
+        padding-top: 24px;
+        border-top: 1px solid var(--line);
+      }
+
+      .workbench-area-header {
+        display: grid;
+        grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+        gap: 18px;
+        align-items: start;
+        margin-bottom: 16px;
+      }
+
+      .workbench-area-header h2 {
+        margin: 0;
+        font-size: 22px;
+        line-height: 1.2;
+      }
+
+      .workbench-area-header p:not(.section-kicker) {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
       .project-counts {
         display: flex;
         flex-wrap: wrap;
@@ -1429,6 +1456,11 @@
           gap: 8px;
         }
 
+        .workbench-area-header {
+          grid-template-columns: 1fr;
+          gap: 8px;
+        }
+
         .agent-form,
         .agent-form-row {
           grid-template-columns: 1fr;
@@ -1473,7 +1505,7 @@
         {% if selected_project %}
           <a class="app-nav-link{% if view_name != 'agent_context' %} active{% endif %}" href="{{ url_for('/projects/' ~ selected_project.slug) }}">{{ t('nav_project') }}</a>
           <a class="app-nav-link" href="{{ url_for('/projects/' ~ selected_project.slug) }}#current-state-title">{{ t('nav_work_state') }}</a>
-          <a class="app-nav-link" href="{{ url_for('/projects/' ~ selected_project.slug) }}#memory-explorer">{{ t('nav_memory') }}</a>
+          <a class="app-nav-link" href="{{ url_for('/projects/' ~ selected_project.slug) }}#project-memory">{{ t('nav_memory') }}</a>
           <a class="app-nav-link{% if view_name == 'agent_context' %} active{% endif %}" href="{{ url_for('/projects/' ~ selected_project.slug) }}#connect-agent">{{ t('nav_agent_handoff') }}</a>
         {% endif %}
         <a class="app-nav-link{% if view_name == 'inbox' %} active{% endif %}" href="{{ url_for('/inbox') }}">{{ t('nav_review') }}</a>

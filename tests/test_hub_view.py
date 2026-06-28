@@ -820,7 +820,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Memory" in body
     assert "Agent handoff" in body
     assert 'href="/projects/central-agent-data-hub#current-state-title"' in body
-    assert 'href="/projects/central-agent-data-hub#memory-explorer"' in body
+    assert 'href="/projects/central-agent-data-hub#project-memory"' in body
     assert 'href="/projects/central-agent-data-hub#connect-agent"' in body
     assert 'aria-label="Project actions"' in body
     assert "What can I do here?" in body
@@ -845,6 +845,13 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Check memory quality" in body
     assert 'href="#connect-agent"' in body
     assert 'href="#memory-explorer"' in body
+    assert 'id="project-memory"' in body
+    assert "Project memory" in body
+    assert "Search and inspect the reviewed context this project can hand to a chatbot or local agent." in body
+    assert "Agent handoff and review" in body
+    assert "Prepare context for a chatbot or local agent, then handle suggested memory changes separately." in body
+    assert "Memory details" in body
+    assert "Open the sections below when you need the reviewed items, risks, latest report, quality signals, or relations." in body
     assert 'href="#reviewed-memory"' in body
     assert 'href="#risks-and-questions"' in body
     assert 'href="#latest-status"' in body
@@ -969,11 +976,15 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert "Gedächtnis" in body
     assert "Agentenübergabe" in body
     assert 'href="/projects/central-agent-data-hub-demo?lang=de#current-state-title"' in body
-    assert 'href="/projects/central-agent-data-hub-demo?lang=de#memory-explorer"' in body
+    assert 'href="/projects/central-agent-data-hub-demo?lang=de#project-memory"' in body
     assert 'href="/projects/central-agent-data-hub-demo?lang=de#connect-agent"' in body
     assert "Diese Seite durchsuchen" in body
     assert "Was kann ich hier tun?" in body
     assert "Nutze dieses Projekt als lokale Arbeitsfläche" in body
+    assert "Projektgedächtnis" in body
+    assert "Durchsuche und prüfe den bestätigten Kontext" in body
+    assert "Agentenübergabe und Prüfung" in body
+    assert "Detailansicht" in body
     assert "Empfohlen" in body
     assert "Aktueller Arbeitsstand" in body
     assert "Beginne hier, bevor du Arbeit an einen Agenten übergibst" in body

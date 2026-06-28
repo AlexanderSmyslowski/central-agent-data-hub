@@ -91,79 +91,108 @@
   </div>
 </section>
 
-<div class="summary-grid">
-  <a class="summary-tile" href="#reviewed-memory">
-    <div class="summary-label">{{ t('reviewed_memory') }}</div>
-    <div class="summary-value">{{ selected_project.counts.facts + selected_project.counts.decisions + selected_project.counts.risks + selected_project.counts.open_questions + selected_project.counts.reports }}</div>
-    <div class="summary-subtle">{{ selected_project.counts.facts }} {{ t('facts') }} · {{ selected_project.counts.decisions }} {{ t('agent_status_decisions') | lower }} · {{ selected_project.counts.reports }} {{ t('reports') }}</div>
-  </a>
-  <a class="summary-tile" href="#risks-and-questions">
-    <div class="summary-label">{{ t('risks_and_questions') }}</div>
-    <div class="summary-value">{{ selected_project.counts.open_questions + selected_project.counts.risks }}</div>
-    <div class="summary-subtle">{{ selected_project.counts.open_questions }} {{ t('open_questions') }} · {{ selected_project.counts.risks }} {{ t('risks') }}</div>
-  </a>
-  <a class="summary-tile" href="#latest-status">
-    <div class="summary-label">{{ t('latest_status') }}</div>
-    <div class="summary-value">{{ selected_project.counts.reports }}</div>
-    <div class="summary-subtle">{% if selected_project.reports %}{{ selected_project.reports[0].title }}{% else %}{{ t('no_reports') }}{% endif %}</div>
-  </a>
-  <a class="summary-tile" href="#quality">
-    <div class="summary-label">{{ t('quality') }}</div>
-    <div class="summary-value">{{ selected_project.quality.score }}</div>
-    <div class="summary-subtle">{{ selected_project.quality.status }} · relation coverage {{ selected_project.quality.relation_coverage }}</div>
-  </a>
-  <a class="summary-tile" href="{{ url_for('/inbox') }}">
-    <div class="summary-label">{{ t('review_inbox') }}</div>
-    <div class="summary-value">{{ draft_total | default(0) }}</div>
-    <div class="summary-subtle">{{ t('all_items_to_review') }}</div>
-  </a>
-</div>
-
-<p class="overview-note">{{ t('overview_note') }}</p>
-
-<section class="memory-explorer" id="memory-explorer" data-memory-explorer data-showing-template="{{ t('memory_search_showing', count='__count__') }}" data-result-template="{{ t('memory_search_result', count='__count__', query='__query__') }}">
-  <div>
-    <h2>{{ t('find_reviewed_memory') }}</h2>
-    <p>{{ t('memory_search_description') }}</p>
-  </div>
-  <div class="memory-filter-row">
-    <label class="memory-filter-label" for="memory-filter">{{ t('memory_search_label') }}</label>
-    <div class="memory-filter-control">
-      <input id="memory-filter" class="memory-filter-input" type="search" data-memory-filter placeholder="{{ t('memory_search_placeholder') }}" autocomplete="off" enterkeyhint="done">
-      <button class="memory-filter-clear" type="button" data-memory-clear hidden>{{ t('memory_search_clear') }}</button>
+<section class="workbench-area" id="project-memory" aria-labelledby="project-memory-title">
+  <div class="workbench-area-header">
+    <div>
+      <p class="section-kicker">{{ t('workbench_area') }}</p>
+      <h2 id="project-memory-title">{{ t('project_memory_area_title') }}</h2>
     </div>
+    <p>{{ t('project_memory_area_copy') }}</p>
   </div>
-  <p class="memory-filter-meta" data-memory-results>{{ t('memory_search_initial') }}</p>
-  <div class="memory-filter-hits" data-memory-hits hidden></div>
-  <p class="empty" data-memory-empty hidden>{{ t('memory_search_empty') }}</p>
-  <div class="memory-type-links" aria-label="{{ t('reviewed_memory') }}">
-    <a href="#reviewed-memory">{{ t('reviewed_memory') }}</a>
-    <a href="#risks-and-questions">{{ t('risks_and_questions') }}</a>
-    <a href="#latest-status">{{ t('latest_status') }}</a>
-    <a href="#relations">{{ t('relations') }}</a>
+
+  <div class="summary-grid">
+    <a class="summary-tile" href="#reviewed-memory">
+      <div class="summary-label">{{ t('reviewed_memory') }}</div>
+      <div class="summary-value">{{ selected_project.counts.facts + selected_project.counts.decisions + selected_project.counts.risks + selected_project.counts.open_questions + selected_project.counts.reports }}</div>
+      <div class="summary-subtle">{{ selected_project.counts.facts }} {{ t('facts') }} · {{ selected_project.counts.decisions }} {{ t('agent_status_decisions') | lower }} · {{ selected_project.counts.reports }} {{ t('reports') }}</div>
+    </a>
+    <a class="summary-tile" href="#risks-and-questions">
+      <div class="summary-label">{{ t('risks_and_questions') }}</div>
+      <div class="summary-value">{{ selected_project.counts.open_questions + selected_project.counts.risks }}</div>
+      <div class="summary-subtle">{{ selected_project.counts.open_questions }} {{ t('open_questions') }} · {{ selected_project.counts.risks }} {{ t('risks') }}</div>
+    </a>
+    <a class="summary-tile" href="#latest-status">
+      <div class="summary-label">{{ t('latest_status') }}</div>
+      <div class="summary-value">{{ selected_project.counts.reports }}</div>
+      <div class="summary-subtle">{% if selected_project.reports %}{{ selected_project.reports[0].title }}{% else %}{{ t('no_reports') }}{% endif %}</div>
+    </a>
+    <a class="summary-tile" href="#quality">
+      <div class="summary-label">{{ t('quality') }}</div>
+      <div class="summary-value">{{ selected_project.quality.score }}</div>
+      <div class="summary-subtle">{{ selected_project.quality.status }} · relation coverage {{ selected_project.quality.relation_coverage }}</div>
+    </a>
+    <a class="summary-tile" href="{{ url_for('/inbox') }}">
+      <div class="summary-label">{{ t('review_inbox') }}</div>
+      <div class="summary-value">{{ draft_total | default(0) }}</div>
+      <div class="summary-subtle">{{ t('all_items_to_review') }}</div>
+    </a>
   </div>
+
+  <p class="overview-note">{{ t('overview_note') }}</p>
+
+  <section class="memory-explorer" id="memory-explorer" data-memory-explorer data-showing-template="{{ t('memory_search_showing', count='__count__') }}" data-result-template="{{ t('memory_search_result', count='__count__', query='__query__') }}">
+    <div>
+      <h2>{{ t('find_reviewed_memory') }}</h2>
+      <p>{{ t('memory_search_description') }}</p>
+    </div>
+    <div class="memory-filter-row">
+      <label class="memory-filter-label" for="memory-filter">{{ t('memory_search_label') }}</label>
+      <div class="memory-filter-control">
+        <input id="memory-filter" class="memory-filter-input" type="search" data-memory-filter placeholder="{{ t('memory_search_placeholder') }}" autocomplete="off" enterkeyhint="done">
+        <button class="memory-filter-clear" type="button" data-memory-clear hidden>{{ t('memory_search_clear') }}</button>
+      </div>
+    </div>
+    <p class="memory-filter-meta" data-memory-results>{{ t('memory_search_initial') }}</p>
+    <div class="memory-filter-hits" data-memory-hits hidden></div>
+    <p class="empty" data-memory-empty hidden>{{ t('memory_search_empty') }}</p>
+    <div class="memory-type-links" aria-label="{{ t('reviewed_memory') }}">
+      <a href="#reviewed-memory">{{ t('reviewed_memory') }}</a>
+      <a href="#risks-and-questions">{{ t('risks_and_questions') }}</a>
+      <a href="#latest-status">{{ t('latest_status') }}</a>
+      <a href="#relations">{{ t('relations') }}</a>
+    </div>
+  </section>
 </section>
 
-<section class="agent-connect" id="connect-agent">
-  <h2>{{ t('connect_an_agent') }}</h2>
-  <p>{{ t('agent_handoff_form_help') }}</p>
-  <form class="agent-form" method="get" action="/projects/{{ selected_project.slug }}/agent-context">
-    <input type="hidden" name="lang" value="{{ language }}">
-    <label class="agent-form-label" for="agent-task">{{ t('task_for_agent') }}</label>
-    <div class="agent-form-row">
-      <input id="agent-task" class="agent-input" type="text" name="task" value="{{ t('default_agent_task') }}" aria-label="{{ t('task_for_agent') }}">
-      <button class="button primary-button" type="submit">{{ t('prepare_agent_handoff') }}</button>
+<section class="workbench-area" id="agent-review" aria-labelledby="agent-review-title">
+  <div class="workbench-area-header">
+    <div>
+      <p class="section-kicker">{{ t('workbench_area') }}</p>
+      <h2 id="agent-review-title">{{ t('agent_review_area_title') }}</h2>
     </div>
-  </form>
+    <p>{{ t('agent_review_area_copy') }}</p>
+  </div>
+
+  <section class="agent-connect" id="connect-agent">
+    <h2>{{ t('connect_an_agent') }}</h2>
+    <p>{{ t('agent_handoff_form_help') }}</p>
+    <form class="agent-form" method="get" action="/projects/{{ selected_project.slug }}/agent-context">
+      <input type="hidden" name="lang" value="{{ language }}">
+      <label class="agent-form-label" for="agent-task">{{ t('task_for_agent') }}</label>
+      <div class="agent-form-row">
+        <input id="agent-task" class="agent-input" type="text" name="task" value="{{ t('default_agent_task') }}" aria-label="{{ t('task_for_agent') }}">
+        <button class="button primary-button" type="submit">{{ t('prepare_agent_handoff') }}</button>
+      </div>
+    </form>
+  </section>
+
+  <a class="review-callout" href="{{ url_for('/inbox') }}">
+    <strong>{{ t('review_suggested_changes') }}</strong>
+    <span>{{ t('drafts_review_note') }}</span>
+  </a>
 </section>
 
-<a class="review-callout" href="{{ url_for('/inbox') }}">
-  <strong>{{ t('review_suggested_changes') }}</strong>
-  <span>{{ t('drafts_review_note') }}</span>
-</a>
+<section class="workbench-area" id="memory-details" aria-labelledby="memory-details-title">
+  <div class="workbench-area-header">
+    <div>
+      <p class="section-kicker">{{ t('workbench_area') }}</p>
+      <h2 id="memory-details-title">{{ t('memory_detail_area_title') }}</h2>
+    </div>
+    <p>{{ t('memory_detail_area_copy') }}</p>
+  </div>
 
-<section class="section" id="reviewed-memory">
-  <h2>{{ t('reviewed_memory') }}</h2>
+  <section class="section" id="reviewed-memory">
+    <h2>{{ t('reviewed_memory') }}</h2>
   <h3>{{ t('agent_status_decisions') }}</h3>
   {% if selected_project.decisions %}
     <div class="list">
@@ -294,4 +323,5 @@
   {% else %}
     <p class="empty">{{ t('no_relations') }}</p>
   {% endif %}
+</section>
 </section>
