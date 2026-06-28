@@ -209,10 +209,17 @@ End time:
 - Hub View opened in browser: yes/no
 - Optional mobile preview URL found/opened: yes/no/not tested
 - Found Project actions: yes/no
+- Understood Project actions as possible next steps: yes/no
+- Found Current work state / Aktueller Arbeitsstand: yes/no
+- Understood Current work state: yes/no
 - Found Find reviewed memory: yes/no
 - Used Search this page: yes/no
 - Saw matching items appear below the search field: yes/no
 - Understood search covers visible reviewed memory only: yes/no
+- Found latest status from the overview: yes/no
+- Found risks and open questions from the overview: yes/no
+- Found review queue / suggested changes from the overview: yes/no
+- Felt Hub View was useful as a local work surface: yes/no/partial
 - Found Use ADH with an agent: yes/no
 - Found Connect an agent: yes/no
 - Prepared or inspected an agent handoff: yes/no
@@ -258,6 +265,12 @@ First place where tester wanted explanation:
 "What do you think a draft is?"
 > ...
 "What do you think Hub View is?"
+> ...
+"What can you do from the first Hub View screen?"
+> ...
+"What do you think the current work state is telling you?"
+> ...
+"What would you use this page for during real work?"
 > ...
 "What do you think Connect an agent does?"
 > ...
@@ -330,18 +343,22 @@ These are the spots worth concentrated attention:
 9. Do they get stuck on **Docker / Postgres**?
 10. Is the command `scripts/first_run_demo.sh` clear?
 11. Does **Project actions** make the main next steps visible?
-12. Does **Use ADH with an agent** make it visible that reviewed ADH context
+12. Does **Current work state** make the project situation understandable
+    without opening every section?
+13. Does Hub View feel like a local work surface rather than a static demo
+    display?
+14. Does **Use ADH with an agent** make it visible that reviewed ADH context
     is being handed to a chatbot or local agent?
-13. Does **Connection verification** make it clear what ADH can check and what
+15. Does **Connection verification** make it clear what ADH can check and what
     remains a manual/external check?
-14. Does the tester understand that Codex setup writes a repo-local
+16. Does the tester understand that Codex setup writes a repo-local
     `AGENTS.md` block, not Hub memory?
-15. Does the tester understand that the public demo shows a dry-run preview and
+17. Does the tester understand that the public demo shows a dry-run preview and
     does not install the demo block?
-16. Does the tester understand that Claude/Hermes/custom agents need their own
+18. Does the tester understand that Claude/Hermes/custom agents need their own
     setup outside Hub View?
-17. Does the tester understand that the terminal fallback is temporary?
-18. If `scripts/first_run_demo.sh --mobile` is used, does the tester understand
+19. Does the tester understand that the terminal fallback is temporary?
+20. If `scripts/first_run_demo.sh --mobile` is used, does the tester understand
     it is a local Wi-Fi preview and not a hosted app?
 
 The current README deliberately frames Agent Data Hub as a local technical
@@ -359,11 +376,15 @@ The test succeeds if the tester, **without explanation**, can:
 - see the public demo check pass
 - open Hub View
 - find **Project actions**
+- understand **Project actions** as concrete next steps
+- find **Current work state**
+- understand the current project situation at a high level
 - find **Find reviewed memory**
 - use **Search this page**
 - see matching items appear below the search field while typing
 - understand that the search covers visible reviewed memory on the page, not
   drafts or hidden data
+- find latest status, risks/open questions, and review queue from the overview
 - find **Use ADH with an agent**
 - find **Connect an agent**
 - understand that the agent handoff is reviewed ADH context being handed to a
@@ -435,6 +456,10 @@ At the end, without correcting them:
 - Was glaubst du, ist Agent Data Hub?
 - Was würdest du damit machen?
 - Was würdest du **nicht** damit machen?
+- Was zeigt dir der aktuelle Arbeitsstand?
+- Welche nächste Aktion würdest du in Hub View auswählen?
+- Fühlt sich Hub View eher wie eine Demo-Seite oder wie eine lokale
+  Arbeitsoberfläche an?
 - Welche Stelle war am unklarsten?
 - Welcher Befehl war am unsichersten?
 - Was hättest du früher wissen wollen?
