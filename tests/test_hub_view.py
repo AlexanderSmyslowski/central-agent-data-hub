@@ -810,11 +810,17 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Selected" in body
     assert "2 review items" in body
     assert 'aria-label="Project actions"' in body
+    assert "What can I do here?" in body
+    assert "Use this project as a local work surface" in body
+    assert "Recommended next" in body
     assert "Use ADH with an agent" in body
-    assert "Prepare the reviewed context before work starts." in body
+    assert "Prepare reviewed context before a chatbot or local agent starts work." in body
     assert "Review suggested changes" in body
+    assert "2 items wait for a human decision across projects." in body
     assert "Find reviewed memory" in body
-    assert "Filter visible facts, decisions, risks, questions, reports, and relations." in body
+    assert "Search facts, decisions, risks, questions, reports, and relations already on this page." in body
+    assert "Read latest status" in body
+    assert "Start with the newest report before changing direction." in body
     assert "Check memory quality" in body
     assert 'href="#connect-agent"' in body
     assert 'href="#memory-explorer"' in body
@@ -931,8 +937,12 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert "Neutrales Demo-Projekt: Es zeigt, wie geprüfter Kontext lokal" in body
     assert "Neutral demo project for showing" not in body
     assert "Diese Seite durchsuchen" in body
+    assert "Was kann ich hier tun?" in body
+    assert "Nutze dieses Projekt als lokale Arbeitsfläche" in body
+    assert "Empfohlen" in body
     assert "Agent verbinden" in body
     assert "Dieses Projekt mit ADH-Kontext prüfen" in body
+    assert "Letzten Stand lesen" in body
     assert "Reviewed facts are visible in Hub View." in body
     assert "Demo risk stays in the original stored language." in body
     assert 'href="/inbox?lang=de"' in body
