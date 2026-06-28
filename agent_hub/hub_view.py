@@ -29,6 +29,7 @@ from agent_hub.hub_view_models import (
     load_agent_context_view_model,
     load_environment,
     load_inbox_view_model,
+    load_review_activity_view_model,
     load_view_model,
     metadata_project_local_path,
     render_page,

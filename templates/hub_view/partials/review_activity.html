@@ -4,7 +4,12 @@
       <p class="section-kicker">{{ t('review_activity_kicker') }}</p>
       <h2 id="review-activity-title">{{ t('review_activity_title') }}</h2>
     </div>
-    <p>{{ t('review_activity_copy') }}</p>
+    <div>
+      <p>{{ t('review_activity_copy') }}</p>
+      {% if inbox.review_activity_url %}
+        <a class="inline-action" href="{{ url_for(inbox.review_activity_url) }}">{{ t('review_activity_open_full') }}</a>
+      {% endif %}
+    </div>
   </div>
   <div class="review-activity-list">
     {% for item in inbox.recent_reviews %}

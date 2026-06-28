@@ -145,6 +145,12 @@ for _ in range(50):
                 "demo-reviewer",
                 "Back to project overview",
             ),
+            "/inbox/activity": (
+                "Review history",
+                "This read-only view shows recent human decisions",
+                "No review history yet.",
+                "Back to Review Inbox",
+            ),
             (
                 "/projects/central-agent-data-hub-demo/agent-context"
                 f"?task={quote('Review the public demo with ADH context')}"
@@ -271,6 +277,13 @@ for _ in range(50):
                 "Prüfung ist bereit",
                 "demo-reviewer",
                 "Zurück zur Projektübersicht",
+            ),
+            "/inbox/activity?lang=de": (
+                "<html lang=\"de\">",
+                "Prüfverlauf",
+                "Diese reine Leseansicht zeigt letzte menschliche Entscheidungen",
+                "Noch kein Prüfverlauf.",
+                "Zurück zum Prüfungseingang",
             ),
             (
                 "/projects/central-agent-data-hub-demo/agent-context"

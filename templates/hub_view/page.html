@@ -1512,10 +1512,22 @@
       }
 
       .review-activity .section-header p:last-child {
-        max-width: 460px;
         margin: 0;
         color: var(--muted);
         line-height: 1.45;
+      }
+
+      .review-activity .section-header > div:last-child {
+        max-width: 460px;
+      }
+
+      .inline-action {
+        display: inline-flex;
+        margin-top: 8px;
+        color: var(--accent);
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
       }
 
       .review-activity-list {
@@ -1893,16 +1905,16 @@
           <a class="app-nav-link" href="{{ url_for('/projects/' ~ selected_project.slug) }}#project-memory">{{ t('nav_memory') }}</a>
           <a class="app-nav-link{% if view_name == 'agent_context' %} active{% endif %}" href="{{ url_for('/projects/' ~ selected_project.slug) }}#connect-agent"{% if view_name == 'agent_context' %} aria-current="page"{% endif %}>{{ t('nav_agent_handoff') }}</a>
         {% endif %}
-        <a class="app-nav-link{% if view_name == 'inbox' %} active{% endif %}" href="{{ url_for('/inbox') }}"{% if view_name == 'inbox' %} aria-current="page"{% endif %}>{{ t('nav_review') }}</a>
+        <a class="app-nav-link{% if view_name in ('inbox', 'review_activity') %} active{% endif %}" href="{{ url_for('/inbox') }}"{% if view_name in ('inbox', 'review_activity') %} aria-current="page"{% endif %}>{{ t('nav_review') }}</a>
       </nav>
 
       <div class="layout">
         <aside class="panel sidebar">
-          <a class="sidebar-action{% if view_name == 'inbox' %} active{% endif %}" href="{{ url_for('/inbox') }}">
+          <a class="sidebar-action{% if view_name in ('inbox', 'review_activity') %} active{% endif %}" href="{{ url_for('/inbox') }}">
             {{ t('review_inbox') }}
             <span class="sidebar-action-meta">{{ draft_total | default(0) }} {{ t('review_items') }}</span>
           </a>
-          {% if view_name != 'inbox' %}
+          {% if view_name not in ('inbox', 'review_activity') %}
             <div class="sidebar-title">{{ t('active_projects') }}</div>
             {% if projects %}
               {% for project in projects %}
@@ -1936,6 +1948,8 @@
         <section class="panel content" id="main-content" tabindex="-1">
           {% if view_name == 'inbox' %}
             {% include "views/inbox.html" %}
+          {% elif view_name == 'review_activity' %}
+            {% include "views/review_activity.html" %}
           {% elif not_found_slug %}
             <div class="detail-header">
               <div>

@@ -799,6 +799,24 @@ def load_inbox_view_model(
             "error": error_message,
             "review_result": result_card,
             "recent_reviews": review_activity_cards(review_activity),
+            "review_activity_url": "/inbox/activity",
+        },
+    }
+
+def load_review_activity_view_model() -> tuple[int, dict[str, object]]:
+    with _compat_attr("connect", connect)() as conn:
+        with conn.cursor() as cur:
+            drafts = fetch_drafts(cur, limit=None)
+            review_activity = fetch_recent_review_actions(cur, limit=50)
+    return 200, {
+        "projects": [],
+        "selected_project": None,
+        "not_found_slug": None,
+        "draft_total": len(drafts),
+        "inbox": {
+            "groups": [],
+            "recent_reviews": review_activity_cards(review_activity),
+            "review_activity_url": None,
         },
     }
 

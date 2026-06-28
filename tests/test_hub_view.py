@@ -523,6 +523,7 @@ def test_inbox_page_renders_german_recent_review_activity() -> None:
                 "message": None,
                 "error": None,
                 "recent_reviews": hub_view.review_activity_cards([review_action_row()]),
+                "review_activity_url": "/inbox/activity",
             },
         },
         200,
@@ -534,11 +535,66 @@ def test_inbox_page_renders_german_recent_review_activity() -> None:
 
     assert "Zuletzt geprüft" in body
     assert "Letzte menschliche Prüfentscheidungen aus der lokalen Prüfspur." in body
+    assert "Gesamten Prüfverlauf öffnen" in body
+    assert 'href="/inbox/activity?lang=de"' in body
     assert "Gemerkt · Fakt" in body
     assert "Central Agent Data Hub" in body
     assert "Status: geprüft." in body
     assert "Von bob." in body
     assert "Über Hub View." in body
+
+
+def test_review_activity_page_renders_read_only_history() -> None:
+    body = hub_view.render_page(
+        {
+            "projects": [],
+            "selected_project": None,
+            "not_found_slug": None,
+            "inbox": {
+                "groups": [],
+                "recent_reviews": hub_view.review_activity_cards(
+                    [review_action_row(action="inbox_reject")]
+                ),
+                "review_activity_url": None,
+            },
+            "draft_total": 0,
+        },
+        200,
+        view_name="review_activity",
+        language="de",
+        current_path="/inbox/activity",
+        query_string="lang=de",
+    ).decode("utf-8")
+
+    assert "Prüfverlauf" in body
+    assert "Diese reine Leseansicht zeigt letzte menschliche Entscheidungen" in body
+    assert 'href="/inbox?lang=de">Zurück zum Prüfungseingang</a>' in body
+    assert "Verworfen · Fakt" in body
+    assert "Status: archiviert." in body
+    assert "Gesamten Prüfverlauf öffnen" not in body
+
+
+def test_review_activity_page_empty_state() -> None:
+    body = hub_view.render_page(
+        {
+            "projects": [],
+            "selected_project": None,
+            "not_found_slug": None,
+            "inbox": {
+                "groups": [],
+                "recent_reviews": [],
+                "review_activity_url": None,
+            },
+            "draft_total": 0,
+        },
+        200,
+        view_name="review_activity",
+    ).decode("utf-8")
+
+    assert "Review history" in body
+    assert "No review history yet." in body
+    assert "Once a human accepts or rejects" in body
+    assert 'href="/inbox">Back to Review Inbox</a>' in body
 
 
 def test_inbox_page_renders_german_queue_language() -> None:
@@ -933,6 +989,41 @@ def test_inbox_get_paths_do_not_write(monkeypatch) -> None:
 
     assert captured["status"] == "200 OK"
     assert "No items to review." in body
+
+
+def test_review_activity_get_path_does_not_write(monkeypatch) -> None:
+    class ReadOnlyCursor:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        def execute(self, sql, *_params) -> None:
+            if re.search(r"\b(INSERT|UPDATE|DELETE)\b", sql.upper()):
+                raise AssertionError("GET /inbox/activity must stay read-only")
+
+        def fetchall(self):
+            return []
+
+    class ReadOnlyConnection:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        def cursor(self):
+            return ReadOnlyCursor()
+
+    monkeypatch.setattr(hub_view, "connect", lambda: ReadOnlyConnection())
+    app = hub_view.create_application(bind_host="127.0.0.1", csrf_token="token")
+
+    captured, body = call_app(app, method="GET", path="/inbox/activity")
+
+    assert captured["status"] == "200 OK"
+    assert "Review history" in body
+    assert "No review history yet." in body
 
 
 def test_inbox_action_get_path_does_not_touch_database(monkeypatch) -> None:

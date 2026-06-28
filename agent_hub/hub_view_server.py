@@ -21,6 +21,7 @@ from agent_hub.hub_view_models import (
     DEFAULT_AGENT_TASK,
     load_agent_context_view_model,
     load_inbox_view_model,
+    load_review_activity_view_model,
     load_view_model,
     metadata_project_local_path,
     render_page,
@@ -250,6 +251,23 @@ class HubViewApplication:
                 reviewed_by=query_value(environ, "reviewed_by"),
                 review_source=query_value(environ, "review_source"),
             )
+            body = _compat_attr("render_page", render_page)(
+                view_model,
+                status_code,
+                view_name=view_name,
+                csrf_token=self.csrf_token,
+                inbox_enabled=self.inbox_enabled,
+                language=language,
+                current_path=path,
+                query_string=str(environ.get("QUERY_STRING") or ""),
+            )
+            return html_response(start_response, status_code, body)
+        elif path == "/inbox/activity":
+            view_name = "review_activity"
+            status_code, view_model = _compat_attr(
+                "load_review_activity_view_model",
+                load_review_activity_view_model,
+            )()
             body = _compat_attr("render_page", render_page)(
                 view_model,
                 status_code,
