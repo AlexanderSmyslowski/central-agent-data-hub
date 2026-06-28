@@ -21,6 +21,7 @@ from agent_hub.hub_view_models import (
     DEFAULT_AGENT_TASK,
     load_agent_context_view_model,
     load_inbox_view_model,
+    load_memory_item_view_model,
     load_review_activity_view_model,
     load_view_model,
     metadata_project_local_path,
@@ -156,6 +157,15 @@ def project_action_slug(path: str, suffix: str) -> str | None:
     slug = path.removeprefix("/projects/").removesuffix(suffix).strip("/")
     return slug or None
 
+def memory_item_path(path: str) -> tuple[str, str, str] | None:
+    parts = path.strip("/").split("/")
+    if len(parts) != 5 or parts[0] != "projects" or parts[2] != "memory":
+        return None
+    slug, item_type, item_id = parts[1], parts[3], parts[4]
+    if not slug or not item_type or not item_id:
+        return None
+    return slug, item_type, item_id
+
 class HubViewApplication:
     def __init__(
         self,
@@ -218,6 +228,24 @@ class HubViewApplication:
             if view_model.get("agent_context"):
                 view_model["agent_context"]["setup_message"] = query_value(environ, "setup_message")
                 view_model["agent_context"]["setup_error"] = query_value(environ, "setup_error")
+            body = _compat_attr("render_page", render_page)(
+                view_model,
+                status_code,
+                view_name=view_name,
+                csrf_token=self.csrf_token,
+                inbox_enabled=self.inbox_enabled,
+                language=language,
+                current_path=path,
+                query_string=str(environ.get("QUERY_STRING") or ""),
+            )
+            return html_response(start_response, status_code, body)
+        elif (memory_path := memory_item_path(path)) is not None:
+            view_name = "memory_item"
+            selected_slug, item_type, item_id = memory_path
+            status_code, view_model = _compat_attr(
+                "load_memory_item_view_model",
+                load_memory_item_view_model,
+            )(selected_slug, item_type, item_id)
             body = _compat_attr("render_page", render_page)(
                 view_model,
                 status_code,

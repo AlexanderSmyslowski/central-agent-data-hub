@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import shlex
 import sys
+from uuid import UUID
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -38,6 +39,7 @@ from agent_hub.repo_agent_memory import (
     plan_repo_agent_memory,
 )
 from agent_hub.reviewers import resolve_responsible_reviewer
+from agent_hub.statuses import agent_read_excluded_statuses
 from agent_hub.writeback_routing import card_for_item
 
 
@@ -66,6 +68,71 @@ PROJECT_CARD_COUNT_KEYS = (
 )
 MISSING_LATEST_REPORT = object()
 
+MEMORY_DETAIL_SPECS = {
+    "fact": {
+        "table": "facts",
+        "columns": "id, statement, source, confidence, status, created_at, updated_at",
+        "title_column": "statement",
+        "type_label_key": "agent_status_facts",
+        "anchor": "reviewed-memory",
+        "fields": (
+            ("source", "memory_item_source"),
+            ("confidence", "memory_item_confidence"),
+        ),
+    },
+    "decision": {
+        "table": "decisions",
+        "columns": "id, decision, rationale, consequences, status, created_at, updated_at",
+        "title_column": "decision",
+        "type_label_key": "agent_status_decisions",
+        "anchor": "reviewed-memory",
+        "fields": (
+            ("rationale", "memory_item_rationale"),
+            ("consequences", "memory_item_consequences"),
+        ),
+    },
+    "risk": {
+        "table": "risks",
+        "columns": "id, title, severity, impact, mitigation, status, created_at, updated_at",
+        "title_column": "title",
+        "type_label_key": "agent_status_risks",
+        "anchor": "risks-and-questions",
+        "fields": (
+            ("severity", "memory_item_severity"),
+            ("impact", "memory_item_impact"),
+            ("mitigation", "memory_item_mitigation"),
+        ),
+    },
+    "open_question": {
+        "table": "open_questions",
+        "columns": "id, question, answer, status, created_at, updated_at",
+        "title_column": "question",
+        "type_label_key": "agent_status_open_questions",
+        "anchor": "risks-and-questions",
+        "fields": (
+            ("answer", "memory_item_answer"),
+        ),
+    },
+    "report": {
+        "table": "reports",
+        "columns": "id, title, report_type, summary, body, status, created_at, updated_at",
+        "title_column": "title",
+        "type_label_key": "agent_status_reports",
+        "anchor": "latest-status",
+        "fields": (
+            ("report_type", "memory_item_report_type"),
+            ("summary", "memory_item_summary"),
+            ("body", "memory_item_body"),
+        ),
+    },
+}
+
+MEMORY_DETAIL_URL_TYPES = {"open_question": "open-question"}
+MEMORY_DETAIL_PATH_TYPES = {
+    **{item_type: item_type for item_type in MEMORY_DETAIL_SPECS},
+    "open-question": "open_question",
+}
+
 def _compat_attr(name: str, fallback):
     module = sys.modules.get("agent_hub.hub_view")
     return getattr(module, name, fallback) if module is not None else fallback
@@ -87,6 +154,34 @@ def format_timestamp(value: object | None) -> str | None:
         return dt.strftime("%Y-%m-%d %H:%M UTC")
     text = str(value)
     return text.replace("T", " ").replace("+00:00", " UTC")
+
+def memory_detail_path_type(item_type: str) -> str:
+    return MEMORY_DETAIL_URL_TYPES.get(item_type, item_type)
+
+def memory_detail_url(project_slug: object, item_type: str, item_id: object) -> str:
+    path_type = memory_detail_path_type(item_type)
+    return f"/projects/{project_slug}/memory/{path_type}/{item_id}"
+
+def rows_with_memory_detail_links(
+    rows: list[dict[str, object]],
+    *,
+    project_slug: object,
+    item_type: str,
+) -> list[dict[str, object]]:
+    linked_rows: list[dict[str, object]] = []
+    for row in rows:
+        linked = dict(row)
+        if linked.get("id"):
+            linked["detail_url"] = memory_detail_url(project_slug, item_type, linked["id"])
+        linked_rows.append(linked)
+    return linked_rows
+
+def memory_status_clause(item_type: str) -> tuple[str, tuple[str, ...]]:
+    excluded_statuses = agent_read_excluded_statuses(item_type)
+    if not excluded_statuses:
+        return "", ()
+    placeholders = ", ".join(["%s"] * len(excluded_statuses))
+    return f"AND status NOT IN ({placeholders})", excluded_statuses
 
 def fetch_active_projects(cur) -> list[dict[str, object]]:
     cur.execute(
@@ -352,11 +447,31 @@ def build_detail_view(
             ],
             "check_cards": build_quality_check_cards(quality),
         },
-        "facts": compiled["facts"],
-        "decisions": compiled["decisions"],
-        "risks": compiled["risks"],
-        "open_questions": compiled["open_questions"],
-        "reports": compiled["reports"],
+        "facts": rows_with_memory_detail_links(
+            compiled["facts"],
+            project_slug=project["slug"],
+            item_type="fact",
+        ),
+        "decisions": rows_with_memory_detail_links(
+            compiled["decisions"],
+            project_slug=project["slug"],
+            item_type="decision",
+        ),
+        "risks": rows_with_memory_detail_links(
+            compiled["risks"],
+            project_slug=project["slug"],
+            item_type="risk",
+        ),
+        "open_questions": rows_with_memory_detail_links(
+            compiled["open_questions"],
+            project_slug=project["slug"],
+            item_type="open_question",
+        ),
+        "reports": rows_with_memory_detail_links(
+            compiled["reports"],
+            project_slug=project["slug"],
+            item_type="report",
+        ),
         "relations": [
             {
                 "source": truncate(row.get("source_summary") or row["source_type"], 88),
@@ -367,6 +482,113 @@ def build_detail_view(
         ],
         "updated_at": format_timestamp(project.get("updated_at")),
     }
+
+def fetch_memory_item(
+    cur,
+    *,
+    project_id: object,
+    item_type: str,
+    item_id: object,
+) -> dict[str, object] | None:
+    spec = MEMORY_DETAIL_SPECS[item_type]
+    status_clause, status_params = memory_status_clause(item_type)
+    cur.execute(
+        f"""
+        SELECT {spec["columns"]}
+        FROM {spec["table"]}
+        WHERE project_id = %s
+          AND id = %s
+          {status_clause}
+        """,
+        (project_id, item_id, *status_params),
+    )
+    row = cur.fetchone()
+    return dict(row) if row else None
+
+def build_memory_item_view(
+    item_type: str,
+    row: dict[str, object],
+    *,
+    project_slug: object,
+) -> dict[str, object]:
+    spec = MEMORY_DETAIL_SPECS[item_type]
+    fields = []
+    for field, label_key in spec["fields"]:
+        value = row.get(field)
+        if value is not None and str(value).strip():
+            fields.append({"label_key": label_key, "value": value})
+    status = row.get("status")
+    if status is not None and str(status).strip():
+        fields.append({"label_key": "memory_item_status", "value": status})
+    updated_at = format_timestamp(row.get("updated_at"))
+    if updated_at:
+        fields.append({"label_key": "memory_item_updated", "value": updated_at})
+    return {
+        "id": str(row["id"]),
+        "item_type": item_type,
+        "type_label_key": spec["type_label_key"],
+        "title": row.get(str(spec["title_column"])) or row["id"],
+        "fields": fields,
+        "back_url": f"/projects/{project_slug}#{spec['anchor']}",
+        "anchor": spec["anchor"],
+    }
+
+def load_memory_item_view_model(
+    selected_slug: str,
+    item_type_path: str,
+    item_id: object,
+) -> tuple[int, dict[str, object]]:
+    item_type = MEMORY_DETAIL_PATH_TYPES.get(item_type_path)
+    with _compat_attr("connect", connect)() as conn:
+        with conn.cursor() as cur:
+            projects = fetch_active_projects(cur)
+            drafts = fetch_drafts(cur, limit=None)
+            draft_counts = draft_counts_by_project(drafts)
+            draft_total = sum(draft_counts.values())
+            cards = build_project_cards(cur, projects, draft_counts)
+            project = _compat_attr("fetch_project", fetch_project)(cur, selected_slug)
+            if project is None or project.get("status") != "active":
+                return 404, {
+                    "projects": cards,
+                    "selected_project": None,
+                    "not_found_slug": selected_slug,
+                    "draft_total": draft_total,
+                    "memory_item": None,
+                }
+            selected_project = build_detail_view(
+                cur,
+                project,
+                draft_count=draft_counts.get(str(project["slug"]), 0),
+            )
+            try:
+                parsed_item_id = UUID(str(item_id))
+            except ValueError:
+                parsed_item_id = None
+            if item_type is None or parsed_item_id is None:
+                memory_item = None
+            else:
+                memory_row = fetch_memory_item(
+                    cur,
+                    project_id=project["id"],
+                    item_type=item_type,
+                    item_id=parsed_item_id,
+                )
+                memory_item = (
+                    build_memory_item_view(
+                        item_type,
+                        memory_row,
+                        project_slug=project["slug"],
+                    )
+                    if memory_row
+                    else None
+                )
+            return 200 if memory_item else 404, {
+                "projects": cards,
+                "selected_project": selected_project,
+                "not_found_slug": None,
+                "draft_total": draft_total,
+                "memory_item": memory_item,
+            }
 
 def agent_context_counts(payload: dict[str, object]) -> dict[str, int]:
     counts = prepare_context_counts(payload)

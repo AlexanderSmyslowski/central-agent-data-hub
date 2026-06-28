@@ -1,0 +1,41 @@
+<div class="memory-detail-view">
+  <a class="back-link prominent-back" href="{{ url_for(memory_item.back_url if memory_item else '/projects/' ~ selected_project.slug) }}">
+    {{ t('back_to_project', project=selected_project.name) }}
+  </a>
+
+  {% if memory_item %}
+    <section class="memory-item-detail" aria-labelledby="memory-item-title">
+      <div class="detail-header">
+        <div>
+          <p class="section-kicker">{{ t(memory_item.type_label_key) }}</p>
+          <h2 class="detail-title" id="memory-item-title">{{ memory_item.title }}</h2>
+          <p class="detail-description">{{ t('memory_item_read_only') }}</p>
+        </div>
+        <div class="project-meta">
+          <div>{{ selected_project.slug }}</div>
+          <div>{{ t(memory_item.type_label_key) }}</div>
+          <div>{{ memory_item.id }}</div>
+        </div>
+      </div>
+
+      <div class="memory-field-list" aria-label="{{ t('memory_item_details') }}">
+        {% for field in memory_item.fields %}
+          <div class="memory-field">
+            <span>{{ t(field.label_key) }}</span>
+            <strong>{{ ui_text(field.value) }}</strong>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  {% else %}
+    <section class="memory-item-detail" aria-labelledby="memory-item-missing-title">
+      <div class="detail-header">
+        <div>
+          <p class="section-kicker">{{ t('memory_item_missing_kicker') }}</p>
+          <h2 class="detail-title" id="memory-item-missing-title">{{ t('memory_item_not_found') }}</h2>
+          <p class="detail-description">{{ t('memory_item_not_found_body') }}</p>
+        </div>
+      </div>
+    </section>
+  {% endif %}
+</div>

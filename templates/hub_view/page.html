@@ -1331,9 +1331,93 @@
         line-height: 1.45;
       }
 
+      .item-title-link {
+        display: inline-block;
+        color: var(--text);
+        font-weight: 700;
+      }
+
+      .item-title-link:hover,
+      .item-title-link:focus-visible {
+        color: var(--accent);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+
       .item-meta {
         margin-top: 6px;
         line-height: 1.45;
+      }
+
+      .item-detail-link {
+        display: inline-flex;
+        margin-top: 8px;
+        color: var(--accent);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .memory-detail-view {
+        display: grid;
+        gap: 18px;
+      }
+
+      .back-link {
+        display: inline-flex;
+        width: fit-content;
+        min-height: 40px;
+        align-items: center;
+        padding: 9px 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface-strong);
+        color: var(--accent);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .back-link:hover,
+      .back-link:focus-visible {
+        border-color: rgba(45, 74, 95, 0.36);
+        background: #fff;
+      }
+
+      .memory-item-detail {
+        display: grid;
+        gap: 18px;
+      }
+
+      .memory-item-detail .detail-title {
+        font-size: 26px;
+        line-height: 1.14;
+      }
+
+      .memory-field-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .memory-field {
+        display: grid;
+        gap: 5px;
+        padding: 14px 0;
+        border-top: 1px solid rgba(38, 38, 36, 0.08);
+      }
+
+      .memory-field span {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .memory-field strong {
+        color: var(--text);
+        font-size: 15px;
+        font-weight: 500;
+        line-height: 1.5;
+        white-space: pre-wrap;
       }
 
       .relation-list {
@@ -1773,6 +1857,14 @@
           grid-template-columns: 1fr;
         }
 
+        .content {
+          order: 1;
+        }
+
+        .sidebar {
+          order: 2;
+        }
+
         .summary-grid {
           grid-template-columns: 1fr;
         }
@@ -1822,6 +1914,10 @@
 
         .content {
           padding: 22px 18px 24px;
+        }
+
+        .memory-item-detail .detail-title {
+          font-size: 24px;
         }
 
         .relation-row {
@@ -1959,6 +2055,8 @@
             </div>
           {% elif view_name == 'agent_context' and selected_project and agent_context %}
             {% include "views/agent_context.html" %}
+          {% elif view_name == 'memory_item' and selected_project %}
+            {% include "views/memory_item.html" %}
           {% elif selected_project %}
             {% include "views/project_detail.html" %}
           {% else %}

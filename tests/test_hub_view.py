@@ -1166,11 +1166,53 @@ def test_application_renders_project_detail(monkeypatch) -> None:
                         },
                     ],
                 },
-                "decisions": [{"decision": "Treat the Hub as verified context.", "rationale": "Shared trust."}],
-                "facts": [{"statement": "Reviewed facts are visible in Hub View.", "source": "demo", "confidence": 0.9}],
-                "risks": [{"title": "Skipped preflight", "severity": "medium", "impact": "stale context"}],
+                "decisions": [
+                    {
+                        "id": "10000000-0000-4000-8000-000000000401",
+                        "decision": "Treat the Hub as verified context.",
+                        "rationale": "Shared trust.",
+                        "detail_url": (
+                            "/projects/central-agent-data-hub/memory/decision/"
+                            "10000000-0000-4000-8000-000000000401"
+                        ),
+                    }
+                ],
+                "facts": [
+                    {
+                        "id": "10000000-0000-4000-8000-000000000201",
+                        "statement": "Reviewed facts are visible in Hub View.",
+                        "source": "demo",
+                        "confidence": 0.9,
+                        "detail_url": (
+                            "/projects/central-agent-data-hub/memory/fact/"
+                            "10000000-0000-4000-8000-000000000201"
+                        ),
+                    }
+                ],
+                "risks": [
+                    {
+                        "id": "10000000-0000-4000-8000-000000000501",
+                        "title": "Skipped preflight",
+                        "severity": "medium",
+                        "impact": "stale context",
+                        "detail_url": (
+                            "/projects/central-agent-data-hub/memory/risk/"
+                            "10000000-0000-4000-8000-000000000501"
+                        ),
+                    }
+                ],
                 "open_questions": [],
-                "reports": [{"title": "Daily report", "summary": "A compact review."}],
+                "reports": [
+                    {
+                        "id": "10000000-0000-4000-8000-000000000601",
+                        "title": "Daily report",
+                        "summary": "A compact review.",
+                        "detail_url": (
+                            "/projects/central-agent-data-hub/memory/report/"
+                            "10000000-0000-4000-8000-000000000601"
+                        ),
+                    }
+                ],
                 "relations": [{"source": "Fact A", "relation_type": "supports", "target": "Decision B"}],
             },
             "not_found_slug": None,
@@ -1295,6 +1337,9 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert 'href="/inbox"' in body
     assert "Treat the Hub as verified context." in body
     assert "Reviewed facts are visible in Hub View." in body
+    assert "Open detail" in body
+    assert 'href="/projects/central-agent-data-hub/memory/fact/10000000-0000-4000-8000-000000000201"' in body
+    assert 'href="/projects/central-agent-data-hub/memory/risk/10000000-0000-4000-8000-000000000501"' in body
     assert "Fact A" in body
     assert "supports" in body
     assert "alexander" not in body.lower()
@@ -1341,16 +1386,26 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
                 "decisions": [],
                 "facts": [
                     {
+                        "id": "10000000-0000-4000-8000-000000000201",
                         "statement": "Reviewed facts are visible in Hub View.",
                         "source": "demo",
                         "confidence": 0.9,
+                        "detail_url": (
+                            "/projects/central-agent-data-hub-demo/memory/fact/"
+                            "10000000-0000-4000-8000-000000000201"
+                        ),
                     }
                 ],
                 "risks": [
                     {
+                        "id": "10000000-0000-4000-8000-000000000501",
                         "title": "Demo risk stays in the original stored language.",
                         "severity": "low",
                         "impact": "test",
+                        "detail_url": (
+                            "/projects/central-agent-data-hub-demo/memory/risk/"
+                            "10000000-0000-4000-8000-000000000501"
+                        ),
                     }
                 ],
                 "open_questions": [],
@@ -1399,11 +1454,104 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert "Letzten Stand lesen" in body
     assert "Reviewed facts are visible in Hub View." in body
     assert "Demo risk stays in the original stored language." in body
+    assert "Detail öffnen" in body
+    assert 'href="/projects/central-agent-data-hub-demo/memory/fact/10000000-0000-4000-8000-000000000201?lang=de"' in body
     assert 'href="/inbox?lang=de"' in body
     assert 'action="/projects/central-agent-data-hub-demo/agent-context"' in body
     assert 'name="lang" value="de"' in body
     assert '<form method="get" action="/projects/central-agent-data-hub-demo">' in body
     assert '<button type="submit" aria-current="true">Deutsch</button>' in body
+
+
+def test_memory_item_page_renders_read_only_german_detail() -> None:
+    body = hub_view.render_page(
+        {
+            "projects": [],
+            "selected_project": {
+                "name": "Central Agent Data Hub Demo",
+                "slug": "central-agent-data-hub-demo",
+            },
+            "memory_item": {
+                "id": "10000000-0000-4000-8000-000000000201",
+                "item_type": "fact",
+                "type_label_key": "agent_status_facts",
+                "title": "Reviewed facts are visible in Hub View.",
+                "back_url": (
+                    "/projects/central-agent-data-hub-demo#reviewed-memory"
+                ),
+                "fields": [
+                    {"label_key": "memory_item_source", "value": "demo"},
+                    {"label_key": "memory_item_status", "value": "verified"},
+                    {"label_key": "memory_item_updated", "value": "2026-06-05 08:00 UTC"},
+                ],
+            },
+            "not_found_slug": None,
+            "draft_total": 0,
+        },
+        200,
+        view_name="memory_item",
+        language="de",
+        current_path="/projects/central-agent-data-hub-demo/memory/fact/10000000-0000-4000-8000-000000000201",
+        query_string="lang=de",
+    ).decode("utf-8")
+
+    assert '<html lang="de">' in body
+    assert "Zurück zu Central Agent Data Hub Demo" in body
+    assert "Fakten" in body
+    assert "Reviewed facts are visible in Hub View." in body
+    assert "Diese Seite liest nur den ausgewählten Eintrag" in body
+    assert "Quelle" in body
+    assert "demo" in body
+    assert "Status" in body
+    assert "geprüft" in body
+    assert "Aktualisiert" in body
+    assert 'href="/projects/central-agent-data-hub-demo?lang=de#reviewed-memory"' in body
+
+
+def test_memory_item_route_renders_read_only_detail(monkeypatch) -> None:
+    def fake_load_memory_item_view_model(
+        selected_slug: str,
+        item_type: str,
+        item_id: str,
+    ) -> tuple[int, dict[str, object]]:
+        assert selected_slug == "central-agent-data-hub-demo"
+        assert item_type == "fact"
+        assert item_id == "10000000-0000-4000-8000-000000000201"
+        return 200, {
+            "projects": [],
+            "selected_project": {
+                "name": "Central Agent Data Hub Demo",
+                "slug": "central-agent-data-hub-demo",
+            },
+            "memory_item": {
+                "id": item_id,
+                "item_type": "fact",
+                "type_label_key": "agent_status_facts",
+                "title": "Reviewed facts are visible in Hub View.",
+                "back_url": "/projects/central-agent-data-hub-demo#reviewed-memory",
+                "fields": [{"label_key": "memory_item_status", "value": "verified"}],
+            },
+            "not_found_slug": None,
+            "draft_total": 0,
+        }
+
+    monkeypatch.setattr(
+        hub_view,
+        "load_memory_item_view_model",
+        fake_load_memory_item_view_model,
+    )
+    app = hub_view.create_application(bind_host="127.0.0.1", csrf_token="token")
+    captured, body = call_app(
+        app,
+        path=(
+            "/projects/central-agent-data-hub-demo/memory/fact/"
+            "10000000-0000-4000-8000-000000000201"
+        ),
+    )
+
+    assert captured["status"] == "200 OK"
+    assert "Reviewed facts are visible in Hub View." in body
+    assert "This page only reads the selected project memory item" in body
 
 
 def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> None:

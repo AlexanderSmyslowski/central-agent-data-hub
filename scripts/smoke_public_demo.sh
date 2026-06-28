@@ -132,6 +132,21 @@ for _ in range(50):
                 "suggested memory changes",
                 "all items to review",
                 "across projects",
+                "Open detail",
+                "/projects/central-agent-data-hub-demo/memory/fact/00000000-0000-4000-8000-000000000201",
+            ),
+            (
+                "/projects/central-agent-data-hub-demo/memory/fact/"
+                "00000000-0000-4000-8000-000000000201"
+            ): (
+                "Back to Central Agent Data Hub Demo",
+                "Facts",
+                "Reviewed memory is context with a source and a review status before agents use it.",
+                "This page only reads the selected project memory item",
+                "Source",
+                "docs/demo/reviewed-context.md",
+                "Status",
+                "verified",
             ),
             "/inbox": (
                 "Review Inbox",
@@ -259,9 +274,25 @@ for _ in range(50):
                 "Dieses Projekt mit ADH-Kontext prüfen",
                 "Neutrales Demo-Projekt",
                 "Central Agent Data Hub Demo",
+                "Detail öffnen",
+                "/projects/central-agent-data-hub-demo/memory/fact/00000000-0000-4000-8000-000000000201?lang=de",
                 "/inbox?lang=de",
                 "/projects/central-agent-data-hub-demo/agent-context",
                 "name=\"lang\" value=\"de\"",
+            ),
+            (
+                "/projects/central-agent-data-hub-demo/memory/fact/"
+                "00000000-0000-4000-8000-000000000201?lang=de"
+            ): (
+                "<html lang=\"de\">",
+                "Zurück zu Central Agent Data Hub Demo",
+                "Fakten",
+                "Reviewed memory is context with a source and a review status before agents use it.",
+                "Diese Seite liest nur den ausgewählten Eintrag",
+                "Quelle",
+                "docs/demo/reviewed-context.md",
+                "Status",
+                "geprüft",
             ),
             "/inbox?lang=de": (
                 "<html lang=\"de\">",
