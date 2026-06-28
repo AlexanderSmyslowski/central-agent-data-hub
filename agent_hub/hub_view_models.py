@@ -48,6 +48,15 @@ CARD_LINE_PREFIXES = {
 }
 
 DEFAULT_AGENT_TASK = "Use reviewed Agent Data Hub context for this project."
+PROJECT_CARD_COUNT_KEYS = (
+    "documents",
+    "facts",
+    "decisions",
+    "open_questions",
+    "risks",
+    "reports",
+)
+MISSING_LATEST_REPORT = object()
 
 def _compat_attr(name: str, fallback):
     module = sys.modules.get("agent_hub.hub_view")
@@ -82,36 +91,148 @@ def fetch_active_projects(cur) -> list[dict[str, object]]:
     )
     return with_project_display_names(list(cur.fetchall()))
 
-def fetch_latest_report(cur, project_id: object) -> dict[str, object] | None:
+
+def empty_project_card_counts() -> dict[str, int]:
+    return {key: 0 for key in PROJECT_CARD_COUNT_KEYS}
+
+
+def project_ids_values_clause(project_ids: list[object]) -> str:
+    return ", ".join(["(%s)"] * len(project_ids))
+
+
+def fetch_project_card_counts(
+    cur,
+    project_ids: list[object],
+) -> dict[object, dict[str, int]]:
+    if not project_ids:
+        return {}
+
+    values_clause = project_ids_values_clause(project_ids)
     cur.execute(
-        """
-        SELECT title, summary, updated_at
-        FROM reports
-        WHERE project_id = %s
-          AND status <> 'archived'
-        ORDER BY updated_at DESC, created_at DESC, id DESC
-        LIMIT 1
+        f"""
+        WITH project_ids(project_id) AS (
+          VALUES {values_clause}
+        ),
+        memory_counts AS (
+          SELECT project_id, 'documents' AS item_type, count(*)::int AS item_count
+          FROM documents
+          WHERE project_id IN (SELECT project_id FROM project_ids)
+          GROUP BY project_id
+          UNION ALL
+          SELECT project_id, 'facts' AS item_type, count(*)::int AS item_count
+          FROM facts
+          WHERE project_id IN (SELECT project_id FROM project_ids)
+            AND status NOT IN ('draft', 'archived')
+          GROUP BY project_id
+          UNION ALL
+          SELECT project_id, 'decisions' AS item_type, count(*)::int AS item_count
+          FROM decisions
+          WHERE project_id IN (SELECT project_id FROM project_ids)
+            AND status NOT IN ('draft', 'archived')
+          GROUP BY project_id
+          UNION ALL
+          SELECT project_id, 'open_questions' AS item_type, count(*)::int AS item_count
+          FROM open_questions
+          WHERE project_id IN (SELECT project_id FROM project_ids)
+            AND status NOT IN ('draft', 'answered', 'closed', 'resolved', 'archived')
+          GROUP BY project_id
+          UNION ALL
+          SELECT project_id, 'risks' AS item_type, count(*)::int AS item_count
+          FROM risks
+          WHERE project_id IN (SELECT project_id FROM project_ids)
+            AND status NOT IN ('draft', 'resolved', 'archived')
+          GROUP BY project_id
+          UNION ALL
+          SELECT project_id, 'reports' AS item_type, count(*)::int AS item_count
+          FROM reports
+          WHERE project_id IN (SELECT project_id FROM project_ids)
+            AND status NOT IN ('draft', 'archived')
+          GROUP BY project_id
+        )
+        SELECT
+          p.project_id,
+          COALESCE(SUM(item_count) FILTER (WHERE item_type = 'documents'), 0)::int AS documents,
+          COALESCE(SUM(item_count) FILTER (WHERE item_type = 'facts'), 0)::int AS facts,
+          COALESCE(SUM(item_count) FILTER (WHERE item_type = 'decisions'), 0)::int AS decisions,
+          COALESCE(SUM(item_count) FILTER (WHERE item_type = 'open_questions'), 0)::int AS open_questions,
+          COALESCE(SUM(item_count) FILTER (WHERE item_type = 'risks'), 0)::int AS risks,
+          COALESCE(SUM(item_count) FILTER (WHERE item_type = 'reports'), 0)::int AS reports
+        FROM project_ids p
+        LEFT JOIN memory_counts m ON m.project_id = p.project_id
+        GROUP BY p.project_id
         """,
-        (project_id,),
+        project_ids,
     )
-    return cur.fetchone()
+    return {
+        row["project_id"]: {key: int(row[key]) for key in PROJECT_CARD_COUNT_KEYS}
+        for row in cur.fetchall()
+    }
+
+
+def fetch_latest_reports_by_project(
+    cur,
+    project_ids: list[object],
+) -> dict[object, dict[str, object]]:
+    if not project_ids:
+        return {}
+
+    values_clause = project_ids_values_clause(project_ids)
+    cur.execute(
+        f"""
+        WITH project_ids(project_id) AS (
+          VALUES {values_clause}
+        ),
+        ranked_reports AS (
+          SELECT
+            r.project_id,
+            r.title,
+            r.summary,
+            r.updated_at,
+            row_number() OVER (
+              PARTITION BY r.project_id
+              ORDER BY r.updated_at DESC, r.created_at DESC, r.id DESC
+            ) AS report_rank
+          FROM reports r
+          JOIN project_ids p ON p.project_id = r.project_id
+          WHERE r.status <> 'archived'
+        )
+        SELECT project_id, title, summary, updated_at
+        FROM ranked_reports
+        WHERE report_rank = 1
+        """,
+        project_ids,
+    )
+    return {row["project_id"]: row for row in cur.fetchall()}
+
+
+def fetch_latest_report(cur, project_id: object) -> dict[str, object] | None:
+    return fetch_latest_reports_by_project(cur, [project_id]).get(project_id)
 
 def build_project_card(
     cur,
     project: dict[str, object],
     *,
     draft_count: int = 0,
+    counts: dict[str, int] | None = None,
+    latest_report: dict[str, object] | None | object = MISSING_LATEST_REPORT,
 ) -> dict[str, object]:
     metadata = project.get("metadata") or {}
-    latest_report = fetch_latest_report(cur, project["id"])
-    payload = fetch_compiled_payload(cur, project, limit=3)
+    project_id = project["id"]
+    if counts is None:
+        counts = fetch_project_card_counts(cur, [project_id]).get(
+            project_id,
+            empty_project_card_counts(),
+        )
+    if latest_report is MISSING_LATEST_REPORT:
+        latest_report = fetch_latest_report(cur, project_id)
+    latest_report = latest_report if isinstance(latest_report, dict) else None
     return {
         "name": project["name"],
         "slug": project["slug"],
         "status": project["status"],
         "description": truncate(project.get("description") or "", 120),
         "project_type": metadata.get("project_type"),
-        "counts": payload["counts"],
+        "counts": counts,
         "draft_count": draft_count,
         "latest_report_title": latest_report["title"] if latest_report else None,
         "latest_report_summary": (
@@ -119,6 +240,27 @@ def build_project_card(
         ),
         "updated_at": format_timestamp(project.get("updated_at")),
     }
+
+
+def build_project_cards(
+    cur,
+    projects: list[dict[str, object]],
+    draft_counts: dict[str, int],
+) -> list[dict[str, object]]:
+    project_ids = [project["id"] for project in projects]
+    counts_by_project = fetch_project_card_counts(cur, project_ids)
+    latest_reports = fetch_latest_reports_by_project(cur, project_ids)
+    return [
+        build_project_card(
+            cur,
+            project,
+            draft_count=draft_counts.get(str(project["slug"]), 0),
+            counts=counts_by_project.get(project["id"], empty_project_card_counts()),
+            latest_report=latest_reports.get(project["id"]),
+        )
+        for project in projects
+    ]
+
 
 def build_detail_view(
     cur,
@@ -354,14 +496,7 @@ def load_agent_context_view_model(selected_slug: str, task: str) -> tuple[int, d
             drafts = fetch_drafts(cur, limit=None)
             draft_counts = draft_counts_by_project(drafts)
             draft_total = sum(draft_counts.values())
-            cards = [
-                build_project_card(
-                    cur,
-                    project,
-                    draft_count=draft_counts.get(str(project["slug"]), 0),
-                )
-                for project in projects
-            ]
+            cards = build_project_cards(cur, projects, draft_counts)
             project = _compat_attr("fetch_project", fetch_project)(cur, selected_slug)
             if project is None or project.get("status") != "active":
                 return 404, {
@@ -449,14 +584,7 @@ def load_view_model(selected_slug: str | None) -> tuple[int, dict[str, object]]:
             drafts = fetch_drafts(cur, limit=None)
             draft_counts = draft_counts_by_project(drafts)
             draft_total = sum(draft_counts.values())
-            cards = [
-                build_project_card(
-                    cur,
-                    project,
-                    draft_count=draft_counts.get(str(project["slug"]), 0),
-                )
-                for project in projects
-            ]
+            cards = build_project_cards(cur, projects, draft_counts)
             if not projects:
                 return 200, {
                     "projects": [],

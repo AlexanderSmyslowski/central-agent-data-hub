@@ -10,6 +10,7 @@ import uuid
 import pytest
 
 from agent_hub import hub_view
+from agent_hub import hub_view_models
 from agent_hub.commands import inbox
 from agent_hub.writeback_routing import lint_card_text
 
@@ -142,6 +143,84 @@ def test_application_rejects_non_get_requests() -> None:
 
     assert captured["status"] == "405 Method Not Allowed"
     assert body == b"Method Not Allowed"
+
+
+def test_build_project_cards_batches_counts_and_latest_reports(monkeypatch) -> None:
+    projects = [
+        {
+            "id": "project-1",
+            "name": "Project One",
+            "slug": "project-one",
+            "status": "active",
+            "description": "First project",
+            "metadata": {"project_type": "demo"},
+            "updated_at": "2026-06-28T10:00:00+00:00",
+        },
+        {
+            "id": "project-2",
+            "name": "Project Two",
+            "slug": "project-two",
+            "status": "active",
+            "description": "Second project",
+            "metadata": {},
+            "updated_at": "2026-06-28T11:00:00+00:00",
+        },
+    ]
+    calls: list[tuple[str, list[object]]] = []
+
+    def fake_counts(_cur, project_ids):
+        calls.append(("counts", list(project_ids)))
+        return {
+            "project-1": {
+                "documents": 0,
+                "facts": 3,
+                "decisions": 1,
+                "open_questions": 0,
+                "risks": 1,
+                "reports": 2,
+            },
+            "project-2": {
+                "documents": 0,
+                "facts": 0,
+                "decisions": 0,
+                "open_questions": 1,
+                "risks": 0,
+                "reports": 0,
+            },
+        }
+
+    def fake_latest_reports(_cur, project_ids):
+        calls.append(("latest_reports", list(project_ids)))
+        return {
+            "project-1": {
+                "title": "Latest report",
+                "summary": "A compact summary.",
+                "updated_at": "2026-06-28T12:00:00+00:00",
+            }
+        }
+
+    monkeypatch.setattr(hub_view_models, "fetch_project_card_counts", fake_counts)
+    monkeypatch.setattr(
+        hub_view_models,
+        "fetch_latest_reports_by_project",
+        fake_latest_reports,
+    )
+
+    cards = hub_view_models.build_project_cards(
+        object(),
+        projects,
+        {"project-two": 4},
+    )
+
+    assert calls == [
+        ("counts", ["project-1", "project-2"]),
+        ("latest_reports", ["project-1", "project-2"]),
+    ]
+    assert cards[0]["counts"]["facts"] == 3
+    assert cards[0]["latest_report_title"] == "Latest report"
+    assert cards[1]["counts"]["open_questions"] == 1
+    assert cards[1]["draft_count"] == 4
+    assert cards[1]["latest_report_title"] is None
 
 
 def test_inbox_page_lists_drafts_as_plain_cards() -> None:
