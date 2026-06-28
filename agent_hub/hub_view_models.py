@@ -356,7 +356,7 @@ def build_codex_setup_view(project: dict[str, object], repo_root: Path) -> dict[
             "verification": {
                 "state": "unknown",
                 "label": "Cannot verify yet",
-                "detail": "Register this project with a local folder before Hub View can check Codex setup.",
+                "detail": "Register a local project folder before ADH can check Codex setup.",
             },
         }
 
@@ -400,19 +400,19 @@ def build_codex_setup_view(project: dict[str, object], repo_root: Path) -> dict[
         verification = {
             "state": "demo",
             "label": "Demo preview only",
-            "detail": "Hub View can show the target file, but it will not install a demo-project Codex block.",
+            "detail": "Demo mode shows the target only; it does not write an AGENTS.md block.",
         }
     elif plan.action == "unchanged":
         verification = {
             "state": "connected",
             "label": "Codex setup verified",
-            "detail": f"{plan.target_file} already contains the ADH block for this project.",
+            "detail": f"{plan.target_file} contains the ADH block for this project.",
         }
     else:
         verification = {
             "state": "missing",
             "label": "Codex setup not installed yet",
-            "detail": f"Install the ADH block into {plan.target_file} so Codex reads it before work.",
+            "detail": f"Install the ADH block into {plan.target_file} so Codex reads ADH context before work.",
         }
     return {
         "project_path": str(plan.repo_path),

@@ -782,8 +782,9 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Connect an agent" in body
     assert 'action="/projects/central-agent-data-hub/agent-context"' in body
     assert "Create context pack" in body
-    assert "Local agents need one-time setup" in body
-    assert "terminal command is only a manual fallback" in body
+    assert "The next screen shows what ADH handed over" in body
+    assert "Task for the agent" in body
+    assert "primary-button" in body
     assert "Latest status" in body
     assert "all items to review" in body
     assert "Review suggested memory changes" in body
@@ -907,11 +908,13 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "Claude Code" in body
     assert "Codex" in body
     assert 'aria-label="Connection verification"' in body
-    assert "ADH can verify the Codex" in body
+    assert "ADH can check Codex here" in body
     assert "Codex setup not installed yet" in body
     assert "Manual check needed" in body
     assert "Persistent rule needed" in body
     assert "Per-task copy/paste" in body
+    assert "must be checked in their own app" in body
+    assert "Start Claude Code after setup" in body
     assert body.index("<h3>Codex</h3>") < body.index("<h3>Claude Code</h3>")
     assert "Hermes or custom agent" in body
     assert "Other MCP-compatible agent" in body

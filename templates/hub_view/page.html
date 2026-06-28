@@ -380,10 +380,10 @@
 
       .agent-connect {
         margin: 0 0 28px;
-        padding: 18px;
-        border: 1px solid rgba(45, 74, 95, 0.22);
+        padding: 20px;
+        border: 1px solid rgba(45, 74, 95, 0.3);
         border-radius: 8px;
-        background: rgba(255, 255, 255, 0.66);
+        background: rgba(255, 255, 255, 0.78);
       }
 
       .agent-connect h2,
@@ -400,9 +400,20 @@
 
       .agent-form {
         display: grid;
+        gap: 8px;
+        margin-top: 16px;
+      }
+
+      .agent-form-label {
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .agent-form-row {
+        display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
         gap: 10px;
-        margin-top: 14px;
       }
 
       .agent-input {
@@ -414,7 +425,7 @@
         color: var(--text);
         font: inherit;
         font-size: 14px;
-        padding: 10px 12px;
+        padding: 11px 12px;
       }
 
       .agent-status {
@@ -469,21 +480,37 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
         gap: 10px;
-        margin-top: 10px;
+        margin-top: 12px;
+      }
+
+      .verification-panel {
+        margin: 18px 0 0;
+        padding: 16px;
+        border: 1px solid rgba(45, 74, 95, 0.26);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.72);
+      }
+
+      .verification-panel h3 {
+        margin-top: 0;
       }
 
       .verification-intro {
-        margin: 14px 0 0;
+        margin: 0;
         color: var(--muted);
-        font-size: 13px;
+        font-size: 14px;
         line-height: 1.45;
+      }
+
+      .verification-intro strong {
+        color: var(--text);
       }
 
       .verification-card {
         padding: 12px 14px;
         border: 1px solid var(--line);
         border-radius: 8px;
-        background: rgba(255, 255, 255, 0.52);
+        background: rgba(255, 255, 255, 0.64);
       }
 
       .verification-card.connected {
@@ -868,6 +895,20 @@
         padding: 8px 11px;
       }
 
+      .primary-button {
+        border-color: rgba(45, 74, 95, 0.45);
+        background: var(--accent);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 700;
+        padding: 11px 16px;
+      }
+
+      .primary-button:hover,
+      .primary-button:focus-visible {
+        background: #223b4c;
+      }
+
       .button.reject {
         color: #6c3434;
       }
@@ -911,7 +952,8 @@
           grid-template-columns: 1fr;
         }
 
-        .agent-form {
+        .agent-form,
+        .agent-form-row {
           grid-template-columns: 1fr;
         }
 

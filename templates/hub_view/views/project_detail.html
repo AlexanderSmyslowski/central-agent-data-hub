@@ -65,10 +65,13 @@
 
 <section class="agent-connect" id="connect-agent">
   <h2>Connect an agent</h2>
-  <p>Make ADH visible before work starts. Chatbots get a copyable context pack. Local agents need one-time setup in the agent's own configuration. The terminal command is only a manual fallback.</p>
+  <p>Create a visible context pack before work starts. The next screen shows what ADH handed over, what it can verify, and which setup path fits your agent.</p>
   <form class="agent-form" method="get" action="/projects/{{ selected_project.slug }}/agent-context">
-    <input class="agent-input" type="text" name="task" value="Review this project with ADH context" aria-label="Task for the agent">
-    <button class="button" type="submit">Create context pack</button>
+    <label class="agent-form-label" for="agent-task">Task for the agent</label>
+    <div class="agent-form-row">
+      <input id="agent-task" class="agent-input" type="text" name="task" value="Review this project with ADH context" aria-label="Task for the agent">
+      <button class="button primary-button" type="submit">Create context pack</button>
+    </div>
   </form>
 </section>
 
