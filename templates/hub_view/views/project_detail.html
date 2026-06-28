@@ -2,7 +2,7 @@
   <div>
     <h2 class="detail-title">{{ selected_project.name }}</h2>
     {% if selected_project.description %}
-      <p class="detail-description">{{ selected_project.description }}</p>
+      <p class="detail-description">{{ ui_text(selected_project.description) }}</p>
     {% endif %}
   </div>
   <div class="project-meta">

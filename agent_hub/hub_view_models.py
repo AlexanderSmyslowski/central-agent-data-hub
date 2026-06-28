@@ -25,6 +25,7 @@ from agent_hub.db import connect
 from agent_hub.hub_view_i18n import (
     DEFAULT_LANGUAGE,
     language_switch_links,
+    localize_ui_text,
     resolve_language,
     translator,
     with_language,
@@ -704,6 +705,7 @@ def render_page(
         inbox_enabled=inbox_enabled,
         language=resolved_language,
         t=t,
+        ui_text=lambda text: localize_ui_text(text, resolved_language),
         url_for=lambda url: with_language(url, resolved_language),
         language_links=language_switch_links(current_path, query_string),
         **view_model,

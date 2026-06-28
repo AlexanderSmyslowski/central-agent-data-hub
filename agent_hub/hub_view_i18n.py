@@ -8,6 +8,15 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 DEFAULT_LANGUAGE = "en"
 SUPPORTED_LANGUAGES = ("en", "de")
 
+KNOWN_UI_TEXT_TRANSLATIONS = {
+    "de": {
+        "Neutral demo project for showing how reviewed context is stored and read locally.": (
+            "Neutrales Demo-Projekt: Es zeigt, wie geprüfter Kontext lokal "
+            "gespeichert und gelesen wird."
+        ),
+    }
+}
+
 TRANSLATIONS: dict[str, dict[str, str]] = {
     "en": {
         "active_projects": "Active projects",
@@ -192,7 +201,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "agent_picker_custom_body": "In diesen Agenten einfügen",
         "agent_picker_custom_title": "Dauerhafte Regel",
         "agent_picker_fallback_body": "Übergang, keine Automatik",
-        "agent_picker_fallback_label": "Fallback",
+        "agent_picker_fallback_label": "Übergang",
         "agent_picker_fallback_title": "Terminal-Lauf",
         "agent_picker_mcp_body": "stdio-MCP-Konfiguration nutzen",
         "agent_picker_mcp_label": "MCP-Agent",
@@ -201,7 +210,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "agent_status_decisions": "Entscheidungen",
         "agent_status_facts": "Fakten",
         "agent_status_open_questions": "Offene Fragen",
-        "agent_status_reports": "Reports",
+        "agent_status_reports": "Berichte",
         "agent_status_risks": "Risiken",
         "agent_status_trail_entries": "Kontextspuren",
         "all_items_to_review": "alle zu prüfenden Einträge",
@@ -213,15 +222,15 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "chatbot_heading": "Text zum Einfügen in einen Chatbot",
         "chatbot_handoff_line": "Für Chatbots: Füge den Text unten vor der Aufgabe ein.",
         "check_handoff": "Übergabe prüfen",
-        "check_memory_quality": "Memory-Qualität prüfen",
-        "check_memory_quality_copy": "Lücken, Beziehungen und Review-Hinweise ansehen.",
+        "check_memory_quality": "Gedächtnis-Qualität prüfen",
+        "check_memory_quality_copy": "Lücken, Beziehungen und Prüfhinweise ansehen.",
         "choose_agent": "Agent auswählen",
         "choose_agent_body": "Wähle die Oberfläche, die du wirklich nutzt.",
         "claude_code": "Claude Code",
         "claude_manual_pieces": "Manuelle Claude-Einrichtung zeigen",
         "claude_manual_check": "Manuelle Prüfung nötig",
         "claude_manual_detail": "Starte Claude Code nach der Einrichtung und prüfe, ob ADH-Kontext angefragt wird.",
-        "claude_setup_body": "Einmalige Einrichtung: Kopiere diesen Befehl und führe ihn einmal aus. Er installiert die optionale MCP-Unterstützung und registriert ADH als lokalen read-only Kontextserver für Claude Code.",
+        "claude_setup_body": "Einmalige Einrichtung: Kopiere diesen Befehl und führe ihn einmal aus. Er installiert die optionale MCP-Unterstützung und registriert ADH als lokalen, nur lesenden Kontextserver für Claude Code.",
         "claude_setup_button": "Claude-Einrichtung kopieren",
         "claude_setup_note": "Nach der Einrichtung wird Claude Code angewiesen, zu Beginn ADH-bezogener Arbeit ADH-Kontext anzufragen.",
         "codex": "Codex",
@@ -248,50 +257,50 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "custom_agent_short": "Hermes/eigener Agent",
         "custom_agent_body": "Einmalige Einrichtung: Kopiere diese Startregel in die dauerhafte Anweisung oder Laufzeit-Konfiguration des Agenten.",
         "copy": "Kopieren",
-        "copy_fallback_command": "Fallback-Befehl kopieren",
+        "copy_fallback_command": "Übergangsbefehl kopieren",
         "copy_mcp_config": "MCP-Konfiguration kopieren",
         "copy_startup_rule": "Startregel kopieren",
         "default_agent_task": "Dieses Projekt mit ADH-Kontext prüfen",
-        "find_reviewed_memory": "Geprüftes Memory finden",
-        "fallback_command": "Fallback-Befehl:",
-        "drafts_review_note": "Drafts sind vorgeschlagene Memory-Änderungen über Projekte hinweg. Sie sind erst reviewed memory, wenn ein Mensch sie akzeptiert.",
+        "find_reviewed_memory": "Geprüftes Projektgedächtnis finden",
+        "fallback_command": "Übergangsbefehl:",
+        "drafts_review_note": "Entwürfe sind vorgeschlagene Änderungen am Projektgedächtnis über Projekte hinweg. Sie gehören erst zum geprüften Projektgedächtnis, wenn ein Mensch sie akzeptiert.",
         "external_manual_check": "Claude, Hermes, eigene Agenten und Chatbots müssen in ihrer eigenen App geprüft werden.",
         "facts": "Fakten",
         "handoff_check_body": "Hub View zeigt, was ADH übergeben hat und welche Zähler dahinterstehen. Ein Agent muss entweder verbunden sein oder den kopierten Kontext erhalten; ADH kann nicht beweisen, dass ein unverbundener Agent den Kontext gelesen hat.",
         "handoff_steps": "Schritte zur Agentenverbindung",
-        "hub_empty_body": "Wähle ein Projekt aus, um geprüftes Memory, aktuelle Risiken, offene Fragen, Reports und Beziehungen anzusehen.",
+        "hub_empty_body": "Wähle ein Projekt aus, um geprüftes Projektgedächtnis, aktuelle Risiken, offene Fragen, Berichte und Beziehungen anzusehen.",
         "hub_view": "Hub View",
         "influence_agent": "Wie das den Agenten beeinflussen soll",
-        "inbox_empty_body": "Wenn Agenten Memory-Änderungen vorschlagen, erscheinen sie hier, bis ein Mensch sie akzeptiert oder verwirft.",
+        "inbox_empty_body": "Wenn Agenten Änderungen am Projektgedächtnis vorschlagen, erscheinen sie hier, bis ein Mensch sie akzeptiert oder verwirft.",
         "inbox_empty_title": "Nichts zu prüfen.",
-        "inbox_review_attribution": "Review-Aktionen werden {reviewer} zugeschrieben.",
-        "inbox_review_disabled": "Review-Aktionen sind deaktiviert, weil Hub View nicht an eine Loopback-Adresse gebunden ist.",
-        "inbox_title": "Review Inbox",
+        "inbox_review_attribution": "Prüfaktionen werden {reviewer} zugeschrieben.",
+        "inbox_review_disabled": "Prüfaktionen sind deaktiviert, weil Hub View nicht an eine Loopback-Adresse gebunden ist.",
+        "inbox_title": "Prüfungseingang",
         "install_mcp_once": "MCP-Unterstützung einmal installieren",
         "add_mcp_once": "ADH einmal als lokalen MCP-Server hinzufügen",
-        "items_pending_review": "Einträge warten auf Review",
+        "items_pending_review": "Einträge warten auf Prüfung",
         "jump_to_chatbot_text": "Zum Chatbot-Text springen",
         "known_gaps": "Bekannte Lücken",
         "language": "Sprache",
         "latest_status": "Letzter Stand",
-        "latest_status_empty": "Kein Statusreport sichtbar.",
-        "local_review_surface": "lokale Review-Oberfläche für Agent Data Hub",
+        "latest_status_empty": "Kein Statusbericht sichtbar.",
+        "local_review_surface": "lokale Prüfoberfläche für Agent Data Hub",
         "local_agent_handoff_line": "Für lokale Agenten: Starte eine neue Aufgabe und achte auf einen ADH-Kontext-Beleg oder entsprechende Zähler.",
         "manual_every_task": "Manuell je Aufgabe",
         "memory_search_clear": "Alles zeigen",
         "memory_search_description": "Durchsuche die geprüften Einträge, die bereits auf dieser Seite sichtbar sind. Treffer erscheinen direkt darunter; die Abschnitte werden gefiltert.",
-        "memory_search_empty": "Kein sichtbares Memory passt zu dieser Suche.",
-        "memory_search_initial": "Sichtbares geprüftes Memory auf dieser Seite.",
+        "memory_search_empty": "Kein sichtbarer Eintrag passt zu dieser Suche.",
+        "memory_search_initial": "Sichtbares geprüftes Projektgedächtnis auf dieser Seite.",
         "memory_search_label": "Diese Seite durchsuchen",
-        "memory_search_placeholder": "Risiko, Entscheidung, Quelle, Report...",
+        "memory_search_placeholder": "Risiko, Entscheidung, Quelle, Bericht...",
         "memory_search_result": "{count} Treffer für „{query}“.",
-        "memory_search_showing": "{count} sichtbare Memory-Einträge auf dieser Seite.",
+        "memory_search_showing": "{count} sichtbare Einträge im Projektgedächtnis auf dieser Seite.",
         "mcp_agent": "MCP-Agent",
         "no_active_decisions": "Keine aktiven Entscheidungen sichtbar.",
         "no_active_projects": "Keine aktiven Projekte sichtbar.",
         "no_active_risks": "Keine aktiven Risiken sichtbar.",
         "no_relations": "Keine Beziehungen sichtbar.",
-        "no_reports": "Keine Reports sichtbar.",
+        "no_reports": "Keine Berichte sichtbar.",
         "no_reviewed_facts": "Keine geprüften Fakten sichtbar.",
         "no_unresolved_questions": "Keine ungeklärten Fragen sichtbar.",
         "one_copied_command": "Ein Befehl zum Kopieren",
@@ -299,45 +308,45 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "open_questions": "offene Fragen",
         "other_mcp_agent": "Anderer MCP-kompatibler Agent",
         "other_mcp_body": "Nutze diese stdio-MCP-Konfiguration, wenn der Agent lokale MCP-Server starten kann, aber nicht Claude Code ist.",
-        "overview_note": "Diese Übersicht liest geprüftes Projekt-Memory aus der lokalen Hub-Datenbank. Vorgeschlagene Memory-Änderungen bleiben getrennt, bis ein Mensch sie akzeptiert oder verwirft.",
+        "overview_note": "Diese Übersicht liest geprüftes Projektgedächtnis aus der lokalen Hub-Datenbank. Vorgeschlagene Änderungen bleiben getrennt, bis ein Mensch sie akzeptiert oder verwirft.",
         "per_task_copy_paste": "Kopieren/Einfügen je Aufgabe",
         "persistent_instruction": "Dauerhafte Anweisung",
         "persistent_rule_needed": "Dauerhafte Regel nötig",
-        "persistent_rule_detail": "Füge dort die Startregel hinzu. ADH kann dieses externe Memory nicht prüfen.",
+        "persistent_rule_detail": "Füge dort die Startregel hinzu. ADH kann diese externe Agentenregel nicht prüfen.",
         "planned_action": "Geplante Aktion:",
         "prepare_agent_handoff": "Agentenübergabe vorbereiten",
         "project_actions": "Projektaktionen",
         "project_not_found": "Projekt nicht gefunden",
         "project_not_found_body": "In diesem Hub ist kein aktives Projekt mit dem Slug {slug} sichtbar.",
         "project_updated": "Projekt aktualisiert {updated_at}.",
-        "prototype_note": "Prototyp-Sprache: Deutsch. Diese lokale Demo zeigt geprüftes Projekt-Memory, vorgeschlagene Memory-Änderungen, Risiken, Fragen und den letzten Stand.",
+        "prototype_note": "Prototyp-Sprache: Deutsch. Diese lokale Demo zeigt geprüftes Projektgedächtnis, vorgeschlagene Änderungen, Risiken, Fragen und den letzten Stand.",
         "quality": "Qualität",
         "quality_snapshot": "Qualitätsblick",
-        "read_surface_review_actions": "Leseoberfläche + Review-Aktionen",
+        "read_surface_review_actions": "Leseoberfläche + Prüfaktionen",
         "reject": "Verwerfen",
         "register_project_folder": "Registriere zuerst den Projektordner und öffne diese Ansicht danach neu.",
         "relations": "Beziehungen",
-        "reports": "Reports",
-        "review_inbox": "Review Inbox",
-        "review_items": "Review-Einträge",
+        "reports": "Berichte",
+        "review_inbox": "Prüfungseingang",
+        "review_items": "Prüfeinträge",
         "review_suggested_changes": "Vorgeschlagene Änderungen prüfen",
         "review_suggested_changes_copy": "{count} Einträge warten projektübergreifend.",
-        "reviewed_memory": "Geprüftes Memory",
-        "reviewed_memory_copy": "Sichtbare Fakten, Entscheidungen, Risiken, Fragen, Reports und Beziehungen filtern.",
+        "reviewed_memory": "Geprüftes Projektgedächtnis",
+        "reviewed_memory_copy": "Sichtbare Fakten, Entscheidungen, Risiken, Fragen, Berichte und Beziehungen filtern.",
         "risks": "Risiken",
         "risks_and_questions": "Risiken und Fragen",
         "selected": "Ausgewählt",
-        "source_of_truth_line": "Quelle der Wahrheit: lokale Agent-Data-Hub-Datenbank. Review-Status: geprüftes Memory ist nutzbar; vorgeschlagene Änderungen bleiben unbestätigt, bis ein Mensch sie prüft.",
-        "suggested_memory_unconfirmed": "Vorgeschlagene Memory-Änderungen bleiben unbestätigt, bis ein Mensch sie hier akzeptiert oder verwirft.",
+        "source_of_truth_line": "Quelle der Wahrheit: lokale Agent-Data-Hub-Datenbank. Prüfstatus: geprüftes Projektgedächtnis ist nutzbar; vorgeschlagene Änderungen bleiben unbestätigt, bis ein Mensch sie prüft.",
+        "suggested_memory_unconfirmed": "Vorgeschlagene Änderungen am Projektgedächtnis bleiben unbestätigt, bis ein Mensch sie hier akzeptiert oder verwirft.",
         "task": "Aufgabe",
         "target_file": "Zieldatei:",
         "task_for_agent": "Aufgabe für den Agenten",
         "tell_agent_task_start": "Dem Agenten sagen, was bei Arbeitsbeginn zu tun ist",
-        "temporary_fallback": "Vorübergehender Fallback",
-        "terminal_fallback": "Terminal-Fallback",
-        "terminal_fallback_body": "Manueller Fallback: Nutze das nur, bis der lokale Agent verbunden ist. Es startet einen sichtbaren ADH-gestützten Lauf, ist aber keine Automatisierung.",
-        "terminal_handoff_line": "Für den Terminal-Fallback: Nutze den Befehl nur, bis der Agent verbunden ist.",
-        "task_blind_spots": "Task-Blind-Spots",
+        "temporary_fallback": "Vorübergehende Lösung",
+        "terminal_fallback": "Terminal als Übergang",
+        "terminal_fallback_body": "Manuelle Übergangslösung: Nutze das nur, bis der lokale Agent verbunden ist. Es startet einen sichtbaren ADH-gestützten Lauf, ist aber keine Automatisierung.",
+        "terminal_handoff_line": "Für die Terminal-Übergangslösung: Nutze den Befehl nur, bis der Agent verbunden ist.",
+        "task_blind_spots": "blinde Stellen zur Aufgabe",
         "stale_items": "veraltete Einträge",
         "unanswered_questions": "unbeantwortete Fragen",
         "use_adh_agent": "ADH mit Agent nutzen",
@@ -363,6 +372,14 @@ def translator(language: str) -> Callable[..., str]:
         return text.format(**kwargs) if kwargs else text
 
     return translate
+
+
+def localize_ui_text(text: object, language: str) -> str:
+    value = str(text or "")
+    return KNOWN_UI_TEXT_TRANSLATIONS.get(resolve_language(language), {}).get(
+        value,
+        value,
+    )
 
 
 def with_language(url: str, language: str) -> str:
@@ -391,11 +408,19 @@ def language_switch_links(current_path: str, query_string: str) -> list[dict[str
     current = f"{current_path}?{query_string}" if query_string else current_path
     links = []
     for code in SUPPORTED_LANGUAGES:
+        parts = urlsplit(with_language(current, code))
         links.append(
             {
                 "code": code,
                 "label": "Deutsch" if code == "de" else "English",
-                "url": with_language(current, code),
+                "params": [
+                    {"name": key, "value": value}
+                    for key, value in parse_qsl(parts.query, keep_blank_values=True)
+                ],
+                "path": parts.path or "/",
+                "url": urlunsplit(
+                    (parts.scheme, parts.netloc, parts.path, parts.query, parts.fragment)
+                ),
             }
         )
     return links

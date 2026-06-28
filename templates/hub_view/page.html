@@ -117,33 +117,42 @@
         font-size: 14px;
       }
 
-      .language-switcher a,
-      .language-switcher span {
+      .language-switcher form {
+        display: contents;
+      }
+
+      .language-switcher button {
+        appearance: none;
+        -webkit-appearance: none;
         display: inline-flex;
         min-width: 92px;
         min-height: 44px;
         align-items: center;
         justify-content: center;
+        margin: 0;
         padding: 10px 14px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
         touch-action: manipulation;
         -webkit-tap-highlight-color: rgba(45, 74, 95, 0.18);
       }
 
-      .language-switcher a + a,
-      .language-switcher a + span,
-      .language-switcher span + a,
-      .language-switcher span + span {
+      .language-switcher form + form button {
         border-left: 1px solid var(--line);
       }
 
-      .language-switcher span {
+      .language-switcher button[aria-current="true"] {
         background: var(--surface-strong);
         color: var(--text);
         font-weight: 700;
       }
 
-      .language-switcher a:hover,
-      .language-switcher a:focus-visible {
+      .language-switcher button:hover,
+      .language-switcher button:focus-visible {
         background: var(--surface-strong);
         color: var(--text);
       }
@@ -1230,8 +1239,7 @@
           width: 100%;
         }
 
-        .language-switcher a,
-        .language-switcher span {
+        .language-switcher button {
           flex: 1 1 0;
           min-width: 0;
         }
@@ -1276,11 +1284,12 @@
         <div class="masthead-actions">
           <nav class="language-switcher" aria-label="{{ t('language') }}">
             {% for link in language_links %}
-              {% if link.code == language %}
-                <span aria-current="true">{{ link.label }}</span>
-              {% else %}
-                <a href="{{ link.url }}">{{ link.label }}</a>
-              {% endif %}
+              <form method="get" action="{{ link.path }}">
+                {% for param in link.params %}
+                  <input type="hidden" name="{{ param.name }}" value="{{ param.value }}">
+                {% endfor %}
+                <button type="submit"{% if link.code == language %} aria-current="true"{% endif %}>{{ link.label }}</button>
+              </form>
             {% endfor %}
           </nav>
           <div class="read-only">{{ t('read_surface_review_actions') }}</div>
@@ -1304,7 +1313,7 @@
                   <p class="project-name">{{ project.name }}</p>
                   <div class="project-meta">{{ project.slug }}{% if project.project_type %} · {{ project.project_type }}{% endif %}</div>
                   {% if project.description %}
-                    <p class="project-blurb">{{ project.description }}</p>
+                    <p class="project-blurb">{{ ui_text(project.description) }}</p>
                   {% endif %}
                   <div class="project-counts">
                     <span>{{ project.counts.facts }} {{ t('facts') }}</span>

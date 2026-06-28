@@ -10,6 +10,7 @@ import uuid
 import pytest
 
 from agent_hub import hub_view
+from agent_hub.hub_view_i18n import language_switch_links
 from agent_hub import hub_view_models
 from agent_hub.commands import inbox
 from agent_hub.writeback_routing import lint_card_text
@@ -141,11 +142,33 @@ def test_render_page_can_switch_to_german_chrome() -> None:
     ).decode("utf-8")
 
     assert '<html lang="de">' in body
-    assert "lokale Review-Oberfläche für Agent Data Hub" in body
-    assert "Leseoberfläche + Review-Aktionen" in body
+    assert "lokale Prüfoberfläche für Agent Data Hub" in body
+    assert "Leseoberfläche + Prüfaktionen" in body
     assert "Aktive Projekte" in body
     assert "Deutsch" in body
-    assert 'href="/"' in body
+    assert '<form method="get" action="/">' in body
+    assert '<button type="submit" aria-current="true">Deutsch</button>' in body
+
+
+def test_language_switch_forms_preserve_existing_query_params() -> None:
+    links = language_switch_links(
+        "/projects/demo/agent-context",
+        "task=Review+demo&setup_message=Done&lang=de",
+    )
+
+    english = links[0]
+    german = links[1]
+
+    assert english["path"] == "/projects/demo/agent-context"
+    assert english["params"] == [
+        {"name": "task", "value": "Review demo"},
+        {"name": "setup_message", "value": "Done"},
+    ]
+    assert german["params"] == [
+        {"name": "task", "value": "Review demo"},
+        {"name": "setup_message", "value": "Done"},
+        {"name": "lang", "value": "de"},
+    ]
 
 
 def test_application_rejects_non_get_requests() -> None:
@@ -854,7 +877,10 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
             "selected_project": {
                 "name": "Central Agent Data Hub Demo",
                 "slug": "central-agent-data-hub-demo",
-                "description": "Neutral demo project.",
+                "description": (
+                    "Neutral demo project for showing how reviewed context is "
+                    "stored and read locally."
+                ),
                 "status": "active",
                 "project_type": "demo",
                 "updated_at": "2026-06-05 08:00 UTC",
@@ -901,7 +927,9 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     ).decode("utf-8")
 
     assert '<html lang="de">' in body
-    assert "Geprüftes Memory finden" in body
+    assert "Geprüftes Projektgedächtnis finden" in body
+    assert "Neutrales Demo-Projekt: Es zeigt, wie geprüfter Kontext lokal" in body
+    assert "Neutral demo project for showing" not in body
     assert "Diese Seite durchsuchen" in body
     assert "Agent verbinden" in body
     assert "Dieses Projekt mit ADH-Kontext prüfen" in body
@@ -910,6 +938,8 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert 'href="/inbox?lang=de"' in body
     assert 'action="/projects/central-agent-data-hub-demo/agent-context"' in body
     assert 'name="lang" value="de"' in body
+    assert '<form method="get" action="/projects/central-agent-data-hub-demo">' in body
+    assert '<button type="submit" aria-current="true">Deutsch</button>' in body
 
 
 def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> None:
