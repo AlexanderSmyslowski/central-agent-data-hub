@@ -85,6 +85,16 @@ def test_hub_view_template_is_split_into_view_partials() -> None:
     assert '{% include "partials/copy_actions.html" %}' in page
 
 
+def test_hub_view_python_entrypoint_delegates_to_split_modules() -> None:
+    entrypoint = read_script("agent_hub/hub_view.py")
+
+    assert (ROOT / "agent_hub/hub_view_models.py").is_file()
+    assert (ROOT / "agent_hub/hub_view_server.py").is_file()
+    assert "from agent_hub.hub_view_models import" in entrypoint
+    assert "from agent_hub.hub_view_server import" in entrypoint
+    assert "raise SystemExit(main())" in entrypoint
+
+
 def test_package_version_is_ready_for_next_public_patch_release() -> None:
     pyproject = read_script("pyproject.toml")
     checklist = read_script("docs/public/release-checklist.md")

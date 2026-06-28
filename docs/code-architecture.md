@@ -81,6 +81,22 @@ The exporting package is split by output concern:
 The export pipeline should preserve existing file names, frontmatter, human
 notes, and Wikilink behavior unless a change is deliberate and tested.
 
+## Hub View Boundary
+
+`agent_hub/hub_view.py` is the public compatibility facade and executable
+entrypoint for the local Hub View.
+
+The implementation is split by responsibility:
+
+- `hub_view_models.py`: database reads, view-model assembly, context handoff
+  data, and template rendering.
+- `hub_view_server.py`: WSGI request handling, local review/setup actions,
+  LAN-read guard, and command-line server startup.
+
+Hub View should stay a local surface over reviewed Hub data. Keep write actions
+explicit, audited, and narrow; keep new UI behavior covered by smoke or WSGI
+tests before adding more app surface.
+
 ## What Not To Split Yet
 
 `rendering.py`, `retrieval.py`, and `quality.py` are still compact enough to
