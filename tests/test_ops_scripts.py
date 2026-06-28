@@ -63,6 +63,9 @@ def test_v015_release_notes_describe_guarded_codex_setup_without_overclaim() -> 
     assert "no shell command execution from Hub View" in notes
     assert "does not run Codex" in notes
     assert "magically use context" in notes
+    assert "Local Mobile Preview" in notes
+    assert "trusted Wi-Fi" in notes
+    assert "no mobile write path" in notes
 
 
 def test_preflight_uses_bounded_docker_checks() -> None:
@@ -263,10 +266,34 @@ def test_first_run_demo_script_wraps_public_demo_path() -> None:
     assert '"$ROOT_DIR/.venv/bin/python" -m pip install -e "$ROOT_DIR"' in script
     assert '"$ROOT_DIR/scripts/db_start_public_demo.sh"' in script
     assert '"$ROOT_DIR/scripts/smoke_public_demo.sh"' in script
-    assert '"$ROOT_DIR/scripts/hub_view.sh" --host 127.0.0.1' in script
+    assert 'hub_view_host="127.0.0.1"' in script
+    assert '"$ROOT_DIR/scripts/hub_view.sh" --host "$hub_view_host"' in script
     assert "AGENT_HUB_PUBLIC_DEMO=1" in script
     assert "http://127.0.0.1:${hub_view_port}" in script
     assert "HUB_VIEW_PORT:-8765" in script
+
+
+def test_first_run_demo_mobile_preview_is_explicit_and_non_loopback() -> None:
+    script = read_script("scripts/first_run_demo.sh")
+    readme = read_script("README.md")
+    getting_started = read_script("docs/public/getting-started.md")
+    boundaries = read_script("docs/automation-boundaries.md")
+
+    assert "--mobile" in script
+    assert "detect_lan_ip()" in script
+    assert 'hub_view_host="0.0.0.0"' in script
+    assert "Open on a phone in the same Wi-Fi" in script
+    assert "Use this only on a trusted local network." in script
+    assert "Review and Codex setup actions stay disabled while mobile preview is active." in script
+    assert "ipconfig getifaddr en0" in script
+
+    assert "scripts/first_run_demo.sh --mobile" in readme
+    assert "scripts/first_run_demo.sh --mobile" in getting_started
+    assert "trusted Wi-Fi" in readme
+    assert "trusted local network" in getting_started
+    assert "Review Inbox and Codex setup writes" in getting_started
+    assert "does not widen the write boundary" in boundaries
+    assert "Review Inbox actions and Codex setup actions remain disabled" in boundaries
 
 
 def test_first_run_demo_preserves_existing_env_and_venv_contract() -> None:

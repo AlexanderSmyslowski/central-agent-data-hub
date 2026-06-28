@@ -3,10 +3,11 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 NO_HUB_VIEW=0
+MOBILE_PREVIEW=0
 
 usage() {
   cat <<'EOF'
-Usage: scripts/first_run_demo.sh [--no-hub-view]
+Usage: scripts/first_run_demo.sh [--no-hub-view] [--mobile]
 
 Runs the public Agent Data Hub demo path from a fresh clone:
   - checks Python and Docker
@@ -19,6 +20,7 @@ Runs the public Agent Data Hub demo path from a fresh clone:
 
 Options:
   --no-hub-view    Run setup, demo database start, and smoke, then exit.
+  --mobile         Bind Hub View to the local network and print a phone URL.
 EOF
 }
 
@@ -26,6 +28,10 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --no-hub-view)
       NO_HUB_VIEW=1
+      shift
+      ;;
+    --mobile)
+      MOBILE_PREVIEW=1
       shift
       ;;
     -h|--help)
@@ -39,6 +45,42 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+detect_lan_ip() {
+  local iface
+  local ip
+
+  if command -v route >/dev/null 2>&1 && command -v awk >/dev/null 2>&1; then
+    iface="$(route get default 2>/dev/null | awk '/interface:/{print $2; exit}' || true)"
+    if [[ -n "$iface" ]] && command -v ipconfig >/dev/null 2>&1; then
+      ip="$(ipconfig getifaddr "$iface" 2>/dev/null || true)"
+      if [[ -n "$ip" ]]; then
+        printf '%s\n' "$ip"
+        return 0
+      fi
+    fi
+  fi
+
+  if command -v ipconfig >/dev/null 2>&1; then
+    for iface in en0 en1; do
+      ip="$(ipconfig getifaddr "$iface" 2>/dev/null || true)"
+      if [[ -n "$ip" ]]; then
+        printf '%s\n' "$ip"
+        return 0
+      fi
+    done
+  fi
+
+  if command -v hostname >/dev/null 2>&1 && command -v awk >/dev/null 2>&1; then
+    ip="$(hostname -I 2>/dev/null | awk '{print $1}' || true)"
+    if [[ -n "$ip" ]]; then
+      printf '%s\n' "$ip"
+      return 0
+    fi
+  fi
+
+  return 1
+}
 
 PYTHON_CMD="${PYTHON:-python3}"
 
@@ -108,13 +150,34 @@ if [[ "$NO_HUB_VIEW" -eq 1 ]]; then
 fi
 
 hub_view_port="${HUB_VIEW_PORT:-8765}"
+hub_view_host="127.0.0.1"
 
 echo
 echo "Public demo first run is ready."
-echo "Open this URL:"
-echo "  http://127.0.0.1:${hub_view_port}"
+
+if [[ "$MOBILE_PREVIEW" -eq 1 ]]; then
+  hub_view_host="0.0.0.0"
+  lan_ip="$(detect_lan_ip || true)"
+  echo "Mobile preview mode is on."
+  echo "Use this only on a trusted local network."
+  echo "Review and Codex setup actions stay disabled while mobile preview is active."
+  echo
+  echo "Open on this Mac:"
+  echo "  http://127.0.0.1:${hub_view_port}"
+  if [[ -n "$lan_ip" ]]; then
+    echo "Open on a phone in the same Wi-Fi:"
+    echo "  http://${lan_ip}:${hub_view_port}"
+  else
+    echo "Could not detect the local network address automatically."
+    echo "On macOS, try: ipconfig getifaddr en0"
+    echo "Then open: http://<that-ip>:${hub_view_port}"
+  fi
+else
+  echo "Open this URL:"
+  echo "  http://127.0.0.1:${hub_view_port}"
+fi
 echo
 echo "Press Ctrl-C in this terminal to stop Hub View."
 echo
 
-AGENT_HUB_PUBLIC_DEMO=1 "$ROOT_DIR/scripts/hub_view.sh" --host 127.0.0.1
+AGENT_HUB_PUBLIC_DEMO=1 "$ROOT_DIR/scripts/hub_view.sh" --host "$hub_view_host"

@@ -207,11 +207,13 @@ End time:
 - Public demo check succeeded: yes/no
 - Hub View started: yes/no
 - Hub View opened in browser: yes/no
+- Optional mobile preview URL found/opened: yes/no/not tested
 - Found Connect an agent: yes/no
 - Created or inspected a context pack: yes/no
 - Found the Codex setup card: yes/no
 - Understood Codex setup target/preview/install: yes/no
 - Understood public demo Codex setup is dry-run only: yes/no/not applicable
+- Understood mobile preview is local read/orientation only: yes/no/not applicable
 
 Moderator diagnostics if needed:
 - script created `.venv`: yes/no/unknown
@@ -315,6 +317,8 @@ These are the spots worth concentrated attention:
     `AGENTS.md` block, not Hub memory?
 13. Does the tester understand that the public demo shows a dry-run preview and
     does not install the demo block?
+14. If `scripts/first_run_demo.sh --mobile` is used, does the tester understand
+    it is a local Wi-Fi preview and not a hosted app?
 
 The current README deliberately frames Agent Data Hub as a local technical
 preview, not a hosted product or finished end-user app. Anything the tester says
@@ -354,6 +358,7 @@ Blocker:
 - Public demo does not start
 - Smoke test fails
 - Hub View does not start
+- Mobile preview claims to enable remote review or setup writes
 - Tester needs maintainer knowledge to continue
 - `.env` points at the wrong DB
 - Private maintainer traces appear

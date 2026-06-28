@@ -27,6 +27,17 @@ For a non-blocking check without starting Hub View:
 scripts/first_run_demo.sh --no-hub-view
 ```
 
+To open the demo from a phone on the same trusted Wi-Fi:
+
+```bash
+scripts/first_run_demo.sh --mobile
+```
+
+The script prints the laptop URL and, when it can detect one, a phone URL such
+as `http://192.168.x.x:8765`. Use this only on a trusted local network. Mobile
+preview is for reading and orientation; Review Inbox and Codex setup writes
+stay disabled when Hub View is not bound to loopback.
+
 ## 2. Manual Path For Troubleshooting
 
 If you want to run the same path step by step, use:
