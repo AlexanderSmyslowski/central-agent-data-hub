@@ -66,11 +66,14 @@
 <section class="memory-explorer" id="memory-explorer" data-memory-explorer>
   <div>
     <h2>Find reviewed memory</h2>
-    <p>Filter what is already visible on this page. This does not search drafts or hidden data.</p>
+    <p>Search the reviewed items already shown on this page. Matches appear below while the page sections are filtered.</p>
   </div>
   <div class="memory-filter-row">
-    <label class="memory-filter-label" for="memory-filter">Filter visible memory</label>
-    <input id="memory-filter" class="memory-filter-input" type="search" data-memory-filter placeholder="decision, risk, source, report..." autocomplete="off">
+    <label class="memory-filter-label" for="memory-filter">Search this page</label>
+    <div class="memory-filter-control">
+      <input id="memory-filter" class="memory-filter-input" type="search" data-memory-filter placeholder="risk, decision, source, report..." autocomplete="off">
+      <button class="memory-filter-clear" type="button" data-memory-clear hidden>Show all</button>
+    </div>
   </div>
   <div class="memory-type-links" aria-label="Memory sections">
     <a href="#reviewed-memory">Reviewed memory</a>
@@ -79,6 +82,7 @@
     <a href="#relations">Relations</a>
   </div>
   <p class="memory-filter-meta" data-memory-results>Showing visible reviewed memory on this page.</p>
+  <div class="memory-filter-hits" data-memory-hits hidden></div>
   <p class="empty" data-memory-empty hidden>No visible memory matches this filter.</p>
 </section>
 

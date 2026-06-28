@@ -210,8 +210,9 @@ End time:
 - Optional mobile preview URL found/opened: yes/no/not tested
 - Found Project actions: yes/no
 - Found Find reviewed memory: yes/no
-- Used Filter visible memory: yes/no
-- Understood filter searches visible reviewed memory only: yes/no
+- Used Search this page: yes/no
+- Saw matching items appear below the search field: yes/no
+- Understood search covers visible reviewed memory only: yes/no
 - Found Use ADH with an agent: yes/no
 - Found Connect an agent: yes/no
 - Prepared or inspected an agent handoff: yes/no
@@ -359,8 +360,9 @@ The test succeeds if the tester, **without explanation**, can:
 - open Hub View
 - find **Project actions**
 - find **Find reviewed memory**
-- use **Filter visible memory**
-- understand that the filter searches visible reviewed memory on the page, not
+- use **Search this page**
+- see matching items appear below the search field while typing
+- understand that the search covers visible reviewed memory on the page, not
   drafts or hidden data
 - find **Use ADH with an agent**
 - find **Connect an agent**

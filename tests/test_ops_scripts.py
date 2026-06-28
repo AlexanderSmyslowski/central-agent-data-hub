@@ -147,7 +147,8 @@ def test_v019_release_notes_describe_memory_explorer() -> None:
     assert "[v0.1.9 release notes]" in readme.split("[v0.1.8 release notes]")[0]
     assert "Agent Data Hub v0.1.9" in notes
     assert "Find Reviewed Memory" in notes
-    assert "Filter visible memory" in notes
+    assert "Search this page" in notes
+    assert "Matching items appear directly below the search field" in notes
     assert "visible reviewed memory" in notes
     assert "does not search drafts" in notes
     assert "does not query hidden data" in notes
@@ -156,7 +157,8 @@ def test_v019_release_notes_describe_memory_explorer() -> None:
     assert "no new Hub-memory write path" in notes
     assert "no autonomous search or background indexer" in notes
     assert "Found Find reviewed memory" in protocol
-    assert "Used Filter visible memory" in protocol
+    assert "Used Search this page" in protocol
+    assert "Saw matching items appear below the search field" in protocol
     assert "visible reviewed memory on the page" in protocol
 
 

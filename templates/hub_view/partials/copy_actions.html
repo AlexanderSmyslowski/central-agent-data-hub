@@ -51,35 +51,96 @@
       var filter = memoryExplorer.querySelector("[data-memory-filter]");
       var result = memoryExplorer.querySelector("[data-memory-results]");
       var empty = memoryExplorer.querySelector("[data-memory-empty]");
+      var hits = memoryExplorer.querySelector("[data-memory-hits]");
+      var clear = memoryExplorer.querySelector("[data-memory-clear]");
       var items = Array.prototype.slice.call(document.querySelectorAll("[data-memory-item]"));
+
+      items.forEach(function (item, index) {
+        if (!item.id) {
+          item.id = "memory-item-" + (index + 1);
+        }
+      });
+
+      function itemLabel(item) {
+        var title = item.querySelector(".item-title");
+        var text = (title ? title.textContent : item.textContent || "").trim();
+        return text.replace(/\s+/g, " ").slice(0, 140);
+      }
+
+      function itemHaystack(item) {
+        var type = item.getAttribute("data-memory-type") || "";
+        return (type + " " + (item.textContent || "")).toLowerCase();
+      }
+
+      function renderHits(matches, query) {
+        if (!hits) {
+          return;
+        }
+        while (hits.firstChild) {
+          hits.removeChild(hits.firstChild);
+        }
+        hits.hidden = !query || matches.length === 0;
+        if (!query || matches.length === 0) {
+          return;
+        }
+        matches.slice(0, 6).forEach(function (item) {
+          var link = document.createElement("a");
+          var strong = document.createElement("strong");
+          var span = document.createElement("span");
+          var type = item.getAttribute("data-memory-type") || "memory";
+
+          link.className = "memory-filter-hit";
+          link.href = "#" + item.id;
+          strong.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+          span.textContent = itemLabel(item);
+          link.appendChild(strong);
+          link.appendChild(span);
+          hits.appendChild(link);
+        });
+      }
 
       function updateMemoryFilter() {
         var query = (filter.value || "").trim().toLowerCase();
         var visible = 0;
+        var matches = [];
 
         items.forEach(function (item) {
-          var haystack = (item.textContent || "").toLowerCase();
-          var matches = !query || haystack.indexOf(query) !== -1;
-          item.hidden = !matches;
-          if (matches) {
+          var haystack = itemHaystack(item);
+          var isMatch = !query || haystack.indexOf(query) !== -1;
+          item.hidden = !isMatch;
+          if (isMatch) {
             visible += 1;
+            if (query) {
+              matches.push(item);
+            }
           }
         });
 
         if (result) {
           if (query) {
-            result.textContent = visible + " visible memory items match.";
+            result.textContent = visible + " visible memory items match \"" + query + "\".";
           } else {
             result.textContent = "Showing " + visible + " visible memory items on this page.";
           }
         }
+        renderHits(matches, query);
         if (empty) {
           empty.hidden = visible !== 0;
+        }
+        if (clear) {
+          clear.hidden = !query;
         }
       }
 
       if (filter) {
         filter.addEventListener("input", updateMemoryFilter);
+        if (clear) {
+          clear.addEventListener("click", function () {
+            filter.value = "";
+            filter.focus();
+            updateMemoryFilter();
+          });
+        }
         updateMemoryFilter();
       }
     }
