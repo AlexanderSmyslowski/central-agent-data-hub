@@ -32,6 +32,10 @@
   </section>
 {% endif %}
 
+{% if inbox.recent_reviews and not inbox.groups %}
+  {% include "partials/review_activity.html" %}
+{% endif %}
+
 <section class="workbench-area" aria-labelledby="inbox-queue-title">
   <div class="workbench-area-header">
     <div>
@@ -98,6 +102,10 @@
   <p class="notice">{{ t('inbox_reviewer_setup_needed') }}</p>
 {% elif inbox.reviewer %}
   <p class="notice">{{ t('inbox_review_attribution', reviewer=inbox.reviewer) }}</p>
+{% endif %}
+
+{% if inbox.recent_reviews and inbox.groups %}
+  {% include "partials/review_activity.html" %}
 {% endif %}
 
 <section class="section">

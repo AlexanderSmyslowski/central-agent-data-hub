@@ -1,0 +1,25 @@
+<section class="review-activity" aria-labelledby="review-activity-title">
+  <div class="section-header">
+    <div>
+      <p class="section-kicker">{{ t('review_activity_kicker') }}</p>
+      <h2 id="review-activity-title">{{ t('review_activity_title') }}</h2>
+    </div>
+    <p>{{ t('review_activity_copy') }}</p>
+  </div>
+  <div class="review-activity-list">
+    {% for item in inbox.recent_reviews %}
+      <article class="review-activity-card">
+        <div>
+          <h3>{{ t(item.decision_key) }} · {{ ui_text(item.type_label) }}</h3>
+          <p>{{ item.project_name }}</p>
+        </div>
+        <p>
+          {% if item.status %}{{ t('review_activity_status', status=ui_text(item.status)) }}{% endif %}
+          {% if item.reviewed_by %}{{ t('review_activity_by', reviewer=ui_text(item.reviewed_by)) }}{% endif %}
+          {% if item.review_source %}{{ t('review_activity_via', source=ui_text(item.review_source)) }}{% endif %}
+          {% if item.updated_at %}{{ item.updated_at }}{% endif %}
+        </p>
+      </article>
+    {% endfor %}
+  </div>
+</section>

@@ -35,6 +35,26 @@ def draft_row(*, status: str = "draft") -> dict[str, object]:
         "updated_at": "2026-06-10T10:00:00Z",
     }
 
+def review_action_row(*, action: str = "inbox_accept") -> dict[str, object]:
+    return {
+        "id": uuid.UUID("10000000-0000-4000-8000-000000000801"),
+        "action": action,
+        "object_type": "fact",
+        "object_id": DRAFT_ID,
+        "output": {
+            "next_status": "verified" if action == "inbox_accept" else "archived",
+            "reviewed_by": "bob",
+            "review_source": "hub_view",
+        },
+        "metadata": {
+            "reviewed_by": "bob",
+            "review_source": "hub_view",
+        },
+        "project": "central-agent-data-hub",
+        "project_name": "Central Agent Data Hub",
+        "updated_at": datetime(2026, 6, 10, 11, 15, tzinfo=timezone.utc),
+    }
+
 
 def call_app(
     app,
@@ -469,6 +489,56 @@ def test_inbox_page_renders_german_reject_result_card() -> None:
     assert "Prüfspur: bob über Hub View." in body
     assert "Weiteren Eintrag prüfen" in body
     assert 'href="/projects/central-agent-data-hub?lang=de">Projekt öffnen</a>' in body
+
+
+def test_review_activity_cards_summarize_audit_rows() -> None:
+    cards = hub_view.review_activity_cards([review_action_row(action="inbox_reject")])
+
+    assert cards == [
+        {
+            "decision": "rejected",
+            "decision_key": "review_activity_rejected",
+            "type": "fact",
+            "type_label": "Fact",
+            "project": "central-agent-data-hub",
+            "project_name": "Central Agent Data Hub",
+            "reviewed_by": "bob",
+            "review_source": "Hub View",
+            "status": "archived",
+            "updated_at": "2026-06-10 11:15 UTC",
+        }
+    ]
+
+
+def test_inbox_page_renders_german_recent_review_activity() -> None:
+    body = hub_view.render_page(
+        {
+            "projects": [],
+            "selected_project": None,
+            "not_found_slug": None,
+            "inbox": {
+                "groups": [],
+                "csrf_token": "token",
+                "enabled": True,
+                "message": None,
+                "error": None,
+                "recent_reviews": hub_view.review_activity_cards([review_action_row()]),
+            },
+        },
+        200,
+        view_name="inbox",
+        language="de",
+        current_path="/inbox",
+        query_string="lang=de",
+    ).decode("utf-8")
+
+    assert "Zuletzt geprüft" in body
+    assert "Letzte menschliche Prüfentscheidungen aus der lokalen Prüfspur." in body
+    assert "Gemerkt · Fakt" in body
+    assert "Central Agent Data Hub" in body
+    assert "Status: geprüft." in body
+    assert "Von bob." in body
+    assert "Über Hub View." in body
 
 
 def test_inbox_page_renders_german_queue_language() -> None:

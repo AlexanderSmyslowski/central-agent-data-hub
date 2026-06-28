@@ -21,6 +21,7 @@ from agent_hub.hub_view_models import (
     fetch_latest_reports_by_project,
     fetch_latest_report,
     fetch_project_card_counts,
+    fetch_recent_review_actions,
     format_timestamp,
     group_draft_cards,
     hub_view_templates_dir,
@@ -31,6 +32,7 @@ from agent_hub.hub_view_models import (
     load_view_model,
     metadata_project_local_path,
     render_page,
+    review_activity_cards,
     shell_command,
     translate_card_line_for_ui,
 )

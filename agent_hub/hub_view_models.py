@@ -664,6 +664,56 @@ def group_draft_cards(rows: list[dict[str, object]]) -> list[dict[str, object]]:
         group["drafts"].append(draft_card(row))
     return list(groups.values())
 
+def fetch_recent_review_actions(cur, *, limit: int = 5) -> list[dict[str, object]]:
+    cur.execute(
+        """
+        SELECT
+          aa.id,
+          aa.action,
+          aa.object_type,
+          aa.object_id,
+          aa.output,
+          aa.metadata,
+          aa.updated_at,
+          p.slug AS project,
+          p.name AS project_name
+        FROM agent_actions AS aa
+        LEFT JOIN agents AS a ON a.id = aa.agent_id
+        LEFT JOIN projects AS p ON p.id = a.project_id
+        WHERE aa.action IN ('inbox_accept', 'inbox_reject')
+        ORDER BY aa.updated_at DESC, aa.created_at DESC, aa.id DESC
+        LIMIT %s
+        """,
+        (limit,),
+    )
+    return list(cur.fetchall())
+
+def review_activity_card(row: dict[str, object]) -> dict[str, object]:
+    output = row.get("output") if isinstance(row.get("output"), dict) else {}
+    metadata = row.get("metadata") if isinstance(row.get("metadata"), dict) else {}
+    decision = "accepted" if row.get("action") == "inbox_accept" else "rejected"
+    item_type = str(row.get("object_type") or "")
+    source = output.get("review_source") or metadata.get("review_source") or ""
+    return {
+        "decision": decision,
+        "decision_key": (
+            "review_activity_accepted"
+            if decision == "accepted"
+            else "review_activity_rejected"
+        ),
+        "type": item_type,
+        "type_label": DRAFT_TYPE_LABELS.get(item_type, item_type),
+        "project": row.get("project") or output.get("project") or "",
+        "project_name": row.get("project_name") or row.get("project") or output.get("project") or "",
+        "reviewed_by": output.get("reviewed_by") or metadata.get("reviewed_by") or "",
+        "review_source": "Hub View" if source == "hub_view" else source,
+        "status": output.get("next_status") or "",
+        "updated_at": format_timestamp(row.get("updated_at")),
+    }
+
+def review_activity_cards(rows: list[dict[str, object]]) -> list[dict[str, object]]:
+    return [review_activity_card(row) for row in rows]
+
 def load_view_model(selected_slug: str | None) -> tuple[int, dict[str, object]]:
     with _compat_attr("connect", connect)() as conn:
         with conn.cursor() as cur:
@@ -720,6 +770,7 @@ def load_inbox_view_model(
     with _compat_attr("connect", connect)() as conn:
         with conn.cursor() as cur:
             drafts = fetch_drafts(cur, limit=None)
+            review_activity = fetch_recent_review_actions(cur)
     result_card = None
     if review_result in {"accepted", "rejected"}:
         result_card = {
@@ -747,6 +798,7 @@ def load_inbox_view_model(
             "message": message,
             "error": error_message,
             "review_result": result_card,
+            "recent_reviews": review_activity_cards(review_activity),
         },
     }
 
