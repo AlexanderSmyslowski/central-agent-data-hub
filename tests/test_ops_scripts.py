@@ -51,6 +51,20 @@ def test_automation_boundaries_describe_guarded_codex_setup_action() -> None:
     assert "no shell command is executed from Hub View" in docs
 
 
+def test_v015_release_notes_describe_guarded_codex_setup_without_overclaim() -> None:
+    readme = read_script("README.md")
+    notes = read_script("docs/public/v0.1.5-release-notes.md")
+
+    assert "[v0.1.5 release notes](docs/public/v0.1.5-release-notes.md)" in readme
+    assert "Guarded Codex Setup From Hub View" in notes
+    assert "public demo" in notes
+    assert "dry-run" in notes
+    assert "no Hub-memory write path" in notes
+    assert "no shell command execution from Hub View" in notes
+    assert "does not run Codex" in notes
+    assert "magically use context" in notes
+
+
 def test_preflight_uses_bounded_docker_checks() -> None:
     common = read_script("scripts/db_common.sh")
     preflight = read_script("scripts/agent_preflight.sh")
