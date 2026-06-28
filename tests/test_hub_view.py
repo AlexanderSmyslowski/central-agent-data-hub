@@ -905,6 +905,18 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "Reviewed decisions become task constraints" in body
     assert "Known gaps" in body
     assert "1 unanswered questions" in body
+    assert "Agent connection wizard" in body
+    assert 'aria-label="Agent connection steps"' in body
+    assert "Choose agent" in body
+    assert "Connect once" in body
+    assert "Test handoff" in body
+    assert "Choose your agent" in body
+    assert 'href="#agent-chatbot"' in body
+    assert 'href="#agent-codex"' in body
+    assert 'href="#agent-claude"' in body
+    assert 'href="#agent-custom"' in body
+    assert 'href="#agent-mcp"' in body
+    assert 'href="#agent-terminal"' in body
     assert "Claude Code" in body
     assert "Codex" in body
     assert 'aria-label="Connection verification"' in body
@@ -930,6 +942,8 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "Copy fallback command" in body
     assert "Copy startup rule" in body
     assert "Copy MCP config" in body
+    assert "Jump to context pack" in body
+    assert "ADH can check this setup here" in body
     assert "Show Claude manual setup pieces" in body
     assert "It never runs an agent" in body
     assert "writes only after an explicit local click" in body
@@ -948,6 +962,7 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "claude mcp add agent-data-hub" in body
     assert "Manual fallback" in body
     assert "it is not automation" in body
+    assert "For local agents: start a new task" in body
     assert "ADH cannot prove that an unconnected agent read the context" in body
     assert 'data-copy-target="claude-code-setup-command"' in body
     assert 'data-copy-target="codex-setup-command"' in body

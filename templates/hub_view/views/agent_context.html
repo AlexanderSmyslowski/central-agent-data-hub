@@ -62,14 +62,31 @@
 </section>
 
 <section class="section agent-context">
-  <h2>Use it with an agent</h2>
-  <p>Pick the path that matches your agent. This page creates a visible handoff and setup material. It never runs an agent; the Codex setup writes only after an explicit local click.</p>
+  <h2>Agent connection wizard</h2>
+  <p>Choose the agent you use, follow the matching setup card, then test the handoff. This page creates visible setup material. It never runs an agent by itself, and Codex setup writes only after an explicit local click.</p>
   {% if agent_context.setup_message %}
     <p class="setup-feedback success">{{ agent_context.setup_message }}</p>
   {% endif %}
   {% if agent_context.setup_error %}
     <p class="setup-feedback error">{{ agent_context.setup_error }}</p>
   {% endif %}
+  <div class="wizard-steps" aria-label="Agent connection steps">
+    <div class="wizard-step">
+      <span>1</span>
+      <strong>Choose agent</strong>
+      <p>Pick the surface you actually use.</p>
+    </div>
+    <div class="wizard-step">
+      <span>2</span>
+      <strong>Connect once</strong>
+      <p>Use one setup card. Chatbots stay copy/paste.</p>
+    </div>
+    <div class="wizard-step">
+      <span>3</span>
+      <strong>Test handoff</strong>
+      <p>Check the receipt or copied context pack.</p>
+    </div>
+  </div>
   <div class="verification-panel">
     <h3>Connection verification</h3>
     <p class="verification-intro"><strong>ADH can check Codex here.</strong> Claude, Hermes, custom agents, and chatbots must be checked in their own app.</p>
@@ -96,13 +113,47 @@
       </div>
     </div>
   </div>
+  <h3>Choose your agent</h3>
+  <div class="agent-picker" aria-label="Choose your agent">
+    <a class="agent-picker-card" href="#agent-chatbot">
+      <span class="agent-picker-label">Chatbot</span>
+      <strong>Copy context pack</strong>
+      <span>Manual per task</span>
+    </a>
+    <a class="agent-picker-card featured" href="#agent-codex">
+      <span class="agent-picker-label">Codex</span>
+      <strong>{{ agent_context.local_agent.codex.verification.label }}</strong>
+      <span>ADH can check this setup here</span>
+    </a>
+    <a class="agent-picker-card" href="#agent-claude">
+      <span class="agent-picker-label">Claude Code</span>
+      <strong>One copied command</strong>
+      <span>Verify inside Claude Code</span>
+    </a>
+    <a class="agent-picker-card" href="#agent-custom">
+      <span class="agent-picker-label">Hermes/custom</span>
+      <strong>Persistent rule</strong>
+      <span>Paste into that agent</span>
+    </a>
+    <a class="agent-picker-card" href="#agent-mcp">
+      <span class="agent-picker-label">MCP agent</span>
+      <strong>Config shape</strong>
+      <span>Use stdio MCP config</span>
+    </a>
+    <a class="agent-picker-card" href="#agent-terminal">
+      <span class="agent-picker-label">Fallback</span>
+      <strong>Terminal run</strong>
+      <span>Temporary, not automation</span>
+    </a>
+  </div>
   <div class="connection-grid">
-    <article class="connection-card">
+    <article class="connection-card" id="agent-chatbot">
       <div class="connection-card-label">Manual every task</div>
       <h3>Chatbot</h3>
       <p>Every task: copy the context pack below into the chat before the task. This is manual, but it makes the handoff visible.</p>
+      <a class="inline-action" href="#chatbot-context-pack">Jump to context pack</a>
     </article>
-    <article class="connection-card featured">
+    <article class="connection-card featured" id="agent-codex">
       <div class="connection-card-label">One local click</div>
       <h3>Codex</h3>
       {% if agent_context.local_agent.codex.preview %}
@@ -146,7 +197,7 @@
         {% endif %}
       {% endif %}
     </article>
-    <article class="connection-card">
+    <article class="connection-card" id="agent-claude">
       <div class="connection-card-label">One copied command</div>
       <h3>Claude Code</h3>
       <p>One-time setup: copy and run this command once. It installs ADH's optional MCP support and registers ADH as a local read-only context server for Claude Code.</p>
@@ -182,7 +233,7 @@
         </ol>
       </details>
     </article>
-    <article class="connection-card">
+    <article class="connection-card" id="agent-custom">
       <div class="connection-card-label">Persistent instruction</div>
       <h3>Hermes or custom agent</h3>
       <p>One-time setup: copy this startup rule into the agent's own persistent instruction or runtime configuration.</p>
@@ -191,7 +242,7 @@
         <button class="button copy-button" type="button" data-copy-target="custom-startup-instruction">Copy startup rule</button>
       </div>
     </article>
-    <article class="connection-card">
+    <article class="connection-card" id="agent-mcp">
       <div class="connection-card-label">Config shape</div>
       <h3>Other MCP-compatible agent</h3>
       <p>Use this stdio MCP config shape when the agent can launch local MCP servers but is not Claude Code.</p>
@@ -200,7 +251,7 @@
         <button class="button copy-button" type="button" data-copy-target="mcp-json-config">Copy MCP config</button>
       </div>
     </article>
-    <article class="connection-card">
+    <article class="connection-card" id="agent-terminal">
       <div class="connection-card-label">Temporary fallback</div>
       <h3>Terminal fallback</h3>
       <p>Manual fallback: use this only until the local agent is connected. It starts one visible ADH-backed run, but it is not automation.</p>
@@ -210,7 +261,15 @@
       </div>
     </article>
   </div>
-  <p>Hub View shows what ADH handed off and the counts behind it. An agent must either be connected or receive the copied pack; ADH cannot prove that an unconnected agent read the context.</p>
+  <div class="handoff-test" id="test-handoff">
+    <h3>Test the handoff</h3>
+    <p>Hub View shows what ADH handed off and the counts behind it. An agent must either be connected or receive the copied pack; ADH cannot prove that an unconnected agent read the context.</p>
+    <ul class="agent-list">
+      <li>For chatbots: paste the context pack below before the task.</li>
+      <li>For local agents: start a new task and look for an ADH Context Loaded receipt or equivalent counts.</li>
+      <li>For terminal fallback: use the command only until the agent is connected.</li>
+    </ul>
+  </div>
   <h3>Context pack for chatbot copy/paste</h3>
   <div class="command-list">
     <div class="copy-row">

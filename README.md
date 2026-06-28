@@ -159,11 +159,13 @@ Hub View is a local review surface, not the operational source of truth.
 
 ## Agent Workflow
 
-Hub View can now make the agent handoff visible from the UI. Open a project,
-use **Connect an agent**, enter the task, and click **Create context pack**.
-The generated view shows which reviewed facts, decisions, risks, questions,
-reports, and trail entries would be handed to a chatbot or local agent. It also
-shows how that context should influence the work.
+Hub View can make the agent handoff visible from the UI. Open a project, use
+**Connect an agent**, enter the task, and click **Create context pack**. The
+generated view starts with an **Agent connection wizard**: choose the agent you
+use, follow the matching setup card, then test the handoff. It shows which
+reviewed facts, decisions, risks, questions, reports, and trail entries would
+be handed to a chatbot or local agent, plus how that context should influence
+the work.
 
 For chatbots, the practical path is copy and paste. For local agents, the
 better path is one-time connection: configure the agent to request ADH context
@@ -444,6 +446,7 @@ local working data. It continues to use the configured `.env` database.
 
 - [Public overview](docs/public/agent-data-hub-overview.md)
 - [Public getting started](docs/public/getting-started.md)
+- [v0.1.8 release notes](docs/public/v0.1.8-release-notes.md)
 - [v0.1.7 release notes](docs/public/v0.1.7-release-notes.md)
 - [v0.1.6 release notes](docs/public/v0.1.6-release-notes.md)
 - [v0.1.5 release notes](docs/public/v0.1.5-release-notes.md)

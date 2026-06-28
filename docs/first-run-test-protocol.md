@@ -212,8 +212,11 @@ End time:
 - Found Hand context to an agent: yes/no
 - Found Connect an agent: yes/no
 - Created or inspected a context pack: yes/no
+- Found Agent connection wizard: yes/no
+- Understood Choose your agent: yes/no
 - Found Connection verification: yes/no
 - Understood Connection verification: yes/no
+- Found Test handoff: yes/no
 - Found the Codex setup card: yes/no
 - Understood Codex setup target/preview/install: yes/no
 - Understood Codex setup can be verified from repo-local AGENTS.md: yes/no
