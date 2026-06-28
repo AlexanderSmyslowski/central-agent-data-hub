@@ -119,7 +119,7 @@
     <a class="summary-tile" href="#quality">
       <div class="summary-label">{{ t('quality') }}</div>
       <div class="summary-value">{{ selected_project.quality.score }}</div>
-      <div class="summary-subtle">{{ selected_project.quality.status }} · relation coverage {{ selected_project.quality.relation_coverage }}</div>
+      <div class="summary-subtle">{{ ui_text(selected_project.quality.status) }} · {{ t('relation_coverage') }} {{ selected_project.quality.relation_coverage }}</div>
     </a>
     <a class="summary-tile" href="{{ url_for('/inbox') }}">
       <div class="summary-label">{{ t('review_inbox') }}</div>
@@ -301,9 +301,29 @@
 
 <section class="section" id="quality">
   <h2>{{ t('quality_snapshot') }}</h2>
-  <div class="project-counts">
-    {% for label, count in selected_project.quality.gaps %}
-      <span>{{ count }} {{ label }}</span>
+  <div class="quality-overview">
+    <div class="quality-score">
+      <span>{{ t('quality_score') }}</span>
+      <strong>{{ selected_project.quality.score }}</strong>
+      <em>{{ ui_text(selected_project.quality.status) }}</em>
+    </div>
+    <div class="quality-score">
+      <span>{{ t('relation_coverage') }}</span>
+      <strong>{{ selected_project.quality.relation_coverage }}</strong>
+      <em>{{ selected_project.quality.relation_count }} {{ t('relations') }}</em>
+    </div>
+  </div>
+  <p class="quality-note">{{ t('quality_snapshot_note') }}</p>
+  <div class="quality-check-grid">
+    {% for card in selected_project.quality.check_cards %}
+      <article class="quality-check-card {{ card.state }}">
+        <div class="quality-check-count">{{ card.count }}</div>
+        <div>
+          <h3>{{ t(card.title_key) }}</h3>
+          <p>{{ t(card.meaning_key) }}</p>
+          <p class="quality-next-step">{{ t(card.action_key) }}</p>
+        </div>
+      </article>
     {% endfor %}
   </div>
 </section>

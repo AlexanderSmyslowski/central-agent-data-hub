@@ -79,6 +79,29 @@ def test_hub_view_localizes_dynamic_codex_status_text() -> None:
     assert localize_ui_text("Demo preview only", "en") == "Demo preview only"
 
 
+def test_quality_check_cards_turn_existing_quality_rows_into_review_signals() -> None:
+    cards = hub_view_models.build_quality_check_cards(
+        {
+            "facts_without_source": [{"id": "fact-1"}],
+            "decisions_without_rationale": [],
+            "risks_without_mitigation": [{"id": "risk-1"}, {"id": "risk-2"}],
+            "open_questions": [],
+            "schema_friction_questions": [{"id": "question-1"}],
+        }
+    )
+
+    assert cards[0] == {
+        "count": 1,
+        "state": "needs-review",
+        "title_key": "quality_facts_without_source",
+        "meaning_key": "quality_facts_without_source_meaning",
+        "action_key": "quality_facts_without_source_action",
+    }
+    assert cards[1]["state"] == "ok"
+    assert cards[2]["count"] == 2
+    assert cards[4]["title_key"] == "quality_schema_friction"
+
+
 class ReviewCursor:
     def __init__(self, row: dict[str, object]) -> None:
         self.row = row
@@ -849,6 +872,22 @@ def test_application_renders_project_detail(monkeypatch) -> None:
                     "relation_count": 3,
                     "relation_coverage": "0.60",
                     "gaps": [("facts without source", 0)],
+                    "check_cards": [
+                        {
+                            "count": 0,
+                            "state": "ok",
+                            "title_key": "quality_facts_without_source",
+                            "meaning_key": "quality_facts_without_source_meaning",
+                            "action_key": "quality_facts_without_source_action",
+                        },
+                        {
+                            "count": 1,
+                            "state": "needs-review",
+                            "title_key": "quality_open_questions",
+                            "meaning_key": "quality_open_questions_meaning",
+                            "action_key": "quality_open_questions_action",
+                        },
+                    ],
                 },
                 "decisions": [{"decision": "Treat the Hub as verified context.", "rationale": "Shared trust."}],
                 "facts": [{"statement": "Reviewed facts are visible in Hub View.", "source": "demo", "confidence": 0.9}],
@@ -898,6 +937,12 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Waiting for review" in body
     assert "Quality snapshot" in body
     assert "Relation coverage 0.60" in body
+    assert "Quality score" in body
+    assert "These are review signals" in body
+    assert "Facts without source" in body
+    assert "Open questions" in body
+    assert "These are reviewed uncertainties" in body
+    assert "Next: answer, keep, or convert them into decisions when ready." in body
     assert "Use ADH with an agent" in body
     assert "Prepare reviewed context before a chatbot or local agent starts work." in body
     assert "Review suggested changes" in body
@@ -1002,6 +1047,15 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
                     "relation_count": 0,
                     "relation_coverage": "0.00",
                     "gaps": [],
+                    "check_cards": [
+                        {
+                            "count": 1,
+                            "state": "needs-review",
+                            "title_key": "quality_risks_without_mitigation",
+                            "meaning_key": "quality_risks_without_mitigation_meaning",
+                            "action_key": "quality_risks_without_mitigation_action",
+                        }
+                    ],
                 },
                 "decisions": [],
                 "facts": [
@@ -1054,6 +1108,10 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert "Beginne hier, bevor du Arbeit an einen Agenten übergibst" in body
     assert "Braucht Aufmerksamkeit" in body
     assert "Wartet auf Prüfung" in body
+    assert "Qualitätswert" in body
+    assert "Das sind Prüfsignale" in body
+    assert "Risiken ohne Gegenmaßnahme" in body
+    assert "Nächster Schritt: Auswirkung und Gegenmaßnahme ergänzen" in body
     assert "Agent verbinden" in body
     assert "Dieses Projekt mit ADH-Kontext prüfen" in body
     assert "Letzten Stand lesen" in body

@@ -1051,6 +1051,99 @@
         margin-top: 0;
       }
 
+      .quality-overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+        margin: 0 0 12px;
+      }
+
+      .quality-score {
+        display: grid;
+        gap: 4px;
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.56);
+      }
+
+      .quality-score span,
+      .quality-check-count {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .quality-score strong {
+        font-size: 24px;
+        line-height: 1.1;
+      }
+
+      .quality-score em {
+        color: var(--muted);
+        font-size: 13px;
+        font-style: normal;
+      }
+
+      .quality-note {
+        margin: 0 0 14px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .quality-check-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 10px;
+      }
+
+      .quality-check-card {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 12px;
+        padding: 13px 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.5);
+      }
+
+      .quality-check-card.needs-review {
+        border-color: rgba(45, 74, 95, 0.34);
+        background: rgba(255, 255, 255, 0.72);
+      }
+
+      .quality-check-count {
+        display: inline-flex;
+        min-width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--surface-strong);
+        color: var(--text);
+      }
+
+      .quality-check-card h3 {
+        margin: 0 0 5px;
+      }
+
+      .quality-check-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .quality-next-step {
+        margin-top: 8px;
+        color: var(--text);
+        font-weight: 600;
+      }
+
       .setup-steps {
         display: grid;
         gap: 10px;

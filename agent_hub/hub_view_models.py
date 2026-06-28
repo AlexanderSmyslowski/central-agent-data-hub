@@ -270,6 +270,55 @@ def build_project_cards(
     ]
 
 
+def build_quality_check_cards(quality: dict[str, object]) -> list[dict[str, object]]:
+    checks = (
+        (
+            "facts_without_source",
+            "quality_facts_without_source",
+            "quality_facts_without_source_meaning",
+            "quality_facts_without_source_action",
+        ),
+        (
+            "decisions_without_rationale",
+            "quality_decisions_without_rationale",
+            "quality_decisions_without_rationale_meaning",
+            "quality_decisions_without_rationale_action",
+        ),
+        (
+            "risks_without_mitigation",
+            "quality_risks_without_mitigation",
+            "quality_risks_without_mitigation_meaning",
+            "quality_risks_without_mitigation_action",
+        ),
+        (
+            "open_questions",
+            "quality_open_questions",
+            "quality_open_questions_meaning",
+            "quality_open_questions_action",
+        ),
+        (
+            "schema_friction_questions",
+            "quality_schema_friction",
+            "quality_schema_friction_meaning",
+            "quality_schema_friction_action",
+        ),
+    )
+    cards = []
+    for key, title_key, meaning_key, action_key in checks:
+        rows = quality.get(key)
+        count = len(rows) if isinstance(rows, list) else 0
+        cards.append(
+            {
+                "count": count,
+                "state": "needs-review" if count else "ok",
+                "title_key": title_key,
+                "meaning_key": meaning_key,
+                "action_key": action_key,
+            }
+        )
+    return cards
+
+
 def build_detail_view(
     cur,
     project: dict[str, object],
@@ -301,6 +350,7 @@ def build_detail_view(
                 ("open questions", len(quality["open_questions"])),
                 ("schema friction", len(quality["schema_friction_questions"])),
             ],
+            "check_cards": build_quality_check_cards(quality),
         },
         "facts": compiled["facts"],
         "decisions": compiled["decisions"],
