@@ -294,15 +294,24 @@ def test_inbox_page_lists_drafts_as_plain_cards() -> None:
 
     card = groups[0]["drafts"][0]["card"]
     assert lint_card_text(card) == []
+    assert "Review queue" in body
+    assert "Review one suggested memory change at a time." in body
+    assert "Nothing here becomes reviewed memory until a human clicks Accept." in body
+    assert "Project queue" in body
+    assert "Reviewer" in body
+    assert "Review is ready" in body
     assert "Remember:" in body
     assert "Source: test." in body
     assert "If wrong:" in body
-    assert "owner: alice" in body
+    assert "Reviewer: alice" in body
+    assert "Why this card is here" in body
     assert 'action="/inbox/accept"' in body
     assert 'action="/inbox/reject"' in body
     assert 'name="csrf_token" value="token"' in body
     assert "Accept" in body
     assert "Reject" in body
+    assert "Store as reviewed memory" in body
+    assert "Archive without promoting" in body
     assert "Merken" not in body
     assert "Verwerfen" not in body
 
@@ -328,8 +337,50 @@ def test_inbox_page_empty_state() -> None:
     assert "No items to review." in body
     assert "When agents suggest memory changes" in body
     assert "Suggested memory changes stay unconfirmed" in body
+    assert "Review queue" in body
+    assert "Reviewer not set" in body
+    assert "Nothing here becomes reviewed memory" in body
+    assert "Review actions are disabled because Hub View is not bound to a loopback address." not in body
     assert "Drafts stay unconfirmed" not in body
     assert 'href="/">Back to project overview</a>' in body
+
+
+def test_inbox_page_renders_german_queue_language() -> None:
+    groups = hub_view.group_draft_cards([draft_row()])
+    body = hub_view.render_page(
+        {
+            "projects": [],
+            "selected_project": None,
+            "not_found_slug": None,
+            "inbox": {
+                "groups": groups,
+                "csrf_token": "token",
+                "enabled": True,
+                "review_enabled": True,
+                "reviewer": "alice",
+                "reviewer_error": None,
+                "message": None,
+                "error": None,
+            },
+            "draft_total": 1,
+        },
+        200,
+        view_name="inbox",
+        language="de",
+        current_path="/inbox",
+        query_string="lang=de",
+    ).decode("utf-8")
+
+    assert "Prüf-Warteschlange" in body
+    assert "Prüfe jeweils eine vorgeschlagene Änderung." in body
+    assert "Nichts hier wird zu geprüftem Projektgedächtnis" in body
+    assert "Projekt-Warteschlange" in body
+    assert "Zuständig: alice" in body
+    assert "Warum diese Karte hier ist" in body
+    assert "Als geprüftes Projektgedächtnis speichern" in body
+    assert "Archivieren, ohne zu übernehmen" in body
+    assert "Merken" in body
+    assert "Verwerfen" in body
 
 
 def test_inbox_accept_promotes_and_audits(monkeypatch) -> None:
@@ -628,7 +679,8 @@ def test_hub_view_without_reviewer_disables_buttons_and_blocks_post(monkeypatch)
         form={"csrf_token": "token", "draft_id": str(DRAFT_ID), "type": "fact"},
     )
 
-    assert "reviewer handle is required; set HUB_VIEW_REVIEWER" in body
+    assert "Set HUB_VIEW_REVIEWER or start Hub View with --reviewer" in body
+    assert "Reviewer required" in body
     assert "disabled>Accept</button>" in body
     assert captured["status"] == "403 Forbidden"
     assert "HUB_VIEW_REVIEWER" in post_body

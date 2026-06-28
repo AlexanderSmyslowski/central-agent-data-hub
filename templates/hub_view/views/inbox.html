@@ -7,6 +7,43 @@
   </div>
 </div>
 
+<section class="workbench-area" aria-labelledby="inbox-queue-title">
+  <div class="workbench-area-header">
+    <div>
+      <p class="section-kicker">{{ t('workbench_area') }}</p>
+      <h2 id="inbox-queue-title">{{ t('inbox_queue_title') }}</h2>
+    </div>
+    <p>{{ t('inbox_queue_copy') }}</p>
+  </div>
+
+  <div class="queue-summary" aria-label="{{ t('inbox_queue_title') }}">
+    <div class="queue-summary-item">
+      <div class="queue-summary-label">{{ t('review_items') }}</div>
+      <div class="queue-summary-value">{{ draft_total | default(0) }}</div>
+    </div>
+    <div class="queue-summary-item">
+      <div class="queue-summary-label">{{ t('review_owner') }}</div>
+      <div class="queue-summary-value">{% if inbox.reviewer %}{{ inbox.reviewer }}{% else %}{{ t('inbox_reviewer_missing') }}{% endif %}</div>
+    </div>
+    <div class="queue-summary-item">
+      <div class="queue-summary-label">{{ t('inbox_review_ready') }}</div>
+      <div class="queue-summary-value">
+        {% if review_enabled %}
+          {{ t('accept') }} / {{ t('reject') }}
+        {% elif not inbox.enabled %}
+          {{ t('inbox_review_disabled') }}
+        {% elif inbox.reviewer_error %}
+          {{ t('inbox_reviewer_required') }}
+        {% else %}
+          {{ t('inbox_reviewer_missing') }}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <p class="notice">{{ t('inbox_review_guard') }}</p>
+</section>
+
 {% if inbox.message %}
   <p class="flash good">{{ inbox.message }}</p>
 {% endif %}
@@ -17,7 +54,7 @@
   <p class="notice">{{ t('inbox_review_disabled') }}</p>
 {% endif %}
 {% if inbox.reviewer_error %}
-  <p class="notice">{{ inbox.reviewer_error }}</p>
+  <p class="notice">{{ t('inbox_reviewer_setup_needed') }}</p>
 {% elif inbox.reviewer %}
   <p class="notice">{{ t('inbox_review_attribution', reviewer=inbox.reviewer) }}</p>
 {% endif %}
@@ -26,17 +63,30 @@
   {% if inbox.groups %}
     {% for group in inbox.groups %}
       <div class="draft-group">
-        <h2>{{ group.project_name }}</h2>
+        <div class="draft-group-header">
+          <div>
+            <p class="section-kicker">{{ t('inbox_project_queue') }}</p>
+            <h2>{{ group.project_name }}</h2>
+          </div>
+          <div class="project-meta">{{ group.drafts | length }} {{ t('review_items') }}</div>
+        </div>
         <div class="list">
           {% for draft in group.drafts %}
             <article class="draft-card">
               <div class="draft-meta">
-                {{ draft.project }} · {{ draft.type_label }} · owner: {{ draft.responsible_reviewer }}
-                {% if draft.updated_at %} · {{ draft.updated_at }}{% endif %}
+                <span class="draft-pill">{{ draft.project }}</span>
+                <span class="draft-pill">{{ draft.type_label }}</span>
+                <span class="draft-pill">{{ t('review_owner') }}: {{ draft.responsible_reviewer }}</span>
+                {% if draft.updated_at %}
+                  <span class="draft-pill">{{ draft.updated_at }}</span>
+                {% endif %}
               </div>
-              {% for line in draft.card_lines %}
-                <p>{{ line }}</p>
-              {% endfor %}
+              <div class="draft-card-body">
+                {% for line in draft.card_lines %}
+                  <p>{{ line }}</p>
+                {% endfor %}
+              </div>
+              <p class="draft-card-reason">{{ t('inbox_card_reason') }}: {{ draft.resolution_reason }}</p>
               <div class="draft-actions">
                 {% if review_enabled %}
                   <form method="post" action="/inbox/accept">
@@ -45,6 +95,7 @@
                     <input type="hidden" name="draft_id" value="{{ draft.id }}">
                     <input type="hidden" name="type" value="{{ draft.type }}">
                     <button class="button" type="submit">{{ t('accept') }}</button>
+                    <span class="draft-action-help">{{ t('inbox_accept_help') }}</span>
                   </form>
                   <form method="post" action="/inbox/reject">
                     <input type="hidden" name="lang" value="{{ language }}">
@@ -52,6 +103,7 @@
                     <input type="hidden" name="draft_id" value="{{ draft.id }}">
                     <input type="hidden" name="type" value="{{ draft.type }}">
                     <button class="button reject" type="submit">{{ t('reject') }}</button>
+                    <span class="draft-action-help">{{ t('inbox_reject_help') }}</span>
                   </form>
                 {% else %}
                   <button class="button" type="button" disabled>{{ t('accept') }}</button>

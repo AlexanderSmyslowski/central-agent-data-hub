@@ -1287,6 +1287,34 @@
         font-weight: 600;
       }
 
+      .queue-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 10px;
+        margin: 20px 0 22px;
+      }
+
+      .queue-summary-item {
+        padding: 13px 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.58);
+      }
+
+      .queue-summary-label {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .queue-summary-value {
+        margin-top: 5px;
+        font-size: 17px;
+        font-weight: 700;
+      }
+
       .notice,
       .flash {
         margin: 0 0 18px;
@@ -1313,6 +1341,20 @@
         margin-top: 24px;
       }
 
+      .draft-group-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: start;
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .draft-group-header h2 {
+        margin: 0;
+      }
+
       .draft-card {
         padding: 14px;
         border: 1px solid var(--line);
@@ -1335,9 +1377,34 @@
       }
 
       .draft-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
         margin-bottom: 10px;
         color: var(--muted);
         font-size: 12px;
+      }
+
+      .draft-pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 3px 7px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.62);
+      }
+
+      .draft-card-body {
+        display: grid;
+        gap: 5px;
+      }
+
+      .draft-card-reason {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.4;
       }
 
       .draft-actions {
@@ -1349,6 +1416,13 @@
 
       .draft-actions form {
         margin: 0;
+      }
+
+      .draft-action-help {
+        display: block;
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 12px;
       }
 
       .button {
