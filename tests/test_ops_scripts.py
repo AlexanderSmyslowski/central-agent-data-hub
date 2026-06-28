@@ -88,8 +88,30 @@ def test_v016_release_notes_describe_maintenance_hardening() -> None:
     assert "no schema change" in notes
     assert "no migration" in notes
     assert "no new Hub-memory write path" in notes
-    assert "current main after v0.1.5" in protocol
-    assert "historical `v0.1.5` tag" in protocol
+
+
+def test_v017_release_notes_describe_visible_agent_connection() -> None:
+    readme = read_script("README.md")
+    notes = read_script("docs/public/v0.1.7-release-notes.md")
+    protocol = read_script("docs/first-run-test-protocol.md")
+
+    assert "[v0.1.7 release notes](docs/public/v0.1.7-release-notes.md)" in readme
+    assert "[v0.1.7 release notes]" in readme.split("[v0.1.6 release notes]")[0]
+    assert "Agent Data Hub v0.1.7" in notes
+    assert "Project Actions In Hub View" in notes
+    assert "Hand context to an agent" in notes
+    assert "Clearer Agent Connection Paths" in notes
+    assert "Connection Verification" in notes
+    assert "Codex setup verified" in notes
+    assert "Demo preview only" in notes
+    assert "manual or external checks" in notes
+    assert "no schema change" in notes
+    assert "no migration" in notes
+    assert "no new Hub-memory write path" in notes
+    assert "current main after v0.1.6" in protocol
+    assert "historical `v0.1.6` tag" in protocol
+    assert "Found Connection verification" in protocol
+    assert "terminal fallback is temporary" in protocol
 
 
 def test_hub_view_template_is_split_into_view_partials() -> None:
@@ -124,7 +146,7 @@ def test_package_version_is_ready_for_next_public_patch_release() -> None:
     checklist = read_script("docs/public/release-checklist.md")
     readme = read_script("README.md")
 
-    assert 'version = "0.1.6"' in pyproject
+    assert 'version = "0.1.7"' in pyproject
     assert "version` matches the tag" in checklist
     assert "Do not move an already published tag" in checklist
     assert "[Release checklist](docs/public/release-checklist.md)" in readme

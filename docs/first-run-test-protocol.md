@@ -1,4 +1,4 @@
-# First-Run Test Protocol (current main after v0.1.5)
+# First-Run Test Protocol (current main after v0.1.6)
 
 A moderator playbook for running a structured first-run usability test of Agent
 Data Hub with a real person.
@@ -18,8 +18,8 @@ the rest of `docs/`.
 
 ## 0. What This Tests Against
 
-This protocol tests the current `main` branch after the published v0.1.5
-release. It does **not** test the historical `v0.1.5` tag.
+This protocol tests the current `main` branch after the published v0.1.6
+release. It does **not** test the historical `v0.1.6` tag.
 
 The tester should rely only on the current public surface:
 
@@ -208,11 +208,18 @@ End time:
 - Hub View started: yes/no
 - Hub View opened in browser: yes/no
 - Optional mobile preview URL found/opened: yes/no/not tested
+- Found Project actions: yes/no
+- Found Hand context to an agent: yes/no
 - Found Connect an agent: yes/no
 - Created or inspected a context pack: yes/no
+- Found Connection verification: yes/no
+- Understood Connection verification: yes/no
 - Found the Codex setup card: yes/no
 - Understood Codex setup target/preview/install: yes/no
+- Understood Codex setup can be verified from repo-local AGENTS.md: yes/no
 - Understood public demo Codex setup is dry-run only: yes/no/not applicable
+- Understood Claude/Hermes/custom setup needs manual verification: yes/no
+- Understood terminal fallback is temporary, not the normal daily path: yes/no
 - Understood mobile preview is local read/orientation only: yes/no/not applicable
 
 Moderator diagnostics if needed:
@@ -247,7 +254,11 @@ First place where tester wanted explanation:
 > ...
 "What do you think Connect an agent does?"
 > ...
+"What do you think Connection verification means?"
+> ...
 "What do you think the Codex setup card would change?"
+> ...
+"What can ADH verify automatically, and what still needs a manual check?"
 > ...
 "Why is the public demo install button disabled?"
 > ...
@@ -311,13 +322,19 @@ These are the spots worth concentrated attention:
 8. Is there **any maintainer-local trace** visible in the public path?
 9. Do they get stuck on **Docker / Postgres**?
 10. Is the command `scripts/first_run_demo.sh` clear?
-11. Does **Connect an agent** make it visible that reviewed ADH context is being
-    handed to a chatbot or local agent?
-12. Does the tester understand that Codex setup writes a repo-local
+11. Does **Project actions** make the main next steps visible?
+12. Does **Hand context to an agent** make it visible that reviewed ADH context
+    is being handed to a chatbot or local agent?
+13. Does **Connection verification** make it clear what ADH can check and what
+    remains a manual/external check?
+14. Does the tester understand that Codex setup writes a repo-local
     `AGENTS.md` block, not Hub memory?
-13. Does the tester understand that the public demo shows a dry-run preview and
+15. Does the tester understand that the public demo shows a dry-run preview and
     does not install the demo block?
-14. If `scripts/first_run_demo.sh --mobile` is used, does the tester understand
+16. Does the tester understand that Claude/Hermes/custom agents need their own
+    setup outside Hub View?
+17. Does the tester understand that the terminal fallback is temporary?
+18. If `scripts/first_run_demo.sh --mobile` is used, does the tester understand
     it is a local Wi-Fi preview and not a hosted app?
 
 The current README deliberately frames Agent Data Hub as a local technical
@@ -334,12 +351,18 @@ The test succeeds if the tester, **without explanation**, can:
 - run `scripts/first_run_demo.sh`
 - see the public demo check pass
 - open Hub View
+- find **Project actions**
+- find **Hand context to an agent**
 - find **Connect an agent**
 - understand that a context pack is reviewed ADH context being handed to a
   chatbot or local agent
+- find **Connection verification**
+- understand what ADH can verify automatically and what still needs a manual
+  check
 - find the Codex setup card
 - understand whether the Codex setup can install or is only a public-demo
   preview/dry-run
+- understand that terminal fallback is not the intended long-term daily path
 - roughly explain that ADH manages reviewed project context for humans and
   agents
 
@@ -404,6 +427,10 @@ At the end, without correcting them:
 - Welcher Befehl war am unsichersten?
 - Was hättest du früher wissen wollen?
 - Hast du erkannt, wie ADH Kontext an eine KI oder einen Agenten übergibt?
+- Hast du verstanden, was ADH bei der Agent-Verbindung prüfen kann und was
+  nicht?
+- Was wäre für dich der normale Weg: Chatbot, Codex, Claude, Hermes/custom oder
+  Terminal fallback?
 - Was klang nach Produktversprechen, obwohl es vielleicht nur Preview ist?
 
 Only after their answers may you explain what ADH actually means.

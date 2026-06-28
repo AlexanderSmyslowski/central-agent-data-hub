@@ -175,6 +175,9 @@ project folder, it previews the `AGENTS.md` block and can install it only after
 an explicit local click. The copyable command remains available as a fallback.
 Hermes/custom agents get a startup-rule block; other MCP clients get the config
 shape.
+The same page shows **Connection verification**: Codex can be checked against
+the repo-local `AGENTS.md` block when the project folder is registered; other
+agents remain honest manual checks in their own configuration.
 The terminal start command remains useful as a manual fallback until the local
 agent is connected, not as the intended long-term daily UX.
 
@@ -441,6 +444,7 @@ local working data. It continues to use the configured `.env` database.
 
 - [Public overview](docs/public/agent-data-hub-overview.md)
 - [Public getting started](docs/public/getting-started.md)
+- [v0.1.7 release notes](docs/public/v0.1.7-release-notes.md)
 - [v0.1.6 release notes](docs/public/v0.1.6-release-notes.md)
 - [v0.1.5 release notes](docs/public/v0.1.5-release-notes.md)
 - [v0.1.4 release notes](docs/public/v0.1.4-release-notes.md)
