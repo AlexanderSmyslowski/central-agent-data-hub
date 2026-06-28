@@ -955,12 +955,34 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--host", default="127.0.0.1", help="Bind host.")
     parser.add_argument(
+        "--allow-lan-read",
+        action="store_true",
+        help=(
+            "Allow Hub View to bind to a non-loopback host. This exposes "
+            "reviewed memory read-only on the local network."
+        ),
+    )
+    parser.add_argument(
         "--port",
         type=int,
         default=int(os.environ.get("HUB_VIEW_PORT", "8765")),
         help="Bind port.",
     )
     return parser
+
+
+def validate_lan_read_bind(host: str, *, allow_lan_read: bool) -> str | None:
+    if is_loopback_host(host):
+        return None
+
+    message = (
+        f"binding Hub View to non-loopback host '{host}' exposes reviewed "
+        "memory read-only on the local network; review and setup writes stay "
+        "disabled unless Hub View is bound to loopback"
+    )
+    if not allow_lan_read:
+        raise ValueError(f"{message}; re-run with --allow-lan-read to confirm")
+    return message
 
 
 def port_is_available(host: str, port: int) -> bool:
@@ -982,6 +1004,14 @@ def main(argv: list[str] | None = None) -> int:
     if not os.environ.get("DATABASE_URL"):
         parser.error("DATABASE_URL is not set")
 
+    try:
+        lan_read_warning = validate_lan_read_bind(
+            args.host,
+            allow_lan_read=args.allow_lan_read,
+        )
+    except ValueError as exc:
+        parser.error(str(exc))
+
     if not port_is_available(args.host, args.port):
         parser.error(
             f"port {args.port} is already in use; retry with --port {args.port + 1}"
@@ -989,11 +1019,13 @@ def main(argv: list[str] | None = None) -> int:
 
     app = create_application(bind_host=args.host)
     with make_server(args.host, args.port, app) as server:
-        print(f"Hub View running on http://{args.host}:{args.port}")
+        if lan_read_warning:
+            print(f"Warning: {lan_read_warning}.", file=sys.stderr, flush=True)
+        print(f"Hub View running on http://{args.host}:{args.port}", flush=True)
         try:
             server.serve_forever()
         except KeyboardInterrupt:
-            print("\nHub View stopped.")
+            print("\nHub View stopped.", flush=True)
     return 0
 
 

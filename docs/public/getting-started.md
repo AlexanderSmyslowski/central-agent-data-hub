@@ -36,7 +36,9 @@ scripts/first_run_demo.sh --mobile
 The script prints the laptop URL and, when it can detect one, a phone URL such
 as `http://192.168.x.x:8765`. Use this only on a trusted local network. Mobile
 preview is for reading and orientation; Review Inbox and Codex setup writes
-stay disabled when Hub View is not bound to loopback.
+stay disabled when Hub View is not bound to loopback. Direct non-loopback Hub
+View starts require `--allow-lan-read` so reviewed memory is not exposed on the
+local network by accident.
 
 ## 2. Manual Path For Troubleshooting
 

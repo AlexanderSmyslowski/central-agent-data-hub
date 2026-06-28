@@ -68,6 +68,17 @@ def test_v015_release_notes_describe_guarded_codex_setup_without_overclaim() -> 
     assert "no mobile write path" in notes
 
 
+def test_package_version_is_ready_for_next_public_patch_release() -> None:
+    pyproject = read_script("pyproject.toml")
+    checklist = read_script("docs/public/release-checklist.md")
+    readme = read_script("README.md")
+
+    assert 'version = "0.1.6"' in pyproject
+    assert "version` matches the tag" in checklist
+    assert "Do not move an already published tag" in checklist
+    assert "[Release checklist](docs/public/release-checklist.md)" in readme
+
+
 def test_preflight_uses_bounded_docker_checks() -> None:
     common = read_script("scripts/db_common.sh")
     preflight = read_script("scripts/agent_preflight.sh")
@@ -267,7 +278,8 @@ def test_first_run_demo_script_wraps_public_demo_path() -> None:
     assert '"$ROOT_DIR/scripts/db_start_public_demo.sh"' in script
     assert '"$ROOT_DIR/scripts/smoke_public_demo.sh"' in script
     assert 'hub_view_host="127.0.0.1"' in script
-    assert '"$ROOT_DIR/scripts/hub_view.sh" --host "$hub_view_host"' in script
+    assert 'hub_view_args=(--host "$hub_view_host")' in script
+    assert '"$ROOT_DIR/scripts/hub_view.sh" "${hub_view_args[@]}"' in script
     assert "AGENT_HUB_PUBLIC_DEMO=1" in script
     assert "http://127.0.0.1:${hub_view_port}" in script
     assert "HUB_VIEW_PORT:-8765" in script
@@ -282,8 +294,10 @@ def test_first_run_demo_mobile_preview_is_explicit_and_non_loopback() -> None:
     assert "--mobile" in script
     assert "detect_lan_ip()" in script
     assert 'hub_view_host="0.0.0.0"' in script
+    assert 'hub_view_args=(--host "$hub_view_host" --allow-lan-read)' in script
     assert "Open on a phone in the same Wi-Fi" in script
     assert "Use this only on a trusted local network." in script
+    assert "Hub View read access is explicitly opened to the local network for this run." in script
     assert "Review and Codex setup actions stay disabled while mobile preview is active." in script
     assert "ipconfig getifaddr en0" in script
 
@@ -291,9 +305,12 @@ def test_first_run_demo_mobile_preview_is_explicit_and_non_loopback() -> None:
     assert "scripts/first_run_demo.sh --mobile" in getting_started
     assert "trusted Wi-Fi" in readme
     assert "trusted local network" in getting_started
+    assert "--allow-lan-read" in readme
+    assert "--allow-lan-read" in getting_started
     assert "Review Inbox and Codex setup writes" in getting_started
     assert "does not widen the write boundary" in boundaries
     assert "Review Inbox actions and Codex setup actions remain disabled" in boundaries
+    assert "--allow-lan-read" in boundaries
 
 
 def test_first_run_demo_preserves_existing_env_and_venv_contract() -> None:
@@ -422,6 +439,7 @@ def test_public_hub_view_entrypoint_is_public_safe() -> None:
     assert "the-one-catering" not in script
     assert "run_agent_hub check" in script
     assert "scripts/db_start_public_demo.sh" in script
+    assert "allow-lan-read" not in script
     assert 'exec "$PYTHON_BIN" -m agent_hub.hub_view "$@"' in script
 
 

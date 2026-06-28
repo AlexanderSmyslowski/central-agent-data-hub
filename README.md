@@ -122,7 +122,9 @@ scripts/first_run_demo.sh --mobile
 
 This prints a local network URL for the phone. Mobile preview is for reading
 and orientation; Hub View disables Review Inbox and Codex setup writes when it
-is not bound to loopback.
+is not bound to loopback. Direct non-loopback Hub View starts require an
+explicit `--allow-lan-read` confirmation because they expose reviewed memory
+read-only on the local network.
 
 Manual path:
 
@@ -447,6 +449,7 @@ local working data. It continues to use the configured `.env` database.
 - [v0.1.0 release notes](docs/public/v0.1.0-release-notes.md)
 - [Announcement pack](docs/public/announcement-pack.md)
 - [First-run test protocol](docs/first-run-test-protocol.md)
+- [Release checklist](docs/public/release-checklist.md)
 - [Agent workflow](docs/agent-workflow.md)
 - [Automation boundaries](docs/automation-boundaries.md)
 - [Code architecture](docs/code-architecture.md)

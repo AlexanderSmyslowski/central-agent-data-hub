@@ -151,15 +151,18 @@ fi
 
 hub_view_port="${HUB_VIEW_PORT:-8765}"
 hub_view_host="127.0.0.1"
+hub_view_args=(--host "$hub_view_host")
 
 echo
 echo "Public demo first run is ready."
 
 if [[ "$MOBILE_PREVIEW" -eq 1 ]]; then
   hub_view_host="0.0.0.0"
+  hub_view_args=(--host "$hub_view_host" --allow-lan-read)
   lan_ip="$(detect_lan_ip || true)"
   echo "Mobile preview mode is on."
   echo "Use this only on a trusted local network."
+  echo "Hub View read access is explicitly opened to the local network for this run."
   echo "Review and Codex setup actions stay disabled while mobile preview is active."
   echo
   echo "Open on this Mac:"
@@ -180,4 +183,4 @@ echo
 echo "Press Ctrl-C in this terminal to stop Hub View."
 echo
 
-AGENT_HUB_PUBLIC_DEMO=1 "$ROOT_DIR/scripts/hub_view.sh" --host "$hub_view_host"
+AGENT_HUB_PUBLIC_DEMO=1 "$ROOT_DIR/scripts/hub_view.sh" "${hub_view_args[@]}"

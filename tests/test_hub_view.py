@@ -7,6 +7,8 @@ import sys
 from urllib.parse import urlencode
 import uuid
 
+import pytest
+
 from agent_hub import hub_view
 from agent_hub.commands import inbox
 from agent_hub.writeback_routing import lint_card_text
@@ -585,6 +587,26 @@ def test_non_loopback_bind_disables_inbox_actions(monkeypatch) -> None:
     assert "disabled>Accept</button>" in body
     assert "Review actions are disabled" in body
     assert captured["status"] == "403 Forbidden"
+
+
+def test_lan_read_bind_requires_explicit_opt_in() -> None:
+    with pytest.raises(ValueError, match="--allow-lan-read"):
+        hub_view.validate_lan_read_bind("0.0.0.0", allow_lan_read=False)
+
+
+def test_lan_read_bind_allows_loopback_without_opt_in() -> None:
+    assert hub_view.validate_lan_read_bind(
+        "127.0.0.1",
+        allow_lan_read=False,
+    ) is None
+
+
+def test_lan_read_bind_returns_warning_when_explicitly_allowed() -> None:
+    warning = hub_view.validate_lan_read_bind("0.0.0.0", allow_lan_read=True)
+
+    assert warning is not None
+    assert "exposes reviewed memory read-only on the local network" in warning
+    assert "writes stay disabled unless Hub View is bound to loopback" in warning
 
 
 def test_application_renders_project_detail(monkeypatch) -> None:
