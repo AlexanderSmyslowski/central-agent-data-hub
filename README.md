@@ -193,7 +193,7 @@ and the same influence rules shown in Hub View.
 For a task-specific read-only context pack:
 
 ```bash
-agent-hub prepare --project <project-slug> --task "review release v0.1.1"
+agent-hub prepare --project <project-slug> --task "review release readiness"
 ```
 
 `prepare` turns reviewed memory into a concrete working brief for one task. It
@@ -441,6 +441,7 @@ local working data. It continues to use the configured `.env` database.
 
 - [Public overview](docs/public/agent-data-hub-overview.md)
 - [Public getting started](docs/public/getting-started.md)
+- [v0.1.6 release notes](docs/public/v0.1.6-release-notes.md)
 - [v0.1.5 release notes](docs/public/v0.1.5-release-notes.md)
 - [v0.1.4 release notes](docs/public/v0.1.4-release-notes.md)
 - [v0.1.3 release notes](docs/public/v0.1.3-release-notes.md)

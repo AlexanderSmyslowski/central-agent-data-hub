@@ -68,6 +68,30 @@ def test_v015_release_notes_describe_guarded_codex_setup_without_overclaim() -> 
     assert "no mobile write path" in notes
 
 
+def test_v016_release_notes_describe_maintenance_hardening() -> None:
+    readme = read_script("README.md")
+    notes = read_script("docs/public/v0.1.6-release-notes.md")
+    protocol = read_script("docs/first-run-test-protocol.md")
+
+    assert "[v0.1.6 release notes](docs/public/v0.1.6-release-notes.md)" in readme
+    assert "[v0.1.6 release notes]" in readme.split("[v0.1.5 release notes]")[0]
+    assert "Agent Data Hub v0.1.6" in notes
+    assert "Safer LAN Read Behavior" in notes
+    assert "--allow-lan-read" in notes
+    assert "Hub View Structure" in notes
+    assert "hub_view_models.py" in notes
+    assert "hub_view_server.py" in notes
+    assert "Faster Project Overview Loading" in notes
+    assert "batch their memory counts and latest-report lookups" in notes
+    assert "First-Run Reuse" in notes
+    assert "reuses the existing local install" in notes
+    assert "no schema change" in notes
+    assert "no migration" in notes
+    assert "no new Hub-memory write path" in notes
+    assert "current main after v0.1.5" in protocol
+    assert "historical `v0.1.5` tag" in protocol
+
+
 def test_hub_view_template_is_split_into_view_partials() -> None:
     page = read_script("templates/hub_view/page.html")
 

@@ -1,4 +1,4 @@
-# First-Run Test Protocol (current main after v0.1.2)
+# First-Run Test Protocol (current main after v0.1.5)
 
 A moderator playbook for running a structured first-run usability test of Agent
 Data Hub with a real person.
@@ -18,8 +18,8 @@ the rest of `docs/`.
 
 ## 0. What This Tests Against
 
-This protocol tests the current `main` branch after the published v0.1.2
-release. It does **not** test the historical `v0.1.2` tag.
+This protocol tests the current `main` branch after the published v0.1.5
+release. It does **not** test the historical `v0.1.5` tag.
 
 The tester should rely only on the current public surface:
 
