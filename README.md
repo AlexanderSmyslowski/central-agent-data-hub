@@ -156,12 +156,13 @@ shows how that context should influence the work.
 For chatbots, the practical path is copy and paste. For local agents, the
 better path is one-time connection: configure the agent to request ADH context
 at task start through the read-only MCP surface or an equivalent startup rule.
-Hub View shows the setup steps, but it does not connect the agent by itself.
-It separates setup paths for Claude Code, Codex, Hermes or custom startup
-rules, and generic MCP-compatible agents, with copy buttons for each path.
-Claude Code gets a single copyable setup command; Codex gets the repo-local
-`AGENTS.md` setup command; Hermes/custom agents get a startup-rule block; other
-MCP clients get the config shape.
+Hub View separates setup paths for Claude Code, Codex, Hermes or custom startup
+rules, and generic MCP-compatible agents. Claude Code gets a single copyable
+setup command. Codex gets a guarded local setup action: when Hub View knows the
+project folder, it previews the `AGENTS.md` block and can install it only after
+an explicit local click. The copyable command remains available as a fallback.
+Hermes/custom agents get a startup-rule block; other MCP clients get the config
+shape.
 The terminal start command remains useful as a manual fallback until the local
 agent is connected, not as the intended long-term daily UX.
 
@@ -352,8 +353,9 @@ scripts/project_schema_friction.sh \
 
 Agent Data Hub can project reviewed memory into Markdown for human reading and
 Obsidian graph navigation. It can also render the same project set in Hub View.
-Hub View is mostly read-only; its only write actions are accepting or rejecting
-one draft at a time through the Review Inbox.
+Hub View is mostly read-only. Its only Hub-memory write actions are accepting or
+rejecting one draft at a time through the Review Inbox. It may also install the
+repo-local Codex `AGENTS.md` setup block after an explicit local click.
 
 The human-facing surfaces are for:
 

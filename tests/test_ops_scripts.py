@@ -39,6 +39,18 @@ def test_automation_boundaries_show_required_reviewer_for_inbox_review() -> None
     assert "public templates leave it unset so review identity is chosen explicitly" in docs
 
 
+def test_automation_boundaries_describe_guarded_codex_setup_action() -> None:
+    docs = read_script("docs/automation-boundaries.md")
+
+    assert "local Codex setup action" in docs
+    assert "repo-local working-rule file, not Hub memory" in docs
+    assert "each form includes a server-generated CSRF token" in docs
+    assert "the browser does not provide the repo path" in docs
+    assert "path from ADH metadata" in docs
+    assert "public-demo checkout is preview/dry-run only" in docs
+    assert "no shell command is executed from Hub View" in docs
+
+
 def test_preflight_uses_bounded_docker_checks() -> None:
     common = read_script("scripts/db_common.sh")
     preflight = read_script("scripts/agent_preflight.sh")

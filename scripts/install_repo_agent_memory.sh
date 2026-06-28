@@ -96,109 +96,19 @@ if ! run_agent_hub brief --project "$PROJECT" --limit 1 >/dev/null; then
   exit 1
 fi
 
-block="$(
-  cat <<EOF
-<!-- CENTRAL-AGENT-DATA-HUB:START -->
-
-## Central Agent Data Hub
-
-Project slug: \`$PROJECT\`
-
-Run Card:
-\`$ROOT_DIR/docs/agent-run-card.md\`
-
-Use the Run Card rhythm for substantial work: start with Hub context, work inside
-one project boundary, finish with review, and write back only reviewed,
-non-sensitive memory.
-
-If work requires protected hosting, deployment, FTP, or production access,
-request a human secure handoff outside the Hub, Git, and Obsidian. Store back
-only the reviewed, non-sensitive outcome.
-
-Use the shared Hub before and after substantial project work:
-
-\`\`\`bash
-$ROOT_DIR/scripts/agent_start.sh --project $PROJECT --query "<current focus>"
-$ROOT_DIR/scripts/agent_start.sh --project $PROJECT --query "<current focus>" --review
-$ROOT_DIR/scripts/agent_finish.sh --project $PROJECT --review
-\`\`\`
-
-For reviewed, non-sensitive memory candidates, dry-run first:
-
-\`\`\`bash
-$ROOT_DIR/scripts/project_remember.sh \\
-  --project $PROJECT \\
-  --type fact \\
-  --text "Reviewed memory candidate." \\
-  --source "non-sensitive source" \\
-  --dry-run
-\`\`\`
-
-Then write only curated memory:
-
-\`\`\`bash
-$ROOT_DIR/scripts/project_remember.sh \\
-  --project $PROJECT \\
-  --type fact \\
-  --text "Reviewed memory candidate." \\
-  --source "non-sensitive source"
-\`\`\`
-
-Never store passwords, API keys, tokens, FTP credentials, private customer data,
-raw invoice data, deployment secrets, unreviewed claims, or assumptions copied
-from another project.
-
-<!-- CENTRAL-AGENT-DATA-HUB:END -->
-EOF
-)"
-
-echo "Central Agent Data Hub repo memory installer"
-echo "Repo:    $repo_abs"
-echo "Project: $PROJECT"
-echo "Target:  $target_path"
-
 if [[ "$DRY_RUN" -eq 1 ]]; then
-  echo
-  echo "Dry run: no files were written."
-  echo
-  printf '%s\n' "$block"
+  "$PYTHON_BIN" -m agent_hub.repo_agent_memory \
+    --repo "$repo_abs" \
+    --project "$PROJECT" \
+    --hub-root "$ROOT_DIR" \
+    --file "$TARGET_FILE" \
+    --dry-run
   exit 0
 fi
 
-mkdir -p "$target_dir"
-
-"$PYTHON_BIN" - "$target_path" "$block" <<'PY'
-from __future__ import annotations
-
-from pathlib import Path
-import sys
-
-target = Path(sys.argv[1])
-block = sys.argv[2].rstrip() + "\n"
-start = "<!-- CENTRAL-AGENT-DATA-HUB:START -->"
-end = "<!-- CENTRAL-AGENT-DATA-HUB:END -->"
-
-if target.exists():
-    original = target.read_text(encoding="utf-8")
-else:
-    original = ""
-
-if start in original and end in original:
-    before = original.split(start, 1)[0].rstrip()
-    after = original.split(end, 1)[1].lstrip()
-    parts = []
-    if before:
-        parts.append(before)
-    parts.append(block.rstrip())
-    if after:
-        parts.append(after.rstrip())
-    updated = "\n\n".join(parts) + "\n"
-elif original.strip():
-    updated = original.rstrip() + "\n\n" + block
-else:
-    updated = block
-
-target.write_text(updated, encoding="utf-8")
-PY
-
-echo "Installed or updated Hub memory block."
+"$PYTHON_BIN" -m agent_hub.repo_agent_memory \
+  --repo "$repo_abs" \
+  --project "$PROJECT" \
+  --hub-root "$ROOT_DIR" \
+  --file "$TARGET_FILE" \
+  --apply
