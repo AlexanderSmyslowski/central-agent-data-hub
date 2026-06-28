@@ -16,8 +16,8 @@
 
 <nav class="action-strip" aria-label="Project actions">
   <a class="action-link primary" href="#connect-agent">
-    <span class="action-title">Hand context to an agent</span>
-    <span class="action-copy">Create a visible context pack before work starts.</span>
+    <span class="action-title">Use ADH with an agent</span>
+    <span class="action-copy">Prepare the reviewed context before work starts.</span>
   </a>
   <a class="action-link" href="/inbox">
     <span class="action-title">Review suggested changes</span>
@@ -65,12 +65,12 @@
 
 <section class="agent-connect" id="connect-agent">
   <h2>Connect an agent</h2>
-  <p>Create a visible context pack before work starts. The next screen shows what ADH handed over, what it can verify, and which setup path fits your agent.</p>
+  <p>Prepare a visible handoff before work starts. The next screen shows what ADH would give the agent, what it can verify, and which setup path fits your agent.</p>
   <form class="agent-form" method="get" action="/projects/{{ selected_project.slug }}/agent-context">
     <label class="agent-form-label" for="agent-task">Task for the agent</label>
     <div class="agent-form-row">
       <input id="agent-task" class="agent-input" type="text" name="task" value="Review this project with ADH context" aria-label="Task for the agent">
-      <button class="button primary-button" type="submit">Create context pack</button>
+      <button class="button primary-button" type="submit">Prepare agent handoff</button>
     </div>
   </form>
 </section>

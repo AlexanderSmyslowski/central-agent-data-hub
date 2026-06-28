@@ -209,14 +209,14 @@ End time:
 - Hub View opened in browser: yes/no
 - Optional mobile preview URL found/opened: yes/no/not tested
 - Found Project actions: yes/no
-- Found Hand context to an agent: yes/no
+- Found Use ADH with an agent: yes/no
 - Found Connect an agent: yes/no
-- Created or inspected a context pack: yes/no
-- Found Agent connection wizard: yes/no
+- Prepared or inspected an agent handoff: yes/no
+- Found Connect your agent: yes/no
 - Understood Choose your agent: yes/no
 - Found Connection verification: yes/no
 - Understood Connection verification: yes/no
-- Found Test handoff: yes/no
+- Found Check handoff: yes/no
 - Found the Codex setup card: yes/no
 - Understood Codex setup target/preview/install: yes/no
 - Understood Codex setup can be verified from repo-local AGENTS.md: yes/no
@@ -326,7 +326,7 @@ These are the spots worth concentrated attention:
 9. Do they get stuck on **Docker / Postgres**?
 10. Is the command `scripts/first_run_demo.sh` clear?
 11. Does **Project actions** make the main next steps visible?
-12. Does **Hand context to an agent** make it visible that reviewed ADH context
+12. Does **Use ADH with an agent** make it visible that reviewed ADH context
     is being handed to a chatbot or local agent?
 13. Does **Connection verification** make it clear what ADH can check and what
     remains a manual/external check?
@@ -355,9 +355,9 @@ The test succeeds if the tester, **without explanation**, can:
 - see the public demo check pass
 - open Hub View
 - find **Project actions**
-- find **Hand context to an agent**
+- find **Use ADH with an agent**
 - find **Connect an agent**
-- understand that a context pack is reviewed ADH context being handed to a
+- understand that the agent handoff is reviewed ADH context being handed to a
   chatbot or local agent
 - find **Connection verification**
 - understand what ADH can verify automatically and what still needs a manual

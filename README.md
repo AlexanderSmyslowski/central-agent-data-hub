@@ -160,9 +160,9 @@ Hub View is a local review surface, not the operational source of truth.
 ## Agent Workflow
 
 Hub View can make the agent handoff visible from the UI. Open a project, use
-**Connect an agent**, enter the task, and click **Create context pack**. The
-generated view starts with an **Agent connection wizard**: choose the agent you
-use, follow the matching setup card, then test the handoff. It shows which
+**Connect an agent**, enter the task, and click **Prepare agent handoff**. The
+generated view starts with **Connect your agent**: choose the agent you
+use, follow the matching setup card, then check the handoff. It shows which
 reviewed facts, decisions, risks, questions, reports, and trail entries would
 be handed to a chatbot or local agent, plus how that context should influence
 the work.

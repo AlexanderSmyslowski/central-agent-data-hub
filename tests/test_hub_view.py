@@ -765,8 +765,8 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Selected" in body
     assert "2 items to review" in body
     assert 'aria-label="Project actions"' in body
-    assert "Hand context to an agent" in body
-    assert "Create a visible context pack before work starts." in body
+    assert "Use ADH with an agent" in body
+    assert "Prepare the reviewed context before work starts." in body
     assert "Review suggested changes" in body
     assert "Inspect reviewed memory" in body
     assert "Check memory quality" in body
@@ -781,8 +781,8 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert 'id="quality"' in body
     assert "Connect an agent" in body
     assert 'action="/projects/central-agent-data-hub/agent-context"' in body
-    assert "Create context pack" in body
-    assert "The next screen shows what ADH handed over" in body
+    assert "Prepare agent handoff" in body
+    assert "The next screen shows what ADH would give the agent" in body
     assert "Task for the agent" in body
     assert "primary-button" in body
     assert "Latest status" in body
@@ -905,11 +905,11 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "Reviewed decisions become task constraints" in body
     assert "Known gaps" in body
     assert "1 unanswered questions" in body
-    assert "Agent connection wizard" in body
+    assert "Connect your agent" in body
     assert 'aria-label="Agent connection steps"' in body
     assert "Choose agent" in body
     assert "Connect once" in body
-    assert "Test handoff" in body
+    assert "Check handoff" in body
     assert "Choose your agent" in body
     assert 'href="#agent-chatbot"' in body
     assert 'href="#agent-codex"' in body
@@ -942,7 +942,7 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "Copy fallback command" in body
     assert "Copy startup rule" in body
     assert "Copy MCP config" in body
-    assert "Jump to context pack" in body
+    assert "Jump to chatbot text" in body
     assert "ADH can check this setup here" in body
     assert "Show Claude manual setup pieces" in body
     assert "It never runs an agent" in body
@@ -974,7 +974,7 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert 'data-copy-target="agent-start-command"' in body
     assert 'data-copy-target="prepare-command"' in body
     assert 'data-copy-target="chatbot-context-pack"' in body
-    assert "Copy context pack" in body
+    assert "Copy chatbot text" in body
     assert "agent-hub prepare --project central-agent-data-hub" in body
     assert "scripts/agent_start.sh --project central-agent-data-hub" in body
     assert "# Agent Context Pack" in body
