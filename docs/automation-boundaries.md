@@ -153,6 +153,10 @@ Hub View's Codex setup action is guarded separately:
 - the block is shown before installation
 - no shell command is executed from Hub View
 
+The public mobile preview mode binds Hub View to the local network for reading
+from a phone. That does not widen the write boundary: because the server is not
+bound to loopback, Review Inbox actions and Codex setup actions remain disabled.
+
 Agent Data Hub v0.1.x uses attribution instead of access control: everyone in
 the trusted local workspace can see the review inbox, but every accept/reject
 decision must carry a reviewer handle. This is not an authentication system.
