@@ -57,6 +57,26 @@
       var items = Array.prototype.slice.call(document.querySelectorAll("[data-memory-item]"));
       var showingTemplate = memoryExplorer.getAttribute("data-showing-template") || "Showing __count__ visible memory items on this page.";
       var resultTemplate = memoryExplorer.getAttribute("data-result-template") || '__count__ matches for "__query__".';
+      var searchAliases = {
+        risiko: ["risk", "risks", "risiken"],
+        risiken: ["risk", "risks", "risiko"],
+        frage: ["question", "questions", "open question", "offene fragen"],
+        fragen: ["question", "questions", "open question", "offene fragen"],
+        entscheidung: ["decision", "decisions"],
+        entscheidungen: ["decision", "decisions"],
+        fakt: ["fact", "facts", "fakten"],
+        fakten: ["fact", "facts", "fakt"],
+        bericht: ["report", "reports", "status", "stand"],
+        berichte: ["report", "reports", "status", "stand"],
+        stand: ["status", "latest status", "report", "bericht"],
+        arbeitsstand: ["status", "latest status", "report", "bericht"],
+        beziehung: ["relation", "relations", "beziehungen"],
+        beziehungen: ["relation", "relations", "beziehung"],
+        quelle: ["source", "sources"],
+        quellen: ["source", "sources"],
+        pruefung: ["review", "reviewed", "draft", "drafts"],
+        prüfung: ["review", "reviewed", "draft", "drafts"]
+      };
 
       items.forEach(function (item, index) {
         if (!item.id) {
@@ -73,6 +93,21 @@
       function itemHaystack(item) {
         var type = item.getAttribute("data-memory-type") || "";
         return (type + " " + (item.textContent || "")).toLowerCase();
+      }
+
+      function searchTerms(query) {
+        var terms = [query];
+        query.split(/\s+/).forEach(function (word) {
+          if (searchAliases[word]) {
+            terms = terms.concat(searchAliases[word]);
+          }
+        });
+        if (searchAliases[query]) {
+          terms = terms.concat(searchAliases[query]);
+        }
+        return terms.filter(function (term, index) {
+          return term && terms.indexOf(term) === index;
+        });
       }
 
       function fillTemplate(template, count, query) {
@@ -96,7 +131,7 @@
           var link = document.createElement("a");
           var strong = document.createElement("strong");
           var span = document.createElement("span");
-          var type = item.getAttribute("data-memory-type") || "memory";
+          var type = item.getAttribute("data-memory-label") || item.getAttribute("data-memory-type") || "memory";
 
           link.className = "memory-filter-hit";
           link.href = "#" + item.id;
@@ -110,12 +145,15 @@
 
       function updateMemoryFilter() {
         var query = (filter.value || "").trim().toLowerCase();
+        var terms = searchTerms(query);
         var visible = 0;
         var matches = [];
 
         items.forEach(function (item) {
           var haystack = itemHaystack(item);
-          var isMatch = !query || haystack.indexOf(query) !== -1;
+          var isMatch = !query || terms.some(function (term) {
+            return haystack.indexOf(term) !== -1;
+          });
           item.hidden = !isMatch;
           if (isMatch) {
             visible += 1;

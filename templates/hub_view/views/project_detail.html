@@ -168,7 +168,7 @@
   {% if selected_project.decisions %}
     <div class="list">
       {% for row in selected_project.decisions %}
-        <article class="item" data-memory-item data-memory-type="decision">
+        <article class="item" data-memory-item data-memory-type="decision" data-memory-label="{{ t('agent_status_decisions') }}">
           <p class="item-title">{{ row.decision }}</p>
           {% if row.rationale %}
             <div class="item-meta">{{ row.rationale }}</div>
@@ -184,7 +184,7 @@
   {% if selected_project.facts %}
     <div class="list">
       {% for row in selected_project.facts %}
-        <article class="item" data-memory-item data-memory-type="fact">
+        <article class="item" data-memory-item data-memory-type="fact" data-memory-label="{{ t('agent_status_facts') }}">
           <p class="item-title">{{ row.statement }}</p>
           <div class="item-meta">
             {% if row.source %}{{ row.source }}{% endif %}
@@ -201,7 +201,7 @@
   {% if selected_project.reports %}
     <div class="list">
       {% for row in selected_project.reports %}
-        <article class="item" data-memory-item data-memory-type="report">
+        <article class="item" data-memory-item data-memory-type="report" data-memory-label="{{ t('agent_status_reports') }}">
           <p class="item-title">{{ row.title }}</p>
           {% if row.summary %}
             <div class="item-meta">{{ row.summary }}</div>
@@ -220,7 +220,7 @@
   {% if selected_project.risks %}
     <div class="list">
       {% for row in selected_project.risks %}
-        <article class="item" data-memory-item data-memory-type="risk">
+        <article class="item" data-memory-item data-memory-type="risk" data-memory-label="{{ t('agent_status_risks') }}">
           <p class="item-title">{{ row.title }}</p>
           <div class="item-meta">{{ row.severity }}{% if row.impact %} · {{ row.impact }}{% endif %}</div>
         </article>
@@ -234,7 +234,7 @@
   {% if selected_project.open_questions %}
     <div class="list">
       {% for row in selected_project.open_questions %}
-        <article class="item" data-memory-item data-memory-type="question">
+        <article class="item" data-memory-item data-memory-type="question" data-memory-label="{{ t('agent_status_open_questions') }}">
           <p class="item-title">{{ row.question }}</p>
           {% if row.answer %}
             <div class="item-meta">{{ row.answer }}</div>
@@ -256,7 +256,7 @@
     <div class="list">
       {% for row in selected_project.reports %}
         {% if loop.first %}
-          <article class="item" data-memory-item data-memory-type="latest status">
+          <article class="item" data-memory-item data-memory-type="latest status" data-memory-label="{{ t('latest_status') }}">
             <p class="item-title">{{ row.title }}</p>
             {% if row.summary %}
               <div class="item-meta">{{ row.summary }}</div>
@@ -284,7 +284,7 @@
   {% if selected_project.relations %}
     <div class="relation-list">
       {% for row in selected_project.relations %}
-        <div class="relation-row" data-memory-item data-memory-type="relation">
+        <div class="relation-row" data-memory-item data-memory-type="relation" data-memory-label="{{ t('relations') }}">
           <div class="relation-node">{{ row.source }}</div>
           <div class="relation-type">{{ row.relation_type }}</div>
           <div class="relation-node">{{ row.target }}</div>

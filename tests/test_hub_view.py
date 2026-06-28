@@ -854,6 +854,10 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Showing visible reviewed memory on this page." in body
     assert "No visible memory matches this search." in body
     assert "itemHaystack" in body
+    assert "searchAliases" in body
+    assert 'risiko: ["risk", "risks", "risiken"]' in body
+    assert 'arbeitsstand: ["status", "latest status", "report", "bericht"]' in body
+    assert "searchTerms(query)" in body
     assert 'getAttribute("data-memory-type")' in body
     assert "memory-filter-hit" in body
     assert 'event.key === "Enter"' in body
@@ -864,6 +868,9 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert 'data-memory-type="report"' in body
     assert 'data-memory-type="latest status"' in body
     assert 'data-memory-type="relation"' in body
+    assert 'data-memory-label="Decisions"' in body
+    assert 'data-memory-label="Risks"' in body
+    assert 'getAttribute("data-memory-label")' in body
     assert "Connect an agent" in body
     assert 'action="/projects/central-agent-data-hub/agent-context"' in body
     assert "Prepare agent handoff" in body
