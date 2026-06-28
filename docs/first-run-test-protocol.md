@@ -209,6 +209,9 @@ End time:
 - Hub View opened in browser: yes/no
 - Found Connect an agent: yes/no
 - Created or inspected a context pack: yes/no
+- Found the Codex setup card: yes/no
+- Understood Codex setup target/preview/install: yes/no
+- Understood public demo Codex setup is dry-run only: yes/no/not applicable
 
 Moderator diagnostics if needed:
 - script created `.venv`: yes/no/unknown
@@ -241,6 +244,10 @@ First place where tester wanted explanation:
 "What do you think Hub View is?"
 > ...
 "What do you think Connect an agent does?"
+> ...
+"What do you think the Codex setup card would change?"
+> ...
+"Why is the public demo install button disabled?"
 > ...
 
 ## Safety / public-flow observations
@@ -304,6 +311,10 @@ These are the spots worth concentrated attention:
 10. Is the command `scripts/first_run_demo.sh` clear?
 11. Does **Connect an agent** make it visible that reviewed ADH context is being
     handed to a chatbot or local agent?
+12. Does the tester understand that Codex setup writes a repo-local
+    `AGENTS.md` block, not Hub memory?
+13. Does the tester understand that the public demo shows a dry-run preview and
+    does not install the demo block?
 
 The current README deliberately frames Agent Data Hub as a local technical
 preview, not a hosted product or finished end-user app. Anything the tester says
@@ -322,6 +333,9 @@ The test succeeds if the tester, **without explanation**, can:
 - find **Connect an agent**
 - understand that a context pack is reviewed ADH context being handed to a
   chatbot or local agent
+- find the Codex setup card
+- understand whether the Codex setup can install or is only a public-demo
+  preview/dry-run
 - roughly explain that ADH manages reviewed project context for humans and
   agents
 
