@@ -65,6 +65,9 @@ for _ in range(50):
             "/": (
                 "Hub View",
                 "local review surface",
+                "App navigation",
+                "Work state",
+                "Agent handoff",
                 "central-agent-data-hub-demo",
                 "Project actions",
                 "Use ADH with an agent",
@@ -201,6 +204,9 @@ for _ in range(50):
             "/projects/central-agent-data-hub-demo?lang=de": (
                 "<html lang=\"de\">",
                 "lokale Prüfoberfläche",
+                "App-Navigation",
+                "Arbeitsstand",
+                "Agentenübergabe",
                 "Aktive Projekte",
                 "Projektaktionen",
                 "Was kann ich hier tun?",

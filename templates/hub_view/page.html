@@ -106,6 +106,34 @@
         justify-items: end;
       }
 
+      .app-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 14px 0 0;
+      }
+
+      .app-nav-link {
+        display: inline-flex;
+        min-height: 40px;
+        align-items: center;
+        padding: 9px 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.56);
+        color: var(--accent);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .app-nav-link:hover,
+      .app-nav-link:focus-visible,
+      .app-nav-link.active {
+        border-color: rgba(45, 74, 95, 0.36);
+        background: var(--surface-strong);
+        color: var(--text);
+      }
+
       .language-switcher {
         display: flex;
         overflow: hidden;
@@ -1372,6 +1400,17 @@
           margin-top: 14px;
         }
 
+        .app-nav {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .app-nav-link {
+          justify-content: center;
+          min-width: 0;
+          text-align: center;
+        }
+
         .content {
           padding: 22px 18px 24px;
         }
@@ -1428,6 +1467,17 @@
           <div class="read-only">{{ t('read_surface_review_actions') }}</div>
         </div>
       </header>
+
+      <nav class="app-nav" aria-label="{{ t('app_navigation') }}">
+        <a class="app-nav-link{% if not selected_project and view_name != 'inbox' %} active{% endif %}" href="{{ url_for('/') }}">{{ t('nav_projects') }}</a>
+        {% if selected_project %}
+          <a class="app-nav-link{% if view_name != 'agent_context' %} active{% endif %}" href="{{ url_for('/projects/' ~ selected_project.slug) }}">{{ t('nav_project') }}</a>
+          <a class="app-nav-link" href="{{ url_for('/projects/' ~ selected_project.slug) }}#current-state-title">{{ t('nav_work_state') }}</a>
+          <a class="app-nav-link" href="{{ url_for('/projects/' ~ selected_project.slug) }}#memory-explorer">{{ t('nav_memory') }}</a>
+          <a class="app-nav-link{% if view_name == 'agent_context' %} active{% endif %}" href="{{ url_for('/projects/' ~ selected_project.slug) }}#connect-agent">{{ t('nav_agent_handoff') }}</a>
+        {% endif %}
+        <a class="app-nav-link{% if view_name == 'inbox' %} active{% endif %}" href="{{ url_for('/inbox') }}">{{ t('nav_review') }}</a>
+      </nav>
 
       <div class="layout">
         <aside class="panel sidebar">

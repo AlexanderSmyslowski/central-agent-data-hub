@@ -126,6 +126,9 @@ def test_render_page_includes_local_review_claim() -> None:
     assert "local review surface for Agent Data Hub" in body
     assert "Read surface + review actions" in body
     assert "Prototype language: English." in body
+    assert 'aria-label="App navigation"' in body
+    assert "Projects" in body
+    assert "Review" in body
 
 
 def test_render_page_can_switch_to_german_chrome() -> None:
@@ -145,6 +148,9 @@ def test_render_page_can_switch_to_german_chrome() -> None:
     assert "lokale Prüfoberfläche für Agent Data Hub" in body
     assert "Leseoberfläche + Prüfaktionen" in body
     assert "Aktive Projekte" in body
+    assert 'aria-label="App-Navigation"' in body
+    assert "Projekte" in body
+    assert "Prüfung" in body
     assert "Deutsch" in body
     assert '<form method="get" action="/">' in body
     assert '<button type="submit" aria-current="true">Deutsch</button>' in body
@@ -809,6 +815,13 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Central Agent Data Hub" in body
     assert "Selected" in body
     assert "2 review items" in body
+    assert 'aria-label="App navigation"' in body
+    assert "Work state" in body
+    assert "Memory" in body
+    assert "Agent handoff" in body
+    assert 'href="/projects/central-agent-data-hub#current-state-title"' in body
+    assert 'href="/projects/central-agent-data-hub#memory-explorer"' in body
+    assert 'href="/projects/central-agent-data-hub#connect-agent"' in body
     assert 'aria-label="Project actions"' in body
     assert "What can I do here?" in body
     assert "Use this project as a local work surface" in body
@@ -951,6 +964,13 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert "Geprüftes Projektgedächtnis finden" in body
     assert "Neutrales Demo-Projekt: Es zeigt, wie geprüfter Kontext lokal" in body
     assert "Neutral demo project for showing" not in body
+    assert 'aria-label="App-Navigation"' in body
+    assert "Arbeitsstand" in body
+    assert "Gedächtnis" in body
+    assert "Agentenübergabe" in body
+    assert 'href="/projects/central-agent-data-hub-demo?lang=de#current-state-title"' in body
+    assert 'href="/projects/central-agent-data-hub-demo?lang=de#memory-explorer"' in body
+    assert 'href="/projects/central-agent-data-hub-demo?lang=de#connect-agent"' in body
     assert "Diese Seite durchsuchen" in body
     assert "Was kann ich hier tun?" in body
     assert "Nutze dieses Projekt als lokale Arbeitsfläche" in body

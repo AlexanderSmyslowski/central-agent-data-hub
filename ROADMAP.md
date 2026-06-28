@@ -86,6 +86,8 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
 
 13. Product elegance
    - Prefer fewer, sharper workflow entrypoints over many equal-seeming commands.
+   - Evolve Hub View as the local human-facing app for reviewed memory; keep
+     the scoped app roadmap in `docs/hub-view-app-roadmap.md`.
    - Add features only when they reduce daily confusion, improve reviewability, or protect memory quality.
    - Keep long technical rule text in repos or skill packs, not in the Hub core.
    - Split new CLI logic into focused modules before `agent_hub/cli.py` grows further.
