@@ -12,7 +12,7 @@ Usage: scripts/first_run_demo.sh [--no-hub-view] [--mobile]
 Runs the public Agent Data Hub demo path from a fresh clone:
   - checks Python and Docker
   - creates .venv if needed
-  - installs the local CLI
+  - installs the local CLI if needed
   - creates .env from .env.example if missing
   - starts the isolated public demo database
   - runs the public demo smoke
@@ -82,6 +82,36 @@ detect_lan_ip() {
   return 1
 }
 
+install_fingerprint() {
+  "$ROOT_DIR/.venv/bin/python" - "$ROOT_DIR" <<'PY'
+from pathlib import Path
+import hashlib
+import sys
+
+root = Path(sys.argv[1])
+digest = hashlib.sha256()
+for relative_path in ("pyproject.toml",):
+    path = root / relative_path
+    digest.update(relative_path.encode("utf-8"))
+    digest.update(b"\0")
+    digest.update(path.read_bytes())
+    digest.update(b"\0")
+print(digest.hexdigest())
+PY
+}
+
+local_cli_ready() {
+  "$ROOT_DIR/.venv/bin/python" - <<'PY' >/dev/null 2>&1
+from importlib.metadata import distribution
+
+distribution("central-agent-data-hub")
+import agent_hub.cli  # noqa: F401
+import jinja2  # noqa: F401
+import psycopg  # noqa: F401
+import yaml  # noqa: F401
+PY
+}
+
 PYTHON_CMD="${PYTHON:-python3}"
 
 echo "Agent Data Hub public demo first run"
@@ -124,8 +154,19 @@ else
   echo "Using existing local virtual environment: .venv"
 fi
 
-echo "Installing Agent Data Hub into .venv"
-"$ROOT_DIR/.venv/bin/python" -m pip install -e "$ROOT_DIR"
+INSTALL_STAMP="$ROOT_DIR/.venv/.agent-data-hub-install"
+INSTALL_FINGERPRINT="$(install_fingerprint)"
+if (
+  local_cli_ready &&
+    [[ -f "$INSTALL_STAMP" ]] &&
+    [[ "$(cat "$INSTALL_STAMP")" == "$INSTALL_FINGERPRINT" ]]
+); then
+  echo "Using existing Agent Data Hub install in .venv"
+else
+  echo "Installing Agent Data Hub into .venv"
+  "$ROOT_DIR/.venv/bin/python" -m pip install -e "$ROOT_DIR"
+  printf '%s\n' "$INSTALL_FINGERPRINT" >"$INSTALL_STAMP"
+fi
 
 if [[ ! -f "$ROOT_DIR/.env" ]]; then
   echo "Creating .env from .env.example"

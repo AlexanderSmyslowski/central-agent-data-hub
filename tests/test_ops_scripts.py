@@ -301,7 +301,11 @@ def test_first_run_demo_script_wraps_public_demo_path() -> None:
     assert os.access(path, os.X_OK)
     assert "set -euo pipefail" in script
     assert "--no-hub-view" in script
+    assert "install_fingerprint()" in script
+    assert "local_cli_ready()" in script
+    assert 'INSTALL_STAMP="$ROOT_DIR/.venv/.agent-data-hub-install"' in script
     assert '"$ROOT_DIR/.venv/bin/python" -m pip install -e "$ROOT_DIR"' in script
+    assert "Using existing Agent Data Hub install in .venv" in script
     assert '"$ROOT_DIR/scripts/db_start_public_demo.sh"' in script
     assert '"$ROOT_DIR/scripts/smoke_public_demo.sh"' in script
     assert 'hub_view_host="127.0.0.1"' in script
@@ -350,6 +354,8 @@ def test_first_run_demo_preserves_existing_env_and_venv_contract() -> None:
     assert ".venv/bin/activate" not in script
     assert "docker info" in script
     assert "sys.version_info >= (3, 11)" in script
+    assert "distribution(\"central-agent-data-hub\")" in script
+    assert "pyproject.toml" in script
 
 
 def test_first_run_demo_stays_public_and_docs_reference_it() -> None:
@@ -364,6 +370,8 @@ def test_first_run_demo_stays_public_and_docs_reference_it() -> None:
 
     assert "scripts/first_run_demo.sh" in readme
     assert "scripts/first_run_demo.sh" in getting_started
+    assert "installs or reuses the local CLI" in readme
+    assert "installs or reuses the local CLI" in getting_started
 
 
 def test_public_demo_mode_forces_demo_database_when_database_url_is_set() -> None:

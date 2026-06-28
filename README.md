@@ -103,10 +103,10 @@ cd central-agent-data-hub
 scripts/first_run_demo.sh
 ```
 
-The script creates `.venv` if needed, installs the local CLI, creates `.env`
-from `.env.example` if missing, starts the isolated public demo database, runs
-the public demo check, then starts Hub View and prints the local URL to open.
-It does not overwrite an existing `.env`.
+The script creates `.venv` if needed, installs or reuses the local CLI, creates
+`.env` from `.env.example` if missing, starts the isolated public demo
+database, runs the public demo check, then starts Hub View and prints the local
+URL to open. It does not overwrite an existing `.env`.
 
 For a non-blocking check without starting Hub View:
 
