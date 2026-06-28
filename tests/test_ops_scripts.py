@@ -68,6 +68,23 @@ def test_v015_release_notes_describe_guarded_codex_setup_without_overclaim() -> 
     assert "no mobile write path" in notes
 
 
+def test_hub_view_template_is_split_into_view_partials() -> None:
+    page = read_script("templates/hub_view/page.html")
+
+    for partial in (
+        "templates/hub_view/views/inbox.html",
+        "templates/hub_view/views/agent_context.html",
+        "templates/hub_view/views/project_detail.html",
+        "templates/hub_view/partials/copy_actions.html",
+    ):
+        assert (ROOT / partial).is_file()
+
+    assert '{% include "views/inbox.html" %}' in page
+    assert '{% include "views/agent_context.html" %}' in page
+    assert '{% include "views/project_detail.html" %}' in page
+    assert '{% include "partials/copy_actions.html" %}' in page
+
+
 def test_package_version_is_ready_for_next_public_patch_release() -> None:
     pyproject = read_script("pyproject.toml")
     checklist = read_script("docs/public/release-checklist.md")

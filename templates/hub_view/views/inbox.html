@@ -1,0 +1,71 @@
+{% set review_enabled = inbox.review_enabled if inbox.review_enabled is defined else inbox.enabled %}
+<a class="nav-link" href="/">Back to project overview</a>
+<div class="detail-header">
+  <div>
+    <h2 class="detail-title">Review Inbox</h2>
+    <p class="detail-description">Suggested memory changes stay unconfirmed until a human accepts or rejects them here.</p>
+  </div>
+</div>
+
+{% if inbox.message %}
+  <p class="flash good">{{ inbox.message }}</p>
+{% endif %}
+{% if inbox.error %}
+  <p class="flash bad">{{ inbox.error }}</p>
+{% endif %}
+{% if not inbox.enabled %}
+  <p class="notice">Review actions are disabled because Hub View is not bound to a loopback address.</p>
+{% endif %}
+{% if inbox.reviewer_error %}
+  <p class="notice">{{ inbox.reviewer_error }}</p>
+{% elif inbox.reviewer %}
+  <p class="notice">Review actions are attributed to {{ inbox.reviewer }}.</p>
+{% endif %}
+
+<section class="section">
+  {% if inbox.groups %}
+    {% for group in inbox.groups %}
+      <div class="draft-group">
+        <h2>{{ group.project_name }}</h2>
+        <div class="list">
+          {% for draft in group.drafts %}
+            <article class="draft-card">
+              <div class="draft-meta">
+                {{ draft.project }} · {{ draft.type_label }} · owner: {{ draft.responsible_reviewer }}
+                {% if draft.updated_at %} · {{ draft.updated_at }}{% endif %}
+              </div>
+              {% for line in draft.card_lines %}
+                <p>{{ line }}</p>
+              {% endfor %}
+              <div class="draft-actions">
+                {% if review_enabled %}
+                  <form method="post" action="/inbox/accept">
+                    <input type="hidden" name="csrf_token" value="{{ inbox.csrf_token }}">
+                    <input type="hidden" name="draft_id" value="{{ draft.id }}">
+                    <input type="hidden" name="type" value="{{ draft.type }}">
+                    <button class="button" type="submit">Accept</button>
+                  </form>
+                  <form method="post" action="/inbox/reject">
+                    <input type="hidden" name="csrf_token" value="{{ inbox.csrf_token }}">
+                    <input type="hidden" name="draft_id" value="{{ draft.id }}">
+                    <input type="hidden" name="type" value="{{ draft.type }}">
+                    <button class="button reject" type="submit">Reject</button>
+                  </form>
+                {% else %}
+                  <button class="button" type="button" disabled>Accept</button>
+                  <button class="button reject" type="button" disabled>Reject</button>
+                {% endif %}
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">
+      <p>No items to review.</p>
+      <p>When agents suggest memory changes, they appear here until a human accepts or rejects them.</p>
+      <a href="/">Back to project overview</a>
+    </div>
+  {% endif %}
+</section>

@@ -1,0 +1,191 @@
+<a class="nav-link" href="/projects/{{ selected_project.slug }}">Back to {{ selected_project.name }}</a>
+<div class="detail-header">
+  <div>
+    <h2 class="detail-title">ADH context loaded</h2>
+    <p class="detail-description">This is the visible handoff from reviewed Agent Data Hub memory to a chatbot or local agent before work starts.</p>
+  </div>
+  <div class="project-meta">
+    <div>{{ agent_context.project_slug }}</div>
+    <div>reviewed context pack</div>
+  </div>
+</div>
+
+<section class="section agent-context">
+  <h2>Task</h2>
+  <p>{{ agent_context.task }}</p>
+  <div class="agent-status">
+    <div class="agent-status-item">
+      <div class="agent-status-label">Facts</div>
+      <div class="agent-status-value">{{ agent_context.counts.facts }}</div>
+    </div>
+    <div class="agent-status-item">
+      <div class="agent-status-label">Decisions</div>
+      <div class="agent-status-value">{{ agent_context.counts.decisions }}</div>
+    </div>
+    <div class="agent-status-item">
+      <div class="agent-status-label">Risks</div>
+      <div class="agent-status-value">{{ agent_context.counts.risks }}</div>
+    </div>
+    <div class="agent-status-item">
+      <div class="agent-status-label">Open questions</div>
+      <div class="agent-status-value">{{ agent_context.counts.open_questions }}</div>
+    </div>
+    <div class="agent-status-item">
+      <div class="agent-status-label">Reports</div>
+      <div class="agent-status-value">{{ agent_context.counts.reports }}</div>
+    </div>
+    <div class="agent-status-item">
+      <div class="agent-status-label">Trail entries</div>
+      <div class="agent-status-value">{{ agent_context.source_count }}</div>
+    </div>
+  </div>
+  <p>Source of truth: local Agent Data Hub database. Review status: reviewed memory is usable; suggested changes remain unconfirmed until a human reviews them.</p>
+</section>
+
+<section class="section agent-context">
+  <h2>How this should influence the agent</h2>
+  <ul class="agent-list">
+    {% for line in agent_context.influence %}
+      <li>{{ line }}</li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="section agent-context">
+  <h2>Known gaps</h2>
+  <div class="project-counts">
+    <span>{{ agent_context.gap_summary.stale }} stale items</span>
+    <span>{{ agent_context.gap_summary.unanswered }} unanswered questions</span>
+    <span>{{ agent_context.gap_summary.blind_spots }} task blind spots</span>
+    <span>{{ agent_context.gap_summary.pending_drafts }} items pending review</span>
+  </div>
+</section>
+
+<section class="section agent-context">
+  <h2>Use it with an agent</h2>
+  <p>Pick the path that matches your agent. This page creates a visible handoff and setup material. It never runs an agent; the Codex setup writes only after an explicit local click.</p>
+  {% if agent_context.setup_message %}
+    <p class="setup-feedback success">{{ agent_context.setup_message }}</p>
+  {% endif %}
+  {% if agent_context.setup_error %}
+    <p class="setup-feedback error">{{ agent_context.setup_error }}</p>
+  {% endif %}
+  <div class="connection-grid">
+    <article class="connection-card">
+      <h3>Chatbot</h3>
+      <p>Every task: copy the context pack below into the chat before the task. This is manual, but it makes the handoff visible.</p>
+    </article>
+    <article class="connection-card">
+      <h3>Claude Code</h3>
+      <p>One-time setup: copy and run this command once. It installs ADH's optional MCP support and registers ADH as a local read-only context server for Claude Code.</p>
+      <div class="copy-row">
+        <code id="claude-code-setup-command" class="command-box">{{ agent_context.local_agent.setup_command }}</code>
+        <button class="button copy-button" type="button" data-copy-target="claude-code-setup-command">Copy Claude setup</button>
+      </div>
+      <p class="setup-note">After setup, Claude Code is instructed to request ADH context at the start of ADH-related work.</p>
+      <details class="setup-details">
+        <summary>Show Claude manual setup pieces</summary>
+        <ol class="setup-steps">
+          <li>
+            <span class="setup-step-title">Install MCP support once</span>
+            <div class="copy-row">
+              <code id="install-mcp-command" class="command-box">{{ agent_context.local_agent.install_mcp }}</code>
+              <button class="button copy-button" type="button" data-copy-target="install-mcp-command">Copy</button>
+            </div>
+          </li>
+          <li>
+            <span class="setup-step-title">Add ADH as a local MCP server once</span>
+            <div class="copy-row">
+              <code id="claude-mcp-command" class="command-box">{{ agent_context.local_agent.claude_mcp }}</code>
+              <button class="button copy-button" type="button" data-copy-target="claude-mcp-command">Copy</button>
+            </div>
+          </li>
+          <li>
+            <span class="setup-step-title">Tell the agent what to do at task start</span>
+            <div class="copy-row">
+              <code id="startup-instruction" class="command-box">{{ agent_context.local_agent.startup_instruction }}</code>
+              <button class="button copy-button" type="button" data-copy-target="startup-instruction">Copy</button>
+            </div>
+          </li>
+        </ol>
+      </details>
+    </article>
+    <article class="connection-card">
+      <h3>Codex</h3>
+      {% if agent_context.local_agent.codex.preview %}
+        {% if agent_context.local_agent.codex.can_install %}
+          <p>One-time setup: ADH knows this project's local folder. Review the target and preview, then install the ADH block into <code>AGENTS.md</code>, which Codex reads before work.</p>
+        {% else %}
+          <p>Demo preview: ADH knows this checkout path, but it will not install a demo-project block into the repo's <code>AGENTS.md</code>. Register a real project folder to enable installation.</p>
+        {% endif %}
+        <p class="setup-note">Project folder: <code>{{ agent_context.local_agent.codex.project_path }}</code></p>
+        <p class="setup-note">Target file: <code>{{ agent_context.local_agent.codex.target_path }}</code></p>
+        <p class="setup-note">Planned action: <code>{{ agent_context.local_agent.codex.action }}</code></p>
+        <details class="setup-details">
+          <summary>Preview AGENTS.md block</summary>
+          <code id="codex-setup-preview" class="command-box">{{ agent_context.local_agent.codex.preview }}</code>
+        </details>
+        {% if inbox_enabled %}
+          {% if agent_context.local_agent.codex.can_install %}
+            <form class="setup-actions" method="post" action="/projects/{{ agent_context.project_slug }}/codex-setup">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <input type="hidden" name="task" value="{{ agent_context.task }}">
+              <button class="button" type="submit">Install Codex setup</button>
+            </form>
+          {% else %}
+            <p class="setup-note">Install is disabled for this demo-only path.</p>
+            <button class="button" type="button" disabled>Install Codex setup</button>
+          {% endif %}
+        {% else %}
+          <p class="setup-note">Install is disabled because Hub View is not bound to loopback.</p>
+          <button class="button" type="button" disabled>Install Codex setup</button>
+        {% endif %}
+        <p class="setup-note">Fallback command:</p>
+        <div class="copy-row">
+          <code id="codex-setup-command" class="command-box">{{ agent_context.local_agent.codex_command }}</code>
+          <button class="button copy-button" type="button" data-copy-target="codex-setup-command">Copy fallback command</button>
+        </div>
+      {% else %}
+        <p>ADH does not know this project's local folder yet, so Hub View will not guess or install a Codex setup.</p>
+        <p class="setup-note">Register the project folder first, then reopen this view.</p>
+        {% if agent_context.local_agent.codex.error %}
+          <p class="setup-feedback error">{{ agent_context.local_agent.codex.error }}</p>
+        {% endif %}
+      {% endif %}
+    </article>
+    <article class="connection-card">
+      <h3>Hermes or custom agent</h3>
+      <p>One-time setup: copy this startup rule into the agent's own persistent instruction or runtime configuration.</p>
+      <div class="copy-row">
+        <code id="custom-startup-instruction" class="command-box">{{ agent_context.local_agent.startup_instruction }}</code>
+        <button class="button copy-button" type="button" data-copy-target="custom-startup-instruction">Copy startup rule</button>
+      </div>
+    </article>
+    <article class="connection-card">
+      <h3>Other MCP-compatible agent</h3>
+      <p>Use this stdio MCP config shape when the agent can launch local MCP servers but is not Claude Code.</p>
+      <div class="copy-row">
+        <code id="mcp-json-config" class="command-box">{{ agent_context.local_agent.mcp_json }}</code>
+        <button class="button copy-button" type="button" data-copy-target="mcp-json-config">Copy MCP config</button>
+      </div>
+    </article>
+    <article class="connection-card">
+      <h3>Terminal fallback</h3>
+      <p>Manual fallback: use this only until the local agent is connected. It starts one visible ADH-backed run, but it is not automation.</p>
+      <div class="copy-row">
+        <code id="agent-start-command" class="command-box">{{ agent_context.commands.agent_start }}</code>
+        <button class="button copy-button" type="button" data-copy-target="agent-start-command">Copy</button>
+      </div>
+    </article>
+  </div>
+  <p>Hub View shows what ADH handed off and the counts behind it. An agent must either be connected or receive the copied pack; ADH cannot prove that an unconnected agent read the context.</p>
+  <h3>Context pack for chatbot copy/paste</h3>
+  <div class="command-list">
+    <div class="copy-row">
+      <code id="prepare-command" class="command-box">{{ agent_context.commands.prepare }}</code>
+      <button class="button copy-button" type="button" data-copy-target="prepare-command">Copy</button>
+    </div>
+  </div>
+  <button class="button copy-button" type="button" data-copy-target="chatbot-context-pack">Copy context pack</button>
+  <textarea id="chatbot-context-pack" class="context-pack" readonly aria-label="Agent context pack">{{ agent_context.markdown }}</textarea>
+</section>
