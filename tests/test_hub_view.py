@@ -344,6 +344,121 @@ def test_inbox_post_on_non_draft_shows_error_without_write(monkeypatch) -> None:
     assert audit_calls == []
 
 
+class EmptyCursor:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_args):
+        return None
+
+    def execute(self, *_args):
+        raise AssertionError("test should patch fetch_project instead of querying")
+
+
+class EmptyConnection:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_args):
+        return None
+
+    def cursor(self):
+        return EmptyCursor()
+
+
+def test_codex_setup_post_installs_agents_block_with_explicit_click(monkeypatch, tmp_path) -> None:
+    project = {
+        "id": "project-id",
+        "slug": "central-agent-data-hub-demo",
+        "name": "Central Agent Data Hub Demo",
+        "status": "active",
+        "metadata": {"local_path": str(tmp_path)},
+    }
+    monkeypatch.setattr(hub_view, "connect", lambda: EmptyConnection())
+    monkeypatch.setattr(hub_view, "fetch_project", lambda _cur, slug: project if slug == project["slug"] else None)
+
+    app = hub_view.create_application(bind_host="127.0.0.1", csrf_token="token")
+    captured, _body = call_app(
+        app,
+        method="POST",
+        path="/projects/central-agent-data-hub-demo/codex-setup",
+        form={"csrf_token": "token", "task": "Review demo"},
+        origin="http://127.0.0.1:8765",
+    )
+
+    headers = dict(captured["headers"])
+    target = tmp_path / "AGENTS.md"
+    assert captured["status"] == "303 See Other"
+    assert "setup_message=Codex%20setup%20installed%20in%20AGENTS.md" in headers["Location"]
+    assert target.exists()
+    text = target.read_text(encoding="utf-8")
+    assert "<!-- CENTRAL-AGENT-DATA-HUB:START -->" in text
+    assert "Project slug: `central-agent-data-hub-demo`" in text
+    assert "agent_start.sh --project central-agent-data-hub-demo" in text
+
+
+def test_codex_setup_post_without_csrf_is_forbidden_without_write(monkeypatch, tmp_path) -> None:
+    def fail_connect():
+        raise AssertionError("CSRF failure must not touch project lookup or files")
+
+    monkeypatch.setattr(hub_view, "connect", fail_connect)
+    app = hub_view.create_application(bind_host="127.0.0.1", csrf_token="token")
+    captured, body = call_app(
+        app,
+        method="POST",
+        path="/projects/central-agent-data-hub-demo/codex-setup",
+        form={"csrf_token": "wrong", "task": "Review demo"},
+    )
+
+    assert captured["status"] == "403 Forbidden"
+    assert "Setup token is missing or invalid." in body
+    assert not (tmp_path / "AGENTS.md").exists()
+
+
+def test_codex_setup_post_on_non_loopback_is_forbidden_without_write(monkeypatch, tmp_path) -> None:
+    def fail_connect():
+        raise AssertionError("non-loopback setup must not touch project lookup or files")
+
+    monkeypatch.setattr(hub_view, "connect", fail_connect)
+    app = hub_view.create_application(bind_host="0.0.0.0", csrf_token="token")
+    captured, body = call_app(
+        app,
+        method="POST",
+        path="/projects/central-agent-data-hub-demo/codex-setup",
+        form={"csrf_token": "token", "task": "Review demo"},
+    )
+
+    assert captured["status"] == "403 Forbidden"
+    assert "only available on loopback" in body
+    assert not (tmp_path / "AGENTS.md").exists()
+
+
+def test_codex_setup_post_with_unknown_project_path_redirects_without_write(monkeypatch, tmp_path) -> None:
+    project = {
+        "id": "project-id",
+        "slug": "central-agent-data-hub-demo",
+        "name": "Central Agent Data Hub Demo",
+        "status": "active",
+        "metadata": {},
+    }
+    monkeypatch.setenv("AGENT_HUB_PUBLIC_DEMO", "1")
+    monkeypatch.setattr(hub_view, "connect", lambda: EmptyConnection())
+    monkeypatch.setattr(hub_view, "fetch_project", lambda _cur, _slug: project)
+
+    app = hub_view.create_application(bind_host="127.0.0.1", csrf_token="token")
+    captured, _body = call_app(
+        app,
+        method="POST",
+        path="/projects/central-agent-data-hub-demo/codex-setup",
+        form={"csrf_token": "token", "task": "Review demo"},
+    )
+
+    headers = dict(captured["headers"])
+    assert captured["status"] == "303 See Other"
+    assert "setup_error=Codex%20setup%20needs%20a%20registered%20project%20folder" in headers["Location"]
+    assert not (tmp_path / "AGENTS.md").exists()
+
+
 def test_hub_view_without_reviewer_disables_buttons_and_blocks_post(monkeypatch) -> None:
     def fail_connect():
         raise AssertionError("missing reviewer POST must not touch the database")
@@ -628,6 +743,15 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
                         "python -m pip install -e '.[mcp]' && "
                         "claude mcp add agent-data-hub -- python -m agent_hub.cli mcp-serve"
                     ),
+                    "codex": {
+                        "can_install": True,
+                        "project_path": "/demo/project",
+                        "target_path": "/demo/project/AGENTS.md",
+                        "target_file": "AGENTS.md",
+                        "action": "create",
+                        "preview": "<!-- CENTRAL-AGENT-DATA-HUB:START -->\nProject slug: `central-agent-data-hub`\n",
+                        "error": None,
+                    },
                     "codex_command": (
                         "scripts/install_repo_agent_memory.sh --repo /demo/project "
                         "--project central-agent-data-hub"
@@ -673,15 +797,20 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "Other MCP-compatible agent" in body
     assert "One-time setup" in body
     assert "Copy Claude setup" in body
-    assert "Copy Codex setup" in body
+    assert "Install Codex setup" in body
+    assert "Copy fallback command" in body
     assert "Copy startup rule" in body
     assert "Copy MCP config" in body
     assert "Show Claude manual setup pieces" in body
-    assert "does not run commands or write an agent configuration by itself" in body
+    assert "It never runs an agent" in body
+    assert "writes only after an explicit local click" in body
     assert "is instructed to request ADH context" in body
     assert "AGENTS.md" in body
     assert "ADH knows this project" in body
     assert "Project folder:" in body
+    assert "Target file:" in body
+    assert "Planned action:" in body
+    assert "Preview AGENTS.md block" in body
     assert "/demo/project" in body
     assert "Run this from the project repository" not in body
     assert "$PWD" not in body
@@ -708,8 +837,9 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert 'href="/projects/central-agent-data-hub"' in body
 
 
-def test_agent_context_commands_are_shell_quoted_for_copy_paste(monkeypatch) -> None:
+def test_agent_context_commands_are_shell_quoted_for_copy_paste(monkeypatch, tmp_path) -> None:
     monkeypatch.setattr(hub_view, "prepare_markdown", lambda _payload: "# Agent Context Pack")
+    project_path = str(tmp_path)
 
     view = hub_view.build_agent_context_view(
         {
@@ -717,7 +847,7 @@ def test_agent_context_commands_are_shell_quoted_for_copy_paste(monkeypatch) -> 
                 "id": "project-id",
                 "slug": "central-agent-data-hub",
                 "name": "Central Agent Data Hub",
-                "metadata": {"local_path": "/workspace/central-agent-data-hub"},
+                "metadata": {"local_path": project_path},
             },
             "task": "Review Ronak's release notes",
             "verified_project_state": [],
@@ -777,12 +907,16 @@ def test_agent_context_commands_are_shell_quoted_for_copy_paste(monkeypatch) -> 
         [
             str(install_script),
             "--repo",
-            "/workspace/central-agent-data-hub",
+            project_path,
             "--project",
             "central-agent-data-hub",
         ]
     )
-    assert view["local_agent"]["codex_project_path"] == "/workspace/central-agent-data-hub"
+    assert view["local_agent"]["codex_project_path"] == project_path
+    assert view["local_agent"]["codex"]["project_path"] == project_path
+    assert view["local_agent"]["codex"]["target_file"] == "AGENTS.md"
+    assert view["local_agent"]["codex"]["action"] == "create"
+    assert "<!-- CENTRAL-AGENT-DATA-HUB:START -->" in view["local_agent"]["codex"]["preview"]
     assert (
         view["local_agent"]["claude_mcp"]
         == hub_view.shell_command(
@@ -844,6 +978,7 @@ def test_agent_context_omits_codex_setup_when_project_path_is_unknown(monkeypatc
 
     assert view["local_agent"]["codex_command"] is None
     assert view["local_agent"]["codex_project_path"] is None
+    assert view["local_agent"]["codex"]["can_install"] is False
 
 
 def test_agent_context_uses_public_demo_checkout_for_codex_setup(monkeypatch) -> None:
@@ -883,6 +1018,9 @@ def test_agent_context_uses_public_demo_checkout_for_codex_setup(monkeypatch) ->
 
     repo_root = str(hub_view.Path(hub_view.__file__).resolve().parents[1])
     assert view["local_agent"]["codex_project_path"] == repo_root
+    assert view["local_agent"]["codex"]["can_install"] is False
+    assert view["local_agent"]["codex"]["demo_only"] is True
+    assert view["local_agent"]["codex"]["target_path"] == f"{repo_root}/AGENTS.md"
     install_script = (
         hub_view.Path(hub_view.__file__).resolve().parents[1] / "scripts" / "install_repo_agent_memory.sh"
     )
@@ -893,6 +1031,7 @@ def test_agent_context_uses_public_demo_checkout_for_codex_setup(monkeypatch) ->
             repo_root,
             "--project",
             "central-agent-data-hub-demo",
+            "--dry-run",
         ]
     )
 

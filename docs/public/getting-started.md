@@ -106,11 +106,16 @@ To see how an agent would use ADH, open a project in Hub View and use
 **Connect an agent**. Enter a task and click **Create context pack**. Hub View
 will show the reviewed context being handed to the agent and provide a
 copy-ready pack for chatbots. For local agents, Hub View shows the one-time MCP
-or startup-rule setup. Hub View does not connect the agent by itself; the local
-agent must be configured once. After setup, the local agent is instructed to
-request ADH context when work starts. Hub View provides copy buttons for the
+or startup-rule setup. Hub View does not run the agent by itself; the local
+agent must still be configured once. After setup, the local agent is instructed
+to request ADH context when work starts. Hub View provides copy buttons for the
 matching setup path: Claude Code, Codex, Hermes/custom startup rule, generic
 MCP-compatible agent, terminal fallback, and chatbot context pack.
+
+For Codex, Hub View can be a little more direct. When it knows the project
+folder, it shows the target `AGENTS.md` file, previews the block, and can
+install it after an explicit local click. The copyable terminal command remains
+available as a fallback.
 
 Optional: export the Markdown projection manually if you want to inspect the
 generated files:

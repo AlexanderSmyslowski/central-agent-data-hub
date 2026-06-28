@@ -31,15 +31,21 @@ over stdio for external agents, but it has no write tools, no HTTP transport,
 and no import, remember, accept, reject, or sync capability. The server asks
 Postgres for a read-only session; writes remain outside the MCP boundary.
 
-Hub View's agent context screen also belongs in this read-only layer. It lets a
-human click from a project to a visible task context pack, using the same
+Hub View's agent context screen mostly belongs in this read-only layer. It lets
+a human click from a project to a visible task context pack, using the same
 reviewed prepare path as the CLI. It may show how reviewed memory should shape
-an agent run, but it must not create, promote, or modify memory.
+an agent run, but it must not create, promote, or modify Hub memory.
 
 Hub View may show one-time local agent connection instructions, such as Claude
 Code MCP setup, Codex `AGENTS.md` setup, Hermes/custom startup-rule text, or
 generic MCP configuration. These instructions make the handoff visible; they do
 not launch, control, or silently feed an unconfigured agent.
+
+The one exception on this screen is a local Codex setup action. When Hub View
+knows a project's local folder, it may preview and install the marked ADH block
+into that repo's `AGENTS.md` file after an explicit human click. This writes a
+repo-local working-rule file, not Hub memory, and it does not run Codex or prove
+that Codex used the context.
 
 The `ADH Context Loaded` receipt in `agent_start.sh`, `agent-hub prepare`, and
 Hub View is also read-only. It confirms which reviewed context is being handed
@@ -121,9 +127,9 @@ command warns about that state. Agent-facing relation reads hide relations that
 would expose draft or inactive endpoint summaries.
 
 Hub View may expose the same reviewed action in its local Review Inbox. This is
-not a general UI write boundary: the only allowed Hub View writes are accepting
-one draft or rejecting one draft. Both actions reuse the `agent-hub inbox`
-review path and write the same audit trail.
+not a general UI write boundary: the only allowed Hub View memory writes are
+accepting one draft or rejecting one draft. Both actions reuse the
+`agent-hub inbox` review path and write the same audit trail.
 
 Hub View review actions are guarded deliberately:
 
@@ -132,6 +138,20 @@ Hub View review actions are guarded deliberately:
 - requests with an `Origin` header must come from loopback
 - review buttons are disabled when Hub View is not bound to loopback
 - there is no bulk accept and no silent promotion
+
+Hub View's Codex setup action is guarded separately:
+
+- writes use `POST` only
+- each form includes a server-generated CSRF token
+- requests with an `Origin` header must come from loopback
+- setup buttons are disabled when Hub View is not bound to loopback
+- the browser does not provide the repo path; Hub View uses the known project
+  path from ADH metadata
+- the public-demo checkout is preview/dry-run only and cannot install a
+  demo-project block into the repository's `AGENTS.md`
+- the target is the repo-local `AGENTS.md` file
+- the block is shown before installation
+- no shell command is executed from Hub View
 
 Agent Data Hub v0.1.x uses attribution instead of access control: everyone in
 the trusted local workspace can see the review inbox, but every accept/reject

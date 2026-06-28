@@ -35,6 +35,12 @@ from agent_hub.context_receipt import INFLUENCE_LINES, prepare_context_counts
 from agent_hub.db import connect
 from agent_hub.quality import fetch_project_quality
 from agent_hub.rendering import truncate
+from agent_hub.repo_agent_memory import (
+    DEFAULT_TARGET_FILE,
+    RepoAgentMemoryError,
+    install_repo_agent_memory,
+    plan_repo_agent_memory,
+)
 from agent_hub.reviewers import resolve_required_reviewer, resolve_responsible_reviewer
 from agent_hub.writeback_routing import card_for_item
 
@@ -193,15 +199,82 @@ def shell_command(parts: list[object]) -> str:
     return " ".join(shlex.quote(str(part)) for part in parts)
 
 
-def known_project_local_path(project: dict[str, object], repo_root: Path) -> str | None:
+def metadata_project_local_path(project: dict[str, object]) -> str | None:
     metadata = project.get("metadata") or {}
     if isinstance(metadata, dict):
         local_path = metadata.get("local_path")
         if isinstance(local_path, str) and local_path.strip():
             return local_path
+    return None
+
+
+def known_project_local_path(project: dict[str, object], repo_root: Path) -> str | None:
+    local_path = metadata_project_local_path(project)
+    if local_path is not None:
+        return local_path
     if os.environ.get("AGENT_HUB_PUBLIC_DEMO") == "1" and project.get("slug") == "central-agent-data-hub-demo":
         return str(repo_root)
     return None
+
+
+def build_codex_setup_view(project: dict[str, object], repo_root: Path) -> dict[str, object]:
+    metadata_local_path = metadata_project_local_path(project)
+    project_repo_path = known_project_local_path(project, repo_root)
+    if project_repo_path is None:
+        return {
+            "project_path": None,
+            "command": None,
+            "target_path": None,
+            "target_file": DEFAULT_TARGET_FILE,
+            "action": None,
+            "preview": None,
+            "error": None,
+            "can_install": False,
+            "demo_only": False,
+        }
+
+    codex_command_parts = [
+        str(repo_root / "scripts" / "install_repo_agent_memory.sh"),
+        "--repo",
+        project_repo_path,
+        "--project",
+        project["slug"],
+    ]
+    if metadata_local_path is None:
+        codex_command_parts.append("--dry-run")
+    codex_command = shell_command(codex_command_parts)
+    try:
+        plan = plan_repo_agent_memory(
+            repo_path=project_repo_path,
+            project_slug=str(project["slug"]),
+            hub_root=repo_root,
+            target_file=DEFAULT_TARGET_FILE,
+        )
+    except RepoAgentMemoryError as exc:
+        return {
+            "project_path": project_repo_path,
+            "command": codex_command,
+            "target_path": None,
+            "target_file": DEFAULT_TARGET_FILE,
+            "action": None,
+            "preview": None,
+            "error": str(exc),
+            "can_install": False,
+            "demo_only": metadata_local_path is None,
+        }
+
+    can_install = metadata_local_path is not None
+    return {
+        "project_path": str(plan.repo_path),
+        "command": codex_command,
+        "target_path": str(plan.target_path),
+        "target_file": plan.target_file,
+        "action": plan.action,
+        "preview": plan.block,
+        "error": None,
+        "can_install": can_install,
+        "demo_only": not can_install,
+    }
 
 
 def build_agent_context_view(payload: dict[str, object]) -> dict[str, object]:
@@ -213,18 +286,7 @@ def build_agent_context_view(payload: dict[str, object]) -> dict[str, object]:
     counts = agent_context_counts(payload)
     task = str(payload["task"])
     repo_root = Path(__file__).resolve().parents[1]
-    project_repo_path = known_project_local_path(project, repo_root)
-    codex_command = None
-    if project_repo_path is not None:
-        codex_command = shell_command(
-            [
-                str(repo_root / "scripts" / "install_repo_agent_memory.sh"),
-                "--repo",
-                project_repo_path,
-                "--project",
-                project["slug"],
-            ]
-        )
+    codex_setup = build_codex_setup_view(project, repo_root)
     mcp_server_command = [sys.executable, "-m", "agent_hub.cli", "mcp-serve"]
     install_mcp_command = [sys.executable, "-m", "pip", "install", "-e", ".[mcp]"]
     mcp_json = {
@@ -285,8 +347,9 @@ def build_agent_context_view(payload: dict[str, object]) -> dict[str, object]:
                 f"{shell_command(install_mcp_command)} && "
                 f"{shell_command(['claude', 'mcp', 'add', 'agent-data-hub', '--', *mcp_server_command])}"
             ),
-            "codex_command": codex_command,
-            "codex_project_path": project_repo_path,
+            "codex": codex_setup,
+            "codex_command": codex_setup["command"],
+            "codex_project_path": codex_setup["project_path"],
             "install_mcp": shell_command(install_mcp_command),
             "claude_mcp": shell_command(
                 [
@@ -591,6 +654,20 @@ def inbox_redirect(param: str, message: str) -> str:
     return f"/inbox?{param}={quote(message)}"
 
 
+def agent_context_redirect(slug: str, task: str, param: str, message: str) -> str:
+    return (
+        f"/projects/{quote(slug, safe='')}/agent-context"
+        f"?task={quote(task)}&{param}={quote(message)}"
+    )
+
+
+def project_action_slug(path: str, suffix: str) -> str | None:
+    if not path.startswith("/projects/") or not path.endswith(suffix):
+        return None
+    slug = path.removeprefix("/projects/").removesuffix(suffix).strip("/")
+    return slug or None
+
+
 class HubViewApplication:
     def __init__(
         self,
@@ -618,6 +695,8 @@ class HubViewApplication:
             return self.handle_get(path, environ, start_response)
         if method == "POST" and path in {"/inbox/accept", "/inbox/reject"}:
             return self.handle_inbox_post(path, environ, start_response)
+        if method == "POST" and project_action_slug(path, "/codex-setup") is not None:
+            return self.handle_codex_setup_post(path, environ, start_response)
         if method == "POST":
             return text_response(start_response, "405 Method Not Allowed", "Method Not Allowed")
 
@@ -642,6 +721,9 @@ class HubViewApplication:
                 selected_slug,
                 query_value(environ, "task") or DEFAULT_AGENT_TASK,
             )
+            if view_model.get("agent_context"):
+                view_model["agent_context"]["setup_message"] = query_value(environ, "setup_message")
+                view_model["agent_context"]["setup_error"] = query_value(environ, "setup_error")
             body = render_page(
                 view_model,
                 status_code,
@@ -759,6 +841,87 @@ class HubViewApplication:
         return redirect_response(
             start_response,
             inbox_redirect("message", f"{label}: draft {result['id']}."),
+        )
+
+    def handle_codex_setup_post(
+        self,
+        path: str,
+        environ: dict[str, object],
+        start_response: Callable[[str, list[tuple[str, str]]], Any],
+    ) -> list[bytes]:
+        selected_slug = project_action_slug(path, "/codex-setup")
+        if selected_slug is None:
+            return text_response(start_response, "404 Not Found", "Not Found")
+
+        form = read_post_form(environ)
+        task = (form.get("task") or DEFAULT_AGENT_TASK).strip() or DEFAULT_AGENT_TASK
+
+        if not self.inbox_enabled:
+            return text_response(
+                start_response,
+                "403 Forbidden",
+                "Codex setup actions are only available on loopback.",
+            )
+        if not origin_is_loopback(environ.get("HTTP_ORIGIN")):
+            return text_response(
+                start_response,
+                "403 Forbidden",
+                "Origin is not allowed for this local setup action.",
+            )
+
+        if form.get("csrf_token") != self.csrf_token:
+            return text_response(
+                start_response,
+                "403 Forbidden",
+                "Setup token is missing or invalid.",
+            )
+
+        try:
+            with connect() as conn:
+                with conn.cursor() as cur:
+                    project = fetch_project(cur, selected_slug)
+            if project is None or project.get("status") != "active":
+                return redirect_response(
+                    start_response,
+                    agent_context_redirect(selected_slug, task, "setup_error", "Project not found."),
+                )
+            repo_root = Path(__file__).resolve().parents[1]
+            project_path = metadata_project_local_path(project)
+            if project_path is None:
+                return redirect_response(
+                    start_response,
+                    agent_context_redirect(
+                        selected_slug,
+                        task,
+                        "setup_error",
+                        "Codex setup needs a registered project folder.",
+                    ),
+                )
+            plan = plan_repo_agent_memory(
+                repo_path=project_path,
+                project_slug=str(project["slug"]),
+                hub_root=repo_root,
+                target_file=DEFAULT_TARGET_FILE,
+            )
+            install_repo_agent_memory(plan)
+        except (OSError, RepoAgentMemoryError):
+            return redirect_response(
+                start_response,
+                agent_context_redirect(
+                    selected_slug,
+                    task,
+                    "setup_error",
+                    "Codex setup could not be installed.",
+                ),
+            )
+
+        if plan.action == "unchanged":
+            message = f"Codex setup already up to date in {plan.target_file}."
+        else:
+            message = f"Codex setup installed in {plan.target_file}."
+        return redirect_response(
+            start_response,
+            agent_context_redirect(selected_slug, task, "setup_message", message),
         )
 
 

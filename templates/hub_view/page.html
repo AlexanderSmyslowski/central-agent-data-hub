@@ -471,6 +471,31 @@
         font-size: 0.92rem;
       }
 
+      .setup-feedback {
+        margin: 12px 0;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.62);
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .setup-feedback.success {
+        border-color: rgba(45, 74, 95, 0.26);
+        color: var(--accent);
+      }
+
+      .setup-feedback.error {
+        border-color: rgba(130, 42, 42, 0.28);
+        color: #7c2d2d;
+      }
+
+      .setup-actions {
+        margin-top: 10px;
+      }
+
       .setup-details {
         margin-top: 14px;
       }
@@ -975,7 +1000,13 @@
 
             <section class="section agent-context">
               <h2>Use it with an agent</h2>
-              <p>Pick the path that matches your agent. This page creates a visible handoff and setup material; it does not run commands or write an agent configuration by itself.</p>
+              <p>Pick the path that matches your agent. This page creates a visible handoff and setup material. It never runs an agent; the Codex setup writes only after an explicit local click.</p>
+              {% if agent_context.setup_message %}
+                <p class="setup-feedback success">{{ agent_context.setup_message }}</p>
+              {% endif %}
+              {% if agent_context.setup_error %}
+                <p class="setup-feedback error">{{ agent_context.setup_error }}</p>
+              {% endif %}
               <div class="connection-grid">
                 <article class="connection-card">
                   <h3>Chatbot</h3>
@@ -1018,16 +1049,45 @@
                 </article>
                 <article class="connection-card">
                   <h3>Codex</h3>
-                  {% if agent_context.local_agent.codex_project_path %}
-                    <p>One-time setup: ADH knows this project's local folder. Run this command once to install the ADH block into <code>AGENTS.md</code>, which Codex reads before work.</p>
-                    <p class="setup-note">Project folder: <code>{{ agent_context.local_agent.codex_project_path }}</code></p>
+                  {% if agent_context.local_agent.codex.preview %}
+                    {% if agent_context.local_agent.codex.can_install %}
+                      <p>One-time setup: ADH knows this project's local folder. Review the target and preview, then install the ADH block into <code>AGENTS.md</code>, which Codex reads before work.</p>
+                    {% else %}
+                      <p>Demo preview: ADH knows this checkout path, but it will not install a demo-project block into the repo's <code>AGENTS.md</code>. Register a real project folder to enable installation.</p>
+                    {% endif %}
+                    <p class="setup-note">Project folder: <code>{{ agent_context.local_agent.codex.project_path }}</code></p>
+                    <p class="setup-note">Target file: <code>{{ agent_context.local_agent.codex.target_path }}</code></p>
+                    <p class="setup-note">Planned action: <code>{{ agent_context.local_agent.codex.action }}</code></p>
+                    <details class="setup-details">
+                      <summary>Preview AGENTS.md block</summary>
+                      <code id="codex-setup-preview" class="command-box">{{ agent_context.local_agent.codex.preview }}</code>
+                    </details>
+                    {% if inbox_enabled %}
+                      {% if agent_context.local_agent.codex.can_install %}
+                        <form class="setup-actions" method="post" action="/projects/{{ agent_context.project_slug }}/codex-setup">
+                          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                          <input type="hidden" name="task" value="{{ agent_context.task }}">
+                          <button class="button" type="submit">Install Codex setup</button>
+                        </form>
+                      {% else %}
+                        <p class="setup-note">Install is disabled for this demo-only path.</p>
+                        <button class="button" type="button" disabled>Install Codex setup</button>
+                      {% endif %}
+                    {% else %}
+                      <p class="setup-note">Install is disabled because Hub View is not bound to loopback.</p>
+                      <button class="button" type="button" disabled>Install Codex setup</button>
+                    {% endif %}
+                    <p class="setup-note">Fallback command:</p>
                     <div class="copy-row">
                       <code id="codex-setup-command" class="command-box">{{ agent_context.local_agent.codex_command }}</code>
-                      <button class="button copy-button" type="button" data-copy-target="codex-setup-command">Copy Codex setup</button>
+                      <button class="button copy-button" type="button" data-copy-target="codex-setup-command">Copy fallback command</button>
                     </div>
                   {% else %}
-                    <p>ADH does not know this project's local folder yet, so Hub View will not guess a Codex setup command.</p>
+                    <p>ADH does not know this project's local folder yet, so Hub View will not guess or install a Codex setup.</p>
                     <p class="setup-note">Register the project folder first, then reopen this view.</p>
+                    {% if agent_context.local_agent.codex.error %}
+                      <p class="setup-feedback error">{{ agent_context.local_agent.codex.error }}</p>
+                    {% endif %}
                   {% endif %}
                 </article>
                 <article class="connection-card">
