@@ -26,6 +26,43 @@
           </div>
         {% endfor %}
       </div>
+
+      <section class="memory-related" aria-labelledby="memory-related-title">
+        <div>
+          <h3 id="memory-related-title">{{ t('memory_related_title') }}</h3>
+          <p>{{ t('memory_related_copy') }}</p>
+        </div>
+        {% if memory_item.relations %}
+          <div class="memory-relation-list">
+            {% for relation in memory_item.relations %}
+              <article class="memory-relation-card">
+                <div class="memory-relation-direction">{{ t(relation.direction_key) }}</div>
+                <div class="memory-relation-flow">
+                  {% if relation.direction == 'out' %}
+                    <span>{{ t('memory_relation_this_item_source') }}</span>
+                    <span class="relation-pill">{{ t(relation.relation_label_key) }}</span>
+                    {% if relation.other_url %}
+                      <a href="{{ url_for(relation.other_url) }}">{{ t(relation.other_label_key) }}: {{ relation.other_summary }}</a>
+                    {% else %}
+                      <strong>{{ t(relation.other_label_key) }}: {{ relation.other_summary }}</strong>
+                    {% endif %}
+                  {% else %}
+                    {% if relation.other_url %}
+                      <a href="{{ url_for(relation.other_url) }}">{{ t(relation.other_label_key) }}: {{ relation.other_summary }}</a>
+                    {% else %}
+                      <strong>{{ t(relation.other_label_key) }}: {{ relation.other_summary }}</strong>
+                    {% endif %}
+                    <span class="relation-pill">{{ t(relation.relation_label_key) }}</span>
+                    <span>{{ t('memory_relation_this_item_target') }}</span>
+                  {% endif %}
+                </div>
+              </article>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="empty">{{ t('memory_related_empty') }}</p>
+        {% endif %}
+      </section>
     </section>
   {% else %}
     <section class="memory-item-detail" aria-labelledby="memory-item-missing-title">

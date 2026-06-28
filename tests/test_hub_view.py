@@ -1484,6 +1484,20 @@ def test_memory_item_page_renders_read_only_german_detail() -> None:
                     {"label_key": "memory_item_status", "value": "verified"},
                     {"label_key": "memory_item_updated", "value": "2026-06-05 08:00 UTC"},
                 ],
+                "relations": [
+                    {
+                        "id": "10000000-0000-4000-8000-000000000701",
+                        "direction": "out",
+                        "direction_key": "memory_relation_outgoing",
+                        "relation_label_key": "relation_supports",
+                        "other_label_key": "agent_status_decisions",
+                        "other_summary": "Use reviewed memory as task constraints.",
+                        "other_url": (
+                            "/projects/central-agent-data-hub-demo/memory/decision/"
+                            "10000000-0000-4000-8000-000000000401"
+                        ),
+                    }
+                ],
             },
             "not_found_slug": None,
             "draft_total": 0,
@@ -1502,6 +1516,13 @@ def test_memory_item_page_renders_read_only_german_detail() -> None:
     assert "Diese Seite liest nur den ausgewählten Eintrag" in body
     assert "Quelle" in body
     assert "demo" in body
+    assert "Zusammenhänge" in body
+    assert "Diese Verbindungen zeigen" in body
+    assert "Von diesem Eintrag aus" in body
+    assert "Dieser Eintrag" in body
+    assert "stützt" in body
+    assert "Entscheidungen: Use reviewed memory as task constraints." in body
+    assert 'href="/projects/central-agent-data-hub-demo/memory/decision/10000000-0000-4000-8000-000000000401?lang=de"' in body
     assert "Status" in body
     assert "geprüft" in body
     assert "Aktualisiert" in body
@@ -1530,6 +1551,7 @@ def test_memory_item_route_renders_read_only_detail(monkeypatch) -> None:
                 "title": "Reviewed facts are visible in Hub View.",
                 "back_url": "/projects/central-agent-data-hub-demo#reviewed-memory",
                 "fields": [{"label_key": "memory_item_status", "value": "verified"}],
+                "relations": [],
             },
             "not_found_slug": None,
             "draft_total": 0,
@@ -1552,6 +1574,60 @@ def test_memory_item_route_renders_read_only_detail(monkeypatch) -> None:
     assert captured["status"] == "200 OK"
     assert "Reviewed facts are visible in Hub View." in body
     assert "This page only reads the selected project memory item" in body
+    assert "Related memory" in body
+    assert "No direct relation is visible for this item." in body
+
+
+def test_build_memory_item_view_summarizes_incoming_and_outgoing_relations() -> None:
+    row = {
+        "id": uuid.UUID("10000000-0000-4000-8000-000000000201"),
+        "statement": "Reviewed facts are visible in Hub View.",
+        "source": "demo",
+        "confidence": 0.9,
+        "status": "verified",
+        "updated_at": datetime(2026, 6, 5, 8, 0, tzinfo=timezone.utc),
+    }
+    relations = [
+        {
+            "id": uuid.UUID("10000000-0000-4000-8000-000000000701"),
+            "source_type": "fact",
+            "source_id": row["id"],
+            "source_summary": "Reviewed facts are visible in Hub View.",
+            "relation_type": "supports",
+            "target_type": "decision",
+            "target_id": uuid.UUID("10000000-0000-4000-8000-000000000401"),
+            "target_summary": "Treat the Hub as verified context.",
+        },
+        {
+            "id": uuid.UUID("10000000-0000-4000-8000-000000000702"),
+            "source_type": "document",
+            "source_id": uuid.UUID("10000000-0000-4000-8000-000000000101"),
+            "source_summary": "Concept: Reviewed Context",
+            "relation_type": "references",
+            "target_type": "fact",
+            "target_id": row["id"],
+            "target_summary": "Reviewed facts are visible in Hub View.",
+        },
+    ]
+
+    view = hub_view_models.build_memory_item_view(
+        "fact",
+        row,
+        project_slug="central-agent-data-hub-demo",
+        relation_rows=relations,
+    )
+
+    assert view["relations"][0]["direction"] == "out"
+    assert view["relations"][0]["relation_label_key"] == "relation_supports"
+    assert view["relations"][0]["other_label_key"] == "agent_status_decisions"
+    assert view["relations"][0]["other_url"] == (
+        "/projects/central-agent-data-hub-demo/memory/decision/"
+        "10000000-0000-4000-8000-000000000401"
+    )
+    assert view["relations"][1]["direction"] == "in"
+    assert view["relations"][1]["relation_label_key"] == "relation_references"
+    assert view["relations"][1]["other_label_key"] == "memory_relation_document"
+    assert view["relations"][1]["other_url"] is None
 
 
 def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> None:

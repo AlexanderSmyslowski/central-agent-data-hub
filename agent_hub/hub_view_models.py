@@ -32,6 +32,7 @@ from agent_hub.hub_view_i18n import (
     with_language,
 )
 from agent_hub.quality import fetch_project_quality
+from agent_hub.relations import fetch_project_relations
 from agent_hub.rendering import truncate
 from agent_hub.repo_agent_memory import (
     DEFAULT_TARGET_FILE,
@@ -39,7 +40,10 @@ from agent_hub.repo_agent_memory import (
     plan_repo_agent_memory,
 )
 from agent_hub.reviewers import resolve_responsible_reviewer
-from agent_hub.statuses import agent_read_excluded_statuses
+from agent_hub.statuses import (
+    agent_read_excluded_statuses,
+    agent_read_excluded_statuses_by_type,
+)
 from agent_hub.writeback_routing import card_for_item
 
 
@@ -133,6 +137,30 @@ MEMORY_DETAIL_PATH_TYPES = {
     "open-question": "open_question",
 }
 
+RELATION_OBJECT_LABEL_KEYS = {
+    "project": "nav_project",
+    "agent": "memory_relation_agent",
+    "document": "memory_relation_document",
+    "agent_action": "memory_relation_agent_action",
+    **{
+        item_type: spec["type_label_key"]
+        for item_type, spec in MEMORY_DETAIL_SPECS.items()
+    },
+}
+
+RELATION_TYPE_LABEL_KEYS = {
+    "supports": "relation_supports",
+    "contradicts": "relation_contradicts",
+    "supersedes": "relation_supersedes",
+    "mitigates": "relation_mitigates",
+    "answers": "relation_answers",
+    "raises": "relation_raises",
+    "references": "relation_references",
+    "derived_from": "relation_derived_from",
+    "blocks": "relation_blocks",
+    "depends_on": "relation_depends_on",
+}
+
 def _compat_attr(name: str, fallback):
     module = sys.modules.get("agent_hub.hub_view")
     return getattr(module, name, fallback) if module is not None else fallback
@@ -182,6 +210,72 @@ def memory_status_clause(item_type: str) -> tuple[str, tuple[str, ...]]:
         return "", ()
     placeholders = ", ".join(["%s"] * len(excluded_statuses))
     return f"AND status NOT IN ({placeholders})", excluded_statuses
+
+def relation_object_label_key(object_type: object) -> str:
+    return RELATION_OBJECT_LABEL_KEYS.get(str(object_type), "memory_relation_item")
+
+def relation_type_label_key(relation_type: object) -> str:
+    return RELATION_TYPE_LABEL_KEYS.get(str(relation_type), "memory_relation_type")
+
+def relation_object_url(
+    *,
+    project_slug: object,
+    object_type: object,
+    object_id: object,
+) -> str | None:
+    item_type = str(object_type)
+    if item_type not in MEMORY_DETAIL_SPECS:
+        return None
+    return memory_detail_url(project_slug, item_type, object_id)
+
+def related_memory_cards(
+    rows: list[dict[str, object]],
+    *,
+    current_type: str,
+    current_id: object,
+    project_slug: object,
+) -> list[dict[str, object]]:
+    current_id_text = str(current_id)
+    cards: list[dict[str, object]] = []
+    for row in rows:
+        source_matches = (
+            row.get("source_type") == current_type
+            and str(row.get("source_id")) == current_id_text
+        )
+        target_matches = (
+            row.get("target_type") == current_type
+            and str(row.get("target_id")) == current_id_text
+        )
+        if not source_matches and not target_matches:
+            continue
+
+        other_type = row["target_type"] if source_matches else row["source_type"]
+        other_id = row["target_id"] if source_matches else row["source_id"]
+        other_summary = (
+            row.get("target_summary") if source_matches else row.get("source_summary")
+        )
+        cards.append(
+            {
+                "id": str(row["id"]),
+                "direction": "out" if source_matches else "in",
+                "direction_key": (
+                    "memory_relation_outgoing"
+                    if source_matches
+                    else "memory_relation_incoming"
+                ),
+                "relation_type": row["relation_type"],
+                "relation_label_key": relation_type_label_key(row["relation_type"]),
+                "other_type": other_type,
+                "other_label_key": relation_object_label_key(other_type),
+                "other_summary": truncate(other_summary or other_type, 160),
+                "other_url": relation_object_url(
+                    project_slug=project_slug,
+                    object_type=other_type,
+                    object_id=other_id,
+                ),
+            }
+        )
+    return cards
 
 def fetch_active_projects(cur) -> list[dict[str, object]]:
     cur.execute(
@@ -510,6 +604,7 @@ def build_memory_item_view(
     row: dict[str, object],
     *,
     project_slug: object,
+    relation_rows: list[dict[str, object]] | None = None,
 ) -> dict[str, object]:
     spec = MEMORY_DETAIL_SPECS[item_type]
     fields = []
@@ -529,6 +624,12 @@ def build_memory_item_view(
         "type_label_key": spec["type_label_key"],
         "title": row.get(str(spec["title_column"])) or row["id"],
         "fields": fields,
+        "relations": related_memory_cards(
+            relation_rows or [],
+            current_type=item_type,
+            current_id=row["id"],
+            project_slug=project_slug,
+        ),
         "back_url": f"/projects/{project_slug}#{spec['anchor']}",
         "anchor": spec["anchor"],
     }
@@ -573,11 +674,24 @@ def load_memory_item_view_model(
                     item_type=item_type,
                     item_id=parsed_item_id,
                 )
+                relation_rows = (
+                    fetch_project_relations(
+                        cur,
+                        project["id"],
+                        object_type=item_type,
+                        object_id=parsed_item_id,
+                        limit=12,
+                        excluded_statuses_by_type=agent_read_excluded_statuses_by_type(),
+                    )
+                    if memory_row
+                    else []
+                )
                 memory_item = (
                     build_memory_item_view(
                         item_type,
                         memory_row,
                         project_slug=project["slug"],
+                        relation_rows=relation_rows,
                     )
                     if memory_row
                     else None
