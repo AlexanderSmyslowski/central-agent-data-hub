@@ -70,6 +70,30 @@
   {% if agent_context.setup_error %}
     <p class="setup-feedback error">{{ agent_context.setup_error }}</p>
   {% endif %}
+  <h3>Connection verification</h3>
+  <p class="verification-intro">ADH can verify the Codex <code>AGENTS.md</code> setup in a registered project folder. Other agents need a manual check in their own app or configuration.</p>
+  <div class="verification-grid" aria-label="Connection verification">
+    <div class="verification-card {{ agent_context.local_agent.codex.verification.state }}">
+      <div class="verification-label">Codex</div>
+      <div class="verification-status">{{ agent_context.local_agent.codex.verification.label }}</div>
+      <p class="verification-detail">{{ agent_context.local_agent.codex.verification.detail }}</p>
+    </div>
+    <div class="verification-card manual">
+      <div class="verification-label">Claude Code</div>
+      <div class="verification-status">Manual check needed</div>
+      <p class="verification-detail">Run the setup command once, then start Claude Code and look for the ADH context request.</p>
+    </div>
+    <div class="verification-card manual">
+      <div class="verification-label">Hermes or custom agent</div>
+      <div class="verification-status">Persistent rule needed</div>
+      <p class="verification-detail">Paste the startup rule into that agent's own configuration. ADH cannot inspect that external memory.</p>
+    </div>
+    <div class="verification-card manual">
+      <div class="verification-label">Chatbot</div>
+      <div class="verification-status">Per-task copy/paste</div>
+      <p class="verification-detail">Copy the context pack into the chat before the task. There is no persistent connection.</p>
+    </div>
+  </div>
   <div class="connection-grid">
     <article class="connection-card">
       <div class="connection-card-label">Manual every task</div>

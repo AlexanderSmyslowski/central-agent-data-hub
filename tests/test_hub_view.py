@@ -859,6 +859,11 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
                         "action": "create",
                         "preview": "<!-- CENTRAL-AGENT-DATA-HUB:START -->\nProject slug: `central-agent-data-hub`\n",
                         "error": None,
+                        "verification": {
+                            "state": "missing",
+                            "label": "Codex setup not installed yet",
+                            "detail": "Install the ADH block into AGENTS.md so Codex reads it before work.",
+                        },
                     },
                     "codex_command": (
                         "scripts/install_repo_agent_memory.sh --repo /demo/project "
@@ -901,6 +906,12 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "1 unanswered questions" in body
     assert "Claude Code" in body
     assert "Codex" in body
+    assert 'aria-label="Connection verification"' in body
+    assert "ADH can verify the Codex" in body
+    assert "Codex setup not installed yet" in body
+    assert "Manual check needed" in body
+    assert "Persistent rule needed" in body
+    assert "Per-task copy/paste" in body
     assert body.index("<h3>Codex</h3>") < body.index("<h3>Claude Code</h3>")
     assert "Hermes or custom agent" in body
     assert "Other MCP-compatible agent" in body
@@ -1056,6 +1067,29 @@ def test_agent_context_commands_are_shell_quoted_for_copy_paste(monkeypatch, tmp
     assert "Review Ronak's release notes" in view["local_agent"]["startup_instruction"]
 
 
+def test_codex_setup_view_reports_connection_status(tmp_path) -> None:
+    repo_root = hub_view.Path(hub_view.__file__).resolve().parents[1]
+    project = {
+        "id": "project-id",
+        "slug": "central-agent-data-hub",
+        "name": "Central Agent Data Hub",
+        "metadata": {"local_path": str(tmp_path)},
+    }
+
+    missing = hub_view.build_codex_setup_view(project, repo_root)
+
+    assert missing["action"] == "create"
+    assert missing["verification"]["state"] == "missing"
+    assert missing["verification"]["label"] == "Codex setup not installed yet"
+
+    (tmp_path / "AGENTS.md").write_text(str(missing["preview"]).rstrip() + "\n", encoding="utf-8")
+    connected = hub_view.build_codex_setup_view(project, repo_root)
+
+    assert connected["action"] == "unchanged"
+    assert connected["verification"]["state"] == "connected"
+    assert connected["verification"]["label"] == "Codex setup verified"
+
+
 def test_agent_context_omits_codex_setup_when_project_path_is_unknown(monkeypatch) -> None:
     monkeypatch.delenv("AGENT_HUB_PUBLIC_DEMO", raising=False)
     monkeypatch.setattr(hub_view, "prepare_markdown", lambda _payload: "# Agent Context Pack")
@@ -1094,6 +1128,7 @@ def test_agent_context_omits_codex_setup_when_project_path_is_unknown(monkeypatc
     assert view["local_agent"]["codex_command"] is None
     assert view["local_agent"]["codex_project_path"] is None
     assert view["local_agent"]["codex"]["can_install"] is False
+    assert view["local_agent"]["codex"]["verification"]["state"] == "unknown"
 
 
 def test_agent_context_uses_public_demo_checkout_for_codex_setup(monkeypatch) -> None:
@@ -1135,6 +1170,7 @@ def test_agent_context_uses_public_demo_checkout_for_codex_setup(monkeypatch) ->
     assert view["local_agent"]["codex_project_path"] == repo_root
     assert view["local_agent"]["codex"]["can_install"] is False
     assert view["local_agent"]["codex"]["demo_only"] is True
+    assert view["local_agent"]["codex"]["verification"]["state"] == "demo"
     assert view["local_agent"]["codex"]["target_path"] == f"{repo_root}/AGENTS.md"
     install_script = (
         hub_view.Path(hub_view.__file__).resolve().parents[1] / "scripts" / "install_repo_agent_memory.sh"

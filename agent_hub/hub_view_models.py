@@ -353,6 +353,11 @@ def build_codex_setup_view(project: dict[str, object], repo_root: Path) -> dict[
             "error": None,
             "can_install": False,
             "demo_only": False,
+            "verification": {
+                "state": "unknown",
+                "label": "Cannot verify yet",
+                "detail": "Register this project with a local folder before Hub View can check Codex setup.",
+            },
         }
 
     codex_command_parts = [
@@ -383,9 +388,32 @@ def build_codex_setup_view(project: dict[str, object], repo_root: Path) -> dict[
             "error": str(exc),
             "can_install": False,
             "demo_only": metadata_local_path is None,
+            "verification": {
+                "state": "error",
+                "label": "Cannot verify Codex setup",
+                "detail": str(exc),
+            },
         }
 
     can_install = metadata_local_path is not None
+    if not can_install:
+        verification = {
+            "state": "demo",
+            "label": "Demo preview only",
+            "detail": "Hub View can show the target file, but it will not install a demo-project Codex block.",
+        }
+    elif plan.action == "unchanged":
+        verification = {
+            "state": "connected",
+            "label": "Codex setup verified",
+            "detail": f"{plan.target_file} already contains the ADH block for this project.",
+        }
+    else:
+        verification = {
+            "state": "missing",
+            "label": "Codex setup not installed yet",
+            "detail": f"Install the ADH block into {plan.target_file} so Codex reads it before work.",
+        }
     return {
         "project_path": str(plan.repo_path),
         "command": codex_command,
@@ -396,6 +424,7 @@ def build_codex_setup_view(project: dict[str, object], repo_root: Path) -> dict[
         "error": None,
         "can_install": can_install,
         "demo_only": not can_install,
+        "verification": verification,
     }
 
 def build_agent_context_view(payload: dict[str, object]) -> dict[str, object]:
