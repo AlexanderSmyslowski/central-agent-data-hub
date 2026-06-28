@@ -108,8 +108,8 @@ def test_v017_release_notes_describe_visible_agent_connection() -> None:
     assert "no schema change" in notes
     assert "no migration" in notes
     assert "no new Hub-memory write path" in notes
-    assert "current main after v0.1.6" in protocol
-    assert "historical `v0.1.6` tag" in protocol
+    assert "# First-Run Test Protocol (current main)" in protocol
+    assert "does **not** test a historical" in protocol
     assert "Found Connection verification" in protocol
     assert "terminal fallback is temporary" in protocol
 
