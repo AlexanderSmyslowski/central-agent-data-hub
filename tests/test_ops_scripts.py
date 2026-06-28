@@ -524,6 +524,17 @@ def test_public_hub_view_entrypoint_is_public_safe() -> None:
     assert 'exec "$PYTHON_BIN" -m agent_hub.hub_view "$@"' in script
 
 
+def test_project_remember_dry_run_summary_python_is_shell_safe() -> None:
+    script = read_script("scripts/project_remember.sh")
+
+    assert 'print("Route:  {}".format(payload["tier"]))' in script
+    assert 'print("Status: {}".format(payload["status"] or "default"))' in script
+    assert 'print("Reason: {}".format(payload["reason"]))' in script
+    assert 'payload[\\"tier\\"]' not in script
+    assert 'payload[\\"status\\"]' not in script
+    assert 'payload[\\"reason\\"]' not in script
+
+
 def test_public_entrypoints_do_not_reference_maintainer_projects() -> None:
     public_scripts = [
         "scripts/hub_view.sh",

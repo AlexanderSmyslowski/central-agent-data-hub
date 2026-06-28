@@ -209,9 +209,9 @@ import json
 import sys
 
 payload = json.load(sys.stdin)
-print(f"Route:  {payload[\"tier\"]}")
-print(f"Status: {payload[\"status\"] or \"default\"}")
-print(f"Reason: {payload[\"reason\"]}")
+print("Route:  {}".format(payload["tier"]))
+print("Status: {}".format(payload["status"] or "default"))
+print("Reason: {}".format(payload["reason"]))
 '
   )"
   echo
