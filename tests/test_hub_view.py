@@ -629,10 +629,10 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
                         "claude mcp add agent-data-hub -- python -m agent_hub.cli mcp-serve"
                     ),
                     "codex_command": (
-                        'scripts/install_repo_agent_memory.sh --repo "$PWD" '
+                        "scripts/install_repo_agent_memory.sh --repo /demo/project "
                         "--project central-agent-data-hub"
                     ),
-                    "codex_uses_current_directory": True,
+                    "codex_project_path": "/demo/project",
                     "install_mcp": "pip install -e '.[mcp]'",
                     "claude_mcp": "claude mcp add agent-data-hub -- agent-hub mcp-serve",
                     "mcp_json": '{"mcpServers": {"agent-data-hub": {"command": "agent-hub"}}}',
@@ -680,8 +680,11 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "does not run commands or write an agent configuration by itself" in body
     assert "is instructed to request ADH context" in body
     assert "AGENTS.md" in body
-    assert "Run this from the project repository" in body
-    assert "$PWD" in body
+    assert "ADH knows this project" in body
+    assert "Project folder:" in body
+    assert "/demo/project" in body
+    assert "Run this from the project repository" not in body
+    assert "$PWD" not in body
     assert "project-repo-path" not in body
     assert "Add ADH as a local MCP server once" in body
     assert "claude mcp add agent-data-hub" in body
@@ -714,6 +717,7 @@ def test_agent_context_commands_are_shell_quoted_for_copy_paste(monkeypatch) -> 
                 "id": "project-id",
                 "slug": "central-agent-data-hub",
                 "name": "Central Agent Data Hub",
+                "metadata": {"local_path": "/workspace/central-agent-data-hub"},
             },
             "task": "Review Ronak's release notes",
             "verified_project_state": [],
@@ -766,10 +770,19 @@ def test_agent_context_commands_are_shell_quoted_for_copy_paste(monkeypatch) -> 
     assert view["local_agent"]["install_mcp"] == hub_view.shell_command(
         [sys.executable, "-m", "pip", "install", "-e", ".[mcp]"]
     )
+    install_script = (
+        hub_view.Path(hub_view.__file__).resolve().parents[1] / "scripts" / "install_repo_agent_memory.sh"
+    )
     assert view["local_agent"]["codex_command"] == hub_view.shell_command(
-        [str(hub_view.Path(hub_view.__file__).resolve().parents[1] / "scripts" / "install_repo_agent_memory.sh")]
-    ) + ' --repo "$PWD" --project central-agent-data-hub'
-    assert view["local_agent"]["codex_uses_current_directory"] is True
+        [
+            str(install_script),
+            "--repo",
+            "/workspace/central-agent-data-hub",
+            "--project",
+            "central-agent-data-hub",
+        ]
+    )
+    assert view["local_agent"]["codex_project_path"] == "/workspace/central-agent-data-hub"
     assert (
         view["local_agent"]["claude_mcp"]
         == hub_view.shell_command(
@@ -792,6 +805,96 @@ def test_agent_context_commands_are_shell_quoted_for_copy_paste(monkeypatch) -> 
     assert '"agent-data-hub"' in view["local_agent"]["mcp_json"]
     assert "request reviewed context from Agent Data Hub" in view["local_agent"]["startup_instruction"]
     assert "Review Ronak's release notes" in view["local_agent"]["startup_instruction"]
+
+
+def test_agent_context_omits_codex_setup_when_project_path_is_unknown(monkeypatch) -> None:
+    monkeypatch.delenv("AGENT_HUB_PUBLIC_DEMO", raising=False)
+    monkeypatch.setattr(hub_view, "prepare_markdown", lambda _payload: "# Agent Context Pack")
+
+    view = hub_view.build_agent_context_view(
+        {
+            "project": {
+                "id": "project-id",
+                "slug": "unknown-project",
+                "name": "Unknown Project",
+            },
+            "task": "Review setup",
+            "verified_project_state": [],
+            "relevant_decisions": [],
+            "risks": [],
+            "open_questions": [],
+            "reports": [],
+            "relations": [],
+            "drafts_pending_review": {},
+            "context_trail": {
+                "included_counts": {},
+                "sources": [],
+                "excluded": {},
+                "task_selection": {},
+                "gap_summary": {},
+            },
+            "goal": "Review setup",
+            "constraints": [],
+            "allowed_actions": [],
+            "requires_human_approval": [],
+            "suggested_checks": [],
+            "gaps": {"summary": {}},
+        }
+    )
+
+    assert view["local_agent"]["codex_command"] is None
+    assert view["local_agent"]["codex_project_path"] is None
+
+
+def test_agent_context_uses_public_demo_checkout_for_codex_setup(monkeypatch) -> None:
+    monkeypatch.setenv("AGENT_HUB_PUBLIC_DEMO", "1")
+    monkeypatch.setattr(hub_view, "prepare_markdown", lambda _payload: "# Agent Context Pack")
+
+    view = hub_view.build_agent_context_view(
+        {
+            "project": {
+                "id": "project-id",
+                "slug": "central-agent-data-hub-demo",
+                "name": "Central Agent Data Hub Demo",
+            },
+            "task": "Review demo",
+            "verified_project_state": [],
+            "relevant_decisions": [],
+            "risks": [],
+            "open_questions": [],
+            "reports": [],
+            "relations": [],
+            "drafts_pending_review": {},
+            "context_trail": {
+                "included_counts": {},
+                "sources": [],
+                "excluded": {},
+                "task_selection": {},
+                "gap_summary": {},
+            },
+            "goal": "Review demo",
+            "constraints": [],
+            "allowed_actions": [],
+            "requires_human_approval": [],
+            "suggested_checks": [],
+            "gaps": {"summary": {}},
+        }
+    )
+
+    repo_root = str(hub_view.Path(hub_view.__file__).resolve().parents[1])
+    assert view["local_agent"]["codex_project_path"] == repo_root
+    install_script = (
+        hub_view.Path(hub_view.__file__).resolve().parents[1] / "scripts" / "install_repo_agent_memory.sh"
+    )
+    assert view["local_agent"]["codex_command"] == hub_view.shell_command(
+        [
+            str(install_script),
+            "--repo",
+            repo_root,
+            "--project",
+            "central-agent-data-hub-demo",
+        ]
+    )
 
 
 def test_format_timestamp_for_datetime() -> None:

@@ -1018,13 +1018,16 @@
                 </article>
                 <article class="connection-card">
                   <h3>Codex</h3>
-                  <p>One-time setup: open a terminal in the project repo and run this command. It installs the ADH block into <code>AGENTS.md</code>, which Codex reads before work.</p>
-                  <div class="copy-row">
-                    <code id="codex-setup-command" class="command-box">{{ agent_context.local_agent.codex_command }}</code>
-                    <button class="button copy-button" type="button" data-copy-target="codex-setup-command">Copy Codex setup</button>
-                  </div>
-                  {% if agent_context.local_agent.codex_uses_current_directory %}
-                    <p class="setup-note">Run this from the project repository. The command uses the current folder as the repo.</p>
+                  {% if agent_context.local_agent.codex_project_path %}
+                    <p>One-time setup: ADH knows this project's local folder. Run this command once to install the ADH block into <code>AGENTS.md</code>, which Codex reads before work.</p>
+                    <p class="setup-note">Project folder: <code>{{ agent_context.local_agent.codex_project_path }}</code></p>
+                    <div class="copy-row">
+                      <code id="codex-setup-command" class="command-box">{{ agent_context.local_agent.codex_command }}</code>
+                      <button class="button copy-button" type="button" data-copy-target="codex-setup-command">Copy Codex setup</button>
+                    </div>
+                  {% else %}
+                    <p>ADH does not know this project's local folder yet, so Hub View will not guess a Codex setup command.</p>
+                    <p class="setup-note">Register the project folder first, then reopen this view.</p>
                   {% endif %}
                 </article>
                 <article class="connection-card">
