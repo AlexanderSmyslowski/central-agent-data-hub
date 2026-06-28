@@ -737,6 +737,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
                     "gaps": [("facts without source", 0)],
                 },
                 "decisions": [{"decision": "Treat the Hub as verified context.", "rationale": "Shared trust."}],
+                "facts": [{"statement": "Reviewed facts are visible in Hub View.", "source": "demo", "confidence": 0.9}],
                 "risks": [{"title": "Skipped preflight", "severity": "medium", "impact": "stale context"}],
                 "open_questions": [],
                 "reports": [{"title": "Daily report", "summary": "A compact review."}],
@@ -768,17 +769,34 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Use ADH with an agent" in body
     assert "Prepare the reviewed context before work starts." in body
     assert "Review suggested changes" in body
-    assert "Inspect reviewed memory" in body
+    assert "Find reviewed memory" in body
+    assert "Filter visible facts, decisions, risks, questions, reports, and relations." in body
     assert "Check memory quality" in body
     assert 'href="#connect-agent"' in body
+    assert 'href="#memory-explorer"' in body
     assert 'href="#reviewed-memory"' in body
     assert 'href="#risks-and-questions"' in body
     assert 'href="#latest-status"' in body
     assert 'href="#quality"' in body
     assert 'id="reviewed-memory"' in body
+    assert 'id="memory-explorer"' in body
     assert 'id="risks-and-questions"' in body
     assert 'id="latest-status"' in body
     assert 'id="quality"' in body
+    assert 'id="relations"' in body
+    assert 'data-memory-explorer' in body
+    assert 'data-memory-filter' in body
+    assert 'data-memory-results' in body
+    assert 'data-memory-empty' in body
+    assert "Filter visible memory" in body
+    assert "Showing visible reviewed memory on this page." in body
+    assert "No visible memory matches this filter." in body
+    assert 'data-memory-type="decision"' in body
+    assert 'data-memory-type="fact"' in body
+    assert 'data-memory-type="risk"' in body
+    assert 'data-memory-type="report"' in body
+    assert 'data-memory-type="latest status"' in body
+    assert 'data-memory-type="relation"' in body
     assert "Connect an agent" in body
     assert 'action="/projects/central-agent-data-hub/agent-context"' in body
     assert "Prepare agent handoff" in body
@@ -792,6 +810,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Drafts are proposed memory changes across projects. They are not reviewed memory until accepted." in body
     assert 'href="/inbox"' in body
     assert "Treat the Hub as verified context." in body
+    assert "Reviewed facts are visible in Hub View." in body
     assert "Fact A" in body
     assert "supports" in body
     assert "alexander" not in body.lower()

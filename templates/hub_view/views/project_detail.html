@@ -23,9 +23,9 @@
     <span class="action-title">Review suggested changes</span>
     <span class="action-copy">{{ draft_total | default(0) }} items waiting across projects.</span>
   </a>
-  <a class="action-link" href="#reviewed-memory">
-    <span class="action-title">Inspect reviewed memory</span>
-    <span class="action-copy">Read the facts, decisions, and reports agents can use.</span>
+  <a class="action-link" href="#memory-explorer">
+    <span class="action-title">Find reviewed memory</span>
+    <span class="action-copy">Filter visible facts, decisions, risks, questions, reports, and relations.</span>
   </a>
   <a class="action-link" href="#quality">
     <span class="action-title">Check memory quality</span>
@@ -63,6 +63,25 @@
 
 <p class="overview-note">This overview reads reviewed project memory from the local Hub database. Suggested memory changes are separate until a human accepts or rejects them.</p>
 
+<section class="memory-explorer" id="memory-explorer" data-memory-explorer>
+  <div>
+    <h2>Find reviewed memory</h2>
+    <p>Filter what is already visible on this page. This does not search drafts or hidden data.</p>
+  </div>
+  <div class="memory-filter-row">
+    <label class="memory-filter-label" for="memory-filter">Filter visible memory</label>
+    <input id="memory-filter" class="memory-filter-input" type="search" data-memory-filter placeholder="decision, risk, source, report..." autocomplete="off">
+  </div>
+  <div class="memory-type-links" aria-label="Memory sections">
+    <a href="#reviewed-memory">Reviewed memory</a>
+    <a href="#risks-and-questions">Risks and questions</a>
+    <a href="#latest-status">Latest status</a>
+    <a href="#relations">Relations</a>
+  </div>
+  <p class="memory-filter-meta" data-memory-results>Showing visible reviewed memory on this page.</p>
+  <p class="empty" data-memory-empty hidden>No visible memory matches this filter.</p>
+</section>
+
 <section class="agent-connect" id="connect-agent">
   <h2>Connect an agent</h2>
   <p>Prepare a visible handoff before work starts. The next screen shows what ADH would give the agent, what it can verify, and which setup path fits your agent.</p>
@@ -86,7 +105,7 @@
   {% if selected_project.decisions %}
     <div class="list">
       {% for row in selected_project.decisions %}
-        <article class="item">
+        <article class="item" data-memory-item data-memory-type="decision">
           <p class="item-title">{{ row.decision }}</p>
           {% if row.rationale %}
             <div class="item-meta">{{ row.rationale }}</div>
@@ -102,7 +121,7 @@
   {% if selected_project.facts %}
     <div class="list">
       {% for row in selected_project.facts %}
-        <article class="item">
+        <article class="item" data-memory-item data-memory-type="fact">
           <p class="item-title">{{ row.statement }}</p>
           <div class="item-meta">
             {% if row.source %}{{ row.source }}{% endif %}
@@ -119,7 +138,7 @@
   {% if selected_project.reports %}
     <div class="list">
       {% for row in selected_project.reports %}
-        <article class="item">
+        <article class="item" data-memory-item data-memory-type="report">
           <p class="item-title">{{ row.title }}</p>
           {% if row.summary %}
             <div class="item-meta">{{ row.summary }}</div>
@@ -138,7 +157,7 @@
   {% if selected_project.risks %}
     <div class="list">
       {% for row in selected_project.risks %}
-        <article class="item">
+        <article class="item" data-memory-item data-memory-type="risk">
           <p class="item-title">{{ row.title }}</p>
           <div class="item-meta">{{ row.severity }}{% if row.impact %} · {{ row.impact }}{% endif %}</div>
         </article>
@@ -152,7 +171,7 @@
   {% if selected_project.open_questions %}
     <div class="list">
       {% for row in selected_project.open_questions %}
-        <article class="item">
+        <article class="item" data-memory-item data-memory-type="question">
           <p class="item-title">{{ row.question }}</p>
           {% if row.answer %}
             <div class="item-meta">{{ row.answer }}</div>
@@ -174,7 +193,7 @@
     <div class="list">
       {% for row in selected_project.reports %}
         {% if loop.first %}
-          <article class="item">
+          <article class="item" data-memory-item data-memory-type="latest status">
             <p class="item-title">{{ row.title }}</p>
             {% if row.summary %}
               <div class="item-meta">{{ row.summary }}</div>
@@ -197,12 +216,12 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section" id="relations">
   <h2>Relations</h2>
   {% if selected_project.relations %}
     <div class="relation-list">
       {% for row in selected_project.relations %}
-        <div class="relation-row">
+        <div class="relation-row" data-memory-item data-memory-type="relation">
           <div class="relation-node">{{ row.source }}</div>
           <div class="relation-type">{{ row.relation_type }}</div>
           <div class="relation-node">{{ row.target }}</div>

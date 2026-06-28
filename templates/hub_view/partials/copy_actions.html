@@ -45,5 +45,43 @@
         fallbackCopy(text, button);
       }
     });
+
+    var memoryExplorer = document.querySelector("[data-memory-explorer]");
+    if (memoryExplorer) {
+      var filter = memoryExplorer.querySelector("[data-memory-filter]");
+      var result = memoryExplorer.querySelector("[data-memory-results]");
+      var empty = memoryExplorer.querySelector("[data-memory-empty]");
+      var items = Array.prototype.slice.call(document.querySelectorAll("[data-memory-item]"));
+
+      function updateMemoryFilter() {
+        var query = (filter.value || "").trim().toLowerCase();
+        var visible = 0;
+
+        items.forEach(function (item) {
+          var haystack = (item.textContent || "").toLowerCase();
+          var matches = !query || haystack.indexOf(query) !== -1;
+          item.hidden = !matches;
+          if (matches) {
+            visible += 1;
+          }
+        });
+
+        if (result) {
+          if (query) {
+            result.textContent = visible + " visible memory items match.";
+          } else {
+            result.textContent = "Showing " + visible + " visible memory items on this page.";
+          }
+        }
+        if (empty) {
+          empty.hidden = visible !== 0;
+        }
+      }
+
+      if (filter) {
+        filter.addEventListener("input", updateMemoryFilter);
+        updateMemoryFilter();
+      }
+    }
   }());
 </script>

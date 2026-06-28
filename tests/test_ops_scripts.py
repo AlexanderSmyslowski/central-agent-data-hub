@@ -138,6 +138,28 @@ def test_v018_release_notes_describe_agent_connection_flow() -> None:
     assert "Found Check handoff" in protocol
 
 
+def test_v019_release_notes_describe_memory_explorer() -> None:
+    readme = read_script("README.md")
+    notes = read_script("docs/public/v0.1.9-release-notes.md")
+    protocol = read_script("docs/first-run-test-protocol.md")
+
+    assert "[v0.1.9 release notes](docs/public/v0.1.9-release-notes.md)" in readme
+    assert "[v0.1.9 release notes]" in readme.split("[v0.1.8 release notes]")[0]
+    assert "Agent Data Hub v0.1.9" in notes
+    assert "Find Reviewed Memory" in notes
+    assert "Filter visible memory" in notes
+    assert "visible reviewed memory" in notes
+    assert "does not search drafts" in notes
+    assert "does not query hidden data" in notes
+    assert "no schema change" in notes
+    assert "no migration" in notes
+    assert "no new Hub-memory write path" in notes
+    assert "no autonomous search or background indexer" in notes
+    assert "Found Find reviewed memory" in protocol
+    assert "Used Filter visible memory" in protocol
+    assert "visible reviewed memory on the page" in protocol
+
+
 def test_hub_view_template_is_split_into_view_partials() -> None:
     page = read_script("templates/hub_view/page.html")
 
@@ -170,7 +192,7 @@ def test_package_version_is_ready_for_next_public_patch_release() -> None:
     checklist = read_script("docs/public/release-checklist.md")
     readme = read_script("README.md")
 
-    assert 'version = "0.1.8"' in pyproject
+    assert 'version = "0.1.9"' in pyproject
     assert "version` matches the tag" in checklist
     assert "Do not move an already published tag" in checklist
     assert "[Release checklist](docs/public/release-checklist.md)" in readme
