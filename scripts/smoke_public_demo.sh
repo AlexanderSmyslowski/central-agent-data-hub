@@ -133,6 +133,10 @@ for _ in range(50):
             "/inbox": (
                 "Review Inbox",
                 "Suggested memory changes stay unconfirmed",
+                "How to review",
+                "Would you want an agent to rely on this later?",
+                "Is the origin concrete enough to trust?",
+                "Accept stores it as reviewed memory. Reject archives it.",
                 "No items to review.",
                 "When agents suggest memory changes",
                 "Back to project overview",

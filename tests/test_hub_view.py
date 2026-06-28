@@ -322,6 +322,7 @@ def test_inbox_page_lists_drafts_as_plain_cards() -> None:
                 "message": None,
                 "error": None,
             },
+            "draft_total": 1,
         },
         200,
         view_name="inbox",
@@ -332,6 +333,18 @@ def test_inbox_page_lists_drafts_as_plain_cards() -> None:
     assert "Review queue" in body
     assert "Review one suggested memory change at a time." in body
     assert "Nothing here becomes reviewed memory until a human clicks Accept." in body
+    assert "How to review" in body
+    assert "Would you want an agent to rely on this later?" in body
+    assert "Is the origin concrete enough to trust?" in body
+    assert "Accept stores it as reviewed memory. Reject archives it." in body
+    assert "Filter review queue" in body
+    assert "project, fact, source, reviewer..." in body
+    assert "Visible review items: 1." in body
+    assert "No review item matches this filter." in body
+    assert "data-inbox-filter" in body
+    assert "data-inbox-item" in body
+    assert "data-inbox-group" in body
+    assert "Suggested change · Fact" in body
     assert "Project queue" in body
     assert "Reviewer" in body
     assert "Review is ready" in body
@@ -409,6 +422,15 @@ def test_inbox_page_renders_german_queue_language() -> None:
     assert "Prüf-Warteschlange" in body
     assert "Prüfe jeweils eine vorgeschlagene Änderung." in body
     assert "Nichts hier wird zu geprüftem Projektgedächtnis" in body
+    assert "So prüfst du" in body
+    assert "Soll ein Agent sich später darauf verlassen?" in body
+    assert "Ist die Herkunft konkret genug" in body
+    assert "Merken übernimmt es ins geprüfte Projektgedächtnis." in body
+    assert "Prüf-Warteschlange filtern" in body
+    assert "Projekt, Fakt, Quelle, Zuständig..." in body
+    assert "Sichtbare Prüfeinträge: 1." in body
+    assert "Kein Prüfeintrag passt zu diesem Filter." in body
+    assert "Vorgeschlagene Änderung · Fakt" in body
     assert "Projekt-Warteschlange" in body
     assert "Zuständig: alice" in body
     assert "Warum diese Karte hier ist" in body
@@ -987,7 +1009,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Showing visible reviewed memory on this page." in body
     assert "No visible memory matches this search." in body
     assert "itemHaystack" in body
-    assert "searchAliases" in body
+    assert "reviewSearchAliases" in body
     assert 'risiko: ["risk", "risks", "risiken"]' in body
     assert 'arbeitsstand: ["status", "latest status", "report", "bericht"]' in body
     assert "searchTerms(query)" in body

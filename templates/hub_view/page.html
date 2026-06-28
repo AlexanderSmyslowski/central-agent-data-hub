@@ -1468,6 +1468,89 @@
         margin-top: 24px;
       }
 
+      .review-guide {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .review-guide-title {
+        margin: 16px 0 0;
+        font-size: 16px;
+        line-height: 1.25;
+      }
+
+      .review-guide-card {
+        min-height: 100%;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.54);
+      }
+
+      .review-guide-card h3 {
+        margin: 0 0 7px;
+        font-size: 14px;
+        line-height: 1.25;
+      }
+
+      .review-guide-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .review-filter {
+        margin: 18px 0 18px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.5);
+      }
+
+      .review-filter label {
+        display: block;
+        margin-bottom: 7px;
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .review-filter-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+      }
+
+      .review-filter input {
+        width: 100%;
+        min-height: 42px;
+        box-sizing: border-box;
+        border: 1px solid var(--line-strong);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--text);
+        font: inherit;
+        font-size: 15px;
+        padding: 8px 11px;
+      }
+
+      .review-filter-status {
+        margin: 10px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .review-filter-empty {
+        margin: 8px 0 0;
+        color: #7a2e2e;
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
       .draft-group-header {
         display: flex;
         justify-content: space-between;
@@ -1487,10 +1570,17 @@
         border: 1px solid var(--line);
         border-radius: 8px;
         background: rgba(255, 255, 255, 0.5);
+        scroll-margin-top: 18px;
       }
 
       .draft-card + .draft-card {
         margin-top: 12px;
+      }
+
+      .draft-card-title {
+        margin: 0 0 10px;
+        font-size: 16px;
+        line-height: 1.25;
       }
 
       .draft-card p {
@@ -1660,6 +1750,14 @@
         .workbench-area-header {
           grid-template-columns: 1fr;
           gap: 8px;
+        }
+
+        .review-guide {
+          grid-template-columns: 1fr;
+        }
+
+        .review-filter-row {
+          grid-template-columns: 1fr;
         }
 
         .agent-form,

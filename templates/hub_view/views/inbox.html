@@ -42,6 +42,22 @@
   </div>
 
   <p class="notice">{{ t('inbox_review_guard') }}</p>
+
+  <h3 class="review-guide-title">{{ t('inbox_guide_title') }}</h3>
+  <div class="review-guide" aria-label="{{ t('inbox_guide_title') }}">
+    <div class="review-guide-card">
+      <h3>{{ t('inbox_guide_content') }}</h3>
+      <p>{{ t('inbox_guide_content_copy') }}</p>
+    </div>
+    <div class="review-guide-card">
+      <h3>{{ t('inbox_guide_source') }}</h3>
+      <p>{{ t('inbox_guide_source_copy') }}</p>
+    </div>
+    <div class="review-guide-card">
+      <h3>{{ t('inbox_guide_choose') }}</h3>
+      <p>{{ t('inbox_guide_choose_copy') }}</p>
+    </div>
+  </div>
 </section>
 
 {% if inbox.message %}
@@ -61,8 +77,29 @@
 
 <section class="section">
   {% if inbox.groups %}
+    <div
+      class="review-filter"
+      data-inbox-filter
+      data-showing-template="{{ t('inbox_filter_showing_template') }}"
+      data-result-template="{{ t('inbox_filter_result_template') }}"
+    >
+      <label for="inbox-filter">{{ t('inbox_filter_label') }}</label>
+      <div class="review-filter-row">
+        <input
+          id="inbox-filter"
+          type="search"
+          autocomplete="off"
+          enterkeyhint="done"
+          placeholder="{{ t('inbox_filter_placeholder') }}"
+          data-inbox-filter-input
+        >
+        <button class="button" type="button" data-inbox-clear hidden>{{ t('inbox_filter_clear') }}</button>
+      </div>
+      <p class="review-filter-status" data-inbox-filter-result>{{ t('inbox_filter_showing_template') | replace('__count__', draft_total | default(0) | string) }}</p>
+      <p class="review-filter-empty" data-inbox-empty hidden>{{ t('inbox_filter_empty') }}</p>
+    </div>
     {% for group in inbox.groups %}
-      <div class="draft-group">
+      <div class="draft-group" data-inbox-group>
         <div class="draft-group-header">
           <div>
             <p class="section-kicker">{{ t('inbox_project_queue') }}</p>
@@ -72,11 +109,18 @@
         </div>
         <div class="list">
           {% for draft in group.drafts %}
-            <article class="draft-card">
+            <article
+              class="draft-card"
+              data-inbox-item
+              data-inbox-type="{{ draft.type }}"
+              data-inbox-project="{{ draft.project }}"
+              data-inbox-label="{{ ui_text(draft.type_label) }}"
+            >
+              <h3 class="draft-card-title">{{ t('inbox_card_title') }} · {{ ui_text(draft.type_label) }}</h3>
               <div class="draft-meta">
                 <span class="draft-pill">{{ draft.project }}</span>
-                <span class="draft-pill">{{ draft.type_label }}</span>
-                <span class="draft-pill">{{ t('review_owner') }}: {{ draft.responsible_reviewer }}</span>
+                <span class="draft-pill">{{ ui_text(draft.type_label) }}</span>
+                <span class="draft-pill">{{ t('review_owner') }}: {{ ui_text(draft.responsible_reviewer) }}</span>
                 {% if draft.updated_at %}
                   <span class="draft-pill">{{ draft.updated_at }}</span>
                 {% endif %}
@@ -86,7 +130,7 @@
                   <p>{{ line }}</p>
                 {% endfor %}
               </div>
-              <p class="draft-card-reason">{{ t('inbox_card_reason') }}: {{ draft.resolution_reason }}</p>
+              <p class="draft-card-reason">{{ t('inbox_card_reason') }}: {{ ui_text(draft.resolution_reason) }}</p>
               <div class="draft-actions">
                 {% if review_enabled %}
                   <form method="post" action="/inbox/accept">
