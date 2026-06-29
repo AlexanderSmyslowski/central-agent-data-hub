@@ -60,6 +60,20 @@ CARD_LINE_PREFIXES = {
     "Quelle:": "Source:",
     "Folge bei Irrtum:": "If wrong:",
 }
+CARD_SECTION_PREFIXES = {
+    "Was merke ich mir:": (
+        "draft_section_remember",
+        "draft_section_remember_help",
+    ),
+    "Quelle:": (
+        "draft_section_source",
+        "draft_section_source_help",
+    ),
+    "Folge bei Irrtum:": (
+        "draft_section_if_wrong",
+        "draft_section_if_wrong_help",
+    ),
+}
 
 DEFAULT_AGENT_TASK = "Use reviewed Agent Data Hub context for this project."
 PROJECT_CARD_COUNT_KEYS = (
@@ -1106,6 +1120,7 @@ def draft_card(row: dict[str, object]) -> dict[str, object]:
         "resolution_reason": resolution_reason or "no reviewer assigned",
         "card": card,
         "card_lines": [translate_card_line_for_ui(line) for line in card.splitlines()],
+        "card_sections": draft_card_sections(card),
     }
 
 def translate_card_line_for_ui(line: str) -> str:
@@ -1113,6 +1128,29 @@ def translate_card_line_for_ui(line: str) -> str:
         if line.startswith(source):
             return f"{target}{line.removeprefix(source)}"
     return line
+
+def draft_card_sections(card: str) -> list[dict[str, str]]:
+    sections: list[dict[str, str]] = []
+    for line in card.splitlines():
+        for prefix, (label_key, help_key) in CARD_SECTION_PREFIXES.items():
+            if line.startswith(prefix):
+                sections.append(
+                    {
+                        "label_key": label_key,
+                        "help_key": help_key,
+                        "text": line.removeprefix(prefix).strip(),
+                    }
+                )
+                break
+        else:
+            sections.append(
+                {
+                    "label_key": "draft_section_detail",
+                    "help_key": "draft_section_detail_help",
+                    "text": line.strip(),
+                }
+            )
+    return sections
 
 def group_draft_cards(rows: list[dict[str, object]]) -> list[dict[str, object]]:
     groups: dict[str, dict[str, object]] = {}

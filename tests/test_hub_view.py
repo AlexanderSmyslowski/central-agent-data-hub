@@ -543,9 +543,16 @@ def test_inbox_page_lists_drafts_as_plain_cards() -> None:
     assert "Project queue" in body
     assert "Reviewer" in body
     assert "Review actions" in body
-    assert "Remember:" in body
-    assert "Source: test." in body
-    assert "If wrong:" in body
+    assert "Suggested memory change summary" in body
+    assert "What ADH would remember" in body
+    assert "This is what future agents may rely on after acceptance." in body
+    assert "Source to check" in body
+    assert "test." in body
+    assert "Use this to decide whether the origin is concrete enough." in body
+    assert "If this is wrong" in body
+    assert "Use this to judge the cost of a wrong assumption." in body
+    assert "Should this become reviewed memory?" in body
+    assert "Accept only if the sentence is correct, useful, and safe for future agents." in body
     assert "Reviewer: alice" in body
     assert "Why this card is here" in body
     assert 'action="/inbox/accept"' in body
@@ -586,6 +593,7 @@ def test_inbox_page_empty_state() -> None:
     assert "Review decision map" in body
     assert "Suggested memory changes need a human decision." in body
     assert "Choose a reviewer before accepting or rejecting." in body
+    assert "Set a reviewer before this card can be accepted or rejected." not in body
     assert "Items to decide" not in body
     assert "Reviewer not set" in body
     assert "Nothing here becomes reviewed memory" in body
@@ -836,6 +844,15 @@ def test_inbox_page_renders_german_queue_language() -> None:
     assert "Vorgeschlagene Änderung · Fakt" in body
     assert "Projekt-Warteschlange" in body
     assert "Zuständig: alice" in body
+    assert "Zusammenfassung der vorgeschlagenen Änderung" in body
+    assert "Was ADH merken würde" in body
+    assert "Darauf könnten sich spätere Agenten nach dem Merken stützen." in body
+    assert "Quelle prüfen" in body
+    assert "Nutze das, um zu entscheiden, ob die Herkunft konkret genug ist." in body
+    assert "Falls das falsch ist" in body
+    assert "Nutze das, um die Folgen einer falschen Annahme einzuschätzen." in body
+    assert "Soll das zu geprüftem Projektgedächtnis werden?" in body
+    assert "Merke nur, wenn der Satz korrekt, nützlich und sicher für spätere Agenten ist." in body
     assert "Warum diese Karte hier ist" in body
     assert "Als geprüftes Projektgedächtnis speichern" in body
     assert "Archivieren, ohne zu übernehmen" in body
@@ -1151,6 +1168,7 @@ def test_hub_view_without_reviewer_disables_buttons_and_blocks_post(monkeypatch)
 
     assert "Set HUB_VIEW_REVIEWER or start Hub View with --reviewer" in body
     assert "Reviewer required" in body
+    assert "Set a reviewer before this card can be accepted or rejected." in body
     assert "disabled>Accept</button>" in body
     assert captured["status"] == "403 Forbidden"
     assert "HUB_VIEW_REVIEWER" in post_body

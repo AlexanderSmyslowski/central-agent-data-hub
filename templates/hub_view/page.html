@@ -2247,7 +2247,35 @@
 
       .draft-card-body {
         display: grid;
-        gap: 5px;
+        gap: 0;
+        border-top: 1px solid rgba(38, 38, 36, 0.1);
+        border-bottom: 1px solid rgba(38, 38, 36, 0.1);
+      }
+
+      .draft-card-field {
+        display: grid;
+        gap: 4px;
+        padding: 10px 0;
+      }
+
+      .draft-card-field + .draft-card-field {
+        border-top: 1px solid rgba(38, 38, 36, 0.08);
+      }
+
+      .draft-card-field-label {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        line-height: 1.2;
+        text-transform: uppercase;
+      }
+
+      .draft-card-field small,
+      .draft-disabled-note {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.35;
       }
 
       .draft-card-reason {
@@ -2257,11 +2285,27 @@
         line-height: 1.4;
       }
 
+      .draft-decision-panel {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 14px;
+        align-items: start;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(38, 38, 36, 0.1);
+      }
+
+      .draft-decision-panel strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 14px;
+      }
+
       .draft-actions {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-        margin-top: 12px;
+        justify-content: flex-end;
       }
 
       .draft-actions form {
@@ -2424,6 +2468,14 @@
 
         .review-filter-row {
           grid-template-columns: 1fr;
+        }
+
+        .draft-decision-panel {
+          grid-template-columns: 1fr;
+        }
+
+        .draft-actions {
+          justify-content: flex-start;
         }
 
         .agent-form,

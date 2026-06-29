@@ -217,13 +217,25 @@
                   <span class="draft-pill">{{ draft.updated_at }}</span>
                 {% endif %}
               </div>
-              <div class="draft-card-body">
-                {% for line in draft.card_lines %}
-                  <p>{{ line }}</p>
+              <div class="draft-card-body" aria-label="{{ t('draft_review_summary') }}">
+                {% for section in draft.card_sections %}
+                  <div class="draft-card-field">
+                    <span class="draft-card-field-label">{{ t(section.label_key) }}</span>
+                    <p>{{ section.text }}</p>
+                    <small>{{ t(section.help_key) }}</small>
+                  </div>
                 {% endfor %}
               </div>
               <p class="draft-card-reason">{{ t('inbox_card_reason') }}: {{ ui_text(draft.resolution_reason) }}</p>
-              <div class="draft-actions">
+              <div class="draft-decision-panel">
+                <div>
+                  <strong>{{ t('draft_decision_question') }}</strong>
+                  <p>{{ t('draft_decision_copy') }}</p>
+                  {% if not review_enabled %}
+                    <p class="draft-disabled-note">{{ t('draft_actions_disabled_note') }}</p>
+                  {% endif %}
+                </div>
+                <div class="draft-actions">
                 {% if review_enabled %}
                   <form method="post" action="/inbox/accept">
                     <input type="hidden" name="lang" value="{{ language }}">
@@ -245,6 +257,7 @@
                   <button class="button" type="button" disabled>{{ t('accept') }}</button>
                   <button class="button reject" type="button" disabled>{{ t('reject') }}</button>
                 {% endif %}
+                </div>
               </div>
             </article>
           {% endfor %}
