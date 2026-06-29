@@ -1107,6 +1107,11 @@
         margin-bottom: 6px;
       }
 
+      .memory-explorer.search-active {
+        border-color: rgba(45, 74, 95, 0.36);
+        background: rgba(255, 255, 255, 0.82);
+      }
+
       .memory-explorer p {
         margin: 0;
         color: var(--muted);
@@ -1158,6 +1163,29 @@
         padding: 9px 12px;
       }
 
+      .memory-filter-action {
+        display: inline-flex;
+        min-height: 42px;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(45, 74, 95, 0.36);
+        border-radius: 8px;
+        background: var(--accent);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.25;
+        padding: 9px 12px;
+        text-align: center;
+        text-decoration: none;
+      }
+
+      .memory-filter-action:hover,
+      .memory-filter-action:focus-visible {
+        background: #223b4c;
+      }
+
+      .memory-filter-action[hidden],
       .memory-filter-clear[hidden] {
         display: none;
       }
@@ -1217,6 +1245,12 @@
         color: var(--muted);
         font-size: 13px;
         line-height: 1.4;
+      }
+
+      .memory-filter-match {
+        scroll-margin-top: 18px;
+        border-color: rgba(45, 74, 95, 0.32);
+        background: rgba(45, 74, 95, 0.06);
       }
 
       [data-memory-item][hidden] {
@@ -2774,6 +2808,10 @@
         }
 
         .review-filter-row {
+          grid-template-columns: 1fr;
+        }
+
+        .memory-filter-control {
           grid-template-columns: 1fr;
         }
 

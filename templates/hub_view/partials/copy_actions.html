@@ -98,9 +98,12 @@
       var empty = memoryExplorer.querySelector("[data-memory-empty]");
       var hits = memoryExplorer.querySelector("[data-memory-hits]");
       var clear = memoryExplorer.querySelector("[data-memory-clear]");
+      var firstAction = memoryExplorer.querySelector("[data-memory-first]");
       var items = Array.prototype.slice.call(document.querySelectorAll("[data-memory-item]"));
       var showingTemplate = memoryExplorer.getAttribute("data-showing-template") || "Showing __count__ visible memory items on this page.";
       var resultTemplate = memoryExplorer.getAttribute("data-result-template") || '__count__ matches for "__query__".';
+      var firstTemplate = memoryExplorer.getAttribute("data-first-template") || 'Open first match for "__query__".';
+      var currentMatches = [];
 
       items.forEach(function (item, index) {
         if (!item.id) {
@@ -146,6 +149,19 @@
         });
       }
 
+      function openFirstMemoryMatch() {
+        if (!currentMatches.length) {
+          return;
+        }
+        var item = currentMatches[0];
+        window.location.hash = item.id;
+        item.scrollIntoView({ block: "start", behavior: "smooth" });
+        var target = item.querySelector("a, button, [tabindex]");
+        if (target && target.focus) {
+          target.focus({ preventScroll: true });
+        }
+      }
+
       function updateMemoryFilter() {
         var query = (filter.value || "").trim().toLowerCase();
         var terms = searchTerms(query);
@@ -158,6 +174,7 @@
             return haystack.indexOf(term) !== -1;
           });
           item.hidden = !isMatch;
+          item.classList.toggle("memory-filter-match", Boolean(query && isMatch));
           if (isMatch) {
             visible += 1;
             if (query) {
@@ -173,12 +190,21 @@
             result.textContent = fillTemplate(showingTemplate, visible, "");
           }
         }
+        currentMatches = matches;
+        memoryExplorer.classList.toggle("search-active", Boolean(query));
         renderHits(matches, query);
         if (empty) {
           empty.hidden = visible !== 0;
         }
         if (clear) {
           clear.hidden = !query;
+        }
+        if (firstAction) {
+          firstAction.hidden = !query || matches.length === 0;
+          firstAction.href = matches.length ? "#" + matches[0].id : "#memory-explorer";
+          firstAction.textContent = query
+            ? fillTemplate(firstTemplate, matches.length, filter.value.trim())
+            : "";
         }
       }
 
@@ -187,9 +213,16 @@
         filter.addEventListener("keydown", function (event) {
           if (event.key === "Enter") {
             event.preventDefault();
+            openFirstMemoryMatch();
             filter.blur();
           }
         });
+        if (firstAction) {
+          firstAction.addEventListener("click", function (event) {
+            event.preventDefault();
+            openFirstMemoryMatch();
+          });
+        }
         if (clear) {
           clear.addEventListener("click", function () {
             filter.value = "";

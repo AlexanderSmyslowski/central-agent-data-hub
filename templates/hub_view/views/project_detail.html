@@ -157,7 +157,7 @@
 
   <p class="overview-note">{{ t('overview_note') }}</p>
 
-  <section class="memory-explorer" id="memory-explorer" data-memory-explorer data-showing-template="{{ t('memory_search_showing', count='__count__') }}" data-result-template="{{ t('memory_search_result', count='__count__', query='__query__') }}">
+  <section class="memory-explorer" id="memory-explorer" data-memory-explorer data-showing-template="{{ t('memory_search_showing', count='__count__') }}" data-result-template="{{ t('memory_search_result', count='__count__', query='__query__') }}" data-first-template="{{ t('memory_search_first_ready', query='__query__') }}">
     <div>
       <h2>{{ t('find_reviewed_memory') }}</h2>
     <p>{{ t('memory_search_description') }}</p>
@@ -166,6 +166,7 @@
       <label class="memory-filter-label" for="memory-filter">{{ t('memory_search_label') }}</label>
       <div class="memory-filter-control">
         <input id="memory-filter" class="memory-filter-input" type="search" data-memory-filter placeholder="{{ t('memory_search_placeholder') }}" autocomplete="off" enterkeyhint="done">
+        <a class="memory-filter-action" href="#memory-explorer" data-memory-first hidden>{{ t('memory_search_first_action') }}</a>
         <button class="memory-filter-clear" type="button" data-memory-clear hidden>{{ t('memory_search_clear') }}</button>
       </div>
     </div>

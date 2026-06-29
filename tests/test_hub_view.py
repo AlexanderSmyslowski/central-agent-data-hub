@@ -1703,6 +1703,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert 'id="relations"' in body
     assert 'data-memory-explorer' in body
     assert 'data-memory-filter' in body
+    assert 'data-memory-first' in body
     assert 'data-memory-clear' in body
     assert 'data-memory-results' in body
     assert 'data-memory-hits' in body
@@ -1710,6 +1711,9 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert 'enterkeyhint="done"' in body
     assert "Search this page" in body
     assert "Matches appear below while the page sections are filtered." in body
+    assert "Press Enter or open the first match" in body
+    assert "Open first match" in body
+    assert "Open first match for" in body
     assert "Showing visible reviewed memory on this page." in body
     assert "No visible memory matches this search." in body
     assert "itemHaystack" in body
@@ -1717,6 +1721,11 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert 'risiko: ["risk", "risks", "risiken"]' in body
     assert 'arbeitsstand: ["status", "latest status", "report", "bericht"]' in body
     assert "searchTerms(query)" in body
+    assert "openFirstMemoryMatch" in body
+    assert "scrollIntoView" in body
+    assert 'data-first-template' in body
+    assert 'memoryExplorer.classList.toggle("search-active"' in body
+    assert "memory-filter-match" in body
     assert 'getAttribute("data-memory-type")' in body
     assert "memory-filter-hit" in body
     assert 'event.key === "Enter"' in body
@@ -1895,6 +1904,8 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert 'href="/projects/central-agent-data-hub-demo?lang=de#project-memory"' in body
     assert 'href="/projects/central-agent-data-hub-demo?lang=de#connect-agent"' in body
     assert "Diese Seite durchsuchen" in body
+    assert "Drücke Enter oder öffne den ersten Treffer" in body
+    assert "Ersten Treffer öffnen" in body
     assert "Projekt-Arbeitsfläche" in body
     assert "Nutze diese Bereiche wie eine lokale App" in body
     assert "Projektgedächtnis" in body
