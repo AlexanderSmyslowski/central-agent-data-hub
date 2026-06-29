@@ -599,6 +599,20 @@
         gap: 10px;
       }
 
+      .project-overview-start-header {
+        display: grid;
+        gap: 4px;
+        margin-bottom: -6px;
+      }
+
+      .project-overview-start-header p {
+        max-width: 720px;
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
       .project-overview-start-card {
         display: grid;
         gap: 5px;
@@ -3995,6 +4009,10 @@
                 </div>
               </div>
               {% set first_project = projects[0] %}
+              <div class="project-overview-start-header">
+                <p class="section-kicker">{{ t('project_overview_start_kicker') }}</p>
+                <p>{{ t('project_overview_start_body') }}</p>
+              </div>
               <nav class="project-overview-start-strip" aria-label="{{ t('project_overview_start_actions') }}">
                 <a class="project-overview-start-card primary" href="{{ url_for(first_project.next_step_href) }}">
                   <span>{{ t('project_overview_next') }}</span>

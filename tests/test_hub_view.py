@@ -518,6 +518,8 @@ def test_project_overview_renders_as_work_center() -> None:
     assert "Status visible" in body
     assert "Handoff available" in body
     assert 'aria-label="Project overview quick actions"' in body
+    assert "App areas" in body
+    assert "Choose what you want to do now: open a project, review suggestions, or prepare an agent handoff." in body
     assert "Review suggested memory changes across projects." in body
     assert "Prepare a visible handoff for the selected project." in body
     assert "2 to review" in body
@@ -592,6 +594,8 @@ def test_project_overview_renders_german_work_center() -> None:
     assert "Nichts wartet" in body
     assert "Übergabe möglich" in body
     assert 'aria-label="Schnellstart der Projektübersicht"' in body
+    assert "App-Bereiche" in body
+    assert "Wähle, was du jetzt tun willst: Projekt öffnen, Vorschläge prüfen oder Agentenübergabe vorbereiten." in body
     assert "Prüfe vorgeschlagene Änderungen projektübergreifend." in body
     assert "Bereite eine sichtbare Übergabe für dieses Projekt vor." in body
     assert "1 Risiken/Fragen" in body

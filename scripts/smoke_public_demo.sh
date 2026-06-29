@@ -86,6 +86,8 @@ for _ in range(50):
                 "Status visible",
                 "Handoff available",
                 "Project overview quick actions",
+                "App areas",
+                "Choose what you want to do now: open a project, review suggestions, or prepare an agent handoff.",
                 "Review suggested memory changes across projects.",
                 "Prepare a visible handoff for the selected project.",
                 "Latest status",
