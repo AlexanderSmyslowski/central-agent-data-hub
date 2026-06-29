@@ -445,15 +445,27 @@ def build_project_card(
     if draft_count:
         signal_key = "project_overview_signal_review"
         signal_state = "review"
+        next_step_key = "project_overview_next_review"
+        next_step_action_key = "project_overview_next_review_action"
+        next_step_href = "/inbox"
     elif attention_count:
         signal_key = "project_overview_signal_attention"
         signal_state = "attention"
+        next_step_key = "project_overview_next_attention"
+        next_step_action_key = "project_overview_next_attention_action"
+        next_step_href = f"/projects/{project['slug']}#risks-and-questions"
     elif latest_report:
         signal_key = "project_overview_signal_ready"
         signal_state = "ready"
+        next_step_key = "project_overview_next_latest"
+        next_step_action_key = "project_overview_next_latest_action"
+        next_step_href = f"/projects/{project['slug']}#latest-status"
     else:
         signal_key = "project_overview_signal_empty"
         signal_state = "quiet"
+        next_step_key = "project_overview_next_open"
+        next_step_action_key = "project_overview_next_open_action"
+        next_step_href = f"/projects/{project['slug']}"
     return {
         "name": project["name"],
         "slug": project["slug"],
@@ -470,6 +482,9 @@ def build_project_card(
         "attention_count": attention_count,
         "signal_key": signal_key,
         "signal_state": signal_state,
+        "next_step_key": next_step_key,
+        "next_step_action_key": next_step_action_key,
+        "next_step_href": next_step_href,
         "updated_at": format_timestamp(project.get("updated_at")),
     }
 

@@ -441,6 +441,32 @@
         line-height: 1;
       }
 
+      .project-overview-next {
+        display: grid;
+        gap: 6px;
+        padding: 13px 14px;
+        border: 1px solid rgba(45, 74, 95, 0.2);
+        border-radius: 8px;
+        background: rgba(45, 74, 95, 0.06);
+      }
+
+      .project-overview-next strong {
+        font-size: 15px;
+        line-height: 1.35;
+      }
+
+      .project-overview-next a {
+        justify-self: start;
+        color: var(--accent);
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .project-overview-next a:hover,
+      .project-overview-next a:focus-visible {
+        color: var(--accent-strong);
+      }
+
       .project-overview-action {
         display: inline-flex;
         align-items: center;
@@ -2632,6 +2658,13 @@
                         <strong>{{ project.reviewed_count }}</strong>
                         <span>{{ t('project_overview_memory_metric', count=project.reviewed_count) }}</span>
                       </a>
+                    </div>
+                    <div>
+                      <div class="project-overview-next">
+                        <span class="section-kicker">{{ t('project_overview_next') }}</span>
+                        <strong>{{ t(project.next_step_key) }}</strong>
+                        <a href="{{ url_for(project.next_step_href) }}">{{ t(project.next_step_action_key) }}</a>
+                      </div>
                     </div>
                     <div>
                       <p class="section-kicker">{{ t('project_overview_actions') }}</p>

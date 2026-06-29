@@ -372,6 +372,9 @@ def test_build_project_cards_batches_counts_and_latest_reports(monkeypatch) -> N
     assert cards[0]["attention_count"] == 1
     assert cards[0]["signal_key"] == "project_overview_signal_attention"
     assert cards[0]["signal_state"] == "attention"
+    assert cards[0]["next_step_key"] == "project_overview_next_attention"
+    assert cards[0]["next_step_action_key"] == "project_overview_next_attention_action"
+    assert cards[0]["next_step_href"] == "/projects/project-one#risks-and-questions"
     assert cards[1]["counts"]["open_questions"] == 1
     assert cards[1]["draft_count"] == 4
     assert cards[1]["latest_report_title"] is None
@@ -379,6 +382,51 @@ def test_build_project_cards_batches_counts_and_latest_reports(monkeypatch) -> N
     assert cards[1]["attention_count"] == 1
     assert cards[1]["signal_key"] == "project_overview_signal_review"
     assert cards[1]["signal_state"] == "review"
+    assert cards[1]["next_step_key"] == "project_overview_next_review"
+    assert cards[1]["next_step_action_key"] == "project_overview_next_review_action"
+    assert cards[1]["next_step_href"] == "/inbox"
+
+
+def test_project_overview_next_step_falls_back_to_latest_or_open() -> None:
+    project = {
+        "id": "project-1",
+        "name": "Project One",
+        "slug": "project-one",
+        "status": "active",
+        "description": "",
+        "metadata": {},
+        "updated_at": None,
+    }
+
+    latest_card = hub_view_models.build_project_card(
+        object(),
+        project,
+        counts={
+            "facts": 1,
+            "decisions": 0,
+            "risks": 0,
+            "open_questions": 0,
+            "reports": 1,
+        },
+        latest_report={"title": "Latest", "summary": "Current status"},
+    )
+
+    assert latest_card["signal_key"] == "project_overview_signal_ready"
+    assert latest_card["next_step_key"] == "project_overview_next_latest"
+    assert latest_card["next_step_action_key"] == "project_overview_next_latest_action"
+    assert latest_card["next_step_href"] == "/projects/project-one#latest-status"
+
+    empty_card = hub_view_models.build_project_card(
+        object(),
+        project,
+        counts=hub_view_models.empty_project_card_counts(),
+        latest_report=None,
+    )
+
+    assert empty_card["signal_key"] == "project_overview_signal_empty"
+    assert empty_card["next_step_key"] == "project_overview_next_open"
+    assert empty_card["next_step_action_key"] == "project_overview_next_open_action"
+    assert empty_card["next_step_href"] == "/projects/project-one"
 
 
 def test_project_overview_renders_as_work_center() -> None:
@@ -403,6 +451,9 @@ def test_project_overview_renders_as_work_center() -> None:
                     "draft_count": 2,
                     "signal_key": "project_overview_signal_review",
                     "signal_state": "review",
+                    "next_step_key": "project_overview_next_review",
+                    "next_step_action_key": "project_overview_next_review_action",
+                    "next_step_href": "/inbox",
                     "latest_report_title": "Latest demo report",
                     "latest_report_summary": "A compact project status.",
                     "updated_at": "2026-06-28 10:00 UTC",
@@ -425,6 +476,9 @@ def test_project_overview_renders_as_work_center() -> None:
     assert "2 items" in body
     assert "Reviewed memory" in body
     assert "8 items" in body
+    assert "Recommended next step" in body
+    assert "Review pending suggestions before using this project with an agent." in body
+    assert "Open Review Inbox" in body
     assert "Next actions" in body
     assert "Open project" in body
     assert "Prepare agent" in body
@@ -460,6 +514,9 @@ def test_project_overview_renders_german_work_center() -> None:
                     "draft_count": 0,
                     "signal_key": "project_overview_signal_attention",
                     "signal_state": "attention",
+                    "next_step_key": "project_overview_next_attention",
+                    "next_step_action_key": "project_overview_next_attention_action",
+                    "next_step_href": "/projects/central-agent-data-hub-demo#risks-and-questions",
                     "latest_report_title": None,
                     "latest_report_summary": None,
                     "updated_at": "2026-06-28 10:00 UTC",
@@ -480,6 +537,9 @@ def test_project_overview_renders_german_work_center() -> None:
     assert "Noch kein Bericht." in body
     assert "1 Risiken/Fragen" in body
     assert "Geprüftes Gedächtnis" in body
+    assert "Empfohlener nächster Schritt" in body
+    assert "Prüfe Risiken und offene Fragen, bevor die Arbeit weitergeht." in body
+    assert "Risiken und Fragen öffnen" in body
     assert "Nächste Schritte" in body
     assert "Agent vorbereiten" in body
     assert "Vorschläge prüfen" in body
