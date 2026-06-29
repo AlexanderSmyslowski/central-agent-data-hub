@@ -1704,7 +1704,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Memory" in body
     assert "Agent handoff" in body
     assert 'href="/projects/central-agent-data-hub#current-state-title"' in body
-    assert 'href="/projects/central-agent-data-hub#project-memory"' in body
+    assert 'href="/projects/central-agent-data-hub#memory-explorer"' in body
     assert 'href="/projects/central-agent-data-hub#connect-agent"' in body
     assert 'aria-label="Workspace areas"' in body
     assert 'class="action-strip area-map"' in body
@@ -1755,6 +1755,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Search facts, decisions, risks, questions, reports, and relations already on this page." in body
     assert "Check memory quality" in body
     assert body.index("Project workspace") < body.index("Current work state")
+    assert body.index('id="memory-explorer"') < body.index('id="current-state-title"')
     assert 'href="#connect-agent"' in body
     assert 'href="#memory-explorer"' in body
     assert 'href="#current-state-title"' in body
@@ -2002,7 +2003,7 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert "Gedächtnis" in body
     assert "Agentenübergabe" in body
     assert 'href="/projects/central-agent-data-hub-demo?lang=de#current-state-title"' in body
-    assert 'href="/projects/central-agent-data-hub-demo?lang=de#project-memory"' in body
+    assert 'href="/projects/central-agent-data-hub-demo?lang=de#memory-explorer"' in body
     assert 'href="/projects/central-agent-data-hub-demo?lang=de#connect-agent"' in body
     assert "Diese Seite durchsuchen" in body
     assert "Drücke Enter oder öffne den ersten Treffer" in body
