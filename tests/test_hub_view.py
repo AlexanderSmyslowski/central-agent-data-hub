@@ -1665,6 +1665,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert captured["status"] == "200 OK"
     assert 'class="view-projects has-selected-project"' in body
     assert "body.view-projects.has-selected-project .project-brief" in body
+    assert "body.view-projects.has-selected-project .project-section-nav" in body
     assert "body.view-projects.has-selected-project #agent-review" in body
     assert "body.view-projects.has-selected-project #connect-agent" in body
     assert "body.view-projects.has-selected-project #project-review-preview" in body
@@ -1717,6 +1718,15 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "body.view-projects.has-selected-project .action-agent-handoff" in body
     assert "Project workspace" in body
     assert "Use these areas like a local app" in body
+    assert 'aria-label="Project sections"' in body
+    assert "On this project" in body
+    assert body.index('class="project-section-nav"') < body.index('class="project-workbench"')
+    assert 'href="#current-state-title"' in body
+    assert 'href="#memory-explorer"' in body
+    assert 'href="#connect-agent"' in body
+    assert 'href="/inbox"' in body
+    assert 'href="#risks-and-questions"' in body
+    assert 'href="#quality"' in body
     assert "Recommended next" in body
     assert "Current work state" in body
     assert "Read this first. It shows the latest report" in body
@@ -2005,6 +2015,9 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert "Arbeitsstand" in body
     assert "Gedächtnis" in body
     assert "Agentenübergabe" in body
+    assert 'aria-label="Projektbereiche"' in body
+    assert "In diesem Projekt" in body
+    assert body.index('class="project-section-nav"') < body.index('class="project-workbench"')
     assert 'href="/projects/central-agent-data-hub-demo?lang=de#current-state-title"' in body
     assert 'href="/projects/central-agent-data-hub-demo?lang=de#memory-explorer"' in body
     assert 'href="/projects/central-agent-data-hub-demo?lang=de#connect-agent"' in body
