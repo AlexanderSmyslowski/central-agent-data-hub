@@ -36,12 +36,6 @@
 
       <nav class="app-nav" aria-label="{{ t('app_navigation') }}">
         <a class="app-nav-link{% if not selected_project and view_name not in ('inbox', 'review_activity', 'project_onboarding') %} active{% endif %}" href="{{ url_for('/') }}"{% if not selected_project and view_name not in ('inbox', 'review_activity', 'project_onboarding') %} aria-current="page"{% endif %}>{{ t('nav_projects') }}</a>
-        {% if selected_project %}
-          <a class="app-nav-link{% if view_name == 'projects' %} active{% endif %}" href="{{ url_for('/projects/' ~ selected_project.slug) }}"{% if view_name == 'projects' %} aria-current="page"{% endif %}>{{ t('nav_project') }}</a>
-          <a class="app-nav-link" href="{{ url_for('/projects/' ~ selected_project.slug) }}#current-state-title">{{ t('nav_work_state') }}</a>
-          <a class="app-nav-link{% if view_name in ('memory_library', 'memory_item') %} active{% endif %}" href="{{ url_for('/projects/' ~ selected_project.slug ~ '/memory') }}"{% if view_name in ('memory_library', 'memory_item') %} aria-current="page"{% endif %}>{{ t('nav_memory') }}</a>
-          <a class="app-nav-link{% if view_name == 'agent_context' %} active{% endif %}" href="{{ url_for('/projects/' ~ selected_project.slug) }}#connect-agent"{% if view_name == 'agent_context' %} aria-current="page"{% endif %}>{{ t('nav_agent_handoff') }}</a>
-        {% endif %}
         <a class="app-nav-link{% if view_name in ('inbox', 'review_activity') %} active{% endif %}" href="{{ url_for('/inbox') }}"{% if view_name in ('inbox', 'review_activity') %} aria-current="page"{% endif %}>{{ t('nav_review') }}</a>
         <a class="app-nav-link{% if view_name == 'project_onboarding' %} active{% endif %}" href="{{ url_for('/projects/new') }}"{% if view_name == 'project_onboarding' %} aria-current="page"{% endif %}>{{ t('nav_add_project') }}</a>
       </nav>
@@ -86,11 +80,13 @@
               {% endif %}
             </nav>
           {% endif %}
-          <a class="sidebar-action{% if view_name in ('inbox', 'review_activity') %} active{% endif %}" href="{{ url_for('/inbox') }}">
-            {{ t('review_inbox') }}
-            <span class="sidebar-action-meta">{{ tn('count_review_items', draft_total | default(0)) }}</span>
-          </a>
-          {% if view_name not in ('inbox', 'review_activity') %}
+          {% if not selected_project or view_name in ('inbox', 'review_activity') %}
+            <a class="sidebar-action{% if view_name in ('inbox', 'review_activity') %} active{% endif %}" href="{{ url_for('/inbox') }}">
+              {{ t('review_inbox') }}
+              <span class="sidebar-action-meta">{{ tn('count_review_items', draft_total | default(0)) }}</span>
+            </a>
+          {% endif %}
+          {% if not selected_project and view_name not in ('inbox', 'review_activity') %}
             <div class="sidebar-title">{{ t('active_projects') }}</div>
             {% if projects %}
               {% for project in projects %}

@@ -1976,12 +1976,12 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert 'href="#main-content"' in body
     assert 'id="main-content" tabindex="-1"' in body
     assert "Skip to main content" in body
-    assert "Selected" in body
-    assert "2 review items" in body
     assert 'aria-label="App navigation"' in body
-    assert 'href="/projects/central-agent-data-hub" aria-current="page"' in body
+    assert 'href="/projects/central-agent-data-hub" aria-current="page"' not in body
     assert 'aria-label="Current app status"' not in body
     assert 'aria-label="Project workspace sidebar"' in body
+    assert 'class="project-link active"' not in body
+    assert 'class="sidebar-action"' not in body
     assert "Project areas" in body
     assert "Latest status and watch points." in body
     assert "Browse reviewed facts and decisions." in body
@@ -1993,7 +1993,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Agent handoff" in body
     assert 'href="/projects/central-agent-data-hub#current-state-title"' in body
     assert 'href="/projects/central-agent-data-hub/memory"' in body
-    assert 'href="/projects/central-agent-data-hub#connect-agent"' in body
+    assert 'href="/projects/central-agent-data-hub/agent-context"' in body
     assert 'aria-label="Project sections"' in body
     assert 'aria-label="Project sections"' in body
     assert "On this project" in body
@@ -2324,7 +2324,7 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert "data-section-target" in body
     assert 'href="/projects/central-agent-data-hub-demo?lang=de#current-state-title"' in body
     assert 'href="/projects/central-agent-data-hub-demo/memory?lang=de"' in body
-    assert 'href="/projects/central-agent-data-hub-demo?lang=de#connect-agent"' in body
+    assert 'href="/projects/central-agent-data-hub-demo/agent-context?lang=de"' in body
     assert "Diese Seite durchsuchen" in body
     assert "Suchtreffer" in body
     assert 'role="status" aria-live="polite"' in body
@@ -2564,7 +2564,8 @@ def test_memory_item_page_renders_read_only_german_detail() -> None:
     )
     assert 'aria-label="Weiter in der App"' in body
     assert 'href="/projects/central-agent-data-hub-demo?lang=de">Projekt</a>' in body
-    assert 'href="/projects/central-agent-data-hub-demo/memory?lang=de" class="active" aria-current="page">Geprüftes Gedächtnis</a>' in body
+    assert 'href="/projects/central-agent-data-hub-demo/memory?lang=de"' in body
+    assert "Geprüftes Gedächtnis" in body
     assert 'href="/inbox?lang=de">Prüfungseingang</a>' in body
     assert 'href="/projects/central-agent-data-hub-demo/agent-context?lang=de">Agentenübergabe</a>' in body
     assert "Fakten" in body
@@ -3032,12 +3033,13 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert captured["status"] == "200 OK"
     assert "ADH context loaded" in body
     assert "This is the visible handoff" in body
-    assert 'href="/projects/central-agent-data-hub#connect-agent" aria-current="page"' in body
+    assert 'href="/projects/central-agent-data-hub#connect-agent" aria-current="page"' not in body
     assert 'aria-label="Continue in this app"' in body
     assert 'href="/projects/central-agent-data-hub">Project</a>' in body
     assert 'href="/projects/central-agent-data-hub/memory">Reviewed memory</a>' in body
     assert 'href="/inbox">Review Inbox</a>' in body
-    assert 'href="/projects/central-agent-data-hub/agent-context" class="active" aria-current="page">Agent handoff</a>' in body
+    assert 'href="/projects/central-agent-data-hub/agent-context"' in body
+    assert "Agent handoff" in body
     assert "Review release readiness" in body
     assert "Source of truth: local Agent Data Hub database" in body
     assert "How this should influence the agent" in body
