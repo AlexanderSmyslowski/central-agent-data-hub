@@ -66,15 +66,26 @@
     {% for card in selected_project.work_state[:3] %}
       <a class="project-timeline-step {{ card.state }}" href="{{ url_for(card.href) }}">
         <span class="project-timeline-index">{{ card.priority }}</span>
-        <span>{{ t(card.label_key) }}</span>
-        <strong>{% if card.title %}{{ card.title }}{% else %}{{ t(card.title_key) }}{% endif %}</strong>
-        <small>
+        {% if card.kind == 'latest' %}
+          <span>{{ t('project_timeline_step_latest_label') }}</span>
+          <strong>{{ t('project_timeline_step_latest_title') }}</strong>
+          <p>{{ t('project_timeline_step_latest_body') }}</p>
+        {% elif card.kind == 'attention' %}
+          <span>{{ t('project_timeline_step_attention_label') }}</span>
+          <strong>{{ t('project_timeline_step_attention_title') }}</strong>
+          <p>{{ t('project_timeline_step_attention_body') }}</p>
+        {% elif card.kind == 'review' %}
+          <span>{{ t('project_timeline_step_review_label') }}</span>
+          <strong>{{ t('project_timeline_step_review_title') }}</strong>
+          <p>{{ t('project_timeline_step_review_body') }}</p>
+        {% endif %}
+        <small class="project-timeline-status">
           {% if card.kind == 'latest' %}
-            {{ t('work_state_latest_metric', count=card.report_count) }}
+            {{ t('work_state_latest_metric', count=card.report_count) }} · {% if card.title %}{{ card.title }}{% else %}{{ t(card.title_key) }}{% endif %}
           {% elif card.kind == 'attention' %}
-            {{ t('work_state_attention_metric', risks=card.risk_count, questions=card.question_count) }}
+            {{ t('work_state_attention_metric', risks=card.risk_count, questions=card.question_count) }} · {% if card.title %}{{ card.title }}{% else %}{{ t(card.title_key) }}{% endif %}
           {% elif card.kind == 'review' %}
-            {{ t('work_state_review_metric', count=card.review_count) }}
+            {{ t('work_state_review_metric', count=card.review_count) }} · {% if card.title %}{{ card.title }}{% else %}{{ t(card.title_key) }}{% endif %}
           {% endif %}
         </small>
         <span class="project-timeline-action">{{ t(card.action_key) }}</span>

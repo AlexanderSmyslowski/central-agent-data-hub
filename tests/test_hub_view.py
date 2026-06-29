@@ -1742,6 +1742,12 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Working order" in body
     assert "How to work through this project" in body
     assert "Use this order when work starts: read the status" in body
+    assert "Read latest status" in body
+    assert "Start from the newest report so the work does not continue from stale assumptions." in body
+    assert "Check risks and questions" in body
+    assert "Keep active risks and unanswered questions visible before work continues." in body
+    assert "Review suggestions" in body
+    assert "Accept or reject suggested memory changes before agents rely on them." in body
     assert "Hand context to an agent" in body
     assert "Prepare the visible context handoff only after the project state is clear." in body
     assert "Work state" in body
@@ -2080,6 +2086,12 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert "Arbeitsreihenfolge" in body
     assert "So gehst du durch dieses Projekt" in body
     assert "Nutze diese Reihenfolge beim Arbeitsstart" in body
+    assert "Letzten Stand lesen" in body
+    assert "Beginne beim neuesten Bericht, damit die Arbeit nicht aus veralteten Annahmen weiterläuft." in body
+    assert "Risiken und Fragen prüfen" in body
+    assert "Halte aktive Risiken und unbeantwortete Fragen sichtbar, bevor die Arbeit weitergeht." in body
+    assert "Vorschläge prüfen" in body
+    assert "Akzeptiere oder verwerfe vorgeschlagene Gedächtnisänderungen, bevor Agenten sich darauf stützen." in body
     assert "Kontext an Agenten geben" in body
     assert "Bereite die sichtbare Kontextübergabe erst vor" in body
     assert "Projekt-Arbeitsfläche" in body
