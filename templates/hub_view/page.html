@@ -593,13 +593,59 @@
         gap: 14px;
       }
 
+      .project-overview-start-strip {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .project-overview-start-card {
+        display: grid;
+        gap: 5px;
+        min-height: 120px;
+        padding: 13px;
+        border: 1px solid rgba(45, 74, 95, 0.18);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.64);
+        color: var(--text);
+      }
+
+      .project-overview-start-card:hover,
+      .project-overview-start-card:focus-visible {
+        border-color: rgba(45, 74, 95, 0.34);
+        background: var(--surface-strong);
+      }
+
+      .project-overview-start-card.primary {
+        border-color: rgba(45, 74, 95, 0.34);
+        background: rgba(45, 74, 95, 0.08);
+      }
+
+      .project-overview-start-card span,
+      .project-overview-start-card small {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .project-overview-start-card strong {
+        color: var(--text);
+        font-size: 15px;
+        line-height: 1.25;
+      }
+
       .project-overview-card {
         display: grid;
+        grid-template-columns: minmax(0, 1fr);
         gap: 16px;
         padding: 18px;
         border: 1px solid var(--line);
         border-radius: 8px;
         background: rgba(255, 255, 255, 0.66);
+      }
+
+      .project-overview-card > * {
+        min-width: 0;
       }
 
       .project-overview-card.attention,
@@ -741,6 +787,11 @@
         border: 1px solid rgba(45, 74, 95, 0.2);
         border-radius: 8px;
         background: rgba(45, 74, 95, 0.06);
+      }
+
+      .project-overview-next-block,
+      .project-overview-actions-label {
+        min-width: 0;
       }
 
       .project-overview-next strong {
@@ -3460,10 +3511,86 @@
           gap: 8px;
         }
 
-        .project-overview-card-header,
-        .project-overview-map,
-        .project-overview-metrics,
+        .project-overview-start-strip {
+          display: flex;
+          overflow-x: auto;
+          flex-wrap: nowrap;
+          width: 100%;
+          min-width: 0;
+          max-width: 100%;
+          padding-bottom: 2px;
+          scrollbar-width: none;
+        }
+
+        .project-overview-start-strip::-webkit-scrollbar {
+          display: none;
+        }
+
+        .project-overview-start-card {
+          flex: 0 0 188px;
+          min-height: 116px;
+        }
+
+        .project-overview-start-card.primary {
+          flex-basis: 220px;
+        }
+
+        .project-overview-card {
+          gap: 12px;
+          padding: 14px;
+        }
+
+        .project-overview-card-header {
+          order: 0;
+        }
+
+        .project-overview-next-block {
+          order: 1;
+        }
+
+        .project-overview-actions-label {
+          order: 2;
+          margin: 0;
+        }
+
         .project-overview-actions {
+          order: 3;
+          display: flex;
+          overflow-x: auto;
+          flex-wrap: nowrap;
+          width: 100%;
+          min-width: 0;
+          max-width: 100%;
+          padding-bottom: 2px;
+          scrollbar-width: none;
+        }
+
+        .project-overview-actions::-webkit-scrollbar {
+          display: none;
+        }
+
+        .project-overview-action {
+          flex: 0 0 156px;
+        }
+
+        .project-overview-action:first-child {
+          flex-basis: 184px;
+        }
+
+        .project-overview-latest {
+          order: 4;
+        }
+
+        .project-overview-map {
+          order: 5;
+        }
+
+        .project-overview-metrics {
+          order: 6;
+        }
+
+        .project-overview-map,
+        .project-overview-metrics {
           grid-template-columns: 1fr;
         }
 
@@ -3737,6 +3864,29 @@
                   <p class="detail-description">{{ t('project_overview_body') }}</p>
                 </div>
               </div>
+              {% set first_project = projects[0] %}
+              <nav class="project-overview-start-strip" aria-label="{{ t('project_overview_start_actions') }}">
+                <a class="project-overview-start-card primary" href="{{ url_for(first_project.next_step_href) }}">
+                  <span>{{ t('project_overview_next') }}</span>
+                  <strong>{{ t(first_project.next_step_action_key) }}</strong>
+                  <small>{{ t(first_project.next_step_key) }}</small>
+                </a>
+                <a class="project-overview-start-card" href="{{ url_for('/projects/' ~ first_project.slug) }}">
+                  <span>{{ t('project_overview_open') }}</span>
+                  <strong>{{ first_project.name }}</strong>
+                  <small>{{ t('project_overview_start_open_copy') }}</small>
+                </a>
+                <a class="project-overview-start-card" href="{{ url_for('/inbox') }}">
+                  <span>{{ t('project_overview_review') }}</span>
+                  <strong>{{ t('project_overview_review_queue') }}</strong>
+                  <small>{{ t('project_overview_start_review_copy') }}</small>
+                </a>
+                <a class="project-overview-start-card" href="{{ url_for('/projects/' ~ first_project.slug ~ '/agent-context') }}">
+                  <span>{{ t('project_overview_agent') }}</span>
+                  <strong>{{ t('project_overview_agent_area') }}</strong>
+                  <small>{{ t('project_overview_start_agent_copy') }}</small>
+                </a>
+              </nav>
               <div class="project-overview-grid">
                 {% for project in projects %}
                   <article class="project-overview-card {{ project.signal_state }}">
@@ -3814,14 +3964,14 @@
                         <span>{{ t('project_overview_memory_metric', count=project.reviewed_count) }}</span>
                       </a>
                     </div>
-                    <div>
+                    <div class="project-overview-next-block">
                       <div class="project-overview-next">
                         <span class="section-kicker">{{ t('project_overview_next') }}</span>
                         <strong>{{ t(project.next_step_key) }}</strong>
                         <a href="{{ url_for(project.next_step_href) }}">{{ t(project.next_step_action_key) }}</a>
                       </div>
                     </div>
-                    <div>
+                    <div class="project-overview-actions-label">
                       <p class="section-kicker">{{ t('project_overview_actions') }}</p>
                       <div class="project-overview-actions">
                         <a class="project-overview-action" href="{{ url_for('/projects/' ~ project.slug) }}">{{ t('project_overview_open') }}</a>
