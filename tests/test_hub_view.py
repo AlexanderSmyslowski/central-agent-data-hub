@@ -1625,6 +1625,11 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Start with the newest status, check visible concerns" in body
     assert "Prepare agent context" in body
     assert "Prepare handoff." in body
+    assert "Working order" in body
+    assert "How to work through this project" in body
+    assert "Use this order when work starts: read the status" in body
+    assert "Hand context to an agent" in body
+    assert "Prepare the visible context handoff only after the project state is clear." in body
     assert "Work state" in body
     assert "Memory" in body
     assert "Agent handoff" in body
@@ -1916,6 +1921,11 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert "Diese Seite durchsuchen" in body
     assert "Drücke Enter oder öffne den ersten Treffer" in body
     assert "Ersten Treffer öffnen" in body
+    assert "Arbeitsreihenfolge" in body
+    assert "So gehst du durch dieses Projekt" in body
+    assert "Nutze diese Reihenfolge beim Arbeitsstart" in body
+    assert "Kontext an Agenten geben" in body
+    assert "Bereite die sichtbare Kontextübergabe erst vor" in body
     assert "Projekt-Arbeitsfläche" in body
     assert "Nutze diese Bereiche wie eine lokale App" in body
     assert "Projektgedächtnis" in body
