@@ -722,8 +722,10 @@ def test_inbox_page_lists_drafts_as_plain_cards() -> None:
     assert "If this is wrong" in body
     assert "Future work may rely on a false assumption." in body
     assert "Use this to judge the cost of a wrong assumption." in body
+    assert "Your decision" in body
     assert "Should this become reviewed memory?" in body
     assert "Accept only if the sentence is correct, useful, and safe for future agents." in body
+    assert "Your click is recorded as alice in the review trail." in body
     assert 'aria-label="Decision impact"' in body
     assert "If accepted" in body
     assert "Becomes reviewed memory" in body
@@ -1051,8 +1053,10 @@ def test_inbox_page_renders_german_queue_language() -> None:
     assert "Falls das falsch ist" in body
     assert "Spätere Arbeit könnte von einer falschen Annahme ausgehen." in body
     assert "Nutze das, um die Folgen einer falschen Annahme einzuschätzen." in body
+    assert "Deine Entscheidung" in body
     assert "Soll das zu geprüftem Projektgedächtnis werden?" in body
     assert "Merke nur, wenn der Satz korrekt, nützlich und sicher für spätere Agenten ist." in body
+    assert "Dein Klick wird als alice in der Prüfspur protokolliert." in body
     assert 'aria-label="Folge der Entscheidung"' in body
     assert "Wenn gemerkt" in body
     assert "Wird geprüftes Projektgedächtnis" in body
