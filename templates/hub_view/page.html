@@ -3487,6 +3487,20 @@
           order: 0;
         }
 
+        body.view-projects.has-selected-project .detail-title {
+          font-size: 30px;
+          line-height: 1.08;
+        }
+
+        body.view-projects.has-selected-project .detail-description {
+          margin-top: 10px;
+          font-size: 16px;
+        }
+
+        body.view-projects.has-selected-project .detail-header .project-meta {
+          display: none;
+        }
+
         body.view-projects.has-selected-project .project-section-nav {
           position: sticky;
           top: 0;
@@ -3507,13 +3521,47 @@
           scroll-margin-top: 76px;
         }
 
-        body.view-projects.has-selected-project .project-brief,
         body.view-projects.has-selected-project .project-timeline {
           display: none;
         }
 
-        body.view-projects.has-selected-project .project-workbench {
+        body.view-projects.has-selected-project .project-brief {
           order: 2;
+          gap: 12px;
+          margin: 0 0 14px;
+          padding: 14px;
+        }
+
+        body.view-projects.has-selected-project .project-brief-copy strong {
+          font-size: 17px;
+        }
+
+        body.view-projects.has-selected-project .project-brief-actions {
+          display: flex;
+          overflow-x: auto;
+          flex-wrap: nowrap;
+          width: 100%;
+          min-width: 0;
+          max-width: 100%;
+          padding-bottom: 2px;
+          scrollbar-width: none;
+        }
+
+        body.view-projects.has-selected-project .project-brief-actions::-webkit-scrollbar {
+          display: none;
+        }
+
+        body.view-projects.has-selected-project .project-brief-link {
+          flex: 0 0 188px;
+          min-height: 104px;
+        }
+
+        body.view-projects.has-selected-project .project-brief-link:first-child {
+          flex-basis: 220px;
+        }
+
+        body.view-projects.has-selected-project .project-workbench {
+          order: 3;
           gap: 12px;
           margin: 14px 0;
           padding: 14px;

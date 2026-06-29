@@ -1673,6 +1673,10 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert captured["status"] == "200 OK"
     assert 'class="view-projects has-selected-project"' in body
     assert "body.view-projects.has-selected-project .project-brief" in body
+    assert "body.view-projects.has-selected-project .project-brief-actions" in body
+    assert "body.view-projects.has-selected-project .project-brief-link:first-child" in body
+    assert "body.view-projects.has-selected-project .detail-header .project-meta" in body
+    assert "body.view-projects.has-selected-project .project-timeline" in body
     assert "body.view-projects.has-selected-project .project-section-nav" in body
     assert "body.view-projects.has-selected-project #agent-review" in body
     assert "body.view-projects.has-selected-project #connect-agent" in body
