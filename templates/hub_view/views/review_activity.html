@@ -6,6 +6,21 @@
   </div>
 </div>
 
+<section class="review-guide review-history-guide" aria-label="{{ t('review_activity_guide_label') }}">
+  <div class="review-guide-card">
+    <h3>{{ t('review_activity_guide_decision_title') }}</h3>
+    <p>{{ t('review_activity_guide_decision_copy') }}</p>
+  </div>
+  <div class="review-guide-card">
+    <h3>{{ t('review_activity_guide_proof_title') }}</h3>
+    <p>{{ t('review_activity_guide_proof_copy') }}</p>
+  </div>
+  <div class="review-guide-card">
+    <h3>{{ t('review_activity_guide_boundary_title') }}</h3>
+    <p>{{ t('review_activity_guide_boundary_copy') }}</p>
+  </div>
+</section>
+
 {% if inbox.recent_reviews %}
   {% include "partials/review_activity.html" %}
 {% else %}

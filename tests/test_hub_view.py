@@ -963,6 +963,12 @@ def test_review_activity_page_renders_read_only_history() -> None:
     assert "Prüfverlauf" in body
     assert "Diese reine Leseansicht zeigt letzte menschliche Entscheidungen" in body
     assert 'href="/inbox?lang=de">Zurück zum Prüfungseingang</a>' in body
+    assert "Was wurde entschieden?" in body
+    assert "Jede Karte zeigt, ob eine vorgeschlagene Änderung gemerkt oder verworfen wurde." in body
+    assert "Wer hat geklickt?" in body
+    assert "Prüfperson, Quelle, Status und Zeit bleiben als lokale Prüfspur sichtbar." in body
+    assert "Was passiert hier nicht?" in body
+    assert "Diese Seite ändert kein Gedächtnis; sie zeigt nur bereits getroffene Entscheidungen." in body
     assert "Verworfen · Fakt" in body
     assert "Status: archiviert." in body
     assert "Gesamten Prüfverlauf öffnen" not in body
@@ -986,6 +992,12 @@ def test_review_activity_page_empty_state() -> None:
     ).decode("utf-8")
 
     assert "Review history" in body
+    assert "What was decided?" in body
+    assert "Each card shows whether a suggested memory change was saved or rejected." in body
+    assert "Who clicked?" in body
+    assert "Reviewer, source, status, and time stay visible as the local audit trail." in body
+    assert "What does not happen here?" in body
+    assert "This page does not change memory; it only shows decisions already made." in body
     assert "No review history yet." in body
     assert "Once a human accepts or rejects" in body
     assert 'href="/inbox">Back to Review Inbox</a>' in body
