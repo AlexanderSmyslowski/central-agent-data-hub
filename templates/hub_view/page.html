@@ -3197,6 +3197,65 @@
           white-space: normal;
         }
 
+        body.view-projects.has-selected-project .content {
+          display: flex;
+          flex-direction: column;
+        }
+
+        body.view-projects.has-selected-project .detail-header {
+          order: 0;
+        }
+
+        body.view-projects.has-selected-project .project-brief,
+        body.view-projects.has-selected-project .project-timeline {
+          display: none;
+        }
+
+        body.view-projects.has-selected-project .project-workbench {
+          order: 1;
+          gap: 12px;
+          margin: 14px 0;
+          padding: 14px;
+        }
+
+        body.view-projects.has-selected-project .project-workbench .workbench-header p {
+          font-size: 13px;
+        }
+
+        body.view-projects.has-selected-project .action-strip.area-map {
+          display: flex;
+          overflow-x: auto;
+          flex-wrap: nowrap;
+          padding-bottom: 2px;
+          scrollbar-width: none;
+        }
+
+        body.view-projects.has-selected-project .action-strip.area-map::-webkit-scrollbar {
+          display: none;
+        }
+
+        body.view-projects.has-selected-project .action-strip.area-map .action-link {
+          flex: 0 0 212px;
+          min-height: 108px;
+        }
+
+        body.view-projects.has-selected-project .current-state {
+          order: 2;
+          margin-bottom: 16px;
+        }
+
+        body.view-projects.has-selected-project #memory-details {
+          order: 3;
+        }
+
+        body.view-projects.has-selected-project #project-memory {
+          order: 4;
+        }
+
+        body.view-projects.has-selected-project #agent-review {
+          order: 5;
+        }
+
         .content {
           padding: 22px 18px 24px;
         }

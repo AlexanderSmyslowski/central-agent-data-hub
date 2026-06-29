@@ -1642,6 +1642,8 @@ def test_application_renders_project_detail(monkeypatch) -> None:
 
     assert captured["status"] == "200 OK"
     assert 'class="view-projects has-selected-project"' in body
+    assert "body.view-projects.has-selected-project .project-brief" in body
+    assert "body.view-projects.has-selected-project #memory-details" in body
     assert "Central Agent Data Hub" in body
     assert 'href="#main-content"' in body
     assert 'id="main-content" tabindex="-1"' in body
