@@ -2382,6 +2382,10 @@ def test_memory_item_page_renders_read_only_german_detail() -> None:
                 "back_url": (
                     "/projects/central-agent-data-hub-demo#reviewed-memory"
                 ),
+                "library_url": "/projects/central-agent-data-hub-demo/memory",
+                "type_library_url": (
+                    "/projects/central-agent-data-hub-demo/memory?type=fact"
+                ),
                 "source": "demo",
                 "status": "verified",
                 "updated_at": "2026-06-05 08:00 UTC",
@@ -2416,7 +2420,16 @@ def test_memory_item_page_renders_read_only_german_detail() -> None:
     ).decode("utf-8")
 
     assert '<html lang="de">' in body
-    assert "Zurück zu Central Agent Data Hub Demo" in body
+    assert "Zurück zur Gedächtnisbibliothek" in body
+    assert "Nur Fakten zeigen" in body
+    assert (
+        'href="/projects/central-agent-data-hub-demo/memory?lang=de"'
+        in body
+    )
+    assert (
+        'href="/projects/central-agent-data-hub-demo/memory?type=fact&amp;lang=de"'
+        in body
+    )
     assert 'aria-label="Weiter in der App"' in body
     assert 'href="/projects/central-agent-data-hub-demo?lang=de">Projekt</a>' in body
     assert 'href="/projects/central-agent-data-hub-demo/memory?lang=de" class="active" aria-current="page">Geprüftes Gedächtnis</a>' in body
@@ -2454,6 +2467,8 @@ def test_memory_item_page_renders_read_only_german_detail() -> None:
     assert "Status: geprüft" in body
     assert "Quelle: demo." in body
     assert "Von hier weiterarbeiten" in body
+    assert "Zurück zur Gedächtnisbibliothek" in body
+    assert "Nur Fakten zeigen" in body
     assert "Zurück zum Projektbereich" in body
     assert "Agentenübergabe vorbereiten" in body
     assert 'href="/projects/central-agent-data-hub-demo/agent-context?lang=de"' in body
@@ -2592,6 +2607,10 @@ def test_memory_item_route_renders_read_only_detail(monkeypatch) -> None:
                 "source": "demo",
                 "status": "verified",
                 "updated_at": "2026-06-05 08:00 UTC",
+                "library_url": "/projects/central-agent-data-hub-demo/memory",
+                "type_library_url": (
+                    "/projects/central-agent-data-hub-demo/memory?type=fact"
+                ),
                 "fields": [{"label_key": "memory_item_status", "value": "verified"}],
                 "relations": [],
             },
@@ -2616,6 +2635,10 @@ def test_memory_item_route_renders_read_only_detail(monkeypatch) -> None:
     assert captured["status"] == "200 OK"
     assert "Reviewed facts are visible in Hub View." in body
     assert "This page only reads the selected project memory item" in body
+    assert "Back to memory library" in body
+    assert "Show only Facts" in body
+    assert 'href="/projects/central-agent-data-hub-demo/memory"' in body
+    assert 'href="/projects/central-agent-data-hub-demo/memory?type=fact"' in body
     assert "Memory detail quick actions" in body
     assert "Check status and source before relying on it." in body
     assert "Prepare a visible context handoff with this reviewed memory." in body
@@ -2753,6 +2776,10 @@ def test_build_memory_item_view_summarizes_incoming_and_outgoing_relations() -> 
     assert view["source"] == "demo"
     assert view["status"] == "verified"
     assert view["updated_at"] == "2026-06-05 08:00 UTC"
+    assert view["library_url"] == "/projects/central-agent-data-hub-demo/memory"
+    assert view["type_library_url"] == (
+        "/projects/central-agent-data-hub-demo/memory?type=fact"
+    )
 
 
 def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> None:

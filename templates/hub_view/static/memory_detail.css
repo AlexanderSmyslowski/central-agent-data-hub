@@ -24,6 +24,17 @@
   background: #fff;
 }
 
+.memory-detail-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.memory-detail-navigation .back-link {
+  margin: 0;
+}
+
 .memory-item-detail {
   display: grid;
   gap: 18px;
@@ -1104,4 +1115,3 @@
   cursor: default;
   opacity: 0.55;
 }
-

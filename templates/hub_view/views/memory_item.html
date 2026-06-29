@@ -1,7 +1,21 @@
 <div class="memory-detail-view">
-  <a class="back-link prominent-back" href="{{ url_for(memory_item.back_url if memory_item else '/projects/' ~ selected_project.slug) }}">
-    {{ t('back_to_project', project=selected_project.name) }}
-  </a>
+  {% if memory_item %}
+    <nav class="memory-detail-navigation" aria-label="{{ t('memory_item_navigation_label') }}">
+      <a class="back-link prominent-back" href="{{ url_for(memory_item.library_url) }}">
+        {{ t('memory_item_back_library') }}
+      </a>
+      <a class="back-link" href="{{ url_for(memory_item.type_library_url) }}">
+        {{ t('memory_item_type_link', type=t(memory_item.type_label_key)) }}
+      </a>
+      <a class="back-link" href="{{ url_for(memory_item.back_url) }}">
+        {{ t('memory_item_workflow_project_link') }}
+      </a>
+    </nav>
+  {% else %}
+    <a class="back-link prominent-back" href="{{ url_for('/projects/' ~ selected_project.slug) }}">
+      {{ t('back_to_project', project=selected_project.name) }}
+    </a>
+  {% endif %}
 
   {% set context_nav_active = 'memory' %}
   {% include "partials/context_nav.html" %}
@@ -116,7 +130,8 @@
           <strong>{{ t('memory_item_workflow_next_title') }}</strong>
           <p>{{ t('memory_item_workflow_next_copy') }}</p>
           <div class="memory-workflow-actions">
-            <a href="{{ url_for(memory_item.back_url) }}">{{ t('memory_item_workflow_project_link') }}</a>
+            <a href="{{ url_for(memory_item.library_url) }}">{{ t('memory_item_back_library') }}</a>
+            <a href="{{ url_for(memory_item.type_library_url) }}">{{ t('memory_item_type_link', type=t(memory_item.type_label_key)) }}</a>
             <a href="{{ url_for('/projects/' ~ selected_project.slug ~ '/agent-context') }}">{{ t('memory_item_workflow_agent_link') }}</a>
           </div>
         </div>

@@ -371,9 +371,11 @@ for _ in range(50):
                 "/projects/central-agent-data-hub-demo/memory/fact/"
                 "00000000-0000-4000-8000-000000000201"
             ): (
-                "Back to Central Agent Data Hub Demo",
+                "Back to memory library",
+                "Show only Facts",
                 "Continue in this app",
                 "/projects/central-agent-data-hub-demo/memory",
+                "/projects/central-agent-data-hub-demo/memory?type=fact",
                 "/inbox",
                 "/projects/central-agent-data-hub-demo/agent-context",
                 "Facts",
@@ -690,7 +692,8 @@ for _ in range(50):
                 "00000000-0000-4000-8000-000000000201?lang=de"
             ): (
                 "<html lang=\"de\">",
-                "Zurück zu Central Agent Data Hub Demo",
+                "Zurück zur Gedächtnisbibliothek",
+                "Nur Fakten zeigen",
                 "Weiter in der App",
                 "Geprüftes Gedächtnis",
                 "Prüfungseingang",

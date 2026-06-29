@@ -908,6 +908,8 @@ def build_memory_item_view(
             current_id=row["id"],
             project_slug=project_slug,
         ),
+        "library_url": memory_library_url(project_slug),
+        "type_library_url": memory_library_url(project_slug, item_type=item_type),
         "back_url": f"/projects/{project_slug}#{spec['anchor']}",
         "anchor": spec["anchor"],
     }
