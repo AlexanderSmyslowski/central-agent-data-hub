@@ -21,6 +21,35 @@
   {% if agent_context.setup_error %}
     <p class="setup-feedback error">{{ agent_context.setup_error }}</p>
   {% endif %}
+  <div class="agent-setup-guide" aria-labelledby="agent-setup-guide-title">
+    <div class="agent-setup-guide-copy">
+      <p class="section-kicker">{{ t('agent_setup_guide_kicker') }}</p>
+      <h3 id="agent-setup-guide-title">{{ t('agent_setup_guide_title') }}</h3>
+      <p>{{ t('agent_setup_guide_body') }}</p>
+    </div>
+    <div class="wizard-steps" aria-label="{{ t('agent_setup_guide_steps') }}">
+      <div class="wizard-step">
+        <span>1</span>
+        <strong>{{ t('agent_setup_step_choose_title') }}</strong>
+        <p>{{ t('agent_setup_step_choose_body') }}</p>
+      </div>
+      <div class="wizard-step">
+        <span>2</span>
+        <strong>{{ t('agent_setup_step_connect_title') }}</strong>
+        <p>{{ t('agent_setup_step_connect_body') }}</p>
+      </div>
+      <div class="wizard-step">
+        <span>3</span>
+        <strong>{{ t('agent_setup_step_check_title') }}</strong>
+        <p>{{ t('agent_setup_step_check_body') }}</p>
+      </div>
+      <div class="wizard-step">
+        <span>4</span>
+        <strong>{{ t('agent_setup_step_handoff_title') }}</strong>
+        <p>{{ t('agent_setup_step_handoff_body') }}</p>
+      </div>
+    </div>
+  </div>
   <h3 id="agent-choices">{{ t('agent_picker_title') }}</h3>
   <div class="agent-picker" aria-label="{{ t('choose_agent') }}">
     <a class="agent-picker-card" href="#agent-chatbot">
@@ -59,24 +88,6 @@
       <span class="agent-picker-body">{{ t('agent_picker_fallback_body') }}</span>
       <span class="agent-picker-proof">{{ t('agent_picker_fallback_proof') }}</span>
     </a>
-  </div>
-
-  <div class="wizard-steps" aria-label="{{ t('handoff_steps') }}">
-    <div class="wizard-step">
-      <span>1</span>
-      <strong>{{ t('choose_agent') }}</strong>
-      <p>{{ t('choose_agent_body') }}</p>
-    </div>
-    <div class="wizard-step">
-      <span>2</span>
-      <strong>{{ t('connect_once') }}</strong>
-      <p>{{ t('connect_once_body') }}</p>
-    </div>
-    <div class="wizard-step">
-      <span>3</span>
-      <strong>{{ t('check_handoff') }}</strong>
-      <p>{{ t('local_agent_handoff_line') }}</p>
-    </div>
   </div>
 
   {% set codex_state = agent_context.local_agent.codex.verification.state %}

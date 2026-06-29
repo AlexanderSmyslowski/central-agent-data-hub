@@ -2499,10 +2499,15 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "Known gaps" in body
     assert "1 unanswered questions" in body
     assert "Connect your agent" in body
-    assert 'aria-label="Agent connection steps"' in body
-    assert "Choose agent" in body
-    assert "Connect once" in body
-    assert "Check the handoff" in body
+    assert "Setup guide" in body
+    assert "Set up one visible handoff" in body
+    assert "ADH does not run the agent" in body
+    assert 'aria-label="Agent setup guide"' in body
+    assert "Choose your agent" in body
+    assert "Connect once when possible" in body
+    assert "Check the next run" in body
+    assert "Inspect the handoff" in body
+    assert "what ADH is handing to the agent" in body
     assert 'aria-label="Connection status"' in body
     assert "Connection status" in body
     assert "Recommended next step" in body
@@ -2586,8 +2591,8 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "For local agents: start a new task" in body
     assert "ADH cannot prove that an unconnected agent read the context" in body
     assert body.index("<h2>Connect your agent</h2>") < body.index("<h2>Task</h2>")
-    assert body.index('id="agent-choices"') < body.index('aria-label="Agent connection steps"')
-    assert body.index('aria-label="Agent connection steps"') < body.index('aria-label="Connection status"')
+    assert body.index('aria-label="Agent setup guide"') < body.index('id="agent-choices"')
+    assert body.index('id="agent-choices"') < body.index('aria-label="Connection status"')
     assert body.index('id="agent-choices"') < body.index('id="agent-chatbot"')
     assert body.index('id="agent-chatbot"') < body.index('id="test-handoff"')
     assert body.index('id="test-handoff"') < body.index('id="connection-checklist"')
