@@ -666,6 +666,9 @@ def test_inbox_page_lists_drafts_as_plain_cards() -> None:
     assert "project, fact, source, reviewer..." in body
     assert "Visible review items: 1." in body
     assert "No review item matches this filter." in body
+    assert 'class="section review-card-section"' in body
+    assert "body.view-inbox .review-card-section" in body
+    assert "body.view-inbox #review-workbench" in body
     assert "data-inbox-filter" in body
     assert "data-inbox-item" in body
     assert "data-inbox-group" in body
