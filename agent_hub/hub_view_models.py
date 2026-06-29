@@ -507,6 +507,101 @@ def build_quality_check_cards(quality: dict[str, object]) -> list[dict[str, obje
         )
     return cards
 
+def build_work_state_cards(
+    *,
+    reports: list[dict[str, object]],
+    risks: list[dict[str, object]],
+    open_questions: list[dict[str, object]],
+    quality: dict[str, object],
+    draft_count: int,
+) -> list[dict[str, object]]:
+    attention_count = len(risks) + len(open_questions)
+    first_attention = None
+    if risks:
+        first_attention = risks[0].get("title")
+    elif open_questions:
+        first_attention = open_questions[0].get("question")
+
+    quality_attention = next(
+        (
+            card
+            for card in quality["check_cards"]
+            if card.get("state") == "needs-review"
+            and int(card.get("count") or 0) > 0
+        ),
+        None,
+    )
+
+    return [
+        {
+            "kind": "latest",
+            "priority": "1",
+            "label_key": "work_state_latest_label",
+            "href": "#latest-status",
+            "title": reports[0]["title"] if reports else None,
+            "title_key": None if reports else "latest_status_empty",
+            "body": reports[0].get("summary") if reports else None,
+            "body_key": (
+                "work_state_latest_body" if reports else "work_state_latest_empty"
+            ),
+            "action_key": "work_state_latest_action",
+            "state": "ready" if reports else "quiet",
+            "report_count": len(reports),
+        },
+        {
+            "kind": "attention",
+            "priority": "2",
+            "label_key": "work_state_attention_label",
+            "href": "#risks-and-questions",
+            "title": first_attention,
+            "title_key": None if first_attention else "needs_attention_empty",
+            "body": None,
+            "body_key": "work_state_attention_body",
+            "action_key": "work_state_attention_action",
+            "state": "needs-review" if attention_count else "quiet",
+            "risk_count": len(risks),
+            "question_count": len(open_questions),
+        },
+        {
+            "kind": "review",
+            "priority": "3",
+            "label_key": "work_state_review_label",
+            "href": "/inbox",
+            "title": None,
+            "title_key": (
+                "work_state_review_waiting"
+                if draft_count
+                else "work_state_review_empty"
+            ),
+            "body": None,
+            "body_key": "work_state_review_body",
+            "action_key": "work_state_review_action",
+            "state": "needs-review" if draft_count else "quiet",
+            "review_count": draft_count,
+        },
+        {
+            "kind": "quality",
+            "priority": "4",
+            "label_key": "work_state_quality_label",
+            "href": "#quality",
+            "title": None,
+            "title_key": (
+                quality_attention["title_key"]
+                if quality_attention
+                else "work_state_quality_ok"
+            ),
+            "body": None,
+            "body_key": (
+                quality_attention["meaning_key"]
+                if quality_attention
+                else "quality_snapshot_note"
+            ),
+            "action_key": "work_state_quality_action",
+            "state": "needs-review" if quality_attention else "quiet",
+            "quality_score": quality["score"],
+        },
+    ]
+
 
 def build_detail_view(
     cur,
@@ -517,6 +612,45 @@ def build_detail_view(
     metadata = project.get("metadata") or {}
     compiled = fetch_compiled_payload(cur, project, limit=8)
     quality = fetch_project_quality(cur, project)
+    quality_view = {
+        "score": quality["score"],
+        "status": quality["status"],
+        "relation_count": quality["relation_count"],
+        "relation_coverage": f"{quality['relation_coverage']:.2f}",
+        "gaps": [
+            ("facts without source", len(quality["facts_without_source"])),
+            ("decisions without rationale", len(quality["decisions_without_rationale"])),
+            ("risks without mitigation", len(quality["risks_without_mitigation"])),
+            ("open questions", len(quality["open_questions"])),
+            ("schema friction", len(quality["schema_friction_questions"])),
+        ],
+        "check_cards": build_quality_check_cards(quality),
+    }
+    facts = rows_with_memory_detail_links(
+        compiled["facts"],
+        project_slug=project["slug"],
+        item_type="fact",
+    )
+    decisions = rows_with_memory_detail_links(
+        compiled["decisions"],
+        project_slug=project["slug"],
+        item_type="decision",
+    )
+    risks = rows_with_memory_detail_links(
+        compiled["risks"],
+        project_slug=project["slug"],
+        item_type="risk",
+    )
+    open_questions = rows_with_memory_detail_links(
+        compiled["open_questions"],
+        project_slug=project["slug"],
+        item_type="open_question",
+    )
+    reports = rows_with_memory_detail_links(
+        compiled["reports"],
+        project_slug=project["slug"],
+        item_type="report",
+    )
 
     return {
         "name": project["name"],
@@ -527,45 +661,19 @@ def build_detail_view(
         "work_mode": metadata.get("work_mode"),
         "counts": compiled["counts"],
         "draft_count": draft_count,
-        "quality": {
-            "score": quality["score"],
-            "status": quality["status"],
-            "relation_count": quality["relation_count"],
-            "relation_coverage": f"{quality['relation_coverage']:.2f}",
-            "gaps": [
-                ("facts without source", len(quality["facts_without_source"])),
-                ("decisions without rationale", len(quality["decisions_without_rationale"])),
-                ("risks without mitigation", len(quality["risks_without_mitigation"])),
-                ("open questions", len(quality["open_questions"])),
-                ("schema friction", len(quality["schema_friction_questions"])),
-            ],
-            "check_cards": build_quality_check_cards(quality),
-        },
-        "facts": rows_with_memory_detail_links(
-            compiled["facts"],
-            project_slug=project["slug"],
-            item_type="fact",
+        "quality": quality_view,
+        "work_state": build_work_state_cards(
+            reports=reports,
+            risks=risks,
+            open_questions=open_questions,
+            quality=quality_view,
+            draft_count=draft_count,
         ),
-        "decisions": rows_with_memory_detail_links(
-            compiled["decisions"],
-            project_slug=project["slug"],
-            item_type="decision",
-        ),
-        "risks": rows_with_memory_detail_links(
-            compiled["risks"],
-            project_slug=project["slug"],
-            item_type="risk",
-        ),
-        "open_questions": rows_with_memory_detail_links(
-            compiled["open_questions"],
-            project_slug=project["slug"],
-            item_type="open_question",
-        ),
-        "reports": rows_with_memory_detail_links(
-            compiled["reports"],
-            project_slug=project["slug"],
-            item_type="report",
-        ),
+        "facts": facts,
+        "decisions": decisions,
+        "risks": risks,
+        "open_questions": open_questions,
+        "reports": reports,
         "relations": [
             {
                 "source": truncate(row.get("source_summary") or row["source_type"], 88),

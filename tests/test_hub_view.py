@@ -122,6 +122,51 @@ def test_quality_check_cards_turn_existing_quality_rows_into_review_signals() ->
     assert cards[4]["title_key"] == "quality_schema_friction"
 
 
+def test_work_state_cards_prioritize_status_attention_review_and_quality() -> None:
+    quality = {
+        "score": 74,
+        "check_cards": [
+            {
+                "count": 0,
+                "state": "ok",
+                "title_key": "quality_facts_without_source",
+                "meaning_key": "quality_facts_without_source_meaning",
+            },
+            {
+                "count": 2,
+                "state": "needs-review",
+                "title_key": "quality_risks_without_mitigation",
+                "meaning_key": "quality_risks_without_mitigation_meaning",
+            },
+        ],
+    }
+
+    cards = hub_view_models.build_work_state_cards(
+        reports=[{"title": "Daily report", "summary": ""}],
+        risks=[{"title": "Deployment risk"}],
+        open_questions=[{"question": "Who reviews adapter output?"}],
+        quality=quality,
+        draft_count=3,
+    )
+
+    assert [card["kind"] for card in cards] == [
+        "latest",
+        "attention",
+        "review",
+        "quality",
+    ]
+    assert [card["priority"] for card in cards] == ["1", "2", "3", "4"]
+    assert cards[0]["title"] == "Daily report"
+    assert cards[0]["body_key"] == "work_state_latest_body"
+    assert cards[1]["title"] == "Deployment risk"
+    assert cards[1]["risk_count"] == 1
+    assert cards[1]["question_count"] == 1
+    assert cards[2]["review_count"] == 3
+    assert cards[2]["state"] == "needs-review"
+    assert cards[3]["quality_score"] == 74
+    assert cards[3]["title_key"] == "quality_risks_without_mitigation"
+
+
 class ReviewCursor:
     def __init__(self, row: dict[str, object]) -> None:
         self.row = row
@@ -1166,6 +1211,61 @@ def test_application_renders_project_detail(monkeypatch) -> None:
                         },
                     ],
                 },
+                "work_state": [
+                    {
+                        "kind": "latest",
+                        "priority": "1",
+                        "label_key": "work_state_latest_label",
+                        "href": "#latest-status",
+                        "report_count": 1,
+                        "title": "Daily report",
+                        "title_key": None,
+                        "body": "A compact review.",
+                        "body_key": None,
+                        "action_key": "work_state_latest_action",
+                        "state": "ready",
+                    },
+                    {
+                        "kind": "attention",
+                        "priority": "2",
+                        "label_key": "work_state_attention_label",
+                        "href": "#risks-and-questions",
+                        "risk_count": 1,
+                        "question_count": 0,
+                        "title": "Skipped preflight",
+                        "title_key": None,
+                        "body": None,
+                        "body_key": "work_state_attention_body",
+                        "action_key": "work_state_attention_action",
+                        "state": "needs-review",
+                    },
+                    {
+                        "kind": "review",
+                        "priority": "3",
+                        "label_key": "work_state_review_label",
+                        "href": "/inbox",
+                        "review_count": 2,
+                        "title": None,
+                        "title_key": "work_state_review_waiting",
+                        "body": None,
+                        "body_key": "work_state_review_body",
+                        "action_key": "work_state_review_action",
+                        "state": "needs-review",
+                    },
+                    {
+                        "kind": "quality",
+                        "priority": "4",
+                        "label_key": "work_state_quality_label",
+                        "href": "#quality",
+                        "quality_score": 92,
+                        "title": None,
+                        "title_key": "quality_open_questions",
+                        "body": None,
+                        "body_key": "quality_open_questions_meaning",
+                        "action_key": "work_state_quality_action",
+                        "state": "needs-review",
+                    },
+                ],
                 "decisions": [
                     {
                         "id": "10000000-0000-4000-8000-000000000401",
@@ -1253,13 +1353,20 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Use this project as a local work surface" in body
     assert "Recommended next" in body
     assert "Current work state" in body
-    assert "Start here before handing work to an agent" in body
+    assert "Read this first. It shows the latest report" in body
+    assert "Step 1" in body
+    assert "Reports: 1" in body
+    assert "Open latest status" in body
     assert "Needs attention" in body
-    assert "1 risks · 0 open questions" in body
+    assert "Risks: 1 · Questions: 0" in body
     assert "Skipped preflight" in body
-    assert "Waiting for review" in body
+    assert "Review queue" in body
+    assert "Review items: 2" in body
+    assert "Suggested changes are waiting for a human decision." in body
+    assert "Open Review Inbox" in body
+    assert "Quality signals" in body
+    assert "Quality score: 92" in body
     assert "Quality snapshot" in body
-    assert "Relation coverage 0.60" in body
     assert "Quality score" in body
     assert "These are review signals" in body
     assert "Facts without source" in body
@@ -1383,6 +1490,61 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
                         }
                     ],
                 },
+                "work_state": [
+                    {
+                        "kind": "latest",
+                        "priority": "1",
+                        "label_key": "work_state_latest_label",
+                        "href": "#latest-status",
+                        "report_count": 0,
+                        "title": None,
+                        "title_key": "latest_status_empty",
+                        "body": None,
+                        "body_key": "work_state_latest_empty",
+                        "action_key": "work_state_latest_action",
+                        "state": "quiet",
+                    },
+                    {
+                        "kind": "attention",
+                        "priority": "2",
+                        "label_key": "work_state_attention_label",
+                        "href": "#risks-and-questions",
+                        "risk_count": 1,
+                        "question_count": 0,
+                        "title": "Demo risk stays in the original stored language.",
+                        "title_key": None,
+                        "body": None,
+                        "body_key": "work_state_attention_body",
+                        "action_key": "work_state_attention_action",
+                        "state": "needs-review",
+                    },
+                    {
+                        "kind": "review",
+                        "priority": "3",
+                        "label_key": "work_state_review_label",
+                        "href": "/inbox",
+                        "review_count": 0,
+                        "title": None,
+                        "title_key": "work_state_review_empty",
+                        "body": None,
+                        "body_key": "work_state_review_body",
+                        "action_key": "work_state_review_action",
+                        "state": "quiet",
+                    },
+                    {
+                        "kind": "quality",
+                        "priority": "4",
+                        "label_key": "work_state_quality_label",
+                        "href": "#quality",
+                        "quality_score": 80,
+                        "title": None,
+                        "title_key": "quality_risks_without_mitigation",
+                        "body": None,
+                        "body_key": "quality_risks_without_mitigation_meaning",
+                        "action_key": "work_state_quality_action",
+                        "state": "needs-review",
+                    },
+                ],
                 "decisions": [],
                 "facts": [
                     {
@@ -1442,10 +1604,20 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert "Detailansicht" in body
     assert "Empfohlen" in body
     assert "Aktueller Arbeitsstand" in body
-    assert "Beginne hier, bevor du Arbeit an einen Agenten übergibst" in body
+    assert "Lies das zuerst. Hier siehst du letzten Bericht" in body
+    assert "Schritt 1" in body
+    assert "Berichte: 0" in body
+    assert "Für dieses Projekt ist noch kein Bericht erfasst." in body
+    assert "Letzten Stand öffnen" in body
     assert "Braucht Aufmerksamkeit" in body
-    assert "Wartet auf Prüfung" in body
+    assert "Risiken: 1 · Fragen: 0" in body
+    assert "Risiken und Fragen öffnen" in body
+    assert "Prüf-Warteschlange" in body
+    assert "Prüfeinträge: 0" in body
+    assert "Keine vorgeschlagenen Änderungen warten." in body
     assert "Qualitätswert" in body
+    assert "Qualitätswert: 80" in body
+    assert "Qualitätssignale öffnen" in body
     assert "Das sind Prüfsignale" in body
     assert "Risiken ohne Gegenmaßnahme" in body
     assert "Nächster Schritt: Auswirkung und Gegenmaßnahme ergänzen" in body
