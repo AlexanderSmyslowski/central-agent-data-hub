@@ -237,7 +237,8 @@ def test_package_version_is_ready_for_next_public_patch_release() -> None:
     checklist = read_script("docs/public/release-checklist.md")
     readme = read_script("README.md")
 
-    assert 'version = "0.1.11"' in pyproject
+    assert 'version = "0.1.12"' in pyproject
+    assert "[v0.1.12 release notes](docs/public/v0.1.12-release-notes.md)" in readme
     assert "version` matches the tag" in checklist
     assert "Do not move an already published tag" in checklist
     assert "[Release checklist](docs/public/release-checklist.md)" in readme

@@ -454,6 +454,7 @@ local working data. It continues to use the configured `.env` database.
 - [Public overview](docs/public/agent-data-hub-overview.md)
 - [Public getting started](docs/public/getting-started.md)
 - [Hub View app roadmap](docs/hub-view-app-roadmap.md)
+- [v0.1.12 release notes](docs/public/v0.1.12-release-notes.md)
 - [v0.1.11 release notes](docs/public/v0.1.11-release-notes.md)
 - [v0.1.10 release notes](docs/public/v0.1.10-release-notes.md)
 - [v0.1.9 release notes](docs/public/v0.1.9-release-notes.md)
