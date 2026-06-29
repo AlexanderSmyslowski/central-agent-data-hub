@@ -831,6 +831,7 @@ def test_inbox_page_renders_accept_result_card() -> None:
     assert "New status: verified." in body
     assert "Audit trail: bob via Hub View." in body
     assert "Review another item" in body
+    assert 'href="/inbox/activity">View review history</a>' in body
     assert 'href="/projects/central-agent-data-hub">Open project</a>' in body
 
 
@@ -876,6 +877,7 @@ def test_inbox_page_renders_german_reject_result_card() -> None:
     assert "Neuer Status: archiviert." in body
     assert "Prüfspur: bob über Hub View." in body
     assert "Weiteren Eintrag prüfen" in body
+    assert 'href="/inbox/activity?lang=de">Prüfverlauf ansehen</a>' in body
     assert 'href="/projects/central-agent-data-hub?lang=de">Projekt öffnen</a>' in body
 
 

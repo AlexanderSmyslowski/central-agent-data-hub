@@ -73,6 +73,7 @@
     <p class="review-result-queue-note">{{ t('review_result_queue_updated') }}</p>
     <div class="review-result-actions" aria-label="{{ t('review_result_next') }}">
       <a class="button primary-button" href="{{ url_for('/inbox') }}">{{ t('review_result_queue') }}</a>
+      <a class="button" href="{{ url_for('/inbox/activity') }}">{{ t('review_result_history') }}</a>
       {% if inbox.review_result.project %}
         <a class="button" href="{{ url_for('/projects/' ~ inbox.review_result.project) }}">{{ t('review_result_project') }}</a>
       {% endif %}
