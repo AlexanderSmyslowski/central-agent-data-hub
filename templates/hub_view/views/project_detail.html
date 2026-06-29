@@ -181,6 +181,10 @@
 
   <section class="section" id="reviewed-memory">
     <h2>{{ t('reviewed_memory') }}</h2>
+    <p class="next-step-callout">
+      <strong>{{ t('next_step_label') }}</strong>
+      {{ t('reviewed_memory_next_step') }}
+    </p>
   <h3>{{ t('agent_status_decisions') }}</h3>
   {% if selected_project.decisions %}
     <div class="list">
@@ -254,6 +258,10 @@
 
 <section class="section" id="risks-and-questions">
   <h2>{{ t('risks_and_questions') }}</h2>
+  <p class="next-step-callout">
+    <strong>{{ t('next_step_label') }}</strong>
+    {{ t('risks_questions_next_step') }}
+  </p>
   <h3>{{ t('agent_status_risks') }}</h3>
   {% if selected_project.risks %}
     <div class="list">
@@ -301,6 +309,10 @@
 
 <section class="section" id="latest-status">
   <h2>{{ t('latest_status') }}</h2>
+  <p class="next-step-callout">
+    <strong>{{ t('next_step_label') }}</strong>
+    {{ t('latest_status_next_step') }}
+  </p>
   {% if selected_project.updated_at %}
     <p class="item-meta">{{ t('project_updated', updated_at=selected_project.updated_at) }}</p>
   {% endif %}
@@ -331,6 +343,10 @@
 
 <section class="section" id="quality">
   <h2>{{ t('quality_snapshot') }}</h2>
+  <p class="next-step-callout">
+    <strong>{{ t('next_step_label') }}</strong>
+    {{ t('quality_next_step') }}
+  </p>
   <div class="quality-overview">
     <div class="quality-score">
       <span>{{ t('quality_score') }}</span>

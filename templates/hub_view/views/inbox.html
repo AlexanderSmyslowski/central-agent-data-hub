@@ -70,6 +70,15 @@
     </div>
   </div>
 
+  <p class="next-step-callout">
+    <strong>{{ t('next_step_label') }}</strong>
+    {% if inbox.groups %}
+      {{ t('review_queue_next_step') }}
+    {% else %}
+      {{ t('review_queue_empty_next_step') }}
+    {% endif %}
+  </p>
+
   <p class="notice">{{ t('inbox_review_guard') }}</p>
 
   <h3 class="review-guide-title">{{ t('inbox_guide_title') }}</h3>

@@ -397,6 +397,8 @@ def test_inbox_page_lists_drafts_as_plain_cards() -> None:
     assert lint_card_text(card) == []
     assert "Review queue" in body
     assert "Review one suggested memory change at a time." in body
+    assert "Next step" in body
+    assert "Open one card, check the sentence and source" in body
     assert "Nothing here becomes reviewed memory until a human clicks Accept." in body
     assert "How to review" in body
     assert "Would you want an agent to rely on this later?" in body
@@ -449,6 +451,8 @@ def test_inbox_page_empty_state() -> None:
 
     assert "No items to review." in body
     assert "When agents suggest memory changes" in body
+    assert "Nothing needs review right now." in body
+    assert "When a card appears, check the sentence and source" in body
     assert "Suggested memory changes stay unconfirmed" in body
     assert "Review queue" in body
     assert "Reviewer not set" in body
@@ -670,6 +674,8 @@ def test_inbox_page_renders_german_queue_language() -> None:
 
     assert "Prüf-Warteschlange" in body
     assert "Prüfe jeweils eine vorgeschlagene Änderung." in body
+    assert "Nächster Schritt" in body
+    assert "Öffne eine Karte, prüfe Satz und Quelle" in body
     assert "Nichts hier wird zu geprüftem Projektgedächtnis" in body
     assert "So prüfst du" in body
     assert "Soll ein Agent sich später darauf verlassen?" in body
@@ -1391,6 +1397,10 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Prepare context for a chatbot or local agent, then handle suggested memory changes separately." in body
     assert "Memory details" in body
     assert "Open the sections below when you need the reviewed items, risks, latest report, quality signals, or relations." in body
+    assert "Use these entries as the verified base." in body
+    assert "Read the newest report first." in body
+    assert "Check whether an active risk or open question" in body
+    assert "Fix or consciously accept the visible signals" in body
     assert 'href="#reviewed-memory"' in body
     assert 'href="#risks-and-questions"' in body
     assert 'href="#latest-status"' in body
@@ -1602,6 +1612,10 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert "Durchsuche und prüfe den bestätigten Kontext" in body
     assert "Agentenübergabe und Prüfung" in body
     assert "Detailansicht" in body
+    assert "Nutze diese Einträge als geprüfte Grundlage." in body
+    assert "Lies zuerst den neuesten Bericht." in body
+    assert "Prüfe, ob ein aktives Risiko oder eine offene Frage" in body
+    assert "Behebe oder akzeptiere die sichtbaren Signale bewusst" in body
     assert "Empfohlen" in body
     assert "Aktueller Arbeitsstand" in body
     assert "Lies das zuerst. Hier siehst du letzten Bericht" in body
