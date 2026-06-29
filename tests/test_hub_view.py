@@ -1974,6 +1974,9 @@ def test_memory_item_page_renders_read_only_german_detail() -> None:
                 "back_url": (
                     "/projects/central-agent-data-hub-demo#reviewed-memory"
                 ),
+                "source": "demo",
+                "status": "verified",
+                "updated_at": "2026-06-05 08:00 UTC",
                 "fields": [
                     {"label_key": "memory_item_source", "value": "demo"},
                     {"label_key": "memory_item_status", "value": "verified"},
@@ -2015,6 +2018,16 @@ def test_memory_item_page_renders_read_only_german_detail() -> None:
     assert "Sichtbare Kontextübergabe vorbereiten." in body
     assert "Reviewed facts are visible in Hub View." in body
     assert "Diese Seite liest nur den ausgewählten Eintrag" in body
+    assert 'aria-label="So nutzt du diesen Eintrag"' in body
+    assert "Als geprüften Kontext nutzen" in body
+    assert "Das ist geprüftes Projektgedächtnis. Agenten dürfen es als Kontext nutzen" in body
+    assert "Vertrauenscheck" in body
+    assert "Status: geprüft" in body
+    assert "Quelle: demo." in body
+    assert "Von hier weiterarbeiten" in body
+    assert "Zurück zum Projektbereich" in body
+    assert "Agentenübergabe vorbereiten" in body
+    assert 'href="/projects/central-agent-data-hub-demo/agent-context?lang=de"' in body
     assert "Quelle" in body
     assert "demo" in body
     assert "Zusammenhänge" in body
@@ -2051,6 +2064,9 @@ def test_memory_item_route_renders_read_only_detail(monkeypatch) -> None:
                 "type_label_key": "agent_status_facts",
                 "title": "Reviewed facts are visible in Hub View.",
                 "back_url": "/projects/central-agent-data-hub-demo#reviewed-memory",
+                "source": "demo",
+                "status": "verified",
+                "updated_at": "2026-06-05 08:00 UTC",
                 "fields": [{"label_key": "memory_item_status", "value": "verified"}],
                 "relations": [],
             },
@@ -2075,6 +2091,10 @@ def test_memory_item_route_renders_read_only_detail(monkeypatch) -> None:
     assert captured["status"] == "200 OK"
     assert "Reviewed facts are visible in Hub View." in body
     assert "This page only reads the selected project memory item" in body
+    assert "Use as reviewed context" in body
+    assert "Status: verified" in body
+    assert "Source: demo." in body
+    assert "Prepare agent handoff" in body
     assert "Related memory" in body
     assert "No direct relation is visible for this item." in body
 
@@ -2129,6 +2149,9 @@ def test_build_memory_item_view_summarizes_incoming_and_outgoing_relations() -> 
     assert view["relations"][1]["relation_label_key"] == "relation_references"
     assert view["relations"][1]["other_label_key"] == "memory_relation_document"
     assert view["relations"][1]["other_url"] is None
+    assert view["source"] == "demo"
+    assert view["status"] == "verified"
+    assert view["updated_at"] == "2026-06-05 08:00 UTC"
 
 
 def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> None:

@@ -1875,6 +1875,69 @@
         line-height: 1.14;
       }
 
+      .memory-workflow {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr);
+        gap: 10px;
+      }
+
+      .memory-workflow-card {
+        display: grid;
+        gap: 7px;
+        align-content: start;
+        padding: 14px 15px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.62);
+      }
+
+      .memory-workflow-card.primary {
+        border-color: rgba(45, 74, 95, 0.3);
+        background: rgba(45, 74, 95, 0.08);
+      }
+
+      .memory-workflow-card span {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        line-height: 1.2;
+        text-transform: uppercase;
+      }
+
+      .memory-workflow-card strong {
+        font-size: 15px;
+        line-height: 1.25;
+      }
+
+      .memory-workflow-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .memory-workflow-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 2px;
+      }
+
+      .memory-workflow-actions a {
+        display: inline-flex;
+        min-height: 32px;
+        align-items: center;
+        padding: 6px 9px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.6);
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 700;
+        text-decoration: none;
+      }
+
       .memory-field-list {
         display: grid;
         gap: 10px;
@@ -2715,6 +2778,10 @@
         }
 
         .draft-decision-panel {
+          grid-template-columns: 1fr;
+        }
+
+        .memory-workflow {
           grid-template-columns: 1fr;
         }
 

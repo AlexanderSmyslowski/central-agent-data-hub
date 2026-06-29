@@ -18,6 +18,47 @@
         </div>
       </div>
 
+      <section class="memory-workflow" aria-label="{{ t('memory_item_workflow_label') }}">
+        <div class="memory-workflow-card primary">
+          <span>{{ t('memory_item_workflow_use') }}</span>
+          {% if memory_item.item_type in ('risk', 'open_question') %}
+            <strong>{{ t('memory_item_workflow_attention_title') }}</strong>
+            <p>{{ t('memory_item_workflow_attention_copy') }}</p>
+          {% else %}
+            <strong>{{ t('memory_item_workflow_context_title') }}</strong>
+            <p>{{ t('memory_item_workflow_context_copy') }}</p>
+          {% endif %}
+        </div>
+        <div class="memory-workflow-card">
+          <span>{{ t('memory_item_workflow_trust') }}</span>
+          <strong>
+            {% if memory_item.status %}
+              {{ t('memory_item_workflow_status', status=ui_text(memory_item.status)) }}
+            {% else %}
+              {{ t('memory_item_workflow_status_unknown') }}
+            {% endif %}
+          </strong>
+          <p>
+            {% if memory_item.source %}
+              {{ t('memory_item_workflow_source', source=ui_text(memory_item.source)) }}
+            {% elif memory_item.updated_at %}
+              {{ t('memory_item_workflow_updated', updated=memory_item.updated_at) }}
+            {% else %}
+              {{ t('memory_item_workflow_read_only') }}
+            {% endif %}
+          </p>
+        </div>
+        <div class="memory-workflow-card">
+          <span>{{ t('memory_item_workflow_next') }}</span>
+          <strong>{{ t('memory_item_workflow_next_title') }}</strong>
+          <p>{{ t('memory_item_workflow_next_copy') }}</p>
+          <div class="memory-workflow-actions">
+            <a href="{{ url_for(memory_item.back_url) }}">{{ t('memory_item_workflow_project_link') }}</a>
+            <a href="{{ url_for('/projects/' ~ selected_project.slug ~ '/agent-context') }}">{{ t('memory_item_workflow_agent_link') }}</a>
+          </div>
+        </div>
+      </section>
+
       <div class="memory-field-list" aria-label="{{ t('memory_item_details') }}">
         {% for field in memory_item.fields %}
           <div class="memory-field">

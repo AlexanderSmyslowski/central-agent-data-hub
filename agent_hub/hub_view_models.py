@@ -776,11 +776,16 @@ def build_memory_item_view(
     updated_at = format_timestamp(row.get("updated_at"))
     if updated_at:
         fields.append({"label_key": "memory_item_updated", "value": updated_at})
+    source = row.get("source")
+    source_text = str(source).strip() if source is not None else ""
     return {
         "id": str(row["id"]),
         "item_type": item_type,
         "type_label_key": spec["type_label_key"],
         "title": row.get(str(spec["title_column"])) or row["id"],
+        "source": source_text,
+        "status": status,
+        "updated_at": updated_at,
         "fields": fields,
         "relations": related_memory_cards(
             relation_rows or [],
