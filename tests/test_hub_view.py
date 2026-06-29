@@ -235,6 +235,7 @@ def test_render_page_includes_local_review_claim() -> None:
 
     assert "Hub View" in body
     assert 'class="view-projects"' in body
+    assert 'class="layout no-sidebar"' not in body
     stylesheet_positions = []
     for asset in hub_view.HUB_VIEW_STYLESHEET_ASSETS:
         tag = f'<link rel="stylesheet" href="/static/{asset}">'
@@ -633,6 +634,8 @@ def test_project_overview_renders_as_work_center() -> None:
     ).decode("utf-8")
 
     assert "Project work center" in body
+    assert 'class="layout no-sidebar"' in body
+    assert 'class="panel sidebar"' not in body
     assert "Central Agent Data Hub Demo" in body
     assert "Review waiting" in body
     assert "Active project" in body
@@ -701,12 +704,10 @@ def test_project_overview_renders_german_work_center() -> None:
     assert "Geprüftes Projektgedächtnis finden" in body
     assert "Vorschläge prüfen" in body
     assert "Agent verbinden" in body
-    assert "1 Fakt" in body
-    assert "1 Entscheidung" in body
-    assert "0 Risiken" in body
-    assert "1 offene Frage" in body
-    assert "0 Prüfeinträge" in body
+    assert 'class="layout no-sidebar"' in body
+    assert 'class="panel sidebar"' not in body
     assert "3 geprüfte Einträge" in body
+    assert "0 Prüfeinträge" in body
     assert "Empfohlener nächster Schritt" in body
     assert "Prüfe Risiken und offene Fragen, bevor die Arbeit weitergeht." in body
     assert "Risiken und Fragen öffnen" in body

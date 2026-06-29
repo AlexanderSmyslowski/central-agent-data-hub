@@ -46,7 +46,9 @@
         <a class="app-nav-link{% if view_name == 'project_onboarding' %} active{% endif %}" href="{{ url_for('/projects/new') }}"{% if view_name == 'project_onboarding' %} aria-current="page"{% endif %}>{{ t('nav_add_project') }}</a>
       </nav>
 
-      <div class="layout">
+      {% set show_sidebar = selected_project or view_name in ('inbox', 'review_activity', 'project_onboarding') or not projects %}
+      <div class="layout{% if not show_sidebar %} no-sidebar{% endif %}">
+        {% if show_sidebar %}
         <aside class="panel sidebar">
           {% if selected_project and view_name not in ('inbox', 'review_activity') %}
             {% set sidebar_review_count = draft_total | default(0) %}
@@ -118,6 +120,7 @@
             {% endif %}
           {% endif %}
         </aside>
+        {% endif %}
 
         <section class="panel content" id="main-content" tabindex="-1">
           {% if view_name == 'inbox' %}
