@@ -2283,8 +2283,24 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "Recommended next step" in body
     assert "Codex is not connected yet." in body
     assert "Install the ADH block once." in body
-    assert 'href="#connection-verification"' in body
+    assert 'href="#connection-checklist"' in body
     assert "View all checks" in body
+    assert 'id="connection-checklist"' in body
+    assert 'data-connection-checklist' in body
+    assert "Test the connection" in body
+    assert "Visible proof" in body
+    assert "These checkmarks stay in this browser page only." in body
+    assert "Manual checks completed: __done__ of __total__." in body
+    assert "Still open" in body
+    assert "Looks ready" in body
+    assert "The setup command was run once." in body
+    assert "A new Claude Code task shows an ADH receipt" in body
+    assert "The startup rule was stored" in body
+    assert "The next agent run shows an ADH receipt" in body
+    assert "The context pack was copied." in body
+    assert "The context pack is visible in the chat before the task." in body
+    assert "data-connection-check" in body
+    assert "updateConnectionChecklist" in body
     assert "Which agent do you use?" in body
     assert 'href="#agent-chatbot"' in body
     assert 'href="#agent-codex"' in body
@@ -2348,6 +2364,8 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert body.index('aria-label="Connection status"') < body.index('id="agent-choices"')
     assert body.index('id="agent-choices"') < body.index('id="agent-chatbot"')
     assert body.index('id="agent-chatbot"') < body.index('id="test-handoff"')
+    assert body.index('id="test-handoff"') < body.index('id="connection-checklist"')
+    assert body.index('id="connection-checklist"') < body.index('id="connection-verification"')
     assert body.index('id="test-handoff"') < body.index('aria-label="Connection verification"')
     assert body.index('aria-label="Connection verification"') < body.index("<h2>Task</h2>")
     assert body.index("<h2>Known gaps</h2>") < body.index("<h2>Text to paste into a chatbot</h2>")

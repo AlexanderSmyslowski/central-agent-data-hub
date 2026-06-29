@@ -1668,6 +1668,108 @@
         margin-top: 0;
       }
 
+      .connection-checklist {
+        margin: 18px 0;
+        padding: 16px;
+        border: 1px solid rgba(45, 74, 95, 0.26);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.72);
+      }
+
+      .section-header.compact {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 14px;
+        align-items: start;
+        margin-bottom: 8px;
+      }
+
+      .section-header.compact h3 {
+        margin: 0;
+      }
+
+      .section-header.compact p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      .connection-check-note {
+        margin: 0 0 12px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .connection-check-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 10px;
+      }
+
+      .connection-check-card {
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.64);
+      }
+
+      .connection-check-card.done,
+      .connection-check-card.connected {
+        border-color: rgba(45, 95, 61, 0.34);
+        background: rgba(255, 255, 255, 0.82);
+      }
+
+      .connection-check-card.demo,
+      .connection-check-card.missing,
+      .connection-check-card.unknown,
+      .connection-check-card.manual {
+        border-color: rgba(45, 74, 95, 0.22);
+      }
+
+      .connection-check-header {
+        display: grid;
+        gap: 4px;
+        margin-bottom: 9px;
+      }
+
+      .connection-check-header span {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .connection-check-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .connection-check-evidence {
+        padding-top: 8px;
+        border-top: 1px solid rgba(38, 38, 36, 0.1);
+      }
+
+      .connection-check-row {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 8px;
+        align-items: start;
+        margin-top: 8px;
+        color: var(--text);
+        font-size: 13px;
+        line-height: 1.35;
+      }
+
+      .connection-check-row input {
+        margin-top: 2px;
+        accent-color: var(--accent);
+      }
+
       .quality-overview {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -2908,6 +3010,10 @@
         }
 
         .agent-setup-panel {
+          grid-template-columns: 1fr;
+        }
+
+        .section-header.compact {
           grid-template-columns: 1fr;
         }
 

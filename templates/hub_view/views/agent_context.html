@@ -76,7 +76,7 @@
       {% else %}
         <a class="button primary-button" href="#agent-choices">{{ t('agent_setup_choose_agent') }}</a>
       {% endif %}
-      <a class="inline-action" href="#connection-verification">{{ t('agent_setup_view_checks') }}</a>
+      <a class="inline-action" href="#connection-checklist">{{ t('agent_setup_view_checks') }}</a>
     </div>
   </div>
 
@@ -245,6 +245,70 @@
       <li>{{ t('terminal_handoff_line') }}</li>
     </ul>
   </div>
+
+  <section class="connection-checklist" id="connection-checklist" data-connection-checklist data-summary-template="{{ t('connection_check_summary', done='__done__', total='__total__') }}" data-open-label="{{ t('connection_check_open') }}" data-ready-label="{{ t('connection_check_ready') }}" aria-labelledby="connection-checklist-title">
+    <div class="section-header compact">
+      <div>
+        <p class="section-kicker">{{ t('connection_check_kicker') }}</p>
+        <h3 id="connection-checklist-title">{{ t('connection_check_title') }}</h3>
+      </div>
+      <p data-connection-summary>{{ t('connection_check_initial') }}</p>
+    </div>
+    <p class="connection-check-note">{{ t('connection_check_note') }}</p>
+    <div class="connection-check-grid">
+      <article class="connection-check-card automatic {{ agent_context.local_agent.codex.verification.state }}">
+        <div class="connection-check-header">
+          <span>{{ t('codex') }}</span>
+          <strong>{{ ui_text(agent_context.local_agent.codex.verification.label) }}</strong>
+        </div>
+        <p>{{ ui_text(agent_context.local_agent.codex.verification.detail) }}</p>
+        <p class="connection-check-evidence">{{ t('connection_check_codex_evidence') }}</p>
+      </article>
+      <article class="connection-check-card" data-connection-check-card>
+        <div class="connection-check-header">
+          <span>{{ t('claude_code') }}</span>
+          <strong data-check-card-state>{{ t('connection_check_open') }}</strong>
+        </div>
+        <label class="connection-check-row">
+          <input type="checkbox" data-connection-check>
+          <span>{{ t('connection_check_claude_setup') }}</span>
+        </label>
+        <label class="connection-check-row">
+          <input type="checkbox" data-connection-check>
+          <span>{{ t('connection_check_claude_receipt') }}</span>
+        </label>
+      </article>
+      <article class="connection-check-card" data-connection-check-card>
+        <div class="connection-check-header">
+          <span>{{ t('custom_agent_short') }}</span>
+          <strong data-check-card-state>{{ t('connection_check_open') }}</strong>
+        </div>
+        <label class="connection-check-row">
+          <input type="checkbox" data-connection-check>
+          <span>{{ t('connection_check_custom_rule') }}</span>
+        </label>
+        <label class="connection-check-row">
+          <input type="checkbox" data-connection-check>
+          <span>{{ t('connection_check_custom_receipt') }}</span>
+        </label>
+      </article>
+      <article class="connection-check-card" data-connection-check-card>
+        <div class="connection-check-header">
+          <span>{{ t('chatbot') }}</span>
+          <strong data-check-card-state>{{ t('connection_check_open') }}</strong>
+        </div>
+        <label class="connection-check-row">
+          <input type="checkbox" data-connection-check>
+          <span>{{ t('connection_check_chatbot_copied') }}</span>
+        </label>
+        <label class="connection-check-row">
+          <input type="checkbox" data-connection-check>
+          <span>{{ t('connection_check_chatbot_visible') }}</span>
+        </label>
+      </article>
+    </div>
+  </section>
+
   <div class="verification-panel" id="connection-verification">
     <h3>{{ t('connection_verification') }}</h3>
     <p class="verification-intro"><strong>{{ t('codex_can_check') }}</strong> {{ t('external_manual_check') }}</p>
