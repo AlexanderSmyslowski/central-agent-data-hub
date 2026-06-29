@@ -160,8 +160,8 @@
                   {% endif %}
                   <div class="project-overview-focus-meta">
                     <span>{{ t(first_project.signal_key) }}</span>
-                    <span>{{ t('project_overview_memory_metric', count=first_project.reviewed_count) }}</span>
-                    <span>{{ t('project_overview_review_metric', count=first_project.draft_count) }}</span>
+                    <span>{{ tn('project_overview_memory_metric', first_project.reviewed_count) }}</span>
+                    <span>{{ tn('project_overview_review_metric', first_project.draft_count) }}</span>
                   </div>
                 </div>
                 <div class="project-overview-focus-next">
@@ -179,8 +179,10 @@
                 <a class="project-overview-action quiet" href="{{ url_for('/projects/new') }}">{{ t('project_overview_start_own_title') }}</a>
               </nav>
 
-              <div class="project-overview-grid">
+              {% if projects | length > 1 %}
+              <div class="project-overview-grid" aria-label="{{ t('project_overview_other_projects') }}">
                 {% for project in projects %}
+                  {% if not loop.first %}
                   <article class="project-overview-card {{ project.signal_state }}">
                     <div class="project-overview-card-header">
                       <div>
@@ -212,12 +214,12 @@
                       <a class="project-overview-metric" href="{{ url_for('/inbox') }}">
                         <span>{{ t('project_overview_review_queue') }}</span>
                         <strong>{{ project.draft_count }}</strong>
-                        <span>{{ t('project_overview_review_metric', count=project.draft_count) }}</span>
+                        <span>{{ tn('project_overview_review_metric', project.draft_count) }}</span>
                       </a>
                       <a class="project-overview-metric" href="{{ url_for('/projects/' ~ project.slug ~ '/memory') }}">
                         <span>{{ t('project_overview_memory') }}</span>
                         <strong>{{ project.reviewed_count }}</strong>
-                        <span>{{ t('project_overview_memory_metric', count=project.reviewed_count) }}</span>
+                        <span>{{ tn('project_overview_memory_metric', project.reviewed_count) }}</span>
                       </a>
                     </div>
                     <div class="project-overview-actions-label">
@@ -230,8 +232,10 @@
                       </div>
                     </div>
                   </article>
+                  {% endif %}
                 {% endfor %}
               </div>
+              {% endif %}
             </section>
           {% else %}
             <section class="project-overview" aria-labelledby="project-onboarding-empty-title">

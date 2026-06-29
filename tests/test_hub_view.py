@@ -635,32 +635,22 @@ def test_project_overview_renders_as_work_center() -> None:
     assert "Project work center" in body
     assert "Central Agent Data Hub Demo" in body
     assert "Review waiting" in body
-    assert "Latest demo report" in body
     assert "Active project" in body
     assert 'aria-label="What can I do now?"' in body
     assert "Read project state" in body
     assert "Find reviewed memory" in body
     assert "Review suggestions" in body
     assert "Connect an agent" in body
-    assert "Attention" in body
-    assert "3 risks/questions" in body
-    assert "Review queue" in body
-    assert "2 items" in body
-    assert "Reviewed memory" in body
-    assert "8 items" in body
+    assert "2 review items" in body
+    assert "8 reviewed items" in body
     assert "Recommended next step" in body
     assert "Review pending suggestions before using this project with an agent." in body
     assert "Open Review Inbox" in body
-    assert "Next actions" in body
-    assert "Open project" in body
-    assert "Prepare agent" in body
-    assert "Read latest status" in body
-    assert 'href="/projects/central-agent-data-hub-demo#risks-and-questions"' in body
     assert 'href="/projects/central-agent-data-hub-demo/memory"' in body
     assert 'href="/projects/central-agent-data-hub-demo/agent-context"' in body
     assert 'href="/inbox"' in body
-    assert 'href="/projects/central-agent-data-hub-demo#latest-status"' in body
     assert 'href="/projects/central-agent-data-hub-demo"' in body
+    assert 'class="project-overview-card' not in body
 
 
 def test_project_overview_renders_german_work_center() -> None:
@@ -705,7 +695,6 @@ def test_project_overview_renders_german_work_center() -> None:
 
     assert "Projekt-Arbeitszentrale" in body
     assert "Braucht Aufmerksamkeit" in body
-    assert "Noch kein Bericht." in body
     assert "Aktives Projekt" in body
     assert 'aria-label="Was kann ich jetzt tun?"' in body
     assert "Projektstand lesen" in body
@@ -717,16 +706,12 @@ def test_project_overview_renders_german_work_center() -> None:
     assert "0 Risiken" in body
     assert "1 offene Frage" in body
     assert "0 Prüfeinträge" in body
-    assert "1 Risiken/Fragen" in body
-    assert "Geprüftes Gedächtnis" in body
+    assert "3 geprüfte Einträge" in body
     assert "Empfohlener nächster Schritt" in body
     assert "Prüfe Risiken und offene Fragen, bevor die Arbeit weitergeht." in body
     assert "Risiken und Fragen öffnen" in body
-    assert "Nächste Schritte" in body
-    assert "Agent vorbereiten" in body
-    assert "Vorschläge prüfen" in body
-    assert "Letzten Stand lesen" in body
-    assert "Projekt öffnen" in body
+    assert "Eigenes Projekt nutzen" in body
+    assert 'class="project-overview-card' not in body
 
 
 def test_inbox_page_lists_drafts_as_plain_cards() -> None:
