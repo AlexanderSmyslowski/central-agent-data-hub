@@ -259,12 +259,7 @@ def test_render_page_includes_local_review_claim() -> None:
     assert 'aria-label="App navigation"' in body
     assert "Projects" in body
     assert "Review" in body
-    assert 'aria-label="Current app status"' in body
-    assert "Area" in body
-    assert "Project" in body
-    assert "Project overview" in body
-    assert "0 items" in body
-    assert "Select a project" in body
+    assert 'aria-label="Current app status"' not in body
 
 
 def test_hub_view_static_asset_manifest_matches_static_files() -> None:
@@ -329,10 +324,7 @@ def test_render_page_can_switch_to_german_chrome() -> None:
     assert "Leseoberfläche + Prüfaktionen" in body
     assert "Aktive Projekte" in body
     assert 'aria-label="App-Navigation"' in body
-    assert 'aria-label="Aktueller App-Status"' in body
-    assert "Bereich" in body
     assert "Projektübersicht" in body
-    assert "Projekt auswählen" in body
     assert "Projekte" in body
     assert "Prüfung" in body
     assert "Deutsch" in body
@@ -387,7 +379,7 @@ def test_hub_view_serves_static_assets_with_narrow_paths() -> None:
     assert captured["status"] == "200 OK"
     assert headers["Content-Type"] == "text/css; charset=utf-8"
     assert headers["X-Content-Type-Options"] == "nosniff"
-    assert ".project-brief" in css
+    assert ".workspace-link" in css
 
     captured, css = call_app(app, path="/static/memory_search.css")
     assert captured["status"] == "200 OK"
@@ -644,23 +636,12 @@ def test_project_overview_renders_as_work_center() -> None:
     assert "Central Agent Data Hub Demo" in body
     assert "Review waiting" in body
     assert "Latest demo report" in body
-    assert 'aria-label="Project signals"' in body
-    assert "Work state" in body
-    assert "Status visible" in body
-    assert "Handoff available" in body
+    assert "Active project" in body
     assert 'aria-label="What can I do now?"' in body
-    assert "Start here" in body
-    assert "What do you want to do now?" in body
-    assert "Pick one path: read the current project state, review suggested memory changes, or prepare context for an agent." in body
-    assert "Understand the project" in body
     assert "Read project state" in body
-    assert "Open the project state with latest status, risks, questions, and reviewed memory." in body
-    assert "Human review" in body
-    assert "Accept or reject suggested memory changes before agents rely on them." in body
-    assert "Give context to AI" in body
+    assert "Find reviewed memory" in body
+    assert "Review suggestions" in body
     assert "Connect an agent" in body
-    assert "Choose chatbot, Codex, Claude Code, Hermes, or another local agent and see the context handoff." in body
-    assert "2 to review" in body
     assert "Attention" in body
     assert "3 risks/questions" in body
     assert "Review queue" in body
@@ -673,7 +654,6 @@ def test_project_overview_renders_as_work_center() -> None:
     assert "Next actions" in body
     assert "Open project" in body
     assert "Prepare agent" in body
-    assert "Review suggestions" in body
     assert "Read latest status" in body
     assert 'href="/projects/central-agent-data-hub-demo#risks-and-questions"' in body
     assert 'href="/projects/central-agent-data-hub-demo/memory"' in body
@@ -726,23 +706,12 @@ def test_project_overview_renders_german_work_center() -> None:
     assert "Projekt-Arbeitszentrale" in body
     assert "Braucht Aufmerksamkeit" in body
     assert "Noch kein Bericht." in body
-    assert 'aria-label="Projekt-Signale"' in body
-    assert "Arbeitsstand" in body
-    assert "Noch kein Stand" in body
-    assert "Nichts wartet" in body
-    assert "Übergabe möglich" in body
+    assert "Aktives Projekt" in body
     assert 'aria-label="Was kann ich jetzt tun?"' in body
-    assert "Hier starten" in body
-    assert "Was willst du jetzt tun?" in body
-    assert "Wähle einen Weg: aktuellen Projektstand lesen, vorgeschlagene Änderungen prüfen oder Kontext für einen Agenten vorbereiten." in body
-    assert "Projekt verstehen" in body
     assert "Projektstand lesen" in body
-    assert "Öffne den Projektstand mit letztem Bericht, Risiken, Fragen und geprüftem Gedächtnis." in body
-    assert "Menschliche Prüfung" in body
-    assert "Akzeptiere oder verwerfe vorgeschlagene Änderungen, bevor Agenten sich darauf stützen." in body
-    assert "Kontext an KI geben" in body
+    assert "Geprüftes Projektgedächtnis finden" in body
+    assert "Vorschläge prüfen" in body
     assert "Agent verbinden" in body
-    assert "Wähle Chatbot, Codex, Claude Code, Hermes oder einen anderen lokalen Agenten und sieh die Kontextübergabe." in body
     assert "1 Fakt" in body
     assert "1 Entscheidung" in body
     assert "0 Risiken" in body
@@ -2025,14 +1994,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "2 review items" in body
     assert 'aria-label="App navigation"' in body
     assert 'href="/projects/central-agent-data-hub" aria-current="page"' in body
-    assert 'aria-label="Current app status"' in body
-    assert 'class="app-status-item app-status-project"' in body
-    assert "Area" in body
-    assert "Project workspace" in body
-    assert "Central Agent Data Hub" in body
-    assert "Review" in body
-    assert "2 items" in body
-    assert "Handoff ready" in body
+    assert 'aria-label="Current app status"' not in body
     assert 'aria-label="Project workspace sidebar"' in body
     assert "Project areas" in body
     assert "Latest status and watch points." in body
@@ -2040,38 +2002,16 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "2 suggestions wait." in body
     assert "Prepare visible context handoff." in body
     assert "Quality score 92." in body
-    assert 'aria-label="Project work snapshot"' in body
-    assert "Project snapshot" in body
-    assert "What needs attention now?" in body
-    assert "Start with the newest status, check visible concerns" in body
-    assert "Prepare agent context" in body
-    assert "Prepare handoff." in body
-    assert "Working order" in body
-    assert "How to work through this project" in body
-    assert "Use this order when work starts: read the status" in body
-    assert "Read latest status" in body
-    assert "Start from the newest report so the work does not continue from stale assumptions." in body
-    assert "Check risks and questions" in body
-    assert "Keep active risks and unanswered questions visible before work continues." in body
-    assert "Review suggestions" in body
-    assert "Accept or reject suggested memory changes before agents rely on them." in body
-    assert "Hand context to an agent" in body
-    assert "Prepare the visible context handoff only after the project state is clear." in body
     assert "Work state" in body
     assert "Memory" in body
     assert "Agent handoff" in body
     assert 'href="/projects/central-agent-data-hub#current-state-title"' in body
     assert 'href="/projects/central-agent-data-hub/memory"' in body
     assert 'href="/projects/central-agent-data-hub#connect-agent"' in body
-    assert 'aria-label="Workspace areas"' in body
-    assert 'class="action-strip area-map"' in body
-    assert 'class="action-link primary action-work-state"' in body
-    assert 'class="action-link action-agent-handoff"' in body
-    assert "Project workspace" in body
-    assert "Use these areas like a local app" in body
+    assert 'aria-label="Project sections"' in body
     assert 'aria-label="Project sections"' in body
     assert "On this project" in body
-    assert body.index('class="project-section-nav"') < body.index('class="project-workbench"')
+    assert body.index('class="project-section-nav"') < body.index('class="memory-explorer"')
     assert "data-project-section-nav" in body
     assert "data-section-target" in body
 
@@ -2080,18 +2020,12 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     memory_library_css = static_dir.joinpath("memory_library.css").read_text(
         encoding="utf-8"
     )
-    assert "body.view-projects.has-selected-project .project-brief" in responsive_css
-    assert "body.view-projects.has-selected-project .project-brief-actions" in responsive_css
-    assert "body.view-projects.has-selected-project .project-brief-link:first-child" in responsive_css
     assert "body.view-projects.has-selected-project .detail-header .project-meta" in responsive_css
-    assert "body.view-projects.has-selected-project .project-timeline" in responsive_css
     assert "body.view-projects.has-selected-project .project-section-nav" in responsive_css
     assert "body.view-projects.has-selected-project #agent-review" in responsive_css
     assert "body.view-projects.has-selected-project #connect-agent" in responsive_css
     assert "body.view-projects.has-selected-project #project-review-preview" in responsive_css
     assert "body.view-projects.has-selected-project #memory-details" in responsive_css
-    assert "body.view-projects.has-selected-project .action-work-state" in responsive_css
-    assert "body.view-projects.has-selected-project .action-agent-handoff" in responsive_css
     assert ".project-section-nav a.active" in memory_library_css
     project_nav_js = static_dir.joinpath("project_nav.js").read_text(encoding="utf-8")
     assert "setActiveProjectSection" in project_nav_js
@@ -2103,7 +2037,6 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert 'href="/inbox"' in body
     assert 'href="#risks-and-questions"' in body
     assert 'href="#quality"' in body
-    assert "Recommended next" in body
     assert "Current work state" in body
     assert "Read this first. It shows the latest report" in body
     assert "Step 1" in body
@@ -2125,10 +2058,8 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Open questions" in body
     assert "These are reviewed uncertainties" in body
     assert "Next: answer, keep, or convert them into decisions when ready." in body
-    assert "Use ADH with an agent" in body
-    assert "Prepare reviewed context before a chatbot or local agent starts work." in body
+    assert "Connect an agent" in body
     assert "Review suggested changes" in body
-    assert "2 items wait for a human decision across projects." in body
     assert "Human review" in body
     assert "What needs a human decision?" in body
     assert "These suggestions are not reviewed memory yet." in body
@@ -2141,8 +2072,8 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Future work may rely on a false assumption." in body
     assert "Preview only. Accept or reject in the Review Inbox" in body
     assert "Find reviewed memory" in body
-    assert "Browse all reviewed facts, decisions, risks, questions, and reports for this project." in body
-    assert "Check memory quality" in body
+    assert "Search and inspect the reviewed context this project can hand to a chatbot or local agent." in body
+    assert "Quality snapshot" in body
     assert body.index("Project workspace") < body.index("Current work state")
     assert body.index('id="memory-explorer"') < body.index('id="current-state-title"')
     assert 'href="#connect-agent"' in body
@@ -2402,7 +2333,7 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert "Agentenübergabe" in body
     assert 'aria-label="Projektbereiche"' in body
     assert "In diesem Projekt" in body
-    assert body.index('class="project-section-nav"') < body.index('class="project-workbench"')
+    assert body.index('class="project-section-nav"') < body.index('class="memory-explorer"')
     assert "data-project-section-nav" in body
     assert "data-section-target" in body
     assert 'href="/projects/central-agent-data-hub-demo?lang=de#current-state-title"' in body
@@ -2413,19 +2344,8 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert 'role="status" aria-live="polite"' in body
     assert "Drücke Enter oder öffne den ersten Treffer" in body
     assert "Ersten Treffer öffnen" in body
-    assert "Arbeitsreihenfolge" in body
-    assert "So gehst du durch dieses Projekt" in body
-    assert "Nutze diese Reihenfolge beim Arbeitsstart" in body
-    assert "Letzten Stand lesen" in body
-    assert "Beginne beim neuesten Bericht, damit die Arbeit nicht aus veralteten Annahmen weiterläuft." in body
-    assert "Risiken und Fragen prüfen" in body
-    assert "Halte aktive Risiken und unbeantwortete Fragen sichtbar, bevor die Arbeit weitergeht." in body
-    assert "Vorschläge prüfen" in body
-    assert "Akzeptiere oder verwerfe vorgeschlagene Gedächtnisänderungen, bevor Agenten sich darauf stützen." in body
-    assert "Kontext an Agenten geben" in body
-    assert "Bereite die sichtbare Kontextübergabe erst vor" in body
-    assert "Projekt-Arbeitsfläche" in body
-    assert "Nutze diese Bereiche wie eine lokale App" in body
+    assert body.index('class="memory-explorer"') < body.index('class="current-state"')
+    assert "Arbeitsstand" in body
     assert "Projektgedächtnis" in body
     assert "Durchsuche und prüfe den bestätigten Kontext" in body
     assert "Arten von Projektgedächtnis" in body
@@ -2460,19 +2380,6 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert body.index('id="latest-status"') < body.index('id="risks-and-questions"')
     assert body.index('id="risks-and-questions"') < body.index('id="reviewed-memory"')
     assert body.index('id="reviewed-memory"') < body.index('id="quality"')
-    assert "Empfohlen" in body
-    assert "Aktueller Arbeitsstand" in body
-    assert "Lies das zuerst. Hier siehst du letzten Bericht" in body
-    assert "Schritt 1" in body
-    assert "Berichte: 0" in body
-    assert "Für dieses Projekt ist noch kein Bericht erfasst." in body
-    assert "Letzten Stand öffnen" in body
-    assert "Braucht Aufmerksamkeit" in body
-    assert "Risiken: 1 · Fragen: 0" in body
-    assert "Risiken und Fragen öffnen" in body
-    assert "Prüf-Warteschlange" in body
-    assert "Prüfeinträge: 0" in body
-    assert "Keine vorgeschlagenen Änderungen warten." in body
     assert "Qualitätswert" in body
     assert "Qualitätswert: 80" in body
     assert "Qualitätssignale öffnen" in body
@@ -2795,7 +2702,6 @@ def test_memory_library_page_renders_german_filterable_library() -> None:
     ).decode("utf-8")
 
     assert '<html lang="de">' in body
-    assert "Gedächtnisbibliothek" in body
     assert "Bibliothek des geprüften Gedächtnisses" in body
     assert "Durchsuche die geprüften Fakten" in body
     assert 'aria-label="Geprüftes Gedächtnis nach Art filtern"' in body
@@ -3153,24 +3059,8 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "Known gaps" in body
     assert "1 unanswered questions" in body
     assert "Connect your agent" in body
-    assert 'aria-label="Start here"' in body
-    assert "Choose how ADH reaches your agent" in body
-    assert "Pick one path first." in body
-    assert "Choose your path" in body
-    assert "Check it worked" in body
-    assert "Copy text for chat" in body
-    assert 'href="#agent-choices"' in body
-    assert 'href="#connection-checklist"' in body
-    assert 'href="#chatbot-context-pack-section"' in body
-    assert "Setup guide" in body
-    assert "Set up one visible handoff" in body
-    assert "ADH does not run the agent" in body
-    assert 'aria-label="Agent setup guide"' in body
-    assert "Choose your agent" in body
-    assert "Connect once when possible" in body
-    assert "Check the next run" in body
-    assert "Inspect the handoff" in body
-    assert "what ADH is handing to the agent" in body
+    assert "never runs an agent by itself" in body
+    assert "Which agent do you use?" in body
     assert 'aria-label="Connection status"' in body
     assert "Connection status" in body
     assert "Recommended next step" in body
@@ -3257,9 +3147,8 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "For local agents: start a new task" in body
     assert "ADH cannot prove that an unconnected agent read the context" in body
     assert body.index("<h2>Connect your agent</h2>") < body.index("<h2>Task</h2>")
-    assert body.index('aria-label="Start here"') < body.index('aria-label="Agent setup guide"')
-    assert body.index('aria-label="Agent setup guide"') < body.index('id="agent-choices"')
     assert body.index('id="agent-choices"') < body.index('aria-label="Connection status"')
+    assert body.index('aria-label="Connection status"') < body.index('id="agent-chatbot"')
     assert body.index('id="agent-choices"') < body.index('id="agent-chatbot"')
     assert body.index('id="agent-chatbot"') < body.index('id="test-handoff"')
     assert body.index('id="test-handoff"') < body.index('id="connection-checklist"')

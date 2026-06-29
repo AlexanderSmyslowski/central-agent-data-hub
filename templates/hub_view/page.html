@@ -46,55 +46,6 @@
         <a class="app-nav-link{% if view_name == 'project_onboarding' %} active{% endif %}" href="{{ url_for('/projects/new') }}"{% if view_name == 'project_onboarding' %} aria-current="page"{% endif %}>{{ t('nav_add_project') }}</a>
       </nav>
 
-      {% set status_review_count = draft_total | default(0) %}
-      <section class="app-status" aria-label="{{ t('app_status_label') }}">
-        <div class="app-status-item app-status-area active">
-          <span>{{ t('app_status_area') }}</span>
-          <strong>
-            {% if view_name in ('inbox', 'review_activity') %}
-              {{ t('app_status_area_review') }}
-            {% elif view_name == 'project_onboarding' %}
-              {{ t('app_status_area_add_project') }}
-            {% elif view_name == 'agent_context' %}
-              {{ t('app_status_area_agent') }}
-            {% elif view_name == 'memory_library' %}
-              {{ t('app_status_area_memory_library') }}
-            {% elif view_name == 'memory_item' %}
-              {{ t('app_status_area_memory') }}
-            {% elif selected_project %}
-              {{ t('app_status_area_project') }}
-            {% else %}
-              {{ t('app_status_area_projects') }}
-            {% endif %}
-          </strong>
-        </div>
-        <a class="app-status-item app-status-project" href="{{ url_for('/') }}">
-          <span>{{ t('app_status_project') }}</span>
-          <strong>{% if selected_project %}{{ selected_project.name }}{% else %}{{ t('app_status_project_overview') }}{% endif %}</strong>
-        </a>
-        <a class="app-status-item app-status-review{% if view_name in ('inbox', 'review_activity') %} active{% endif %}" href="{{ url_for('/inbox') }}">
-          <span>{{ t('app_status_review') }}</span>
-          <strong>
-            {% if status_review_count == 1 %}
-              {{ t('app_status_review_count_one') }}
-            {% else %}
-              {{ t('app_status_review_count_many', count=status_review_count) }}
-            {% endif %}
-          </strong>
-        </a>
-        {% if selected_project %}
-          <a class="app-status-item app-status-agent{% if view_name == 'agent_context' %} active{% endif %}" href="{{ url_for('/projects/' ~ selected_project.slug ~ '/agent-context') }}">
-            <span>{{ t('app_status_agent') }}</span>
-            <strong>{{ t('app_status_agent_ready') }}</strong>
-          </a>
-        {% else %}
-          <div class="app-status-item app-status-agent">
-            <span>{{ t('app_status_agent') }}</span>
-            <strong>{{ t('app_status_agent_select_project') }}</strong>
-          </div>
-        {% endif %}
-      </section>
-
       <div class="layout">
         <aside class="panel sidebar">
           {% if selected_project and view_name not in ('inbox', 'review_activity') %}
@@ -192,45 +143,42 @@
             {% include "views/project_detail.html" %}
           {% elif projects %}
             <section class="project-overview" aria-labelledby="project-overview-title">
+              {% set first_project = projects[0] %}
               <div class="detail-header">
                 <div>
                   <h2 class="detail-title" id="project-overview-title">{{ t('project_overview_title') }}</h2>
                   <p class="detail-description">{{ t('project_overview_body') }}</p>
                 </div>
               </div>
-              {% set first_project = projects[0] %}
-              <div class="project-overview-start-header">
-                <p class="section-kicker">{{ t('project_overview_start_kicker') }}</p>
-                <h3 class="project-overview-start-title">{{ t('project_overview_start_title') }}</h3>
-                <p>{{ t('project_overview_start_body') }}</p>
-              </div>
-              <nav class="project-overview-start-strip" aria-label="{{ t('project_overview_start_actions') }}">
-                <a class="project-overview-start-card primary" href="{{ url_for(first_project.next_step_href) }}">
-                  <span>{{ t('project_overview_next') }}</span>
-                  <strong>{{ t(first_project.next_step_action_key) }}</strong>
-                  <small>{{ t(first_project.next_step_key) }}</small>
-                </a>
-                <a class="project-overview-start-card" href="{{ url_for('/projects/' ~ first_project.slug) }}">
-                  <span>{{ t('project_overview_start_read_label') }}</span>
-                  <strong>{{ t('project_overview_start_read_title') }}</strong>
-                  <small>{{ t('project_overview_start_open_copy') }}</small>
-                </a>
-                <a class="project-overview-start-card" href="{{ url_for('/inbox') }}">
-                  <span>{{ t('project_overview_start_review_label') }}</span>
-                  <strong>{{ t('project_overview_start_review_title') }}</strong>
-                  <small>{{ t('project_overview_start_review_copy') }}</small>
-                </a>
-                <a class="project-overview-start-card" href="{{ url_for('/projects/' ~ first_project.slug ~ '/agent-context') }}">
-                  <span>{{ t('project_overview_start_agent_label') }}</span>
-                  <strong>{{ t('project_overview_start_agent_title') }}</strong>
-                  <small>{{ t('project_overview_start_agent_copy') }}</small>
-                </a>
-                <a class="project-overview-start-card" href="{{ url_for('/projects/new') }}">
-                  <span>{{ t('project_overview_start_own_label') }}</span>
-                  <strong>{{ t('project_overview_start_own_title') }}</strong>
-                  <small>{{ t('project_overview_start_own_copy') }}</small>
-                </a>
+
+              <article class="project-overview-focus {{ first_project.signal_state }}">
+                <div class="project-overview-focus-main">
+                  <p class="section-kicker">{{ t('active_project') }}</p>
+                  <h3>{{ first_project.name }}</h3>
+                  {% if first_project.description %}
+                    <p>{{ ui_text(first_project.description) }}</p>
+                  {% endif %}
+                  <div class="project-overview-focus-meta">
+                    <span>{{ t(first_project.signal_key) }}</span>
+                    <span>{{ t('project_overview_memory_metric', count=first_project.reviewed_count) }}</span>
+                    <span>{{ t('project_overview_review_metric', count=first_project.draft_count) }}</span>
+                  </div>
+                </div>
+                <div class="project-overview-focus-next">
+                  <span class="section-kicker">{{ t('project_overview_next') }}</span>
+                  <strong>{{ t(first_project.next_step_key) }}</strong>
+                  <a class="project-overview-action" href="{{ url_for(first_project.next_step_href) }}">{{ t(first_project.next_step_action_key) }}</a>
+                </div>
+              </article>
+
+              <nav class="project-overview-quick-actions" aria-label="{{ t('project_overview_start_actions') }}">
+                <a class="project-overview-action" href="{{ url_for('/projects/' ~ first_project.slug) }}">{{ t('project_overview_start_read_title') }}</a>
+                <a class="project-overview-action secondary" href="{{ url_for('/projects/' ~ first_project.slug ~ '/memory') }}">{{ t('find_reviewed_memory') }}</a>
+                <a class="project-overview-action secondary" href="{{ url_for('/inbox') }}">{{ t('project_overview_start_review_title') }}</a>
+                <a class="project-overview-action secondary" href="{{ url_for('/projects/' ~ first_project.slug ~ '/agent-context') }}">{{ t('project_overview_start_agent_title') }}</a>
+                <a class="project-overview-action quiet" href="{{ url_for('/projects/new') }}">{{ t('project_overview_start_own_title') }}</a>
               </nav>
+
               <div class="project-overview-grid">
                 {% for project in projects %}
                   <article class="project-overview-card {{ project.signal_state }}">
@@ -255,42 +203,6 @@
                         <p>{{ t('project_overview_no_report') }}</p>
                       {% endif %}
                     </div>
-                    <div class="project-overview-map" aria-label="{{ t('project_overview_map') }}">
-                      <a
-                        class="project-overview-map-item {% if project.latest_report_title %}ready{% else %}quiet{% endif %}"
-                        href="{{ url_for('/projects/' ~ project.slug) }}#latest-status"
-                      >
-                        <span>{{ t('project_overview_status_area') }}</span>
-                        <strong>
-                          {% if project.latest_report_title %}
-                            {{ t('project_overview_status_visible') }}
-                          {% else %}
-                            {{ t('project_overview_status_missing') }}
-                          {% endif %}
-                        </strong>
-                      </a>
-                      <a class="project-overview-map-item ready" href="{{ url_for('/projects/' ~ project.slug ~ '/memory') }}">
-                        <span>{{ t('project_overview_memory') }}</span>
-                        <strong>{{ t('project_overview_memory_metric', count=project.reviewed_count) }}</strong>
-                      </a>
-                      <a
-                        class="project-overview-map-item {% if project.draft_count %}needs-review{% else %}quiet{% endif %}"
-                        href="{{ url_for('/inbox') }}"
-                      >
-                        <span>{{ t('project_overview_review_queue') }}</span>
-                        <strong>
-                          {% if project.draft_count %}
-                            {{ t('project_overview_review_waiting', count=project.draft_count) }}
-                          {% else %}
-                            {{ t('project_overview_review_clear') }}
-                          {% endif %}
-                        </strong>
-                      </a>
-                      <a class="project-overview-map-item ready" href="{{ url_for('/projects/' ~ project.slug ~ '/agent-context') }}">
-                        <span>{{ t('project_overview_agent_area') }}</span>
-                        <strong>{{ t('project_overview_agent_ready') }}</strong>
-                      </a>
-                    </div>
                     <div class="project-overview-metrics" aria-label="{{ t('project_overview_title') }}">
                       <a class="project-overview-metric" href="{{ url_for('/projects/' ~ project.slug) }}#risks-and-questions">
                         <span>{{ t('project_overview_attention') }}</span>
@@ -307,13 +219,6 @@
                         <strong>{{ project.reviewed_count }}</strong>
                         <span>{{ t('project_overview_memory_metric', count=project.reviewed_count) }}</span>
                       </a>
-                    </div>
-                    <div class="project-overview-next-block">
-                      <div class="project-overview-next">
-                        <span class="section-kicker">{{ t('project_overview_next') }}</span>
-                        <strong>{{ t(project.next_step_key) }}</strong>
-                        <a href="{{ url_for(project.next_step_href) }}">{{ t(project.next_step_action_key) }}</a>
-                      </div>
                     </div>
                     <div class="project-overview-actions-label">
                       <p class="section-kicker">{{ t('project_overview_actions') }}</p>

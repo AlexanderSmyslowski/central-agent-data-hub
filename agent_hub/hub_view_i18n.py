@@ -67,6 +67,7 @@ KNOWN_UI_TEXT_TRANSLATIONS = {
 
 TRANSLATIONS: dict[str, dict[str, str]] = {
     "en": {
+        "active_project": "Active project",
         "active_projects": "Active projects",
         "accept": "Accept",
         "agent_context_claim": "This is the visible handoff from reviewed Agent Data Hub memory to a chatbot or local agent before work starts.",
@@ -798,6 +799,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "workspace_sidebar_title": "Project areas",
     },
     "de": {
+        "active_project": "Aktives Projekt",
         "active_projects": "Aktive Projekte",
         "accept": "Merken",
         "agent_context_claim": "Das ist die sichtbare Übergabe von geprüftem Agent-Data-Hub-Kontext an einen Chatbot oder lokalen Agenten vor Arbeitsbeginn.",

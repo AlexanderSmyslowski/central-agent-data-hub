@@ -209,8 +209,9 @@ def test_hub_view_template_is_split_into_view_partials() -> None:
     assert "<style>" not in page
     assert "<script>" not in page
     assert "/* Base chrome */" in base_css
-    assert ".project-brief" in layout_css
+    assert ".workspace-link" in layout_css
     assert ".project-overview" in project_overview_css
+    assert ".project-overview-focus" in project_overview_css
     assert ".memory-explorer" in memory_search_css
     assert ".agent-form" in agent_handoff_css
     assert "body.view-projects.has-selected-project" in responsive_css

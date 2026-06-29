@@ -10,6 +10,84 @@
   gap: 14px;
 }
 
+.project-overview-focus {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 0.36fr);
+  gap: 18px;
+  padding: 20px;
+  border: 1px solid rgba(45, 74, 95, 0.22);
+  border-radius: 8px;
+  background: var(--surface-strong);
+}
+
+.project-overview-focus h3 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.15;
+}
+
+.project-overview-focus p {
+  max-width: 680px;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.project-overview-focus-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.project-overview-focus-meta span {
+  padding: 5px 8px;
+  border: 1px solid rgba(45, 74, 95, 0.16);
+  border-radius: 999px;
+  background: rgba(45, 74, 95, 0.05);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.project-overview-focus.review .project-overview-focus-meta span:first-child,
+.project-overview-focus.attention .project-overview-focus-meta span:first-child {
+  border-color: rgba(135, 86, 32, 0.28);
+  background: rgba(255, 248, 235, 0.72);
+  color: #654014;
+}
+
+.project-overview-focus-next {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgba(45, 74, 95, 0.16);
+  border-radius: 8px;
+  background: rgba(45, 74, 95, 0.05);
+}
+
+.project-overview-focus-next strong {
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.project-overview-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.project-overview-quick-actions .project-overview-action {
+  min-height: 42px;
+}
+
+.project-overview-action.quiet {
+  background: transparent;
+  color: var(--muted);
+}
+
 .project-overview-start-strip {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -289,16 +367,6 @@
 .project-overview-action.secondary:focus-visible {
   border-color: rgba(45, 74, 95, 0.36);
   background: var(--surface-strong);
-}
-
-.project-workbench {
-  display: grid;
-  gap: 16px;
-  margin: 22px 0 22px;
-  padding: 18px;
-  border: 1px solid rgba(45, 74, 95, 0.22);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.62);
 }
 
 /* Project onboarding */
