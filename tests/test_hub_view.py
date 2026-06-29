@@ -1531,10 +1531,17 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Prepare context for a chatbot or local agent, then handle suggested memory changes separately." in body
     assert "Memory details" in body
     assert "Start with latest status, then check risks and questions" in body
+    assert 'aria-label="Memory detail sections"' in body
+    assert "Newest report and project timestamp." in body
+    assert "Open risks and reviewed questions." in body
+    assert "Decisions, facts, and reports." in body
+    assert "Trust and review-health signals." in body
+    assert "How memory items point to each other." in body
     assert "Use these entries as the verified base." in body
     assert "Read the newest report first." in body
     assert "Check whether an active risk or open question" in body
     assert "Fix or consciously accept the visible signals" in body
+    assert body.index('aria-label="Memory detail sections"') < body.index('id="latest-status"')
     assert body.index('id="latest-status"') < body.index('id="risks-and-questions"')
     assert body.index('id="risks-and-questions"') < body.index('id="reviewed-memory"')
     assert body.index('id="reviewed-memory"') < body.index('id="quality"')
@@ -1758,10 +1765,17 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert "Agentenübergabe und Prüfung" in body
     assert "Detailansicht" in body
     assert "Beginne mit dem letzten Stand, prüfe dann Risiken und Fragen" in body
+    assert 'aria-label="Detailbereiche im Projektgedächtnis"' in body
+    assert "Neuester Bericht und Projektzeitpunkt." in body
+    assert "Offene Risiken und geprüfte Fragen." in body
+    assert "Entscheidungen, Fakten und Berichte." in body
+    assert "Vertrauens- und Prüfsignale." in body
+    assert "Wie Gedächtnis-Einträge zusammenhängen." in body
     assert "Nutze diese Einträge als geprüfte Grundlage." in body
     assert "Lies zuerst den neuesten Bericht." in body
     assert "Prüfe, ob ein aktives Risiko oder eine offene Frage" in body
     assert "Behebe oder akzeptiere die sichtbaren Signale bewusst" in body
+    assert body.index('aria-label="Detailbereiche im Projektgedächtnis"') < body.index('id="latest-status"')
     assert body.index('id="latest-status"') < body.index('id="risks-and-questions"')
     assert body.index('id="risks-and-questions"') < body.index('id="reviewed-memory"')
     assert body.index('id="reviewed-memory"') < body.index('id="quality"')

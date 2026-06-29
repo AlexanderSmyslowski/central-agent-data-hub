@@ -189,6 +189,34 @@
     <p>{{ t('memory_detail_area_copy') }}</p>
   </div>
 
+  <nav class="detail-section-nav" aria-label="{{ t('memory_detail_nav') }}">
+    <a class="detail-section-link" href="#latest-status">
+      <span>{{ t('latest_status') }}</span>
+      <strong>{{ selected_project.counts.reports }}</strong>
+      <small>{{ t('memory_detail_nav_latest') }}</small>
+    </a>
+    <a class="detail-section-link" href="#risks-and-questions">
+      <span>{{ t('risks_and_questions') }}</span>
+      <strong>{{ selected_project.counts.risks + selected_project.counts.open_questions }}</strong>
+      <small>{{ t('memory_detail_nav_attention') }}</small>
+    </a>
+    <a class="detail-section-link" href="#reviewed-memory">
+      <span>{{ t('reviewed_memory') }}</span>
+      <strong>{{ selected_project.counts.facts + selected_project.counts.decisions + selected_project.counts.reports }}</strong>
+      <small>{{ t('memory_detail_nav_verified') }}</small>
+    </a>
+    <a class="detail-section-link" href="#quality">
+      <span>{{ t('quality_snapshot') }}</span>
+      <strong>{{ selected_project.quality.score }}</strong>
+      <small>{{ t('memory_detail_nav_quality') }}</small>
+    </a>
+    <a class="detail-section-link" href="#relations">
+      <span>{{ t('relations') }}</span>
+      <strong>{{ selected_project.quality.relation_count }}</strong>
+      <small>{{ t('memory_detail_nav_relations') }}</small>
+    </a>
+  </nav>
+
   <section class="section" id="latest-status">
     <h2>{{ t('latest_status') }}</h2>
     <p class="next-step-callout">
