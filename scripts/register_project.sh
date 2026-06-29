@@ -220,58 +220,26 @@ fi
 "$PYTHON_BIN" - "$PROJECT" "$NAME" "$DESCRIPTION" "$repo_abs" "$PROJECT_TYPE" "$MEMORY_SCOPE" "$DOMAIN_PROFILE" "$repo_remote" <<'PY'
 from __future__ import annotations
 
-import json
 import sys
 
 from agent_hub.db import connect
+from agent_hub.project_registration import register_project
 
 slug, name, description, local_path, project_type, memory_scope, domain_profile, repo_remote = sys.argv[1:]
 
-metadata = {
-    "local_path": local_path,
-    "project_type": project_type,
-    "memory_scope": memory_scope,
-    "work_mode": "central-hub-start-finish",
-    "registered_by": "scripts/register_project.sh",
-}
-if domain_profile:
-    metadata["domain_profile"] = domain_profile
-if repo_remote:
-    metadata["repo"] = repo_remote
-
 with connect() as conn:
     with conn.cursor() as cur:
-        cur.execute(
-            """
-            INSERT INTO projects (name, slug, description, status, metadata)
-            VALUES (%s, %s, %s, 'active', %s::jsonb)
-            ON CONFLICT (slug) DO UPDATE SET
-              name = EXCLUDED.name,
-              description = EXCLUDED.description,
-              status = EXCLUDED.status,
-              metadata = projects.metadata || EXCLUDED.metadata,
-              updated_at = now()
-            RETURNING id
-            """,
-            (name, slug, description, json.dumps(metadata)),
-        )
-        project_id = cur.fetchone()["id"]
-        cur.execute(
-            """
-            INSERT INTO agents (project_id, name, slug, role, status, metadata)
-            VALUES (%s, 'Codex', 'codex', %s, 'active', %s::jsonb)
-            ON CONFLICT (project_id, slug) DO UPDATE SET
-              name = EXCLUDED.name,
-              role = EXCLUDED.role,
-              status = EXCLUDED.status,
-              metadata = agents.metadata || EXCLUDED.metadata,
-              updated_at = now()
-            """,
-            (
-                project_id,
-                f"Coding and implementation agent for {name}.",
-                json.dumps({"interface": "codex", "registered_by": "scripts/register_project.sh"}),
-            ),
+        register_project(
+            cur,
+            slug=slug,
+            name=name,
+            repo_path=local_path,
+            description=description,
+            project_type=project_type,
+            memory_scope=memory_scope,
+            domain_profile=domain_profile,
+            repo_remote=repo_remote,
+            registered_by="scripts/register_project.sh",
         )
     conn.commit()
 PY

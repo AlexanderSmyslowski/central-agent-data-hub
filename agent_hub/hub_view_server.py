@@ -23,6 +23,7 @@ from agent_hub.hub_view_models import (
     load_inbox_view_model,
     load_memory_library_view_model,
     load_memory_item_view_model,
+    load_project_onboarding_view_model,
     load_review_activity_view_model,
     load_view_model,
     metadata_project_local_path,
@@ -30,6 +31,7 @@ from agent_hub.hub_view_models import (
     hub_view_static_dir,
 )
 from agent_hub.hub_view_i18n import resolve_language, with_language
+from agent_hub.project_registration import ProjectRegistrationError, register_project
 from agent_hub.repo_agent_memory import (
     DEFAULT_TARGET_FILE,
     RepoAgentMemoryError,
@@ -181,6 +183,14 @@ def agent_context_redirect(
         language,
     )
 
+def project_onboarding_redirect(
+    param: str,
+    message: str,
+    *,
+    language: str = "en",
+) -> str:
+    return with_language(f"/projects/new?{param}={quote(message)}", language)
+
 def project_action_slug(path: str, suffix: str) -> str | None:
     if not path.startswith("/projects/") or not path.endswith(suffix):
         return None
@@ -224,6 +234,8 @@ class HubViewApplication:
             return self.handle_get(path, environ, start_response, language=language)
         if method == "POST" and path in {"/inbox/accept", "/inbox/reject"}:
             return self.handle_inbox_post(path, environ, start_response)
+        if method == "POST" and path == "/projects/new":
+            return self.handle_project_onboarding_post(environ, start_response)
         if method == "POST" and project_action_slug(path, "/codex-setup") is not None:
             return self.handle_codex_setup_post(path, environ, start_response)
         if method == "POST":
@@ -248,6 +260,28 @@ class HubViewApplication:
                 start_response,
                 path.removeprefix("/static/"),
             )
+        elif path == "/projects/new":
+            view_name = "project_onboarding"
+            status_code, view_model = _compat_attr(
+                "load_project_onboarding_view_model",
+                load_project_onboarding_view_model,
+            )(
+                csrf_token=self.csrf_token,
+                registration_enabled=self.inbox_enabled,
+                message=query_value(environ, "message"),
+                error_message=query_value(environ, "error"),
+            )
+            body = _compat_attr("render_page", render_page)(
+                view_model,
+                status_code,
+                view_name=view_name,
+                csrf_token=self.csrf_token,
+                inbox_enabled=self.inbox_enabled,
+                language=language,
+                current_path=path,
+                query_string=str(environ.get("QUERY_STRING") or ""),
+            )
+            return html_response(start_response, status_code, body)
         elif path.startswith("/projects/") and path.endswith("/memory"):
             view_name = "memory_library"
             selected_slug = path.removeprefix("/projects/").removesuffix("/memory").strip("/")
@@ -464,6 +498,79 @@ class HubViewApplication:
         return redirect_response(
             start_response,
             inbox_result_redirect(result, decision=decision, language=language),
+        )
+
+    def handle_project_onboarding_post(
+        self,
+        environ: dict[str, object],
+        start_response: Callable[[str, list[tuple[str, str]]], Any],
+    ) -> list[bytes]:
+        if not self.inbox_enabled:
+            return text_response(
+                start_response,
+                "403 Forbidden",
+                "Project registration is only available on loopback.",
+            )
+        if not origin_is_loopback(environ.get("HTTP_ORIGIN")):
+            return text_response(
+                start_response,
+                "403 Forbidden",
+                "Origin is not allowed for this local setup action.",
+            )
+
+        form = read_post_form(environ)
+        language = resolve_language(form.get("lang"))
+        if form.get("csrf_token") != self.csrf_token:
+            return text_response(
+                start_response,
+                "403 Forbidden",
+                "Setup token is missing or invalid.",
+            )
+
+        try:
+            with _compat_attr("connect", connect)() as conn:
+                with conn.cursor() as cur:
+                    result = _compat_attr("register_project", register_project)(
+                        cur,
+                        slug=form.get("slug", ""),
+                        name=form.get("name", ""),
+                        repo_path=form.get("repo_path", ""),
+                        description=form.get("description", ""),
+                        project_type="product",
+                        memory_scope="project",
+                        registered_by="hub_view.project_onboarding",
+                    )
+                conn.commit()
+        except ProjectRegistrationError as exc:
+            return redirect_response(
+                start_response,
+                project_onboarding_redirect(
+                    "error",
+                    str(exc),
+                    language=language,
+                ),
+            )
+        except Exception:
+            return redirect_response(
+                start_response,
+                project_onboarding_redirect(
+                    "error",
+                    "The project could not be registered.",
+                    language=language,
+                ),
+            )
+
+        task = DEFAULT_AGENT_TASK
+        message = "Project registered. Next: choose how to hand ADH context to your agent."
+        return redirect_response(
+            start_response,
+            agent_context_redirect(
+                str(result["slug"]),
+                task,
+                "setup_message",
+                message,
+                language=language,
+            ),
         )
 
     def handle_codex_setup_post(

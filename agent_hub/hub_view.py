@@ -34,6 +34,7 @@ from agent_hub.hub_view_models import (
     load_inbox_view_model,
     load_memory_library_view_model,
     load_memory_item_view_model,
+    load_project_onboarding_view_model,
     load_review_activity_view_model,
     load_view_model,
     metadata_project_local_path,
@@ -46,6 +47,7 @@ from agent_hub.hub_view_models import (
     translate_card_line_for_ui,
 )
 from agent_hub.repo_agent_memory import install_repo_agent_memory, plan_repo_agent_memory
+from agent_hub.project_registration import register_project
 from agent_hub.hub_view_server import (
     HubViewApplication,
     agent_context_redirect,

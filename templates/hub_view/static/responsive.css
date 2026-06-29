@@ -24,6 +24,10 @@
     grid-template-columns: 1fr;
   }
 
+  .project-onboarding-grid {
+    grid-template-columns: 1fr;
+  }
+
   .project-timeline-header {
     grid-template-columns: 1fr;
     gap: 8px;

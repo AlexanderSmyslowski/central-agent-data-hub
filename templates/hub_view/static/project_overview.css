@@ -12,7 +12,7 @@
 
 .project-overview-start-strip {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 10px;
 }
 
@@ -301,3 +301,113 @@
   background: rgba(255, 255, 255, 0.62);
 }
 
+/* Project onboarding */
+.project-onboarding {
+  display: grid;
+  gap: 18px;
+}
+
+.project-onboarding-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(240px, 0.65fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.project-onboarding-form,
+.project-onboarding-guide {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.form-field {
+  display: grid;
+  gap: 6px;
+}
+
+.form-field span,
+.project-onboarding-guide h3 {
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.form-field input,
+.form-field textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid rgba(45, 74, 95, 0.2);
+  border-radius: 8px;
+  background: var(--surface-strong);
+  color: var(--text);
+  font: inherit;
+  line-height: 1.35;
+}
+
+.form-field textarea {
+  resize: vertical;
+}
+
+.form-field input:disabled,
+.form-field textarea:disabled {
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.form-field small,
+.form-note {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.primary-action {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid rgba(45, 74, 95, 0.28);
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--surface-strong);
+  font: inherit;
+  font-weight: 800;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.primary-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.project-onboarding-guide h3 {
+  margin: 0;
+}
+
+.project-onboarding-guide ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.notice.success {
+  border-color: rgba(36, 119, 84, 0.26);
+  background: rgba(232, 247, 239, 0.76);
+}
+
+.notice.error {
+  border-color: rgba(150, 64, 48, 0.26);
+  background: rgba(255, 241, 236, 0.82);
+}

@@ -1482,6 +1482,129 @@ def test_codex_setup_post_with_unknown_project_path_redirects_without_write(monk
     assert not (tmp_path / "AGENTS.md").exists()
 
 
+def test_project_onboarding_page_explains_boundaries() -> None:
+    body = hub_view.render_page(
+        {
+            "projects": [],
+            "selected_project": None,
+            "not_found_slug": None,
+            "draft_total": 0,
+            "registration": {
+                "csrf_token": "token",
+                "enabled": True,
+                "message": None,
+                "error": None,
+            },
+        },
+        200,
+        view_name="project_onboarding",
+        csrf_token="token",
+    ).decode("utf-8")
+
+    assert "Use ADH with your own project" in body
+    assert "Local project folder" in body
+    assert "Register project" in body
+    assert "No repository files are written" in body
+    assert "No agent starts automatically" in body
+
+
+def test_project_onboarding_post_registers_project_without_repo_write(monkeypatch, tmp_path) -> None:
+    calls = []
+
+    class Connection(EmptyConnection):
+        def __init__(self) -> None:
+            self.committed = False
+
+        def commit(self) -> None:
+            self.committed = True
+
+    connection = Connection()
+
+    def fake_register_project(_cur, **kwargs):
+        calls.append(kwargs)
+        return {"slug": kwargs["slug"], "id": "project-id"}
+
+    monkeypatch.setattr(hub_view, "connect", lambda: connection)
+    monkeypatch.setattr(hub_view, "register_project", fake_register_project)
+
+    app = hub_view.create_application(bind_host="127.0.0.1", csrf_token="token")
+    captured, _body = call_app(
+        app,
+        method="POST",
+        path="/projects/new",
+        form={
+            "csrf_token": "token",
+            "name": "My Project",
+            "slug": "my-project",
+            "repo_path": str(tmp_path),
+            "description": "Local work.",
+        },
+        origin="http://127.0.0.1:8765",
+    )
+
+    headers = dict(captured["headers"])
+    assert captured["status"] == "303 See Other"
+    assert headers["Location"].startswith("/projects/my-project/agent-context")
+    assert "setup_message=Project%20registered" in headers["Location"]
+    assert calls == [
+        {
+            "slug": "my-project",
+            "name": "My Project",
+            "repo_path": str(tmp_path),
+            "description": "Local work.",
+            "project_type": "product",
+            "memory_scope": "project",
+            "registered_by": "hub_view.project_onboarding",
+        }
+    ]
+    assert connection.committed is True
+    assert not (tmp_path / "AGENTS.md").exists()
+
+
+def test_project_onboarding_post_without_csrf_is_forbidden_without_db(monkeypatch, tmp_path) -> None:
+    def fail_connect():
+        raise AssertionError("CSRF failure must not touch the database")
+
+    monkeypatch.setattr(hub_view, "connect", fail_connect)
+    app = hub_view.create_application(bind_host="127.0.0.1", csrf_token="token")
+    captured, body = call_app(
+        app,
+        method="POST",
+        path="/projects/new",
+        form={
+            "csrf_token": "wrong",
+            "name": "My Project",
+            "slug": "my-project",
+            "repo_path": str(tmp_path),
+        },
+    )
+
+    assert captured["status"] == "403 Forbidden"
+    assert "Setup token is missing or invalid." in body
+
+
+def test_project_onboarding_post_on_non_loopback_is_forbidden_without_db(monkeypatch, tmp_path) -> None:
+    def fail_connect():
+        raise AssertionError("non-loopback registration must not touch the database")
+
+    monkeypatch.setattr(hub_view, "connect", fail_connect)
+    app = hub_view.create_application(bind_host="0.0.0.0", csrf_token="token")
+    captured, body = call_app(
+        app,
+        method="POST",
+        path="/projects/new",
+        form={
+            "csrf_token": "token",
+            "name": "My Project",
+            "slug": "my-project",
+            "repo_path": str(tmp_path),
+        },
+    )
+
+    assert captured["status"] == "403 Forbidden"
+    assert "Project registration is only available on loopback." in body
+
+
 def test_hub_view_without_reviewer_disables_buttons_and_blocks_post(monkeypatch) -> None:
     def fail_connect():
         raise AssertionError("missing reviewer POST must not touch the database")

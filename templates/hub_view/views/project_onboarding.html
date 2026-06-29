@@ -1,0 +1,95 @@
+<section class="project-onboarding" aria-labelledby="project-onboarding-title">
+  <div class="detail-header">
+    <div>
+      <p class="section-kicker">{{ t('project_onboarding_kicker') }}</p>
+      <h2 class="detail-title" id="project-onboarding-title">{{ t('project_onboarding_title') }}</h2>
+      <p class="detail-description">{{ t('project_onboarding_body') }}</p>
+    </div>
+  </div>
+
+  {% if registration.message %}
+    <div class="notice success" role="status">{{ registration.message }}</div>
+  {% endif %}
+  {% if registration.error %}
+    <div class="notice error" role="alert">{{ registration.error }}</div>
+  {% endif %}
+
+  <div class="project-onboarding-grid">
+    <form class="project-onboarding-form" method="post" action="{{ url_for('/projects/new') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="hidden" name="lang" value="{{ language }}">
+
+      <label class="form-field">
+        <span>{{ t('project_onboarding_name_label') }}</span>
+        <input
+          type="text"
+          name="name"
+          required
+          autocomplete="off"
+          placeholder="{{ t('project_onboarding_name_placeholder') }}"
+          {% if not registration.enabled %}disabled{% endif %}
+        >
+        <small>{{ t('project_onboarding_name_help') }}</small>
+      </label>
+
+      <label class="form-field">
+        <span>{{ t('project_onboarding_slug_label') }}</span>
+        <input
+          type="text"
+          name="slug"
+          required
+          autocomplete="off"
+          inputmode="latin"
+          pattern="[a-z0-9][a-z0-9-]*[a-z0-9]"
+          placeholder="{{ t('project_onboarding_slug_placeholder') }}"
+          {% if not registration.enabled %}disabled{% endif %}
+        >
+        <small>{{ t('project_onboarding_slug_help') }}</small>
+      </label>
+
+      <label class="form-field wide">
+        <span>{{ t('project_onboarding_path_label') }}</span>
+        <input
+          type="text"
+          name="repo_path"
+          required
+          autocomplete="off"
+          placeholder="{{ t('project_onboarding_path_placeholder') }}"
+          {% if not registration.enabled %}disabled{% endif %}
+        >
+        <small>{{ t('project_onboarding_path_help') }}</small>
+      </label>
+
+      <label class="form-field wide">
+        <span>{{ t('project_onboarding_description_label') }}</span>
+        <textarea
+          name="description"
+          rows="3"
+          placeholder="{{ t('project_onboarding_description_placeholder') }}"
+          {% if not registration.enabled %}disabled{% endif %}
+        ></textarea>
+        <small>{{ t('project_onboarding_description_help') }}</small>
+      </label>
+
+      {% if registration.enabled %}
+        <button class="primary-action" type="submit">{{ t('project_onboarding_submit') }}</button>
+      {% else %}
+        <button class="primary-action" type="submit" disabled>{{ t('project_onboarding_disabled_button') }}</button>
+      {% endif %}
+    </form>
+
+    <aside class="project-onboarding-guide" aria-label="{{ t('project_onboarding_boundary_title') }}">
+      <h3>{{ t('project_onboarding_boundary_title') }}</h3>
+      <ul>
+        <li>{{ t('project_onboarding_boundary_db') }}</li>
+        <li>{{ t('project_onboarding_boundary_no_scan') }}</li>
+        <li>{{ t('project_onboarding_boundary_no_agents') }}</li>
+        <li>{{ t('project_onboarding_boundary_next') }}</li>
+      </ul>
+      {% if not registration.enabled %}
+        <p class="form-note">{{ t('project_onboarding_loopback_only') }}</p>
+      {% endif %}
+      <a class="project-overview-action secondary" href="{{ url_for('/') }}">{{ t('back_to_projects') }}</a>
+    </aside>
+  </div>
+</section>

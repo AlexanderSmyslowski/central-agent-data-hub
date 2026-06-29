@@ -35,7 +35,7 @@
       </header>
 
       <nav class="app-nav" aria-label="{{ t('app_navigation') }}">
-        <a class="app-nav-link{% if not selected_project and view_name != 'inbox' %} active{% endif %}" href="{{ url_for('/') }}"{% if not selected_project and view_name != 'inbox' %} aria-current="page"{% endif %}>{{ t('nav_projects') }}</a>
+        <a class="app-nav-link{% if not selected_project and view_name not in ('inbox', 'review_activity', 'project_onboarding') %} active{% endif %}" href="{{ url_for('/') }}"{% if not selected_project and view_name not in ('inbox', 'review_activity', 'project_onboarding') %} aria-current="page"{% endif %}>{{ t('nav_projects') }}</a>
         {% if selected_project %}
           <a class="app-nav-link{% if view_name == 'projects' %} active{% endif %}" href="{{ url_for('/projects/' ~ selected_project.slug) }}"{% if view_name == 'projects' %} aria-current="page"{% endif %}>{{ t('nav_project') }}</a>
           <a class="app-nav-link" href="{{ url_for('/projects/' ~ selected_project.slug) }}#current-state-title">{{ t('nav_work_state') }}</a>
@@ -43,6 +43,7 @@
           <a class="app-nav-link{% if view_name == 'agent_context' %} active{% endif %}" href="{{ url_for('/projects/' ~ selected_project.slug) }}#connect-agent"{% if view_name == 'agent_context' %} aria-current="page"{% endif %}>{{ t('nav_agent_handoff') }}</a>
         {% endif %}
         <a class="app-nav-link{% if view_name in ('inbox', 'review_activity') %} active{% endif %}" href="{{ url_for('/inbox') }}"{% if view_name in ('inbox', 'review_activity') %} aria-current="page"{% endif %}>{{ t('nav_review') }}</a>
+        <a class="app-nav-link{% if view_name == 'project_onboarding' %} active{% endif %}" href="{{ url_for('/projects/new') }}"{% if view_name == 'project_onboarding' %} aria-current="page"{% endif %}>{{ t('nav_add_project') }}</a>
       </nav>
 
       {% set status_review_count = draft_total | default(0) %}
@@ -52,6 +53,8 @@
           <strong>
             {% if view_name in ('inbox', 'review_activity') %}
               {{ t('app_status_area_review') }}
+            {% elif view_name == 'project_onboarding' %}
+              {{ t('app_status_area_add_project') }}
             {% elif view_name == 'agent_context' %}
               {{ t('app_status_area_agent') }}
             {% elif view_name == 'memory_library' %}
@@ -170,6 +173,8 @@
             {% include "views/inbox.html" %}
           {% elif view_name == 'review_activity' %}
             {% include "views/review_activity.html" %}
+          {% elif view_name == 'project_onboarding' %}
+            {% include "views/project_onboarding.html" %}
           {% elif not_found_slug %}
             <div class="detail-header">
               <div>
@@ -219,6 +224,11 @@
                   <span>{{ t('project_overview_start_agent_label') }}</span>
                   <strong>{{ t('project_overview_start_agent_title') }}</strong>
                   <small>{{ t('project_overview_start_agent_copy') }}</small>
+                </a>
+                <a class="project-overview-start-card" href="{{ url_for('/projects/new') }}">
+                  <span>{{ t('project_overview_start_own_label') }}</span>
+                  <strong>{{ t('project_overview_start_own_title') }}</strong>
+                  <small>{{ t('project_overview_start_own_copy') }}</small>
                 </a>
               </nav>
               <div class="project-overview-grid">
@@ -319,12 +329,15 @@
               </div>
             </section>
           {% else %}
-            <div class="detail-header">
-              <div>
-                <h2 class="detail-title">{{ t('hub_view') }}</h2>
-                <p class="detail-description">{{ t('hub_empty_body') }}</p>
+            <section class="project-overview" aria-labelledby="project-onboarding-empty-title">
+              <div class="detail-header">
+                <div>
+                  <h2 class="detail-title" id="project-onboarding-empty-title">{{ t('hub_view') }}</h2>
+                  <p class="detail-description">{{ t('hub_empty_body') }}</p>
+                </div>
+                <a class="project-overview-action" href="{{ url_for('/projects/new') }}">{{ t('project_onboarding_open') }}</a>
               </div>
-            </div>
+            </section>
           {% endif %}
         </section>
       </div>

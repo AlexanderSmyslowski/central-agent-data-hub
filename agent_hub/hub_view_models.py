@@ -1618,6 +1618,33 @@ def load_view_model(selected_slug: str | None) -> tuple[int, dict[str, object]]:
                 "draft_total": draft_total,
             }
 
+def load_project_onboarding_view_model(
+    *,
+    csrf_token: str,
+    registration_enabled: bool,
+    message: str | None = None,
+    error_message: str | None = None,
+) -> tuple[int, dict[str, object]]:
+    with _compat_attr("connect", connect)() as conn:
+        with conn.cursor() as cur:
+            projects = fetch_active_projects(cur)
+            drafts = fetch_drafts(cur, limit=None)
+            draft_counts = draft_counts_by_project(drafts)
+            draft_total = sum(draft_counts.values())
+            cards = build_project_cards(cur, projects, draft_counts)
+    return 200, {
+        "projects": cards,
+        "selected_project": None,
+        "not_found_slug": None,
+        "draft_total": draft_total,
+        "registration": {
+            "csrf_token": csrf_token,
+            "enabled": registration_enabled,
+            "message": message,
+            "error": error_message,
+        },
+    }
+
 def load_inbox_view_model(
     *,
     csrf_token: str,
