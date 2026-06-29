@@ -12,6 +12,9 @@ from agent_hub.statuses import (
     INBOX_REVIEW_TYPES,
     MEMORY_STATUS_VALUES,
     REVIEWED_MEMORY_STATUSES,
+    UNRESOLVED_OPEN_QUESTION_STATUSES,
+    current_memory_statuses_for,
+    reviewed_statuses_for,
 )
 
 
@@ -73,15 +76,20 @@ def test_draft_status_migration_only_extends_status_constraints() -> None:
     assert "INSERT INTO" not in sql_body.upper()
 
 
-def test_quality_queries_exclude_drafts_from_reviewed_quality() -> None:
+def test_quality_queries_use_shared_status_policy() -> None:
     counts_source = inspect.getsource(fetch_project_counts)
     warnings_source = inspect.getsource(fetch_memory_quality_warnings)
 
-    assert "status NOT IN ('draft', 'archived')" in counts_source
-    assert "'draft', 'answered', 'closed', 'resolved', 'archived'" in counts_source
-    assert "status NOT IN ('draft', 'resolved', 'archived')" in counts_source
-    assert "status NOT IN ('draft', 'archived')" in warnings_source
-    assert (
-        "oq.status NOT IN ('draft', 'answered', 'closed', 'resolved', 'archived')"
-        in warnings_source
+    assert current_memory_statuses_for("fact") == reviewed_statuses_for("fact")
+    assert current_memory_statuses_for("decision") == reviewed_statuses_for("decision")
+    assert current_memory_statuses_for("risk") == reviewed_statuses_for("risk")
+    assert current_memory_statuses_for("report") == reviewed_statuses_for("report")
+    assert current_memory_statuses_for("open_question") == (
+        UNRESOLVED_OPEN_QUESTION_STATUSES
     )
+
+    assert "current_memory_statuses_for" in counts_source
+    assert "reviewed_statuses_for" in warnings_source
+    assert "UNRESOLVED_OPEN_QUESTION_STATUSES" in warnings_source
+    assert "status NOT IN ('draft'" not in counts_source
+    assert "status NOT IN ('draft'" not in warnings_source

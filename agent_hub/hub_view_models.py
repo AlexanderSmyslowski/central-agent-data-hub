@@ -45,6 +45,8 @@ from agent_hub.statuses import (
     REVIEWED_MEMORY_STATUSES,
     agent_read_excluded_statuses,
     agent_read_excluded_statuses_by_type,
+    current_memory_statuses_for,
+    sql_status_in_clause,
 )
 from agent_hub.writeback_routing import card_for_item, primary_text, source_value
 
@@ -363,6 +365,30 @@ def fetch_project_card_counts(
         return {}
 
     values_clause = project_ids_values_clause(project_ids)
+    document_clause, document_statuses = sql_status_in_clause(
+        "status",
+        current_memory_statuses_for("document"),
+    )
+    fact_clause, fact_statuses = sql_status_in_clause(
+        "status",
+        current_memory_statuses_for("fact"),
+    )
+    decision_clause, decision_statuses = sql_status_in_clause(
+        "status",
+        current_memory_statuses_for("decision"),
+    )
+    open_question_clause, open_question_statuses = sql_status_in_clause(
+        "status",
+        current_memory_statuses_for("open_question"),
+    )
+    risk_clause, risk_statuses = sql_status_in_clause(
+        "status",
+        current_memory_statuses_for("risk"),
+    )
+    report_clause, report_statuses = sql_status_in_clause(
+        "status",
+        current_memory_statuses_for("report"),
+    )
     cur.execute(
         f"""
         WITH project_ids(project_id) AS (
@@ -372,36 +398,37 @@ def fetch_project_card_counts(
           SELECT project_id, 'documents' AS item_type, count(*)::int AS item_count
           FROM documents
           WHERE project_id IN (SELECT project_id FROM project_ids)
+            AND {document_clause}
           GROUP BY project_id
           UNION ALL
           SELECT project_id, 'facts' AS item_type, count(*)::int AS item_count
           FROM facts
           WHERE project_id IN (SELECT project_id FROM project_ids)
-            AND status NOT IN ('draft', 'archived')
+            AND {fact_clause}
           GROUP BY project_id
           UNION ALL
           SELECT project_id, 'decisions' AS item_type, count(*)::int AS item_count
           FROM decisions
           WHERE project_id IN (SELECT project_id FROM project_ids)
-            AND status NOT IN ('draft', 'archived')
+            AND {decision_clause}
           GROUP BY project_id
           UNION ALL
           SELECT project_id, 'open_questions' AS item_type, count(*)::int AS item_count
           FROM open_questions
           WHERE project_id IN (SELECT project_id FROM project_ids)
-            AND status NOT IN ('draft', 'answered', 'closed', 'resolved', 'archived')
+            AND {open_question_clause}
           GROUP BY project_id
           UNION ALL
           SELECT project_id, 'risks' AS item_type, count(*)::int AS item_count
           FROM risks
           WHERE project_id IN (SELECT project_id FROM project_ids)
-            AND status NOT IN ('draft', 'resolved', 'archived')
+            AND {risk_clause}
           GROUP BY project_id
           UNION ALL
           SELECT project_id, 'reports' AS item_type, count(*)::int AS item_count
           FROM reports
           WHERE project_id IN (SELECT project_id FROM project_ids)
-            AND status NOT IN ('draft', 'archived')
+            AND {report_clause}
           GROUP BY project_id
         )
         SELECT
@@ -416,7 +443,15 @@ def fetch_project_card_counts(
         LEFT JOIN memory_counts m ON m.project_id = p.project_id
         GROUP BY p.project_id
         """,
-        project_ids,
+        (
+            *project_ids,
+            *document_statuses,
+            *fact_statuses,
+            *decision_statuses,
+            *open_question_statuses,
+            *risk_statuses,
+            *report_statuses,
+        ),
     )
     return {
         row["project_id"]: {key: int(row[key]) for key in PROJECT_CARD_COUNT_KEYS}

@@ -13,6 +13,7 @@ from agent_hub import hub_view
 from agent_hub.hub_view_i18n import language_switch_links, localize_ui_text, pluralizer
 from agent_hub import hub_view_models
 from agent_hub.commands import inbox
+from agent_hub.statuses import current_memory_statuses_for
 from agent_hub.writeback_routing import lint_card_text
 
 
@@ -410,6 +411,38 @@ def test_build_project_cards_batches_counts_and_latest_reports(monkeypatch) -> N
     assert cards[1]["next_step_key"] == "project_overview_next_review"
     assert cards[1]["next_step_action_key"] == "project_overview_next_review_action"
     assert cards[1]["next_step_href"] == "/inbox"
+
+
+class ProjectCardCountCursor:
+    def __init__(self) -> None:
+        self.sql = ""
+        self.params: tuple[object, ...] | None = None
+
+    def execute(self, sql: str, params: tuple[object, ...]) -> None:
+        self.sql = sql
+        self.params = params
+
+    def fetchall(self) -> list[dict[str, object]]:
+        return []
+
+
+def test_project_card_counts_use_shared_current_memory_status_policy() -> None:
+    cur = ProjectCardCountCursor()
+
+    hub_view_models.fetch_project_card_counts(cur, ["project-1", "project-2"])
+
+    assert "status NOT IN" not in cur.sql
+    assert "status IN" in cur.sql
+    assert cur.params == (
+        "project-1",
+        "project-2",
+        *current_memory_statuses_for("document"),
+        *current_memory_statuses_for("fact"),
+        *current_memory_statuses_for("decision"),
+        *current_memory_statuses_for("open_question"),
+        *current_memory_statuses_for("risk"),
+        *current_memory_statuses_for("report"),
+    )
 
 
 def test_project_draft_preview_filters_project_and_uses_inbox_card_shape() -> None:

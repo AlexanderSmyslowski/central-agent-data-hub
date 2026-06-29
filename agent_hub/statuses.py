@@ -47,6 +47,7 @@ REVIEWED_MEMORY_STATUSES = {
 }
 
 INACTIVE_OPEN_QUESTION_STATUSES = ("answered", "closed", "resolved", "archived")
+UNRESOLVED_OPEN_QUESTION_STATUSES = ("open", "deferred")
 
 INACTIVE_MEMORY_STATUSES = {
     "fact": ("archived", "deprecated"),
@@ -55,6 +56,15 @@ INACTIVE_MEMORY_STATUSES = {
     "open_question": INACTIVE_OPEN_QUESTION_STATUSES,
     "report": ("archived", "superseded"),
     "document": ("archived", "superseded"),
+}
+
+CURRENT_MEMORY_STATUSES = {
+    "document": REVIEWED_MEMORY_STATUSES["document"],
+    "fact": REVIEWED_MEMORY_STATUSES["fact"],
+    "decision": REVIEWED_MEMORY_STATUSES["decision"],
+    "risk": REVIEWED_MEMORY_STATUSES["risk"],
+    "open_question": UNRESOLVED_OPEN_QUESTION_STATUSES,
+    "report": REVIEWED_MEMORY_STATUSES["report"],
 }
 
 PREPARE_EXCLUDED_STATUSES = {
@@ -97,6 +107,22 @@ def inactive_statuses_for(item_type: str) -> tuple[str, ...]:
 
 def prepare_excluded_statuses(item_type: str) -> tuple[str, ...]:
     return PREPARE_EXCLUDED_STATUSES[item_type]
+
+
+def reviewed_statuses_for(item_type: str) -> tuple[str, ...]:
+    return REVIEWED_MEMORY_STATUSES[item_type]
+
+
+def current_memory_statuses_for(item_type: str) -> tuple[str, ...]:
+    return CURRENT_MEMORY_STATUSES[item_type]
+
+
+def sql_status_in_clause(
+    column: str,
+    statuses: tuple[str, ...],
+) -> tuple[str, tuple[str, ...]]:
+    placeholders = ", ".join(["%s"] * len(statuses))
+    return f"{column} IN ({placeholders})", statuses
 
 
 def read_surface_excluded_statuses(

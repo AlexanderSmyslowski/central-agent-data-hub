@@ -7,6 +7,12 @@ from agent_hub.relations import (
     RELATION_TYPES,
     fetch_project_relations,
 )
+from agent_hub.statuses import (
+    UNRESOLVED_OPEN_QUESTION_STATUSES,
+    current_memory_statuses_for,
+    reviewed_statuses_for,
+    sql_status_in_clause,
+)
 
 CORE_TABLES = (
     "projects",
@@ -124,68 +130,97 @@ def fetch_low_confidence_facts(cur) -> list[dict[str, object]]:
 
 
 def fetch_open_questions(cur) -> list[dict[str, object]]:
+    status_clause, statuses = sql_status_in_clause(
+        "status",
+        UNRESOLVED_OPEN_QUESTION_STATUSES,
+    )
     cur.execute(
-        """
+        f"""
         SELECT id, question, status
         FROM open_questions
-        WHERE status NOT IN ('draft', 'answered', 'closed', 'resolved', 'archived')
+        WHERE {status_clause}
         ORDER BY created_at, id
-        """
+        """,
+        statuses,
     )
     return list(cur.fetchall())
 
 
 def fetch_memory_quality_warnings(cur) -> list[dict[str, object]]:
     warnings: list[dict[str, object]] = []
+    fact_clause, fact_statuses = sql_status_in_clause(
+        "status",
+        reviewed_statuses_for("fact"),
+    )
+    decision_clause, decision_statuses = sql_status_in_clause(
+        "status",
+        reviewed_statuses_for("decision"),
+    )
+    risk_clause, risk_statuses = sql_status_in_clause(
+        "status",
+        reviewed_statuses_for("risk"),
+    )
+    report_clause, report_statuses = sql_status_in_clause(
+        "status",
+        reviewed_statuses_for("report"),
+    )
+    unresolved_question_clause, unresolved_question_statuses = sql_status_in_clause(
+        "oq.status",
+        UNRESOLVED_OPEN_QUESTION_STATUSES,
+    )
 
     cur.execute(
-        """
+        f"""
         SELECT id, 'fact' AS type, statement AS title,
                'missing source' AS issue
         FROM facts
-        WHERE status NOT IN ('draft', 'archived')
+        WHERE {fact_clause}
           AND NULLIF(BTRIM(COALESCE(source, '')), '') IS NULL
         ORDER BY updated_at DESC, created_at DESC, id
-        """
+        """,
+        fact_statuses,
     )
     warnings.extend(cur.fetchall())
 
     cur.execute(
-        """
+        f"""
         SELECT id, 'decision' AS type, decision AS title,
                'missing rationale' AS issue
         FROM decisions
-        WHERE status NOT IN ('draft', 'archived')
+        WHERE {decision_clause}
           AND NULLIF(BTRIM(COALESCE(rationale, '')), '') IS NULL
         ORDER BY updated_at DESC, created_at DESC, id
-        """
+        """,
+        decision_statuses,
     )
     warnings.extend(cur.fetchall())
 
     cur.execute(
-        """
+        f"""
         SELECT id, 'risk' AS type, title,
                'missing impact or mitigation' AS issue
         FROM risks
-        WHERE status NOT IN ('draft', 'resolved', 'archived')
+        WHERE {risk_clause}
           AND (
             NULLIF(BTRIM(COALESCE(impact, '')), '') IS NULL
             OR NULLIF(BTRIM(COALESCE(mitigation, '')), '') IS NULL
           )
         ORDER BY updated_at DESC, created_at DESC, id
-        """
+        """,
+        risk_statuses,
     )
     warnings.extend(cur.fetchall())
 
     cur.execute(
-        """
+        f"""
         SELECT id, 'report' AS type, title,
                'missing summary' AS issue
         FROM reports
-        WHERE status NOT IN ('draft', 'archived')
+        WHERE {report_clause}
           AND NULLIF(BTRIM(COALESCE(summary, '')), '') IS NULL
         ORDER BY updated_at DESC, created_at DESC, id
-        """
+        """,
+        report_statuses,
     )
     warnings.extend(cur.fetchall())
 
@@ -209,45 +244,50 @@ def fetch_memory_quality_warnings(cur) -> list[dict[str, object]]:
         ("report", "reports", "title", "title"),
     )
     for memory_type, table, text_column, title_column in long_text_checks:
+        status_clause, statuses = sql_status_in_clause(
+            "status",
+            reviewed_statuses_for(memory_type),
+        )
         cur.execute(
             f"""
             SELECT id, %s AS type, {title_column} AS title,
                    'very long memory entry; consider distilling' AS issue
             FROM {table}
-            WHERE status NOT IN ('draft', 'archived')
+            WHERE {status_clause}
               AND length(COALESCE({text_column}, '')) > 1200
             ORDER BY updated_at DESC, created_at DESC, id
             LIMIT 20
             """,
-            (memory_type,),
+            (memory_type, *statuses),
         )
         warnings.extend(cur.fetchall())
 
     cur.execute(
-        """
+        f"""
         SELECT id, 'fact' AS type, statement AS title,
                'possible duplicate fact' AS issue
         FROM facts
-        WHERE status NOT IN ('draft', 'archived')
+        WHERE {fact_clause}
           AND lower(BTRIM(statement)) IN (
             SELECT lower(BTRIM(statement))
             FROM facts
-            WHERE status NOT IN ('draft', 'archived')
+            WHERE {fact_clause}
             GROUP BY lower(BTRIM(statement))
             HAVING count(*) > 1
           )
         ORDER BY updated_at DESC, created_at DESC, id
         LIMIT 20
-        """
+        """,
+        (*fact_statuses, *fact_statuses),
     )
     warnings.extend(cur.fetchall())
 
     cur.execute(
-        """
+        f"""
         SELECT oq.id, 'open_question' AS type, oq.question AS title,
                'possibly answered by a decision' AS issue
         FROM open_questions oq
-        WHERE oq.status NOT IN ('draft', 'answered', 'closed', 'resolved', 'archived')
+        WHERE {unresolved_question_clause}
           AND EXISTS (
             SELECT 1
             FROM relations r
@@ -264,7 +304,8 @@ def fetch_memory_quality_warnings(cur) -> list[dict[str, object]]:
           )
         ORDER BY oq.updated_at DESC, oq.created_at DESC, oq.id
         LIMIT 20
-        """
+        """,
+        unresolved_question_statuses,
     )
     warnings.extend(cur.fetchall())
 
@@ -287,111 +328,140 @@ def fetch_project_counts(cur, project_id: object) -> dict[str, int]:
     cur.execute(
         """
         SELECT
-          (SELECT count(*) FROM documents WHERE project_id = %(project_id)s) AS documents,
+          (
+            SELECT count(*)
+            FROM documents
+            WHERE project_id = %(project_id)s
+              AND status = ANY(%(document_statuses)s)
+          ) AS documents,
           (
             SELECT count(*)
             FROM facts
             WHERE project_id = %(project_id)s
-              AND status NOT IN ('draft', 'archived')
+              AND status = ANY(%(fact_statuses)s)
           ) AS facts,
           (
             SELECT count(*)
             FROM decisions
             WHERE project_id = %(project_id)s
-              AND status NOT IN ('draft', 'archived')
+              AND status = ANY(%(decision_statuses)s)
           ) AS decisions,
           (
             SELECT count(*)
             FROM open_questions
             WHERE project_id = %(project_id)s
-              AND status NOT IN (
-                'draft', 'answered', 'closed', 'resolved', 'archived'
-              )
+              AND status = ANY(%(open_question_statuses)s)
           ) AS open_questions,
           (
             SELECT count(*)
             FROM risks
             WHERE project_id = %(project_id)s
-              AND status NOT IN ('draft', 'resolved', 'archived')
+              AND status = ANY(%(risk_statuses)s)
           ) AS risks,
           (
             SELECT count(*)
             FROM reports
             WHERE project_id = %(project_id)s
-              AND status NOT IN ('draft', 'archived')
+              AND status = ANY(%(report_statuses)s)
           ) AS reports
         """,
-        {"project_id": project_id},
+        {
+            "project_id": project_id,
+            "document_statuses": list(current_memory_statuses_for("document")),
+            "fact_statuses": list(current_memory_statuses_for("fact")),
+            "decision_statuses": list(current_memory_statuses_for("decision")),
+            "open_question_statuses": list(
+                current_memory_statuses_for("open_question")
+            ),
+            "risk_statuses": list(current_memory_statuses_for("risk")),
+            "report_statuses": list(current_memory_statuses_for("report")),
+        },
     )
     return dict(cur.fetchone())
 
 
 def fetch_project_quality(cur, project: dict[str, object]) -> dict[str, object]:
     project_id = project["id"]
+    fact_clause, fact_statuses = sql_status_in_clause(
+        "status",
+        reviewed_statuses_for("fact"),
+    )
+    decision_clause, decision_statuses = sql_status_in_clause(
+        "status",
+        reviewed_statuses_for("decision"),
+    )
+    risk_clause, risk_statuses = sql_status_in_clause(
+        "status",
+        reviewed_statuses_for("risk"),
+    )
+    open_question_clause, open_question_statuses = sql_status_in_clause(
+        "status",
+        UNRESOLVED_OPEN_QUESTION_STATUSES,
+    )
     cur.execute(
-        """
+        f"""
         SELECT id, 'fact' AS type, statement AS title, 'missing source' AS issue
         FROM facts
         WHERE project_id = %s
-          AND status NOT IN ('draft', 'archived')
+          AND {fact_clause}
           AND NULLIF(BTRIM(COALESCE(source, '')), '') IS NULL
         ORDER BY updated_at DESC, created_at DESC, id
         """,
-        (project_id,),
+        (project_id, *fact_statuses),
     )
     facts_without_source = list(cur.fetchall())
 
     cur.execute(
-        """
+        f"""
         SELECT id, 'decision' AS type, decision AS title, 'missing rationale' AS issue
         FROM decisions
         WHERE project_id = %s
-          AND status NOT IN ('draft', 'archived')
+          AND {decision_clause}
           AND NULLIF(BTRIM(COALESCE(rationale, '')), '') IS NULL
         ORDER BY updated_at DESC, created_at DESC, id
         """,
-        (project_id,),
+        (project_id, *decision_statuses),
     )
     decisions_without_rationale = list(cur.fetchall())
 
     cur.execute(
-        """
+        f"""
         SELECT id, 'risk' AS type, title, 'missing impact or mitigation' AS issue
         FROM risks
         WHERE project_id = %s
-          AND status NOT IN ('draft', 'resolved', 'archived')
+          AND {risk_clause}
           AND (
             NULLIF(BTRIM(COALESCE(impact, '')), '') IS NULL
             OR NULLIF(BTRIM(COALESCE(mitigation, '')), '') IS NULL
           )
         ORDER BY updated_at DESC, created_at DESC, id
         """,
-        (project_id,),
+        (project_id, *risk_statuses),
     )
     risks_without_mitigation = list(cur.fetchall())
 
     cur.execute(
-        """
+        f"""
         SELECT id, question, status, updated_at
         FROM open_questions
         WHERE project_id = %s
-          AND status NOT IN ('draft', 'answered', 'closed', 'archived')
+          AND {open_question_clause}
         ORDER BY updated_at DESC, created_at DESC, id
         """,
-        (project_id,),
+        (project_id, *open_question_statuses),
     )
     open_questions = list(cur.fetchall())
 
     cur.execute(
-        """
+        f"""
         SELECT id, question, status, updated_at, metadata->>'suggestion' AS suggestion
         FROM open_questions
         WHERE project_id = %s
-          AND status NOT IN ('draft', 'answered', 'closed', 'resolved', 'archived')
+          AND {open_question_clause}
           AND metadata->>'schema_friction' = 'true'
         ORDER BY updated_at DESC, created_at DESC, id
         """,
-        (project_id,),
+        (project_id, *open_question_statuses),
     )
     schema_friction_questions = list(cur.fetchall())
 
