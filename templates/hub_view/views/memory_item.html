@@ -18,6 +18,29 @@
         </div>
       </div>
 
+      <nav class="memory-action-strip" aria-label="{{ t('memory_item_quick_actions') }}">
+        <a class="memory-action-card primary" href="#memory-trust">
+          <span>{{ t('memory_item_quick_trust') }}</span>
+          <strong>{{ t('memory_item_workflow_trust') }}</strong>
+          <small>{{ t('memory_item_quick_trust_copy') }}</small>
+        </a>
+        <a class="memory-action-card" href="{{ url_for('/projects/' ~ selected_project.slug ~ '/agent-context') }}">
+          <span>{{ t('memory_item_quick_agent') }}</span>
+          <strong>{{ t('memory_item_workflow_agent_link') }}</strong>
+          <small>{{ t('memory_item_quick_agent_copy') }}</small>
+        </a>
+        <a class="memory-action-card" href="#memory-details">
+          <span>{{ t('memory_item_quick_details') }}</span>
+          <strong>{{ t('memory_item_details') }}</strong>
+          <small>{{ t('memory_item_quick_details_copy') }}</small>
+        </a>
+        <a class="memory-action-card" href="#memory-relations">
+          <span>{{ t('memory_item_quick_relations') }}</span>
+          <strong>{{ t('memory_related_title') }}</strong>
+          <small>{{ t('memory_item_quick_relations_copy') }}</small>
+        </a>
+      </nav>
+
       <section class="memory-workflow" aria-label="{{ t('memory_item_workflow_label') }}">
         <div class="memory-workflow-card primary">
           <span>{{ t('memory_item_workflow_use') }}</span>
@@ -29,7 +52,7 @@
             <p>{{ t('memory_item_workflow_context_copy') }}</p>
           {% endif %}
         </div>
-        <div class="memory-workflow-card">
+        <div class="memory-workflow-card" id="memory-trust">
           <span>{{ t('memory_item_workflow_trust') }}</span>
           <strong>
             {% if memory_item.status %}
@@ -59,7 +82,7 @@
         </div>
       </section>
 
-      <div class="memory-field-list" aria-label="{{ t('memory_item_details') }}">
+      <div class="memory-field-list" id="memory-details" aria-label="{{ t('memory_item_details') }}">
         {% for field in memory_item.fields %}
           <div class="memory-field">
             <span>{{ t(field.label_key) }}</span>
@@ -68,7 +91,7 @@
         {% endfor %}
       </div>
 
-      <section class="memory-related" aria-labelledby="memory-related-title">
+      <section class="memory-related" id="memory-relations" aria-labelledby="memory-related-title">
         <div>
           <h3 id="memory-related-title">{{ t('memory_related_title') }}</h3>
           <p>{{ t('memory_related_copy') }}</p>

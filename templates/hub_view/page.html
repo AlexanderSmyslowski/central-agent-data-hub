@@ -2282,6 +2282,57 @@
         line-height: 1.14;
       }
 
+      .memory-action-strip {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 10px;
+        max-width: 100%;
+      }
+
+      .memory-action-card {
+        display: grid;
+        gap: 6px;
+        min-height: 102px;
+        align-content: start;
+        padding: 13px 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.62);
+        color: var(--text);
+      }
+
+      .memory-action-card.primary {
+        border-color: rgba(45, 74, 95, 0.34);
+        background: rgba(45, 74, 95, 0.08);
+      }
+
+      .memory-action-card:hover,
+      .memory-action-card:focus-visible {
+        border-color: rgba(45, 74, 95, 0.38);
+        background: var(--surface-strong);
+      }
+
+      .memory-action-card span {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        line-height: 1.2;
+        text-transform: uppercase;
+      }
+
+      .memory-action-card strong {
+        color: var(--text);
+        font-size: 15px;
+        line-height: 1.25;
+      }
+
+      .memory-action-card small {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.35;
+      }
+
       .memory-workflow {
         display: grid;
         grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr);
@@ -3356,6 +3407,29 @@
 
         .memory-item-detail .detail-title {
           font-size: 24px;
+        }
+
+        .memory-action-strip {
+          display: flex;
+          overflow-x: auto;
+          flex-wrap: nowrap;
+          width: 100%;
+          min-width: 0;
+          max-width: 100%;
+          padding-bottom: 2px;
+          scrollbar-width: none;
+        }
+
+        .memory-action-strip::-webkit-scrollbar {
+          display: none;
+        }
+
+        .memory-action-card {
+          flex: 0 0 188px;
+        }
+
+        .memory-action-card.primary {
+          flex-basis: 212px;
         }
 
         .relation-row {

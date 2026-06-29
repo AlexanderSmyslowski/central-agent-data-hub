@@ -2135,7 +2135,18 @@ def test_memory_item_page_renders_read_only_german_detail() -> None:
     assert "Sichtbare Kontextübergabe vorbereiten." in body
     assert "Reviewed facts are visible in Hub View." in body
     assert "Diese Seite liest nur den ausgewählten Eintrag" in body
+    assert 'aria-label="Schnellzugriff im Gedächtnisdetail"' in body
+    assert "Nachweis" in body
+    assert "Prüfe Status und Quelle, bevor du dich darauf stützt." in body
+    assert 'href="#memory-trust"' in body
+    assert "Weiterarbeiten" in body
+    assert "Öffne Quelle, Status, Vertrauen und Aktualisierung." in body
+    assert 'href="#memory-details"' in body
+    assert "Sieh, wie dieser Eintrag anderes Gedächtnis stützt oder referenziert." in body
+    assert 'href="#memory-relations"' in body
+    assert "Bereite eine sichtbare Kontextübergabe mit diesem geprüften Eintrag vor." in body
     assert 'aria-label="So nutzt du diesen Eintrag"' in body
+    assert 'id="memory-trust"' in body
     assert "Als geprüften Kontext nutzen" in body
     assert "Das ist geprüftes Projektgedächtnis. Agenten dürfen es als Kontext nutzen" in body
     assert "Vertrauenscheck" in body
@@ -2146,8 +2157,10 @@ def test_memory_item_page_renders_read_only_german_detail() -> None:
     assert "Agentenübergabe vorbereiten" in body
     assert 'href="/projects/central-agent-data-hub-demo/agent-context?lang=de"' in body
     assert "Quelle" in body
+    assert 'id="memory-details"' in body
     assert "demo" in body
     assert "Zusammenhänge" in body
+    assert 'id="memory-relations"' in body
     assert "Diese Verbindungen zeigen" in body
     assert "Von diesem Eintrag aus" in body
     assert "Dieser Eintrag" in body
@@ -2208,6 +2221,9 @@ def test_memory_item_route_renders_read_only_detail(monkeypatch) -> None:
     assert captured["status"] == "200 OK"
     assert "Reviewed facts are visible in Hub View." in body
     assert "This page only reads the selected project memory item" in body
+    assert "Memory detail quick actions" in body
+    assert "Check status and source before relying on it." in body
+    assert "Prepare a visible context handoff with this reviewed memory." in body
     assert "Use as reviewed context" in body
     assert "Status: verified" in body
     assert "Source: demo." in body
