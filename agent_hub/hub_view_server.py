@@ -21,6 +21,7 @@ from agent_hub.hub_view_models import (
     DEFAULT_AGENT_TASK,
     load_agent_context_view_model,
     load_inbox_view_model,
+    load_memory_library_view_model,
     load_memory_item_view_model,
     load_review_activity_view_model,
     load_view_model,
@@ -213,6 +214,26 @@ class HubViewApplication:
         view_name = "projects"
         if path == "/":
             selected_slug = None
+        elif path.startswith("/projects/") and path.endswith("/memory"):
+            view_name = "memory_library"
+            selected_slug = path.removeprefix("/projects/").removesuffix("/memory").strip("/")
+            if not selected_slug:
+                return text_response(start_response, "404 Not Found", "Not Found")
+            status_code, view_model = _compat_attr(
+                "load_memory_library_view_model",
+                load_memory_library_view_model,
+            )(selected_slug, query_value(environ, "type"))
+            body = _compat_attr("render_page", render_page)(
+                view_model,
+                status_code,
+                view_name=view_name,
+                csrf_token=self.csrf_token,
+                inbox_enabled=self.inbox_enabled,
+                language=language,
+                current_path=path,
+                query_string=str(environ.get("QUERY_STRING") or ""),
+            )
+            return html_response(start_response, status_code, body)
         elif path.startswith("/projects/") and path.endswith("/agent-context"):
             view_name = "agent_context"
             selected_slug = path.removeprefix("/projects/").removesuffix("/agent-context").strip("/")

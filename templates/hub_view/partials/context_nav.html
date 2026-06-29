@@ -3,7 +3,7 @@
   <span>{{ t('context_nav_label') }}</span>
   {% if context_project %}
     <a href="{{ url_for('/projects/' ~ context_project.slug) }}"{% if context_nav_active == 'project' %} class="active" aria-current="page"{% endif %}>{{ t('context_nav_project') }}</a>
-    <a href="{{ url_for('/projects/' ~ context_project.slug) }}#memory-explorer"{% if context_nav_active == 'memory' %} class="active" aria-current="page"{% endif %}>{{ t('context_nav_memory') }}</a>
+    <a href="{{ url_for('/projects/' ~ context_project.slug ~ '/memory') }}"{% if context_nav_active == 'memory' %} class="active" aria-current="page"{% endif %}>{{ t('context_nav_memory') }}</a>
     <a href="{{ url_for('/inbox') }}"{% if context_nav_active == 'review' %} class="active" aria-current="page"{% endif %}>{{ t('context_nav_review') }}</a>
     <a href="{{ url_for('/projects/' ~ context_project.slug ~ '/agent-context') }}"{% if context_nav_active == 'agent' %} class="active" aria-current="page"{% endif %}>{{ t('context_nav_agent') }}</a>
   {% else %}

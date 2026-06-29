@@ -556,7 +556,7 @@ def test_project_overview_renders_as_work_center() -> None:
     assert "Review suggestions" in body
     assert "Read latest status" in body
     assert 'href="/projects/central-agent-data-hub-demo#risks-and-questions"' in body
-    assert 'href="/projects/central-agent-data-hub-demo#project-memory"' in body
+    assert 'href="/projects/central-agent-data-hub-demo/memory"' in body
     assert 'href="/projects/central-agent-data-hub-demo/agent-context"' in body
     assert 'href="/inbox"' in body
     assert 'href="/projects/central-agent-data-hub-demo#latest-status"' in body
@@ -1800,7 +1800,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert 'aria-label="Project workspace sidebar"' in body
     assert "Project areas" in body
     assert "Latest status and watch points." in body
-    assert "Search reviewed facts and decisions." in body
+    assert "Browse reviewed facts and decisions." in body
     assert "2 suggestions wait." in body
     assert "Prepare visible context handoff." in body
     assert "Quality score 92." in body
@@ -1825,7 +1825,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Memory" in body
     assert "Agent handoff" in body
     assert 'href="/projects/central-agent-data-hub#current-state-title"' in body
-    assert 'href="/projects/central-agent-data-hub#memory-explorer"' in body
+    assert 'href="/projects/central-agent-data-hub/memory"' in body
     assert 'href="/projects/central-agent-data-hub#connect-agent"' in body
     assert 'aria-label="Workspace areas"' in body
     assert 'class="action-strip area-map"' in body
@@ -1888,7 +1888,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Future work may rely on a false assumption." in body
     assert "Preview only. Accept or reject in the Review Inbox" in body
     assert "Find reviewed memory" in body
-    assert "Search facts, decisions, risks, questions, reports, and relations already on this page." in body
+    assert "Browse all reviewed facts, decisions, risks, questions, and reports for this project." in body
     assert "Check memory quality" in body
     assert body.index("Project workspace") < body.index("Current work state")
     assert body.index('id="memory-explorer"') < body.index('id="current-state-title"')
@@ -2147,7 +2147,7 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert "data-project-section-nav" in body
     assert "data-section-target" in body
     assert 'href="/projects/central-agent-data-hub-demo?lang=de#current-state-title"' in body
-    assert 'href="/projects/central-agent-data-hub-demo?lang=de#memory-explorer"' in body
+    assert 'href="/projects/central-agent-data-hub-demo/memory?lang=de"' in body
     assert 'href="/projects/central-agent-data-hub-demo?lang=de#connect-agent"' in body
     assert "Diese Seite durchsuchen" in body
     assert "Suchtreffer" in body
@@ -2287,14 +2287,14 @@ def test_memory_item_page_renders_read_only_german_detail() -> None:
     assert "Zurück zu Central Agent Data Hub Demo" in body
     assert 'aria-label="Weiter in der App"' in body
     assert 'href="/projects/central-agent-data-hub-demo?lang=de">Projekt</a>' in body
-    assert 'href="/projects/central-agent-data-hub-demo?lang=de#memory-explorer" class="active" aria-current="page">Geprüftes Gedächtnis</a>' in body
+    assert 'href="/projects/central-agent-data-hub-demo/memory?lang=de" class="active" aria-current="page">Geprüftes Gedächtnis</a>' in body
     assert 'href="/inbox?lang=de">Prüfungseingang</a>' in body
     assert 'href="/projects/central-agent-data-hub-demo/agent-context?lang=de">Agentenübergabe</a>' in body
     assert "Fakten" in body
     assert 'aria-label="Projekt-Arbeitsseitenleiste"' in body
     assert "Projektbereiche" in body
     assert "Letzter Stand und Beobachtungspunkte." in body
-    assert "Geprüfte Fakten und Entscheidungen suchen." in body
+    assert "Geprüfte Fakten und Entscheidungen durchsuchen." in body
     assert "Keine Vorschläge warten." in body
     assert "Sichtbare Kontextübergabe vorbereiten." in body
     assert "Reviewed facts are visible in Hub View." in body
@@ -2349,6 +2349,91 @@ def test_memory_item_page_renders_read_only_german_detail() -> None:
     assert "geprüft" in body
     assert "Aktualisiert" in body
     assert 'href="/projects/central-agent-data-hub-demo?lang=de#reviewed-memory"' in body
+
+
+def test_memory_library_page_renders_german_filterable_library() -> None:
+    body = hub_view.render_page(
+        {
+            "projects": [],
+            "selected_project": {
+                "name": "Central Agent Data Hub Demo",
+                "slug": "central-agent-data-hub-demo",
+            },
+            "memory_library": {
+                "total_count": 2,
+                "visible_count": 1,
+                "filters": [
+                    {
+                        "label_key": "memory_library_filter_all",
+                        "href": "/projects/central-agent-data-hub-demo/memory",
+                        "count": 2,
+                        "active": False,
+                    },
+                    {
+                        "label_key": "agent_status_facts",
+                        "href": "/projects/central-agent-data-hub-demo/memory?type=fact",
+                        "count": 1,
+                        "active": True,
+                    },
+                ],
+                "sections": [
+                    {
+                        "item_type": "fact",
+                        "label_key": "agent_status_facts",
+                        "count": 1,
+                        "entries": [
+                            {
+                                "item_type": "fact",
+                                "type_label_key": "agent_status_facts",
+                                "title": "Reviewed facts are visible in Hub View.",
+                                "summary": "demo · confidence 0.9",
+                                "status": "verified",
+                                "updated_at": "2026-06-05 08:00 UTC",
+                                "detail_url": (
+                                    "/projects/central-agent-data-hub-demo/memory/fact/"
+                                    "10000000-0000-4000-8000-000000000201"
+                                ),
+                            }
+                        ],
+                    }
+                ],
+            },
+            "not_found_slug": None,
+            "draft_total": 0,
+        },
+        200,
+        view_name="memory_library",
+        language="de",
+        current_path="/projects/central-agent-data-hub-demo/memory",
+        query_string="type=fact&lang=de",
+    ).decode("utf-8")
+
+    assert '<html lang="de">' in body
+    assert "Gedächtnisbibliothek" in body
+    assert "Bibliothek des geprüften Gedächtnisses" in body
+    assert "Durchsuche die geprüften Fakten" in body
+    assert 'aria-label="Geprüftes Gedächtnis nach Art filtern"' in body
+    assert 'href="/projects/central-agent-data-hub-demo/memory?lang=de"' in body
+    assert (
+        'href="/projects/central-agent-data-hub-demo/memory?type=fact&amp;lang=de"'
+        in body
+    )
+    assert 'aria-current="page"' in body
+    assert "Eintrag finden" in body
+    assert "1 von 2 geprüften Einträgen sichtbar." in body
+    assert "Fakten" in body
+    assert "1 Einträge" in body
+    assert "Reviewed facts are visible in Hub View." in body
+    assert "demo · confidence 0.9" in body
+    assert "Status: geprüft" in body
+    assert "Aktualisiert: 2026-06-05 08:00 UTC" in body
+    assert "Detail öffnen" in body
+    assert 'data-memory-item' in body
+    assert (
+        'href="/projects/central-agent-data-hub-demo/memory/fact/'
+        '10000000-0000-4000-8000-000000000201?lang=de"'
+        in body
+    )
 
 
 def test_memory_item_route_renders_read_only_detail(monkeypatch) -> None:
@@ -2408,6 +2493,79 @@ def test_memory_item_route_renders_read_only_detail(monkeypatch) -> None:
     assert "Prepare agent handoff" in body
     assert "Related memory" in body
     assert "No direct relation is visible for this item." in body
+
+
+def test_memory_library_route_passes_type_filter(monkeypatch) -> None:
+    def fake_load_memory_library_view_model(
+        selected_slug: str,
+        selected_filter: str | None = None,
+    ) -> tuple[int, dict[str, object]]:
+        assert selected_slug == "central-agent-data-hub"
+        assert selected_filter == "risk"
+        return 200, {
+            "projects": [],
+            "selected_project": {
+                "name": "Central Agent Data Hub",
+                "slug": "central-agent-data-hub",
+            },
+            "memory_library": {
+                "total_count": 1,
+                "visible_count": 1,
+                "filters": [
+                    {
+                        "label_key": "agent_status_risks",
+                        "href": "/projects/central-agent-data-hub/memory?type=risk",
+                        "count": 1,
+                        "active": True,
+                    }
+                ],
+                "sections": [
+                    {
+                        "item_type": "risk",
+                        "label_key": "agent_status_risks",
+                        "count": 1,
+                        "entries": [
+                            {
+                                "item_type": "risk",
+                                "type_label_key": "agent_status_risks",
+                                "title": "Skipped preflight",
+                                "summary": "medium · stale context",
+                                "status": "open",
+                                "updated_at": "2026-06-05 08:00 UTC",
+                                "detail_url": (
+                                    "/projects/central-agent-data-hub/memory/risk/"
+                                    "10000000-0000-4000-8000-000000000501"
+                                ),
+                            }
+                        ],
+                    }
+                ],
+            },
+            "not_found_slug": None,
+            "draft_total": 0,
+        }
+
+    monkeypatch.setattr(
+        hub_view,
+        "load_memory_library_view_model",
+        fake_load_memory_library_view_model,
+    )
+    app = hub_view.create_application(bind_host="127.0.0.1", csrf_token="token")
+    captured, body = call_app(
+        app,
+        path="/projects/central-agent-data-hub/memory",
+        query="type=risk",
+    )
+
+    assert captured["status"] == "200 OK"
+    assert "Reviewed memory library" in body
+    assert "Skipped preflight" in body
+    assert "medium · stale context" in body
+    assert (
+        'href="/projects/central-agent-data-hub/memory/risk/'
+        '10000000-0000-4000-8000-000000000501"'
+        in body
+    )
 
 
 def test_build_memory_item_view_summarizes_incoming_and_outgoing_relations() -> None:
@@ -2569,7 +2727,7 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert 'href="/projects/central-agent-data-hub#connect-agent" aria-current="page"' in body
     assert 'aria-label="Continue in this app"' in body
     assert 'href="/projects/central-agent-data-hub">Project</a>' in body
-    assert 'href="/projects/central-agent-data-hub#memory-explorer">Reviewed memory</a>' in body
+    assert 'href="/projects/central-agent-data-hub/memory">Reviewed memory</a>' in body
     assert 'href="/inbox">Review Inbox</a>' in body
     assert 'href="/projects/central-agent-data-hub/agent-context" class="active" aria-current="page">Agent handoff</a>' in body
     assert "Review release readiness" in body

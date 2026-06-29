@@ -1,0 +1,94 @@
+<div class="memory-library-view">
+  <a class="back-link prominent-back" href="{{ url_for('/projects/' ~ selected_project.slug) }}">
+    {{ t('back_to_project', project=selected_project.name) }}
+  </a>
+
+  {% set context_nav_active = 'memory' %}
+  {% include "partials/context_nav.html" %}
+
+  {% if memory_library %}
+    <section class="memory-library-hero" aria-labelledby="memory-library-title">
+      <div>
+        <p class="section-kicker">{{ t('memory_library_kicker') }}</p>
+        <h2 class="detail-title" id="memory-library-title">{{ t('memory_library_title') }}</h2>
+        <p class="detail-description">{{ t('memory_library_body') }}</p>
+      </div>
+      <div class="memory-library-total">
+        <span>{{ t('memory_library_total_label') }}</span>
+        <strong>{{ memory_library.total_count }}</strong>
+        <small>{{ t('memory_library_total_copy') }}</small>
+      </div>
+    </section>
+
+    <nav class="memory-library-filters" aria-label="{{ t('memory_library_filter_label') }}">
+      {% for filter in memory_library.filters %}
+        <a class="memory-library-filter{% if filter.active %} active{% endif %}" href="{{ url_for(filter.href) }}"{% if filter.active %} aria-current="page"{% endif %}>
+          <span>{{ t(filter.label_key) }}</span>
+          <strong>{{ filter.count }}</strong>
+        </a>
+      {% endfor %}
+    </nav>
+
+    <section class="memory-explorer memory-library-search" id="memory-library-search" data-memory-explorer data-showing-template="{{ t('memory_search_showing', count='__count__') }}" data-result-template="{{ t('memory_search_result', count='__count__', query='__query__') }}" data-first-template="{{ t('memory_search_first_ready', query='__query__') }}">
+      <div>
+        <h2>{{ t('memory_library_search_title') }}</h2>
+        <p>{{ t('memory_library_search_body') }}</p>
+      </div>
+      <div class="memory-filter-row">
+        <label class="memory-filter-label" for="memory-library-filter">{{ t('memory_search_label') }}</label>
+        <div class="memory-filter-control">
+          <input id="memory-library-filter" class="memory-filter-input" type="search" data-memory-filter placeholder="{{ t('memory_search_placeholder') }}" autocomplete="off" enterkeyhint="done">
+          <div class="memory-filter-actions">
+            <a class="memory-filter-action" href="#memory-library-search" data-memory-first hidden>{{ t('memory_search_first_action') }}</a>
+            <button class="memory-filter-clear" type="button" data-memory-clear hidden>{{ t('memory_search_clear') }}</button>
+          </div>
+        </div>
+      </div>
+      <p class="memory-filter-meta" data-memory-results role="status" aria-live="polite">
+        {{ t('memory_library_showing', visible=memory_library.visible_count, total=memory_library.total_count) }}
+      </p>
+      <div class="memory-filter-hits" data-memory-hits aria-label="{{ t('memory_search_matches_label') }}" hidden></div>
+      <p class="empty" data-memory-empty hidden>{{ t('memory_search_empty') }}</p>
+    </section>
+
+    <div class="memory-library-sections">
+      {% for section in memory_library.sections %}
+        <section class="memory-library-section" id="memory-library-{{ section.item_type }}" aria-labelledby="memory-library-{{ section.item_type }}-title">
+          <div class="section-header compact">
+            <div>
+              <p class="section-kicker">{{ t('memory_library_section_kicker') }}</p>
+              <h3 id="memory-library-{{ section.item_type }}-title">{{ t(section.label_key) }}</h3>
+            </div>
+            <p>{{ t('memory_library_section_count', count=section.count) }}</p>
+          </div>
+          {% if section.entries %}
+            <div class="memory-library-list">
+              {% for item in section.entries %}
+                <article class="memory-library-card" data-memory-item data-memory-type="{{ item.item_type }}" data-memory-label="{{ t(item.type_label_key) }}">
+                  <div class="memory-library-card-main">
+                    <p class="section-kicker">{{ t(item.type_label_key) }}</p>
+                    <a class="item-title item-title-link" href="{{ url_for(item.detail_url) }}">{{ ui_text(item.title) }}</a>
+                    {% if item.summary %}
+                      <p>{{ ui_text(item.summary) }}</p>
+                    {% endif %}
+                  </div>
+                  <div class="memory-library-card-meta">
+                    {% if item.status %}
+                      <span>{{ t('memory_library_status', status=ui_text(item.status)) }}</span>
+                    {% endif %}
+                    {% if item.updated_at %}
+                      <span>{{ t('memory_library_updated', updated=item.updated_at) }}</span>
+                    {% endif %}
+                    <a href="{{ url_for(item.detail_url) }}">{{ t('open_memory_detail') }}</a>
+                  </div>
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="empty">{{ t('memory_library_section_empty') }}</p>
+          {% endif %}
+        </section>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>

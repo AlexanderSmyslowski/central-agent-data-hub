@@ -42,6 +42,7 @@ from agent_hub.repo_agent_memory import (
 )
 from agent_hub.reviewers import resolve_responsible_reviewer
 from agent_hub.statuses import (
+    REVIEWED_MEMORY_STATUSES,
     agent_read_excluded_statuses,
     agent_read_excluded_statuses_by_type,
 )
@@ -159,6 +160,22 @@ MEMORY_DETAIL_PATH_TYPES = {
     "open-question": "open_question",
 }
 
+MEMORY_LIBRARY_ITEM_TYPES = (
+    "fact",
+    "decision",
+    "risk",
+    "open_question",
+    "report",
+)
+
+MEMORY_LIBRARY_FILTER_PATHS = {
+    "fact": "fact",
+    "decision": "decision",
+    "risk": "risk",
+    "open_question": "open-question",
+    "report": "report",
+}
+
 RELATION_OBJECT_LABEL_KEYS = {
     "project": "nav_project",
     "agent": "memory_relation_agent",
@@ -225,6 +242,25 @@ def rows_with_memory_detail_links(
             linked["detail_url"] = memory_detail_url(project_slug, item_type, linked["id"])
         linked_rows.append(linked)
     return linked_rows
+
+def memory_library_path_type(item_type: str) -> str:
+    return MEMORY_LIBRARY_FILTER_PATHS.get(item_type, item_type)
+
+def normalize_memory_library_filter(value: object | None) -> str | None:
+    text = str(value or "").strip()
+    if not text or text == "all":
+        return None
+    return MEMORY_DETAIL_PATH_TYPES.get(text)
+
+def memory_library_url(
+    project_slug: object,
+    *,
+    item_type: str | None = None,
+) -> str:
+    base = f"/projects/{project_slug}/memory"
+    if item_type is None:
+        return base
+    return f"{base}?type={memory_library_path_type(item_type)}"
 
 def memory_status_clause(item_type: str) -> tuple[str, tuple[str, ...]]:
     excluded_statuses = agent_read_excluded_statuses(item_type)
@@ -809,6 +845,178 @@ def build_memory_item_view(
         "back_url": f"/projects/{project_slug}#{spec['anchor']}",
         "anchor": spec["anchor"],
     }
+
+def memory_library_card(
+    item_type: str,
+    row: dict[str, object],
+    *,
+    project_slug: object,
+) -> dict[str, object]:
+    spec = MEMORY_DETAIL_SPECS[item_type]
+    title = row.get(str(spec["title_column"])) or row["id"]
+    summary = None
+    if item_type == "fact":
+        source = row.get("source")
+        confidence = row.get("confidence")
+        parts = []
+        if source:
+            parts.append(str(source))
+        if confidence is not None:
+            parts.append(f"confidence {confidence}")
+        summary = " · ".join(parts)
+    elif item_type == "decision":
+        summary = row.get("rationale")
+    elif item_type == "risk":
+        parts = [str(row.get("severity") or "").strip()]
+        if row.get("impact"):
+            parts.append(str(row["impact"]))
+        summary = " · ".join(part for part in parts if part)
+    elif item_type == "open_question":
+        summary = row.get("answer")
+    elif item_type == "report":
+        summary = row.get("summary")
+
+    return {
+        "id": str(row["id"]),
+        "item_type": item_type,
+        "type_label_key": spec["type_label_key"],
+        "title": title,
+        "summary": summary,
+        "status": row.get("status"),
+        "updated_at": format_timestamp(row.get("updated_at")),
+        "detail_url": memory_detail_url(project_slug, item_type, row["id"]),
+    }
+
+def fetch_memory_library_cards(
+    cur,
+    *,
+    project_id: object,
+    project_slug: object,
+) -> dict[str, list[dict[str, object]]]:
+    groups: dict[str, list[dict[str, object]]] = {}
+    for item_type in MEMORY_LIBRARY_ITEM_TYPES:
+        spec = MEMORY_DETAIL_SPECS[item_type]
+        statuses = REVIEWED_MEMORY_STATUSES[item_type]
+        placeholders = ", ".join(["%s"] * len(statuses))
+        cur.execute(
+            f"""
+            SELECT {spec["columns"]}
+            FROM {spec["table"]}
+            WHERE project_id = %s
+              AND status IN ({placeholders})
+            ORDER BY updated_at DESC NULLS LAST, created_at DESC NULLS LAST, id DESC
+            """,
+            (project_id, *statuses),
+        )
+        groups[item_type] = [
+            memory_library_card(item_type, dict(row), project_slug=project_slug)
+            for row in cur.fetchall()
+        ]
+    return groups
+
+def memory_library_filters(
+    *,
+    groups: dict[str, list[dict[str, object]]],
+    selected_type: str | None,
+    project_slug: object,
+) -> list[dict[str, object]]:
+    total = sum(len(rows) for rows in groups.values())
+    filters = [
+        {
+            "label_key": "memory_library_filter_all",
+            "href": memory_library_url(project_slug),
+            "count": total,
+            "active": selected_type is None,
+        }
+    ]
+    for item_type in MEMORY_LIBRARY_ITEM_TYPES:
+        filters.append(
+            {
+                "label_key": MEMORY_DETAIL_SPECS[item_type]["type_label_key"],
+                "href": memory_library_url(project_slug, item_type=item_type),
+                "count": len(groups.get(item_type, [])),
+                "active": selected_type == item_type,
+            }
+        )
+    return filters
+
+def build_memory_library_view(
+    *,
+    groups: dict[str, list[dict[str, object]]],
+    selected_type: str | None,
+    project_slug: object,
+) -> dict[str, object]:
+    visible_types = (
+        [selected_type]
+        if selected_type in MEMORY_LIBRARY_ITEM_TYPES
+        else list(MEMORY_LIBRARY_ITEM_TYPES)
+    )
+    sections = [
+        {
+            "item_type": item_type,
+            "label_key": MEMORY_DETAIL_SPECS[item_type]["type_label_key"],
+            "entries": groups.get(item_type, []),
+            "count": len(groups.get(item_type, [])),
+        }
+        for item_type in visible_types
+    ]
+    total = sum(len(rows) for rows in groups.values())
+    visible_count = sum(section["count"] for section in sections)
+    return {
+        "selected_type": selected_type,
+        "filters": memory_library_filters(
+            groups=groups,
+            selected_type=selected_type,
+            project_slug=project_slug,
+        ),
+        "sections": sections,
+        "total_count": total,
+        "visible_count": visible_count,
+    }
+
+def load_memory_library_view_model(
+    selected_slug: str,
+    selected_filter: object | None = None,
+) -> tuple[int, dict[str, object]]:
+    selected_type = normalize_memory_library_filter(selected_filter)
+    with _compat_attr("connect", connect)() as conn:
+        with conn.cursor() as cur:
+            projects = fetch_active_projects(cur)
+            drafts = fetch_drafts(cur, limit=None)
+            draft_counts = draft_counts_by_project(drafts)
+            draft_total = sum(draft_counts.values())
+            cards = build_project_cards(cur, projects, draft_counts)
+            project = _compat_attr("fetch_project", fetch_project)(cur, selected_slug)
+            if project is None or project.get("status") != "active":
+                return 404, {
+                    "projects": cards,
+                    "selected_project": None,
+                    "not_found_slug": selected_slug,
+                    "draft_total": draft_total,
+                    "memory_library": None,
+                }
+            selected_project = build_detail_view(
+                cur,
+                project,
+                draft_count=draft_counts.get(str(project["slug"]), 0),
+                draft_rows=drafts,
+            )
+            groups = fetch_memory_library_cards(
+                cur,
+                project_id=project["id"],
+                project_slug=project["slug"],
+            )
+            return 200, {
+                "projects": cards,
+                "selected_project": selected_project,
+                "not_found_slug": None,
+                "draft_total": draft_total,
+                "memory_library": build_memory_library_view(
+                    groups=groups,
+                    selected_type=selected_type,
+                    project_slug=project["slug"],
+                ),
+            }
 
 def load_memory_item_view_model(
     selected_slug: str,

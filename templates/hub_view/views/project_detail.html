@@ -115,7 +115,7 @@
       <span class="action-title">{{ t('nav_work_state') }}</span>
       <span class="action-copy">{{ t('current_state_copy') }}</span>
     </a>
-    <a class="action-link action-memory" href="#memory-explorer">
+    <a class="action-link action-memory" href="{{ url_for('/projects/' ~ selected_project.slug ~ '/memory') }}">
       <span class="action-kicker">{{ t('nav_memory') }}</span>
       <span class="action-title">{{ t('find_reviewed_memory') }}</span>
       <span class="action-copy">{{ t('reviewed_memory_action_copy') }}</span>
