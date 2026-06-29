@@ -570,6 +570,51 @@
         gap: 8px;
       }
 
+      .project-overview-map {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .project-overview-map-item {
+        display: grid;
+        gap: 5px;
+        min-height: 86px;
+        padding: 11px;
+        border: 1px solid rgba(45, 74, 95, 0.18);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.58);
+        color: var(--text);
+      }
+
+      .project-overview-map-item:hover,
+      .project-overview-map-item:focus-visible {
+        border-color: rgba(45, 74, 95, 0.34);
+        background: var(--surface-strong);
+      }
+
+      .project-overview-map-item span {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.25;
+      }
+
+      .project-overview-map-item strong {
+        color: var(--text);
+        font-size: 14px;
+        line-height: 1.25;
+      }
+
+      .project-overview-map-item.ready {
+        border-color: rgba(45, 74, 95, 0.28);
+      }
+
+      .project-overview-map-item.needs-review,
+      .project-overview-map-item.needs-attention {
+        border-color: rgba(135, 86, 32, 0.28);
+        background: rgba(255, 248, 235, 0.68);
+      }
+
       .project-overview-metric {
         display: grid;
         gap: 4px;
@@ -600,7 +645,7 @@
 
       .project-overview-next {
         display: grid;
-        gap: 6px;
+        gap: 10px;
         padding: 13px 14px;
         border: 1px solid rgba(45, 74, 95, 0.2);
         border-radius: 8px;
@@ -614,14 +659,20 @@
 
       .project-overview-next a {
         justify-self: start;
-        color: var(--accent);
+        min-height: 40px;
+        padding: 9px 13px;
+        border-radius: 8px;
+        background: var(--accent);
+        color: #fff;
         font-size: 14px;
         font-weight: 700;
+        text-align: center;
       }
 
       .project-overview-next a:hover,
       .project-overview-next a:focus-visible {
-        color: var(--accent-strong);
+        background: var(--accent-strong);
+        color: #fff;
       }
 
       .project-overview-action {
@@ -2956,6 +3007,7 @@
         }
 
         .project-overview-card-header,
+        .project-overview-map,
         .project-overview-metrics,
         .project-overview-actions {
           grid-template-columns: 1fr;
@@ -3230,6 +3282,42 @@
                       {% else %}
                         <p>{{ t('project_overview_no_report') }}</p>
                       {% endif %}
+                    </div>
+                    <div class="project-overview-map" aria-label="{{ t('project_overview_map') }}">
+                      <a
+                        class="project-overview-map-item {% if project.latest_report_title %}ready{% else %}quiet{% endif %}"
+                        href="{{ url_for('/projects/' ~ project.slug) }}#latest-status"
+                      >
+                        <span>{{ t('project_overview_status_area') }}</span>
+                        <strong>
+                          {% if project.latest_report_title %}
+                            {{ t('project_overview_status_visible') }}
+                          {% else %}
+                            {{ t('project_overview_status_missing') }}
+                          {% endif %}
+                        </strong>
+                      </a>
+                      <a class="project-overview-map-item ready" href="{{ url_for('/projects/' ~ project.slug) }}#project-memory">
+                        <span>{{ t('project_overview_memory') }}</span>
+                        <strong>{{ t('project_overview_memory_metric', count=project.reviewed_count) }}</strong>
+                      </a>
+                      <a
+                        class="project-overview-map-item {% if project.draft_count %}needs-review{% else %}quiet{% endif %}"
+                        href="{{ url_for('/inbox') }}"
+                      >
+                        <span>{{ t('project_overview_review_queue') }}</span>
+                        <strong>
+                          {% if project.draft_count %}
+                            {{ t('project_overview_review_waiting', count=project.draft_count) }}
+                          {% else %}
+                            {{ t('project_overview_review_clear') }}
+                          {% endif %}
+                        </strong>
+                      </a>
+                      <a class="project-overview-map-item ready" href="{{ url_for('/projects/' ~ project.slug ~ '/agent-context') }}">
+                        <span>{{ t('project_overview_agent_area') }}</span>
+                        <strong>{{ t('project_overview_agent_ready') }}</strong>
+                      </a>
                     </div>
                     <div class="project-overview-metrics" aria-label="{{ t('project_overview_title') }}">
                       <a class="project-overview-metric" href="{{ url_for('/projects/' ~ project.slug) }}#risks-and-questions">

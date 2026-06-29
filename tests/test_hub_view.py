@@ -480,6 +480,11 @@ def test_project_overview_renders_as_work_center() -> None:
     assert "Central Agent Data Hub Demo" in body
     assert "Review waiting" in body
     assert "Latest demo report" in body
+    assert 'aria-label="Project signals"' in body
+    assert "Work state" in body
+    assert "Status visible" in body
+    assert "Handoff available" in body
+    assert "2 to review" in body
     assert "Attention" in body
     assert "3 risks/questions" in body
     assert "Review queue" in body
@@ -545,6 +550,11 @@ def test_project_overview_renders_german_work_center() -> None:
     assert "Projekt-Arbeitszentrale" in body
     assert "Braucht Aufmerksamkeit" in body
     assert "Noch kein Bericht." in body
+    assert 'aria-label="Projekt-Signale"' in body
+    assert "Arbeitsstand" in body
+    assert "Noch kein Stand" in body
+    assert "Nichts wartet" in body
+    assert "Übergabe möglich" in body
     assert "1 Risiken/Fragen" in body
     assert "Geprüftes Gedächtnis" in body
     assert "Empfohlener nächster Schritt" in body
