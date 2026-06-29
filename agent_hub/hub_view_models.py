@@ -87,27 +87,31 @@ DRAFT_REMEMBER_TEXT_KEYS = {
 }
 
 DEFAULT_AGENT_TASK = "Use reviewed Agent Data Hub context for this project."
-HUB_VIEW_STYLESHEET_ASSETS = (
-    "base.css",
-    "layout.css",
-    "project_overview.css",
-    "workbench.css",
-    "memory_library.css",
-    "memory_search.css",
-    "review_surfaces.css",
-    "agent_handoff.css",
-    "quality_detail.css",
-    "memory_detail.css",
-    "responsive.css",
-)
-HUB_VIEW_SCRIPT_ASSETS = (
-    "shared.js",
-    "copy.js",
-    "memory_search.js",
-    "project_nav.js",
-    "inbox_filter.js",
-    "connection_checklist.js",
-)
+HUB_VIEW_STATIC_ASSET_MANIFEST = {
+    "stylesheets": (
+        "base.css",
+        "layout.css",
+        "project_overview.css",
+        "workbench.css",
+        "memory_library.css",
+        "memory_search.css",
+        "review_surfaces.css",
+        "agent_handoff.css",
+        "quality_detail.css",
+        "memory_detail.css",
+        "responsive.css",
+    ),
+    "scripts": (
+        "shared.js",
+        "copy.js",
+        "memory_search.js",
+        "project_nav.js",
+        "inbox_filter.js",
+        "connection_checklist.js",
+    ),
+}
+HUB_VIEW_STYLESHEET_ASSETS = HUB_VIEW_STATIC_ASSET_MANIFEST["stylesheets"]
+HUB_VIEW_SCRIPT_ASSETS = HUB_VIEW_STATIC_ASSET_MANIFEST["scripts"]
 PROJECT_CARD_COUNT_KEYS = (
     "documents",
     "facts",

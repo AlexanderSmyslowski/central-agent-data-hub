@@ -235,11 +235,19 @@ def test_render_page_includes_local_review_claim() -> None:
 
     assert "Hub View" in body
     assert 'class="view-projects"' in body
+    stylesheet_positions = []
     for asset in hub_view.HUB_VIEW_STYLESHEET_ASSETS:
-        assert f'<link rel="stylesheet" href="/static/{asset}">' in body
+        tag = f'<link rel="stylesheet" href="/static/{asset}">'
+        assert tag in body
+        stylesheet_positions.append(body.index(tag))
+    assert stylesheet_positions == sorted(stylesheet_positions)
     assert '<link rel="stylesheet" href="/static/app.css">' not in body
+    script_positions = []
     for asset in hub_view.HUB_VIEW_SCRIPT_ASSETS:
-        assert f'<script src="/static/{asset}" defer></script>' in body
+        tag = f'<script src="/static/{asset}" defer></script>'
+        assert tag in body
+        script_positions.append(body.index(tag))
+    assert script_positions == sorted(script_positions)
     assert "<style>" not in body
     body_tag = re.search(r"<body[^>]+>", body)
     assert body_tag is not None
@@ -257,6 +265,50 @@ def test_render_page_includes_local_review_claim() -> None:
     assert "Project overview" in body
     assert "0 items" in body
     assert "Select a project" in body
+
+
+def test_hub_view_static_asset_manifest_matches_static_files() -> None:
+    manifest = hub_view_models.HUB_VIEW_STATIC_ASSET_MANIFEST
+    stylesheets = manifest["stylesheets"]
+    scripts = manifest["scripts"]
+    static_dir = hub_view.hub_view_static_dir()
+
+    assert stylesheets == hub_view.HUB_VIEW_STYLESHEET_ASSETS
+    assert scripts == hub_view.HUB_VIEW_SCRIPT_ASSETS
+    assert len(set(stylesheets)) == len(stylesheets)
+    assert len(set(scripts)) == len(scripts)
+    assert all(
+        asset.endswith(".css") and "/" not in asset
+        for asset in stylesheets
+    )
+    assert all(
+        asset.endswith(".js") and "/" not in asset
+        for asset in scripts
+    )
+
+    css_files = {path.name for path in static_dir.glob("*.css")}
+    js_files = {path.name for path in static_dir.glob("*.js")}
+
+    assert set(stylesheets) == css_files
+    assert set(scripts) == js_files
+    assert "app.css" not in css_files
+    assert "app.js" not in js_files
+
+
+def test_hub_view_static_asset_order_is_intentional() -> None:
+    stylesheets = hub_view.HUB_VIEW_STYLESHEET_ASSETS
+    scripts = hub_view.HUB_VIEW_SCRIPT_ASSETS
+
+    assert stylesheets[0] == "base.css"
+    assert stylesheets[-1] == "responsive.css"
+    assert stylesheets.index("layout.css") < stylesheets.index("project_overview.css")
+    assert stylesheets.index("memory_search.css") < stylesheets.index("responsive.css")
+    assert stylesheets.index("agent_handoff.css") < stylesheets.index("responsive.css")
+
+    assert scripts[0] == "shared.js"
+    assert scripts.index("shared.js") < scripts.index("memory_search.js")
+    assert scripts.index("shared.js") < scripts.index("inbox_filter.js")
+    assert scripts.index("copy.js") < scripts.index("connection_checklist.js")
 
 
 def test_render_page_can_switch_to_german_chrome() -> None:
