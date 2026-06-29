@@ -803,10 +803,66 @@
       }
 
       .overview-note {
-        margin: -12px 0 24px;
+        margin: 0 0 24px;
         color: var(--muted);
         font-size: 14px;
         line-height: 1.5;
+      }
+
+      .memory-kind-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+        margin: 24px 0 28px;
+      }
+
+      .memory-kind-card {
+        display: grid;
+        gap: 6px;
+        min-height: 142px;
+        align-content: start;
+        padding: 14px 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.58);
+      }
+
+      .memory-kind-card:hover,
+      .memory-kind-card:focus-visible {
+        border-color: rgba(45, 74, 95, 0.36);
+        background: var(--surface-strong);
+      }
+
+      .memory-kind-label {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        line-height: 1.2;
+        text-transform: uppercase;
+      }
+
+      .memory-kind-card strong {
+        font-size: 15px;
+        line-height: 1.25;
+      }
+
+      .memory-kind-count {
+        width: fit-content;
+        min-width: 34px;
+        padding: 3px 8px;
+        border: 1px solid rgba(45, 74, 95, 0.18);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--accent);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .memory-kind-card span:last-child {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.4;
       }
 
       .memory-explorer {

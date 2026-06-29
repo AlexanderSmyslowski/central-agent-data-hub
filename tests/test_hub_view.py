@@ -1515,6 +1515,18 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert 'id="project-memory"' in body
     assert "Project memory" in body
     assert "Search and inspect the reviewed context this project can hand to a chatbot or local agent." in body
+    assert 'aria-label="Project memory types"' in body
+    assert 'class="memory-kind-grid"' in body
+    assert "Rules for work" in body
+    assert "Choices that constrain future agent work." in body
+    assert "Known facts" in body
+    assert "Checked assumptions the agent may rely on." in body
+    assert "Work state" in body
+    assert "Compact snapshots of the latest project state." in body
+    assert "Watch points" in body
+    assert "Things the agent must not guess away." in body
+    assert "Still unclear" in body
+    assert "Reviewed uncertainties that should stay visible." in body
     assert "Agent handoff and review" in body
     assert "Prepare context for a chatbot or local agent, then handle suggested memory changes separately." in body
     assert "Memory details" in body
@@ -1572,7 +1584,6 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Task for the agent" in body
     assert "primary-button" in body
     assert "Latest status" in body
-    assert "all items to review" in body
     assert "Review suggested changes" in body
     assert "suggested memory changes" in body
     assert "Drafts are proposed memory changes across projects. They are not reviewed memory until accepted." in body
@@ -1735,6 +1746,15 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert "Nutze diese Bereiche wie eine lokale App" in body
     assert "Projektgedächtnis" in body
     assert "Durchsuche und prüfe den bestätigten Kontext" in body
+    assert "Arten von Projektgedächtnis" in body
+    assert "Vorgaben für Arbeit" in body
+    assert "Festlegungen, die spätere Agentenarbeit begrenzen." in body
+    assert "Bekannte Fakten" in body
+    assert "Geprüfte Annahmen, auf die sich der Agent stützen darf." in body
+    assert "Im Blick behalten" in body
+    assert "Punkte, die der Agent nicht wegvermuten darf." in body
+    assert "Noch unklar" in body
+    assert "Geprüfte Unsicherheiten, die sichtbar bleiben sollen." in body
     assert "Agentenübergabe und Prüfung" in body
     assert "Detailansicht" in body
     assert "Beginne mit dem letzten Stand, prüfe dann Risiken und Fragen" in body

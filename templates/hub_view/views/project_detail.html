@@ -92,31 +92,36 @@
     <p>{{ t('project_memory_area_copy') }}</p>
   </div>
 
-  <div class="summary-grid">
-    <a class="summary-tile" href="#reviewed-memory">
-      <div class="summary-label">{{ t('reviewed_memory') }}</div>
-      <div class="summary-value">{{ selected_project.counts.facts + selected_project.counts.decisions + selected_project.counts.risks + selected_project.counts.open_questions + selected_project.counts.reports }}</div>
-      <div class="summary-subtle">{{ selected_project.counts.facts }} {{ t('facts') }} · {{ selected_project.counts.decisions }} {{ t('agent_status_decisions') | lower }} · {{ selected_project.counts.reports }} {{ t('reports') }}</div>
+  <div class="memory-kind-grid" aria-label="{{ t('memory_kind_map') }}">
+    <a class="memory-kind-card" href="#reviewed-memory">
+      <span class="memory-kind-label">{{ t('memory_kind_decisions_label') }}</span>
+      <strong>{{ t('agent_status_decisions') }}</strong>
+      <span class="memory-kind-count">{{ selected_project.counts.decisions }}</span>
+      <span>{{ t('memory_kind_decisions_body') }}</span>
     </a>
-    <a class="summary-tile" href="#risks-and-questions">
-      <div class="summary-label">{{ t('risks_and_questions') }}</div>
-      <div class="summary-value">{{ selected_project.counts.open_questions + selected_project.counts.risks }}</div>
-      <div class="summary-subtle">{{ selected_project.counts.open_questions }} {{ t('open_questions') }} · {{ selected_project.counts.risks }} {{ t('risks') }}</div>
+    <a class="memory-kind-card" href="#reviewed-memory">
+      <span class="memory-kind-label">{{ t('memory_kind_facts_label') }}</span>
+      <strong>{{ t('agent_status_facts') }}</strong>
+      <span class="memory-kind-count">{{ selected_project.counts.facts }}</span>
+      <span>{{ t('memory_kind_facts_body') }}</span>
     </a>
-    <a class="summary-tile" href="#latest-status">
-      <div class="summary-label">{{ t('latest_status') }}</div>
-      <div class="summary-value">{{ selected_project.counts.reports }}</div>
-      <div class="summary-subtle">{% if selected_project.reports %}{{ selected_project.reports[0].title }}{% else %}{{ t('no_reports') }}{% endif %}</div>
+    <a class="memory-kind-card" href="#latest-status">
+      <span class="memory-kind-label">{{ t('memory_kind_reports_label') }}</span>
+      <strong>{{ t('agent_status_reports') }}</strong>
+      <span class="memory-kind-count">{{ selected_project.counts.reports }}</span>
+      <span>{{ t('memory_kind_reports_body') }}</span>
     </a>
-    <a class="summary-tile" href="#quality">
-      <div class="summary-label">{{ t('quality') }}</div>
-      <div class="summary-value">{{ selected_project.quality.score }}</div>
-      <div class="summary-subtle">{{ ui_text(selected_project.quality.status) }} · {{ t('relation_coverage') }} {{ selected_project.quality.relation_coverage }}</div>
+    <a class="memory-kind-card" href="#risks-and-questions">
+      <span class="memory-kind-label">{{ t('memory_kind_risks_label') }}</span>
+      <strong>{{ t('agent_status_risks') }}</strong>
+      <span class="memory-kind-count">{{ selected_project.counts.risks }}</span>
+      <span>{{ t('memory_kind_risks_body') }}</span>
     </a>
-    <a class="summary-tile" href="{{ url_for('/inbox') }}">
-      <div class="summary-label">{{ t('review_inbox') }}</div>
-      <div class="summary-value">{{ draft_total | default(0) }}</div>
-      <div class="summary-subtle">{{ t('all_items_to_review') }}</div>
+    <a class="memory-kind-card" href="#risks-and-questions">
+      <span class="memory-kind-label">{{ t('memory_kind_questions_label') }}</span>
+      <strong>{{ t('agent_status_open_questions') }}</strong>
+      <span class="memory-kind-count">{{ selected_project.counts.open_questions }}</span>
+      <span>{{ t('memory_kind_questions_body') }}</span>
     </a>
   </div>
 
