@@ -2100,6 +2100,10 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "memory-filter-match" in memory_search_js
     assert 'getAttribute("data-memory-type")' in memory_search_js
     assert "memory-filter-hit" in memory_search_js
+    assert "updateSections" in memory_search_js
+    assert 'querySelectorAll("[data-memory-section]")' in memory_search_js
+    assert 'querySelector("[data-memory-section-count]")' in memory_search_js
+    assert 'data-memory-search-note' in memory_search_js
     assert 'event.key === "Enter"' in memory_search_js
     assert "filter.blur()" in memory_search_js
     assert 'data-memory-type="decision"' in body
@@ -2567,9 +2571,15 @@ def test_memory_library_page_renders_german_filterable_library() -> None:
     )
     assert 'aria-current="page"' in body
     assert "Eintrag finden" in body
+    assert "Suche aktiv. Unten werden nur passende Bereiche und Einträge gezeigt." in body
+    assert "Alle Einträge zeigen" in body
     assert "1 von 2 geprüften Einträgen sichtbar." in body
     assert "Fakten" in body
     assert "1 Einträge" in body
+    assert 'data-memory-search-note hidden' in body
+    assert 'data-memory-section' in body
+    assert 'data-memory-section-count' in body
+    assert 'data-search-template="__count__ Treffer sichtbar"' in body
     assert "Reviewed facts are visible in Hub View." in body
     assert "demo · confidence 0.9" in body
     assert "Status: geprüft" in body

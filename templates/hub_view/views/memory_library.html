@@ -47,19 +47,20 @@
       <p class="memory-filter-meta" data-memory-results role="status" aria-live="polite">
         {{ t('memory_library_showing', visible=memory_library.visible_count, total=memory_library.total_count) }}
       </p>
+      <p class="memory-filter-note" data-memory-search-note hidden>{{ t('memory_search_active_hint') }}</p>
       <div class="memory-filter-hits" data-memory-hits aria-label="{{ t('memory_search_matches_label') }}" hidden></div>
       <p class="empty" data-memory-empty hidden>{{ t('memory_search_empty') }}</p>
     </section>
 
     <div class="memory-library-sections">
       {% for section in memory_library.sections %}
-        <section class="memory-library-section" id="memory-library-{{ section.item_type }}" aria-labelledby="memory-library-{{ section.item_type }}-title">
+        <section class="memory-library-section" id="memory-library-{{ section.item_type }}" aria-labelledby="memory-library-{{ section.item_type }}-title" data-memory-section>
           <div class="section-header compact">
             <div>
               <p class="section-kicker">{{ t('memory_library_section_kicker') }}</p>
               <h3 id="memory-library-{{ section.item_type }}-title">{{ t(section.label_key) }}</h3>
             </div>
-            <p>{{ t('memory_library_section_count', count=section.count) }}</p>
+            <p data-memory-section-count data-default-text="{{ t('memory_library_section_count', count=section.count) }}" data-search-template="{{ t('memory_library_section_search_count', count='__count__') }}">{{ t('memory_library_section_count', count=section.count) }}</p>
           </div>
           {% if section.entries %}
             <div class="memory-library-list">

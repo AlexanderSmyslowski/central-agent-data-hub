@@ -11,7 +11,9 @@
     var hits = memoryExplorer.querySelector("[data-memory-hits]");
     var clear = memoryExplorer.querySelector("[data-memory-clear]");
     var firstAction = memoryExplorer.querySelector("[data-memory-first]");
+    var activeNote = memoryExplorer.querySelector("[data-memory-search-note]");
     var items = Array.prototype.slice.call(document.querySelectorAll("[data-memory-item]"));
+    var sections = Array.prototype.slice.call(document.querySelectorAll("[data-memory-section]"));
     var showingTemplate = memoryExplorer.getAttribute("data-showing-template") || "Showing __count__ visible memory items on this page.";
     var resultTemplate = memoryExplorer.getAttribute("data-result-template") || '__count__ matches for "__query__".';
     var firstTemplate = memoryExplorer.getAttribute("data-first-template") || 'Open first match for "__query__".';
@@ -61,6 +63,29 @@
       });
     }
 
+    function updateSections(query) {
+      sections.forEach(function (section) {
+        var sectionItems = Array.prototype.slice.call(section.querySelectorAll("[data-memory-item]"));
+        var visibleCount = sectionItems.filter(function (item) {
+          return !item.hidden;
+        }).length;
+        var counter = section.querySelector("[data-memory-section-count]");
+        section.hidden = Boolean(query && visibleCount === 0);
+        section.classList.toggle("search-active", Boolean(query && visibleCount > 0));
+        if (counter) {
+          if (query) {
+            counter.textContent = fillTemplate(
+              counter.getAttribute("data-search-template") || "__count__ matches shown",
+              visibleCount,
+              query
+            );
+          } else {
+            counter.textContent = counter.getAttribute("data-default-text") || counter.textContent;
+          }
+        }
+      });
+    }
+
     function openFirstMemoryMatch() {
       if (!currentMatches.length) {
         return;
@@ -104,9 +129,13 @@
       }
       currentMatches = matches;
       memoryExplorer.classList.toggle("search-active", Boolean(query));
+      updateSections(query);
       renderHits(matches, query);
       if (empty) {
         empty.hidden = visible !== 0;
+      }
+      if (activeNote) {
+        activeNote.hidden = !query;
       }
       if (clear) {
         clear.hidden = !query;
