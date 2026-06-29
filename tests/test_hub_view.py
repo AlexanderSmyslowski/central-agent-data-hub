@@ -2573,6 +2573,18 @@ def test_memory_library_page_renders_german_filterable_library() -> None:
     assert "Eintrag finden" in body
     assert "Suche aktiv. Unten werden nur passende Bereiche und Einträge gezeigt." in body
     assert "Alle Einträge zeigen" in body
+    assert "Mit diesem Gedächtnis weiterarbeiten" in body
+    assert "Einen nützlichen Eintrag finden" in body
+    assert "Agentenübergabe vorbereiten" in body
+    assert "Vorschläge prüfen" in body
+    assert "Zurück zum Arbeitsstand" in body
+    assert 'href="#memory-library-search"' in body
+    assert 'href="/projects/central-agent-data-hub-demo/agent-context?lang=de"' in body
+    assert 'href="/inbox?lang=de"' in body
+    assert (
+        'href="/projects/central-agent-data-hub-demo?lang=de#current-state-title"'
+        in body
+    )
     assert "1 von 2 geprüften Einträgen sichtbar." in body
     assert "Fakten" in body
     assert "1 Einträge" in body

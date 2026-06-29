@@ -52,6 +52,36 @@
       <p class="empty" data-memory-empty hidden>{{ t('memory_search_empty') }}</p>
     </section>
 
+    <section class="memory-library-actions" aria-labelledby="memory-library-actions-title">
+      <div>
+        <p class="section-kicker">{{ t('memory_library_actions_kicker') }}</p>
+        <h2 id="memory-library-actions-title">{{ t('memory_library_actions_title') }}</h2>
+        <p>{{ t('memory_library_actions_body') }}</p>
+      </div>
+      <div class="memory-library-action-grid">
+        <a class="memory-library-action-card primary" href="#memory-library-search">
+          <span>{{ t('memory_library_action_find_kicker') }}</span>
+          <strong>{{ t('memory_library_action_find_title') }}</strong>
+          <small>{{ t('memory_library_action_find_body') }}</small>
+        </a>
+        <a class="memory-library-action-card" href="{{ url_for('/projects/' ~ selected_project.slug ~ '/agent-context') }}">
+          <span>{{ t('memory_library_action_agent_kicker') }}</span>
+          <strong>{{ t('memory_library_action_agent_title') }}</strong>
+          <small>{{ t('memory_library_action_agent_body') }}</small>
+        </a>
+        <a class="memory-library-action-card" href="{{ url_for('/inbox') }}">
+          <span>{{ t('memory_library_action_review_kicker') }}</span>
+          <strong>{{ t('memory_library_action_review_title') }}</strong>
+          <small>{{ t('memory_library_action_review_body') }}</small>
+        </a>
+        <a class="memory-library-action-card" href="{{ url_for('/projects/' ~ selected_project.slug) }}#current-state-title">
+          <span>{{ t('memory_library_action_state_kicker') }}</span>
+          <strong>{{ t('memory_library_action_state_title') }}</strong>
+          <small>{{ t('memory_library_action_state_body') }}</small>
+        </a>
+      </div>
+    </section>
+
     <div class="memory-library-sections">
       {% for section in memory_library.sections %}
         <section class="memory-library-section" id="memory-library-{{ section.item_type }}" aria-labelledby="memory-library-{{ section.item_type }}-title" data-memory-section>
