@@ -44,7 +44,7 @@ from agent_hub.statuses import (
     agent_read_excluded_statuses,
     agent_read_excluded_statuses_by_type,
 )
-from agent_hub.writeback_routing import card_for_item
+from agent_hub.writeback_routing import card_for_item, primary_text, source_value
 
 
 DRAFT_TYPE_LABELS = {
@@ -73,6 +73,13 @@ CARD_SECTION_PREFIXES = {
         "draft_section_if_wrong",
         "draft_section_if_wrong_help",
     ),
+}
+DRAFT_REMEMBER_TEXT_KEYS = {
+    "fact": "draft_remember_fact_text",
+    "decision": "draft_remember_decision_text",
+    "risk": "draft_remember_risk_text",
+    "open_question": "draft_remember_open_question_text",
+    "report": "draft_remember_report_text",
 }
 
 DEFAULT_AGENT_TASK = "Use reviewed Agent Data Hub context for this project."
@@ -1159,7 +1166,7 @@ def draft_card(row: dict[str, object]) -> dict[str, object]:
         "resolution_reason": resolution_reason or "no reviewer assigned",
         "card": card,
         "card_lines": [translate_card_line_for_ui(line) for line in card.splitlines()],
-        "card_sections": draft_card_sections(card),
+        "card_sections": draft_card_sections_for_item(row),
     }
 
 def translate_card_line_for_ui(line: str) -> str:
@@ -1190,6 +1197,38 @@ def draft_card_sections(card: str) -> list[dict[str, str]]:
                 }
             )
     return sections
+
+def draft_card_sections_for_item(row: dict[str, object]) -> list[dict[str, str]]:
+    item_type = str(row.get("type") or "")
+    source = source_value(row)
+    source_text_key = (
+        "draft_source_text"
+        if source and source != "Quelle nicht angegeben"
+        else "draft_source_missing_text"
+    )
+    return [
+        {
+            "label_key": "draft_section_remember",
+            "help_key": "draft_section_remember_help",
+            "text_key": DRAFT_REMEMBER_TEXT_KEYS.get(
+                item_type,
+                "draft_remember_generic_text",
+            ),
+            "text_value": primary_text(row),
+        },
+        {
+            "label_key": "draft_section_source",
+            "help_key": "draft_section_source_help",
+            "text_key": source_text_key,
+            "text_value": source if source_text_key == "draft_source_text" else "",
+        },
+        {
+            "label_key": "draft_section_if_wrong",
+            "help_key": "draft_section_if_wrong_help",
+            "text_key": "draft_if_wrong_default_text",
+            "text_value": "",
+        },
+    ]
 
 def group_draft_cards(rows: list[dict[str, object]]) -> list[dict[str, object]]:
     groups: dict[str, dict[str, object]] = {}

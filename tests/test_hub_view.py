@@ -419,6 +419,11 @@ def test_project_draft_preview_filters_project_and_uses_inbox_card_shape() -> No
         "draft_section_source",
         "draft_section_if_wrong",
     ]
+    assert preview[0]["card_sections"][0]["text_key"] == "draft_remember_fact_text"
+    assert preview[0]["card_sections"][0]["text_value"] == "Drafts require explicit review."
+    assert preview[0]["card_sections"][1]["text_key"] == "draft_source_text"
+    assert preview[0]["card_sections"][1]["text_value"] == "test"
+    assert preview[0]["card_sections"][2]["text_key"] == "draft_if_wrong_default_text"
 
 
 def test_project_overview_next_step_falls_back_to_latest_or_open() -> None:
@@ -657,10 +662,13 @@ def test_inbox_page_lists_drafts_as_plain_cards() -> None:
     assert "Suggested memory change summary" in body
     assert "What ADH would remember" in body
     assert "This is what future agents may rely on after acceptance." in body
+    assert "Remember as a verified fact: Drafts require explicit review." in body
     assert "Source to check" in body
+    assert "Source: test." in body
     assert "test." in body
     assert "Use this to decide whether the origin is concrete enough." in body
     assert "If this is wrong" in body
+    assert "Future work may rely on a false assumption." in body
     assert "Use this to judge the cost of a wrong assumption." in body
     assert "Should this become reviewed memory?" in body
     assert "Accept only if the sentence is correct, useful, and safe for future agents." in body
@@ -673,6 +681,8 @@ def test_inbox_page_lists_drafts_as_plain_cards() -> None:
     assert "Reject" in body
     assert "Store as reviewed memory" in body
     assert "Archive without promoting" in body
+    assert "Als gesicherten Fakt merken" not in body
+    assert "Spätere Arbeit könnte" not in body
     assert "Merken" not in body
     assert "Verwerfen" not in body
 
@@ -962,15 +972,20 @@ def test_inbox_page_renders_german_queue_language() -> None:
     assert "Zusammenfassung der vorgeschlagenen Änderung" in body
     assert "Was ADH merken würde" in body
     assert "Darauf könnten sich spätere Agenten nach dem Merken stützen." in body
+    assert "Als gesicherten Fakt merken: Drafts require explicit review." in body
     assert "Quelle prüfen" in body
+    assert "Quelle: test." in body
     assert "Nutze das, um zu entscheiden, ob die Herkunft konkret genug ist." in body
     assert "Falls das falsch ist" in body
+    assert "Spätere Arbeit könnte von einer falschen Annahme ausgehen." in body
     assert "Nutze das, um die Folgen einer falschen Annahme einzuschätzen." in body
     assert "Soll das zu geprüftem Projektgedächtnis werden?" in body
     assert "Merke nur, wenn der Satz korrekt, nützlich und sicher für spätere Agenten ist." in body
     assert "Warum diese Karte hier ist" in body
     assert "Als geprüftes Projektgedächtnis speichern" in body
     assert "Archivieren, ohne zu übernehmen" in body
+    assert "Remember as a verified fact" not in body
+    assert "Future work may rely on a false assumption" not in body
     assert "Merken" in body
     assert "Verwerfen" in body
 
@@ -1696,9 +1711,11 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "These suggestions are not reviewed memory yet." in body
     assert "Needs human decision" in body
     assert "What ADH would remember" in body
-    assert "Drafts require explicit review." in body
+    assert "Remember as a verified fact: Drafts require explicit review." in body
     assert "Source to check" in body
+    assert "Source: test." in body
     assert "If this is wrong" in body
+    assert "Future work may rely on a false assumption." in body
     assert "Preview only. Accept or reject in the Review Inbox" in body
     assert "Find reviewed memory" in body
     assert "Search facts, decisions, risks, questions, reports, and relations already on this page." in body

@@ -256,7 +256,13 @@
               {% for section in draft.card_sections %}
                 <div class="draft-card-field">
                   <span class="draft-card-field-label">{{ t(section.label_key) }}</span>
-                  <p>{{ section.text }}</p>
+                  <p>
+                    {% if section.text_key %}
+                      {{ t(section.text_key, value=section.text_value) }}
+                    {% else %}
+                      {{ section.text }}
+                    {% endif %}
+                  </p>
                   <small>{{ t(section.help_key) }}</small>
                 </div>
               {% endfor %}
