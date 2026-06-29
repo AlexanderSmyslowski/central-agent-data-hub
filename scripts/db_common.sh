@@ -5,6 +5,7 @@ COMPOSE_FILE="$ROOT_DIR/docker-compose.yml"
 COMPOSE_PROJECT_NAME="${AGENT_HUB_COMPOSE_PROJECT_NAME:-central-agent-data-hub}"
 AGENT_HUB_DOCKER_TIMEOUT_SECONDS="${AGENT_HUB_DOCKER_TIMEOUT_SECONDS:-15}"
 AGENT_HUB_DB_READY_TIMEOUT_SECONDS="${AGENT_HUB_DB_READY_TIMEOUT_SECONDS:-5}"
+AGENT_HUB_DB_START_TIMEOUT_SECONDS="${AGENT_HUB_DB_START_TIMEOUT_SECONDS:-60}"
 PUBLIC_DEMO_REQUESTED="${AGENT_HUB_PUBLIC_DEMO:-0}"
 PUBLIC_DEMO_COMPOSE_PROJECT_NAME="${AGENT_HUB_COMPOSE_PROJECT_NAME:-central-agent-data-hub-demo}"
 PUBLIC_DEMO_DB_CONTAINER="${AGENT_HUB_DB_CONTAINER:-central-agent-data-hub-demo-postgres}"
@@ -170,25 +171,70 @@ postgres_ready() {
   compose_quick exec -T "$DB_SERVICE" pg_isready -U "$DB_USER" -d "$DB_NAME" >/dev/null 2>&1
 }
 
+postgres_container_state() {
+  docker_quick inspect "$DB_CONTAINER" \
+    --format '{{.State.Status}}|{{if .State.Health}}{{.State.Health.Status}}{{else}}no-health{{end}}|{{.State.ExitCode}}' \
+    2>/dev/null || true
+}
+
+print_postgres_start_failure() {
+  local state="$1"
+
+  echo "Error: Postgres container did not become ready." >&2
+  if [[ -n "$state" ]]; then
+    echo "Container state: $state" >&2
+  fi
+  echo >&2
+  echo "Recent container logs:" >&2
+  docker_quick logs --tail 40 "$DB_CONTAINER" >&2 || true
+  echo >&2
+  echo "For the public demo path, this usually means the local demo volume is stale or corrupted." >&2
+  echo "This script will not delete local Docker volumes automatically." >&2
+  echo "Use a fresh isolated demo instance, for example:" >&2
+  echo >&2
+  echo "  AGENT_HUB_COMPOSE_PROJECT_NAME=adh-demo-fresh \\" >&2
+  echo "  AGENT_HUB_DB_CONTAINER=adh-demo-fresh-postgres \\" >&2
+  echo "  AGENT_HUB_DB_VOLUME=adh-demo-fresh-pgdata \\" >&2
+  echo "  AGENT_HUB_DB_PORT=55433 \\" >&2
+  echo "  scripts/first_run_demo.sh" >&2
+}
+
 run_agent_hub() {
   (cd "$ROOT_DIR" && "$PYTHON_BIN" -m agent_hub.cli "$@")
 }
 
 wait_for_postgres() {
-  local tries=60
   local delay=2
+  local elapsed=0
+  local state
 
-  echo "Waiting for ${DB_CONTAINER} to become ready..."
-  for _ in $(seq 1 "$tries"); do
+  echo "Waiting for ${DB_CONTAINER} to become ready (up to ${AGENT_HUB_DB_START_TIMEOUT_SECONDS}s)..."
+  while (( elapsed < AGENT_HUB_DB_START_TIMEOUT_SECONDS )); do
     if postgres_ready; then
       echo "Postgres is ready."
       return 0
     fi
+
+    state="$(postgres_container_state)"
+    case "$state" in
+      restarting*|exited*)
+        print_postgres_start_failure "$state"
+        return 1
+        ;;
+      *"|unhealthy|"*)
+        if (( elapsed >= 10 )); then
+          print_postgres_start_failure "$state"
+          return 1
+        fi
+        ;;
+    esac
+
     sleep "$delay"
+    elapsed=$((elapsed + delay))
   done
 
-  echo "Error: Postgres did not become ready in time." >&2
-  compose ps
+  state="$(postgres_container_state)"
+  print_postgres_start_failure "$state"
   return 1
 }
 

@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 NO_HUB_VIEW=0
 MOBILE_PREVIEW=0
+DOCKER_TIMEOUT_SECONDS="${AGENT_HUB_DOCKER_TIMEOUT_SECONDS:-15}"
 
 usage() {
   cat <<'EOF'
@@ -100,6 +101,29 @@ print(digest.hexdigest())
 PY
 }
 
+run_with_timeout() {
+  local timeout_seconds="$1"
+  shift
+
+  "$@" &
+  local pid=$!
+  local elapsed=0
+
+  while kill -0 "$pid" >/dev/null 2>&1; do
+    if (( elapsed >= timeout_seconds )); then
+      kill "$pid" >/dev/null 2>&1 || true
+      sleep 1
+      kill -9 "$pid" >/dev/null 2>&1 || true
+      wait "$pid" >/dev/null 2>&1 || true
+      return 124
+    fi
+    sleep 1
+    elapsed=$((elapsed + 1))
+  done
+
+  wait "$pid"
+}
+
 local_cli_ready() {
   "$ROOT_DIR/.venv/bin/python" - <<'PY' >/dev/null 2>&1
 from importlib.metadata import distribution
@@ -139,9 +163,10 @@ if ! command -v docker >/dev/null 2>&1; then
   exit 1
 fi
 
-if ! docker info >/dev/null 2>&1; then
-  echo "Error: Docker is not running or not reachable." >&2
-  echo "Start Docker Desktop or Docker Engine and retry." >&2
+echo "Checking Docker..."
+if ! run_with_timeout "$DOCKER_TIMEOUT_SECONDS" docker info >/dev/null 2>&1; then
+  echo "Error: Docker is not running or did not respond within ${DOCKER_TIMEOUT_SECONDS}s." >&2
+  echo "Start or restart Docker Desktop, wait until it says Docker is running, then retry." >&2
   exit 1
 fi
 

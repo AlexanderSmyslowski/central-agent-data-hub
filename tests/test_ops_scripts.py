@@ -250,6 +250,7 @@ def test_preflight_uses_bounded_docker_checks() -> None:
 
     assert "run_with_timeout()" in common
     assert "AGENT_HUB_DOCKER_TIMEOUT_SECONDS" in common
+    assert "AGENT_HUB_DB_START_TIMEOUT_SECONDS" in common
     assert "COMPOSE_PROJECT_NAME" in common
     assert "COMMON_GIT_DIR" in common
     assert "SHARED_ROOT" in common
@@ -257,6 +258,13 @@ def test_preflight_uses_bounded_docker_checks() -> None:
     assert "docker_quick()" in common
     assert "compose_quick()" in common
     assert "postgres_ready()" in common
+    assert "postgres_container_state()" in common
+    assert "print_postgres_start_failure()" in common
+    assert "did not become ready" in common
+    assert "local demo volume is stale or corrupted" in common
+    assert "This script will not delete local Docker volumes automatically." in common
+    assert "AGENT_HUB_COMPOSE_PROJECT_NAME=adh-demo-fresh" in common
+    assert 'docker_quick logs --tail 40 "$DB_CONTAINER"' in common
     assert "pg_isready -h localhost -p \"$DB_PORT\"" in common
     assert 'docker compose -p "$COMPOSE_PROJECT_NAME" -f "$COMPOSE_FILE"' in common
     assert 'elif [[ -x "$SHARED_ROOT/.venv/bin/python"' in common
@@ -502,7 +510,13 @@ def test_first_run_demo_preserves_existing_env_and_venv_contract() -> None:
     assert "Keeping existing .env" in script
     assert "source .venv/bin/activate" not in script
     assert ".venv/bin/activate" not in script
+    assert "DOCKER_TIMEOUT_SECONDS" in script
+    assert "run_with_timeout()" in script
+    assert "Checking Docker..." in script
     assert "docker info" in script
+    assert 'run_with_timeout "$DOCKER_TIMEOUT_SECONDS" docker info' in script
+    assert "did not respond within" in script
+    assert "Start or restart Docker Desktop" in script
     assert "sys.version_info >= (3, 11)" in script
     assert "distribution(\"central-agent-data-hub\")" in script
     assert "pyproject.toml" in script
