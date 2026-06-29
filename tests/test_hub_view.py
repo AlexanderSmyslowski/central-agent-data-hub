@@ -2325,6 +2325,15 @@ def test_memory_item_page_renders_read_only_german_detail() -> None:
     assert "Zurück zum Projektbereich" in body
     assert "Agentenübergabe vorbereiten" in body
     assert 'href="/projects/central-agent-data-hub-demo/agent-context?lang=de"' in body
+    assert "Außerhalb von Hub View nutzen" in body
+    assert "Diesen Eintrag kopieren" in body
+    assert "Kopiere genau diesen geprüften Eintrag" in body
+    assert 'id="memory-item-copy-text"' in body
+    assert 'data-copy-target="memory-item-copy-text"' in body
+    assert "Geprüfter Agent-Data-Hub-Eintrag für Central Agent Data Hub Demo" in body
+    assert "Art: Fakten" in body
+    assert "Eintrag: Reviewed facts are visible in Hub View." in body
+    assert "Nur als Kontext verwenden; das Kopieren ändert nichts" in body
     assert "Quelle" in body
     assert 'id="memory-details"' in body
     assert "demo" in body

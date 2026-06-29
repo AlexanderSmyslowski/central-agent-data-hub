@@ -122,6 +122,37 @@
         </div>
       </section>
 
+      <section class="memory-copy-panel" aria-labelledby="memory-copy-title">
+        <div>
+          <p class="section-kicker">{{ t('memory_item_copy_kicker') }}</p>
+          <h3 id="memory-copy-title">{{ t('memory_item_copy_section_title') }}</h3>
+          <p>{{ t('memory_item_copy_section_body') }}</p>
+        </div>
+        <div class="copy-row memory-copy-row">
+          <textarea id="memory-item-copy-text" class="context-pack memory-copy-text" readonly rows="9">{%- set copy_lines = [] -%}
+{%- set _ = copy_lines.append(t('memory_item_copy_header', project=selected_project.name)) -%}
+{%- set _ = copy_lines.append(t('memory_item_copy_type') ~ ': ' ~ t(memory_item.type_label_key)) -%}
+{%- set _ = copy_lines.append(t('memory_item_copy_item') ~ ': ' ~ ui_text(memory_item.title)) -%}
+{%- if memory_item.status -%}
+  {%- set _ = copy_lines.append(t('memory_item_status') ~ ': ' ~ ui_text(memory_item.status)) -%}
+{%- endif -%}
+{%- if memory_item.source -%}
+  {%- set _ = copy_lines.append(t('memory_item_source') ~ ': ' ~ ui_text(memory_item.source)) -%}
+{%- endif -%}
+{%- if memory_item.updated_at -%}
+  {%- set _ = copy_lines.append(t('memory_item_updated') ~ ': ' ~ memory_item.updated_at) -%}
+{%- endif -%}
+{%- for field in memory_item.fields -%}
+  {%- if field.label_key not in ('memory_item_source', 'memory_item_status', 'memory_item_updated') -%}
+    {%- set _ = copy_lines.append(t(field.label_key) ~ ': ' ~ ui_text(field.value)) -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- set _ = copy_lines.append(t('memory_item_copy_boundary')) -%}
+{{ copy_lines | join('\n') }}</textarea>
+          <button class="button copy-button" type="button" data-copy-target="memory-item-copy-text">{{ t('memory_item_copy_button') }}</button>
+        </div>
+      </section>
+
       <div class="memory-field-list" id="memory-details" aria-label="{{ t('memory_item_details') }}">
         {% for field in memory_item.fields %}
           <div class="memory-field">
