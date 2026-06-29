@@ -1,4 +1,3 @@
-<script>
   (function () {
     function markCopied(button) {
       var original = button.getAttribute("data-copy-label") || button.textContent;
@@ -420,4 +419,3 @@
       updateConnectionChecklist();
     }
   }());
-</script>

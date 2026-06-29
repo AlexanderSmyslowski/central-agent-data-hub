@@ -27,6 +27,7 @@ from agent_hub.hub_view_models import (
     load_view_model,
     metadata_project_local_path,
     render_page,
+    hub_view_static_dir,
 )
 from agent_hub.hub_view_i18n import resolve_language, with_language
 from agent_hub.repo_agent_memory import (
@@ -84,6 +85,34 @@ def html_response(
         [
             ("Content-Type", "text/html; charset=utf-8"),
             ("Content-Length", str(len(body))),
+        ],
+    )
+    return [body]
+
+def static_response(
+    start_response: Callable[[str, list[tuple[str, str]]], Any],
+    asset_name: str,
+) -> list[bytes]:
+    content_types = {
+        ".css": "text/css; charset=utf-8",
+        ".js": "application/javascript; charset=utf-8",
+    }
+    asset_path = Path(asset_name)
+    if asset_path.name != asset_name or asset_path.suffix not in content_types:
+        return text_response(start_response, "404 Not Found", "Not Found")
+
+    path = hub_view_static_dir() / asset_name
+    if not path.is_file():
+        return text_response(start_response, "404 Not Found", "Not Found")
+
+    body = path.read_bytes()
+    start_response(
+        "200 OK",
+        [
+            ("Content-Type", content_types[path.suffix]),
+            ("Content-Length", str(len(body))),
+            ("Cache-Control", "no-store"),
+            ("X-Content-Type-Options", "nosniff"),
         ],
     )
     return [body]
@@ -214,6 +243,11 @@ class HubViewApplication:
         view_name = "projects"
         if path == "/":
             selected_slug = None
+        elif path.startswith("/static/"):
+            return static_response(
+                start_response,
+                path.removeprefix("/static/"),
+            )
         elif path.startswith("/projects/") and path.endswith("/memory"):
             view_name = "memory_library"
             selected_slug = path.removeprefix("/projects/").removesuffix("/memory").strip("/")

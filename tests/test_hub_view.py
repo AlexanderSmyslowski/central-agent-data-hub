@@ -235,6 +235,9 @@ def test_render_page_includes_local_review_claim() -> None:
 
     assert "Hub View" in body
     assert 'class="view-projects"' in body
+    assert '<link rel="stylesheet" href="/static/app.css">' in body
+    assert '<script src="/static/app.js" defer></script>' in body
+    assert "<style>" not in body
     body_tag = re.search(r"<body[^>]+>", body)
     assert body_tag is not None
     assert "has-selected-project" not in body_tag.group(0)
@@ -319,6 +322,27 @@ def test_application_rejects_non_get_requests() -> None:
 
     assert captured["status"] == "405 Method Not Allowed"
     assert body == b"Method Not Allowed"
+
+
+def test_hub_view_serves_static_assets_with_narrow_paths() -> None:
+    app = hub_view.create_application(bind_host="127.0.0.1", csrf_token="token")
+
+    captured, css = call_app(app, path="/static/app.css")
+    headers = dict(captured["headers"])
+    assert captured["status"] == "200 OK"
+    assert headers["Content-Type"] == "text/css; charset=utf-8"
+    assert headers["X-Content-Type-Options"] == "nosniff"
+    assert ".project-brief" in css
+
+    captured, js = call_app(app, path="/static/app.js")
+    headers = dict(captured["headers"])
+    assert captured["status"] == "200 OK"
+    assert headers["Content-Type"] == "application/javascript; charset=utf-8"
+    assert 'closest("[data-copy-target]")' in js
+
+    captured, body = call_app(app, path="/static/../page.html")
+    assert captured["status"] == "404 Not Found"
+    assert body == "Not Found"
 
 
 def test_build_project_cards_batches_counts_and_latest_reports(monkeypatch) -> None:
@@ -734,8 +758,9 @@ def test_inbox_page_lists_drafts_as_plain_cards() -> None:
     assert "Visible review items: 1." in body
     assert "No review item matches this filter." in body
     assert 'class="section review-card-section"' in body
-    assert "body.view-inbox .review-card-section" in body
-    assert "body.view-inbox #review-workbench" in body
+    css = hub_view.hub_view_static_dir().joinpath("app.css").read_text(encoding="utf-8")
+    assert "body.view-inbox .review-card-section" in css
+    assert "body.view-inbox #review-workbench" in css
     assert "data-inbox-filter" in body
     assert "data-inbox-item" in body
     assert "data-inbox-group" in body
@@ -1804,16 +1829,6 @@ def test_application_renders_project_detail(monkeypatch) -> None:
 
     assert captured["status"] == "200 OK"
     assert 'class="view-projects has-selected-project"' in body
-    assert "body.view-projects.has-selected-project .project-brief" in body
-    assert "body.view-projects.has-selected-project .project-brief-actions" in body
-    assert "body.view-projects.has-selected-project .project-brief-link:first-child" in body
-    assert "body.view-projects.has-selected-project .detail-header .project-meta" in body
-    assert "body.view-projects.has-selected-project .project-timeline" in body
-    assert "body.view-projects.has-selected-project .project-section-nav" in body
-    assert "body.view-projects.has-selected-project #agent-review" in body
-    assert "body.view-projects.has-selected-project #connect-agent" in body
-    assert "body.view-projects.has-selected-project #project-review-preview" in body
-    assert "body.view-projects.has-selected-project #memory-details" in body
     assert "Central Agent Data Hub" in body
     assert 'href="#main-content"' in body
     assert 'id="main-content" tabindex="-1"' in body
@@ -1864,8 +1879,6 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert 'class="action-strip area-map"' in body
     assert 'class="action-link primary action-work-state"' in body
     assert 'class="action-link action-agent-handoff"' in body
-    assert "body.view-projects.has-selected-project .action-work-state" in body
-    assert "body.view-projects.has-selected-project .action-agent-handoff" in body
     assert "Project workspace" in body
     assert "Use these areas like a local app" in body
     assert 'aria-label="Project sections"' in body
@@ -1873,10 +1886,25 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert body.index('class="project-section-nav"') < body.index('class="project-workbench"')
     assert "data-project-section-nav" in body
     assert "data-section-target" in body
-    assert ".project-section-nav a.active" in body
-    assert "setActiveProjectSection" in body
-    assert "updateProjectSectionNav" in body
-    assert "aria-current\", \"location\"" in body
+
+    css = hub_view.hub_view_static_dir().joinpath("app.css").read_text(encoding="utf-8")
+    assert "body.view-projects.has-selected-project .project-brief" in css
+    assert "body.view-projects.has-selected-project .project-brief-actions" in css
+    assert "body.view-projects.has-selected-project .project-brief-link:first-child" in css
+    assert "body.view-projects.has-selected-project .detail-header .project-meta" in css
+    assert "body.view-projects.has-selected-project .project-timeline" in css
+    assert "body.view-projects.has-selected-project .project-section-nav" in css
+    assert "body.view-projects.has-selected-project #agent-review" in css
+    assert "body.view-projects.has-selected-project #connect-agent" in css
+    assert "body.view-projects.has-selected-project #project-review-preview" in css
+    assert "body.view-projects.has-selected-project #memory-details" in css
+    assert "body.view-projects.has-selected-project .action-work-state" in css
+    assert "body.view-projects.has-selected-project .action-agent-handoff" in css
+    assert ".project-section-nav a.active" in css
+    js = hub_view.hub_view_static_dir().joinpath("app.js").read_text(encoding="utf-8")
+    assert "setActiveProjectSection" in js
+    assert "updateProjectSectionNav" in js
+    assert "aria-current\", \"location\"" in js
     assert 'href="#current-state-title"' in body
     assert 'href="#memory-explorer"' in body
     assert 'href="#connect-agent"' in body
@@ -1989,20 +2017,20 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Open first match for" in body
     assert "Showing visible reviewed memory on this page." in body
     assert "No visible memory matches this search." in body
-    assert "itemHaystack" in body
-    assert "reviewSearchAliases" in body
-    assert 'risiko: ["risk", "risks", "risiken"]' in body
-    assert 'arbeitsstand: ["status", "latest status", "report", "bericht"]' in body
-    assert "searchTerms(query)" in body
-    assert "openFirstMemoryMatch" in body
-    assert "scrollIntoView" in body
     assert 'data-first-template' in body
-    assert 'memoryExplorer.classList.toggle("search-active"' in body
-    assert "memory-filter-match" in body
-    assert 'getAttribute("data-memory-type")' in body
-    assert "memory-filter-hit" in body
-    assert 'event.key === "Enter"' in body
-    assert "filter.blur()" in body
+    assert "itemHaystack" in js
+    assert "reviewSearchAliases" in js
+    assert 'risiko: ["risk", "risks", "risiken"]' in js
+    assert 'arbeitsstand: ["status", "latest status", "report", "bericht"]' in js
+    assert "searchTerms(query)" in js
+    assert "openFirstMemoryMatch" in js
+    assert "scrollIntoView" in js
+    assert 'memoryExplorer.classList.toggle("search-active"' in js
+    assert "memory-filter-match" in js
+    assert 'getAttribute("data-memory-type")' in js
+    assert "memory-filter-hit" in js
+    assert 'event.key === "Enter"' in js
+    assert "filter.blur()" in js
     assert 'data-memory-type="decision"' in body
     assert 'data-memory-type="fact"' in body
     assert 'data-memory-type="risk"' in body
@@ -2011,7 +2039,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert 'data-memory-type="relation"' in body
     assert 'data-memory-label="Decisions"' in body
     assert 'data-memory-label="Risks"' in body
-    assert 'getAttribute("data-memory-label")' in body
+    assert 'getAttribute("data-memory-label")' in js
     assert "Connect an agent" in body
     assert 'action="/projects/central-agent-data-hub/agent-context"' in body
     assert "Prepare agent handoff" in body
@@ -2801,7 +2829,8 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "The context pack was copied." in body
     assert "The context pack is visible in the chat before the task." in body
     assert "data-connection-check" in body
-    assert "updateConnectionChecklist" in body
+    js = hub_view.hub_view_static_dir().joinpath("app.js").read_text(encoding="utf-8")
+    assert "updateConnectionChecklist" in js
     assert "Which agent do you use?" in body
     assert 'href="#agent-chatbot"' in body
     assert 'href="#agent-codex"' in body

@@ -24,6 +24,7 @@ from agent_hub.hub_view_models import (
     fetch_recent_review_actions,
     format_timestamp,
     group_draft_cards,
+    hub_view_static_dir,
     hub_view_templates_dir,
     known_project_local_path,
     load_agent_context_view_model,
@@ -39,6 +40,7 @@ from agent_hub.hub_view_models import (
     render_page,
     review_activity_cards,
     shell_command,
+    static_url,
     translate_card_line_for_ui,
 )
 from agent_hub.repo_agent_memory import install_repo_agent_memory, plan_repo_agent_memory

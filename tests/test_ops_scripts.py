@@ -164,19 +164,27 @@ def test_v019_release_notes_describe_memory_explorer() -> None:
 
 def test_hub_view_template_is_split_into_view_partials() -> None:
     page = read_script("templates/hub_view/page.html")
+    css = read_script("templates/hub_view/static/app.css")
+    js = read_script("templates/hub_view/static/app.js")
 
     for partial in (
         "templates/hub_view/views/inbox.html",
         "templates/hub_view/views/agent_context.html",
         "templates/hub_view/views/project_detail.html",
-        "templates/hub_view/partials/copy_actions.html",
+        "templates/hub_view/static/app.css",
+        "templates/hub_view/static/app.js",
     ):
         assert (ROOT / partial).is_file()
 
     assert '{% include "views/inbox.html" %}' in page
     assert '{% include "views/agent_context.html" %}' in page
     assert '{% include "views/project_detail.html" %}' in page
-    assert '{% include "partials/copy_actions.html" %}' in page
+    assert '<link rel="stylesheet" href="{{ static_url(\'app.css\') }}">' in page
+    assert '<script src="{{ static_url(\'app.js\') }}" defer></script>' in page
+    assert "<style>" not in page
+    assert "<script>" not in page
+    assert "body.view-projects.has-selected-project" in css
+    assert "data-copy-target" in js
 
 
 def test_hub_view_python_entrypoint_delegates_to_split_modules() -> None:

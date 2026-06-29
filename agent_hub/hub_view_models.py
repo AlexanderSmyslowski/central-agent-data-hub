@@ -209,6 +209,12 @@ def _compat_attr(name: str, fallback):
 def hub_view_templates_dir() -> Path:
     return Path(__file__).resolve().parents[1] / "templates" / "hub_view"
 
+def hub_view_static_dir() -> Path:
+    return hub_view_templates_dir() / "static"
+
+def static_url(asset_name: str) -> str:
+    return f"/static/{asset_name}"
+
 def load_environment() -> Environment:
     return Environment(
         loader=FileSystemLoader(str(hub_view_templates_dir())),
@@ -1683,6 +1689,7 @@ def render_page(
         tn=tn,
         ui_text=lambda text: localize_ui_text(text, resolved_language),
         url_for=lambda url: with_language(url, resolved_language),
+        static_url=static_url,
         language_links=language_switch_links(current_path, query_string),
         **view_model,
     ).encode("utf-8")
