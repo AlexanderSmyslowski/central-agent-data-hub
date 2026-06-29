@@ -58,6 +58,30 @@
     <p>{{ t('inbox_queue_copy') }}</p>
   </div>
 
+  <section class="review-focus" aria-label="{{ t('review_focus_label') }}">
+    <div class="review-focus-card primary">
+      <span>{{ t('review_focus_now') }}</span>
+      {% if inbox.groups %}
+        <strong>{{ t('review_focus_first_title') }}</strong>
+        <p>{{ t('review_focus_first_copy') }}</p>
+        <a href="#first-review-item">{{ t('review_focus_first_action') }}</a>
+      {% else %}
+        <strong>{{ t('review_focus_empty_title') }}</strong>
+        <p>{{ t('review_focus_empty_copy') }}</p>
+      {% endif %}
+    </div>
+    <div class="review-focus-card">
+      <span>{{ t('review_focus_rule') }}</span>
+      <strong>{{ t('review_focus_rule_title') }}</strong>
+      <p>{{ t('review_focus_rule_copy') }}</p>
+    </div>
+    <div class="review-focus-card">
+      <span>{{ t('review_focus_after') }}</span>
+      <strong>{{ t('review_focus_after_title') }}</strong>
+      <p>{{ t('review_focus_after_copy') }}</p>
+    </div>
+  </section>
+
   <nav class="review-decision-map" aria-label="{{ t('review_decision_map') }}">
     <a class="review-decision-step" href="#review-cards">
       <span>{{ t('review_decision_queue') }}</span>
@@ -187,6 +211,7 @@
     </div>
     <section class="section" id="review-cards" aria-labelledby="review-cards-title">
       <h2 id="review-cards-title">{{ t('review_cards_title') }}</h2>
+      {% set first_review = namespace(done=false) %}
       {% for group in inbox.groups %}
       <div class="draft-group" data-inbox-group>
         <div class="draft-group-header">
@@ -198,7 +223,10 @@
         </div>
         <div class="list">
           {% for draft in group.drafts %}
+            {% set is_first_review = not first_review.done %}
+            {% if is_first_review %}{% set first_review.done = true %}{% endif %}
             <article
+              {% if is_first_review %}id="first-review-item"{% endif %}
               class="draft-card"
               data-inbox-item
               data-inbox-type="{{ draft.type }}"

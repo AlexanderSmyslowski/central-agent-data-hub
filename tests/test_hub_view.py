@@ -584,6 +584,13 @@ def test_inbox_page_lists_drafts_as_plain_cards() -> None:
     assert lint_card_text(card) == []
     assert "Review queue" in body
     assert "Review one suggested memory change at a time." in body
+    assert 'aria-label="Current review decision"' in body
+    assert "Open the next suggestion" in body
+    assert "Jump to first suggestion" in body
+    assert 'href="#first-review-item"' in body
+    assert 'id="first-review-item"' in body
+    assert "Accept only when the sentence is correct, useful, sourced, and safe for future agents." in body
+    assert "Accept becomes reviewed memory. Reject archives the suggestion without promoting it." in body
     assert 'aria-label="Review decision map"' in body
     assert "Waiting" in body
     assert "Suggested memory changes need a human decision." in body
@@ -655,6 +662,10 @@ def test_inbox_page_empty_state() -> None:
     ).decode("utf-8")
 
     assert "No items to review." in body
+    assert "Nothing is waiting" in body
+    assert "When a suggestion arrives, this page will show the exact sentence, source, and consequence" in body
+    assert "Keep it strict" in body
+    assert "The result is explicit" in body
     assert "When agents suggest memory changes" in body
     assert "Nothing needs review right now." in body
     assert "When a card appears, check the sentence and source" in body
