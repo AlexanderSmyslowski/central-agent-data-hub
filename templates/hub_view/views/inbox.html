@@ -12,10 +12,8 @@
     <p class="section-kicker">{{ t('review_result_kicker') }}</p>
     {% if inbox.review_result.result == 'accepted' %}
       <h2 id="review-result-title">{{ t('review_result_accept_title') }}</h2>
-      <p>{{ t('review_result_accept_body', type=ui_text(inbox.review_result.type_label)) }}</p>
     {% else %}
       <h2 id="review-result-title">{{ t('review_result_reject_title') }}</h2>
-      <p>{{ t('review_result_reject_body', type=ui_text(inbox.review_result.type_label)) }}</p>
     {% endif %}
     {% if inbox.review_result.status %}
       <p>{{ t('review_result_status', status=ui_text(inbox.review_result.status)) }}</p>
@@ -23,6 +21,20 @@
     {% if inbox.review_result.reviewed_by or inbox.review_result.review_source %}
       <p>{{ t('review_result_audit', reviewer=ui_text(inbox.review_result.reviewed_by), source=ui_text(inbox.review_result.review_source)) }}</p>
     {% endif %}
+    <div class="review-result-grid">
+      <div class="review-result-note">
+        <strong>{{ t('review_result_what_changed') }}</strong>
+        {% if inbox.review_result.result == 'accepted' %}
+          <p>{{ t('review_result_accept_body', type=ui_text(inbox.review_result.type_label)) }}</p>
+        {% else %}
+          <p>{{ t('review_result_reject_body', type=ui_text(inbox.review_result.type_label)) }}</p>
+        {% endif %}
+      </div>
+      <div class="review-result-note">
+        <strong>{{ t('review_result_not_changed') }}</strong>
+        <p>{{ t('review_result_no_hidden_change') }}</p>
+      </div>
+    </div>
     <div class="review-result-actions" aria-label="{{ t('review_result_next') }}">
       <a class="button primary-button" href="{{ url_for('/inbox') }}">{{ t('review_result_queue') }}</a>
       {% if inbox.review_result.project %}
@@ -158,7 +170,10 @@
               data-inbox-project="{{ draft.project }}"
               data-inbox-label="{{ ui_text(draft.type_label) }}"
             >
-              <h3 class="draft-card-title">{{ t('inbox_card_title') }} · {{ ui_text(draft.type_label) }}</h3>
+              <div class="draft-card-heading">
+                <h3 class="draft-card-title">{{ t('inbox_card_title') }} · {{ ui_text(draft.type_label) }}</h3>
+                <span class="draft-decision-badge">{{ t('inbox_card_priority') }}</span>
+              </div>
               <div class="draft-meta">
                 <span class="draft-pill">{{ draft.project }}</span>
                 <span class="draft-pill">{{ ui_text(draft.type_label) }}</span>

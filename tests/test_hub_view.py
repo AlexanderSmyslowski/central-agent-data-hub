@@ -526,6 +526,7 @@ def test_inbox_page_lists_drafts_as_plain_cards() -> None:
     assert "data-inbox-item" in body
     assert "data-inbox-group" in body
     assert "Suggested change · Fact" in body
+    assert "Human decision needed" in body
     assert "Project queue" in body
     assert "Reviewer" in body
     assert "Review is ready" in body
@@ -608,6 +609,9 @@ def test_inbox_page_renders_accept_result_card() -> None:
     assert 'id="review-result"' in body
     assert "Saved as reviewed memory" in body
     assert "This Fact is no longer a draft. ADH can now hand it to agents as reviewed context." in body
+    assert "What changed" in body
+    assert "What did not happen" in body
+    assert "ADH did not edit other memory, run an agent, or silently promote anything else." in body
     assert "New status: verified." in body
     assert "Audit trail: bob via Hub View." in body
     assert "Review another item" in body
@@ -648,6 +652,9 @@ def test_inbox_page_renders_german_reject_result_card() -> None:
     assert "Prüfergebnis" in body
     assert "Vorschlag verworfen" in body
     assert "Dieser Eintrag vom Typ Fakt wurde archiviert" in body
+    assert "Was sich geändert hat" in body
+    assert "Was nicht passiert ist" in body
+    assert "ADH hat kein anderes Gedächtnis geändert" in body
     assert "Neuer Status: archiviert." in body
     assert "Prüfspur: bob über Hub View." in body
     assert "Weiteren Eintrag prüfen" in body

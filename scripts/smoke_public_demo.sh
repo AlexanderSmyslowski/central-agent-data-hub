@@ -207,6 +207,7 @@ for _ in range(50):
                 "Accept stores it as reviewed memory. Reject archives it.",
                 "Open one card, check the sentence and source",
                 "Review is ready",
+                "Human decision needed",
                 "demo-reviewer",
                 "Back to project overview",
             ),

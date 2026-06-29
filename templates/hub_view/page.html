@@ -1829,6 +1829,31 @@
         line-height: 1.45;
       }
 
+      .review-result-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin: 14px 0;
+      }
+
+      .review-result-note {
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.58);
+      }
+
+      .review-result-note strong {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 13px;
+      }
+
+      .review-result-note p {
+        margin: 0;
+        font-size: 13px;
+      }
+
       .review-result-actions {
         display: flex;
         flex-wrap: wrap;
@@ -2016,6 +2041,33 @@
         margin: 0 0 10px;
         font-size: 16px;
         line-height: 1.25;
+      }
+
+      .draft-card-heading {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+
+      .draft-card-heading .draft-card-title {
+        margin: 0;
+      }
+
+      .draft-decision-badge {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 3px 8px;
+        border: 1px solid rgba(45, 74, 95, 0.24);
+        border-radius: 999px;
+        background: rgba(45, 74, 95, 0.08);
+        color: var(--accent);
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
       }
 
       .draft-card p {
@@ -2211,6 +2263,10 @@
         }
 
         .review-guide {
+          grid-template-columns: 1fr;
+        }
+
+        .review-result-grid {
           grid-template-columns: 1fr;
         }
 
