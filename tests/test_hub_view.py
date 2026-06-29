@@ -229,6 +229,12 @@ def test_render_page_includes_local_review_claim() -> None:
     assert 'aria-label="App navigation"' in body
     assert "Projects" in body
     assert "Review" in body
+    assert 'aria-label="Current app status"' in body
+    assert "Area" in body
+    assert "Project" in body
+    assert "Project overview" in body
+    assert "0 items" in body
+    assert "Select a project" in body
 
 
 def test_render_page_can_switch_to_german_chrome() -> None:
@@ -249,6 +255,10 @@ def test_render_page_can_switch_to_german_chrome() -> None:
     assert "Leseoberfläche + Prüfaktionen" in body
     assert "Aktive Projekte" in body
     assert 'aria-label="App-Navigation"' in body
+    assert 'aria-label="Aktueller App-Status"' in body
+    assert "Bereich" in body
+    assert "Projektübersicht" in body
+    assert "Projekt auswählen" in body
     assert "Projekte" in body
     assert "Prüfung" in body
     assert "Deutsch" in body
@@ -1574,6 +1584,13 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "2 review items" in body
     assert 'aria-label="App navigation"' in body
     assert 'href="/projects/central-agent-data-hub" aria-current="page"' in body
+    assert 'aria-label="Current app status"' in body
+    assert "Area" in body
+    assert "Project workspace" in body
+    assert "Central Agent Data Hub" in body
+    assert "Review" in body
+    assert "2 items" in body
+    assert "Handoff ready" in body
     assert "Work state" in body
     assert "Memory" in body
     assert "Agent handoff" in body
