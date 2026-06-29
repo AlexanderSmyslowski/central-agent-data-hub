@@ -1,4 +1,5 @@
-{% set review_enabled = inbox.review_enabled if inbox.review_enabled is defined else inbox.enabled %}
+{% set review_enabled = inbox.review_enabled if inbox.review_enabled is defined else (inbox.enabled and inbox.reviewer) %}
+{% set recent_review_count = inbox.recent_reviews | default([]) | length %}
 <a class="nav-link" href="{{ url_for('/') }}">{{ t('back_to_projects') }}</a>
 <div class="detail-header">
   <div>
@@ -48,7 +49,7 @@
   {% include "partials/review_activity.html" %}
 {% endif %}
 
-<section class="workbench-area" aria-labelledby="inbox-queue-title">
+<section class="workbench-area" id="review-workbench" aria-labelledby="inbox-queue-title">
   <div class="workbench-area-header">
     <div>
       <p class="section-kicker">{{ t('workbench_area') }}</p>
@@ -56,6 +57,37 @@
     </div>
     <p>{{ t('inbox_queue_copy') }}</p>
   </div>
+
+  <nav class="review-decision-map" aria-label="{{ t('review_decision_map') }}">
+    <a class="review-decision-step" href="#review-cards">
+      <span>{{ t('review_decision_queue') }}</span>
+      <strong>{{ draft_total | default(0) }}</strong>
+      <small>{{ t('review_decision_queue_copy') }}</small>
+    </a>
+    <div class="review-decision-step">
+      <span>{{ t('review_decision_reviewer') }}</span>
+      <strong>{% if inbox.reviewer %}{{ inbox.reviewer }}{% else %}{{ t('inbox_reviewer_missing') }}{% endif %}</strong>
+      <small>
+        {% if review_enabled %}
+          {{ t('review_decision_reviewer_ready') }}
+        {% elif not inbox.enabled %}
+          {{ t('inbox_review_disabled') }}
+        {% else %}
+          {{ t('review_decision_reviewer_needed') }}
+        {% endif %}
+      </small>
+    </div>
+    <a class="review-decision-step" href="#review-cards">
+      <span>{{ t('review_decision_find') }}</span>
+      <strong>{{ t('review_decision_find_value') }}</strong>
+      <small>{{ t('review_decision_find_copy') }}</small>
+    </a>
+    <a class="review-decision-step" href="{% if recent_review_count %}#review-activity{% else %}{{ url_for('/inbox/activity') }}{% endif %}">
+      <span>{{ t('review_decision_history') }}</span>
+      <strong>{{ recent_review_count }}</strong>
+      <small>{{ t('review_decision_history_copy') }}</small>
+    </a>
+  </nav>
 
   <div class="queue-summary" aria-label="{{ t('inbox_queue_title') }}">
     <div class="queue-summary-item">
@@ -132,6 +164,7 @@
 <section class="section">
   {% if inbox.groups %}
     <div
+      id="review-filter"
       class="review-filter"
       data-inbox-filter
       data-showing-template="{{ t('inbox_filter_showing_template') }}"
@@ -152,7 +185,9 @@
       <p class="review-filter-status" data-inbox-filter-result>{{ t('inbox_filter_showing_template') | replace('__count__', draft_total | default(0) | string) }}</p>
       <p class="review-filter-empty" data-inbox-empty hidden>{{ t('inbox_filter_empty') }}</p>
     </div>
-    {% for group in inbox.groups %}
+    <section class="section" id="review-cards" aria-labelledby="review-cards-title">
+      <h2 id="review-cards-title">{{ t('review_cards_title') }}</h2>
+      {% for group in inbox.groups %}
       <div class="draft-group" data-inbox-group>
         <div class="draft-group-header">
           <div>
@@ -215,9 +250,10 @@
           {% endfor %}
         </div>
       </div>
-    {% endfor %}
+      {% endfor %}
+    </section>
   {% else %}
-    <div class="empty-state">
+    <div class="empty-state" id="review-cards">
       <p>{{ t('inbox_empty_title') }}</p>
       <p>{{ t('inbox_empty_body') }}</p>
       <a href="{{ url_for('/') }}">{{ t('back_to_projects') }}</a>

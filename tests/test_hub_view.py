@@ -498,6 +498,9 @@ def test_inbox_page_lists_drafts_as_plain_cards() -> None:
                 "groups": groups,
                 "csrf_token": "token",
                 "enabled": True,
+                "review_enabled": True,
+                "reviewer": "alice",
+                "reviewer_error": None,
                 "message": None,
                 "error": None,
             },
@@ -511,6 +514,16 @@ def test_inbox_page_lists_drafts_as_plain_cards() -> None:
     assert lint_card_text(card) == []
     assert "Review queue" in body
     assert "Review one suggested memory change at a time." in body
+    assert 'aria-label="Review decision map"' in body
+    assert "Waiting" in body
+    assert "Suggested memory changes need a human decision." in body
+    assert "Find an item" in body
+    assert "Search or open the queue below." in body
+    assert "Audit trail" in body
+    assert "Recent human decisions stay visible." in body
+    assert "Items to decide" in body
+    assert 'href="#review-cards"' in body
+    assert 'href="#review-activity"' in body or 'href="/inbox/activity"' in body
     assert "Next step" in body
     assert "Open one card, check the sentence and source" in body
     assert "Nothing here becomes reviewed memory until a human clicks Accept." in body
@@ -529,7 +542,7 @@ def test_inbox_page_lists_drafts_as_plain_cards() -> None:
     assert "Human decision needed" in body
     assert "Project queue" in body
     assert "Reviewer" in body
-    assert "Review is ready" in body
+    assert "Review actions" in body
     assert "Remember:" in body
     assert "Source: test." in body
     assert "If wrong:" in body
@@ -570,6 +583,10 @@ def test_inbox_page_empty_state() -> None:
     assert "When a card appears, check the sentence and source" in body
     assert "Suggested memory changes stay unconfirmed" in body
     assert "Review queue" in body
+    assert "Review decision map" in body
+    assert "Suggested memory changes need a human decision." in body
+    assert "Choose a reviewer before accepting or rejecting." in body
+    assert "Items to decide" not in body
     assert "Reviewer not set" in body
     assert "Nothing here becomes reviewed memory" in body
     assert "Review actions are disabled because Hub View is not bound to a loopback address." not in body
@@ -795,6 +812,16 @@ def test_inbox_page_renders_german_queue_language() -> None:
 
     assert "Prüf-Warteschlange" in body
     assert "Prüfe jeweils eine vorgeschlagene Änderung." in body
+    assert 'aria-label="Karte der Prüfentscheidung"' in body
+    assert "Wartet" in body
+    assert "Vorgeschlagene Änderungen brauchen eine menschliche Entscheidung." in body
+    assert "Zuständig" in body
+    assert "Merken und Verwerfen sind verfügbar." in body
+    assert "Eintrag finden" in body
+    assert "Suche oder öffne die Warteschlange unten." in body
+    assert "Prüfspur" in body
+    assert "Letzte menschliche Entscheidungen bleiben sichtbar." in body
+    assert "Einträge zur Entscheidung" in body
     assert "Nächster Schritt" in body
     assert "Öffne eine Karte, prüfe Satz und Quelle" in body
     assert "Nichts hier wird zu geprüftem Projektgedächtnis" in body
