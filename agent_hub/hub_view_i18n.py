@@ -191,6 +191,16 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "context_nav_review": "Review Inbox",
         "copied": "Copied",
         "connection_verification": "Connection verification",
+        "count_decisions_many": "{count} decisions",
+        "count_decisions_one": "{count} decision",
+        "count_facts_many": "{count} facts",
+        "count_facts_one": "{count} fact",
+        "count_open_questions_many": "{count} open questions",
+        "count_open_questions_one": "{count} open question",
+        "count_review_items_many": "{count} review items",
+        "count_review_items_one": "{count} review item",
+        "count_risks_many": "{count} risks",
+        "count_risks_one": "{count} risk",
         "connection_check_chatbot_copied": "The context pack was copied.",
         "connection_check_chatbot_visible": "The context pack is visible in the chat before the task.",
         "connection_check_claude_receipt": "A new Claude Code task shows an ADH receipt or requests ADH context.",
@@ -609,7 +619,8 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "review_result_status": "New status: {status}.",
         "review_result_what_changed": "What changed",
         "review_suggested_changes": "Review suggested changes",
-        "review_suggested_changes_action_copy": "{count} items wait for a human decision across projects.",
+        "review_suggested_changes_action_copy_many": "{count} items wait for a human decision across projects.",
+        "review_suggested_changes_action_copy_one": "{count} item waits for a human decision across projects.",
         "review_suggested_changes_copy": "{count} items waiting across projects.",
         "review_queue_empty_next_step": "Nothing needs review right now. When a card appears, check the sentence and source before accepting or rejecting it.",
         "review_queue_next_step": "Open one card, check the sentence and source, then accept or reject it. Nothing is promoted automatically.",
@@ -658,7 +669,8 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "work_state_review_body": "Suggested memory changes stay separate until a human accepts or rejects them.",
         "work_state_review_empty": "No suggested changes are waiting.",
         "work_state_review_label": "Review queue",
-        "work_state_review_metric": "Review items: {count}",
+        "work_state_review_metric_many": "Review items: {count}",
+        "work_state_review_metric_one": "Review item: {count}",
         "work_state_review_waiting": "Suggested changes are waiting for a human decision.",
         "workspace_sidebar_agent_meta": "Prepare visible context handoff.",
         "workspace_sidebar_label": "Project workspace sidebar",
@@ -795,6 +807,16 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "context_nav_review": "Prüfungseingang",
         "copied": "Kopiert",
         "connection_verification": "Verbindung prüfen",
+        "count_decisions_many": "{count} Entscheidungen",
+        "count_decisions_one": "{count} Entscheidung",
+        "count_facts_many": "{count} Fakten",
+        "count_facts_one": "{count} Fakt",
+        "count_open_questions_many": "{count} offene Fragen",
+        "count_open_questions_one": "{count} offene Frage",
+        "count_review_items_many": "{count} Prüfeinträge",
+        "count_review_items_one": "{count} Prüfeintrag",
+        "count_risks_many": "{count} Risiken",
+        "count_risks_one": "{count} Risiko",
         "connection_check_chatbot_copied": "Das Kontextpaket wurde kopiert.",
         "connection_check_chatbot_visible": "Das Kontextpaket steht vor der Aufgabe sichtbar im Chat.",
         "connection_check_claude_receipt": "Eine neue Claude-Code-Aufgabe zeigt einen ADH-Beleg oder fragt ADH-Kontext an.",
@@ -1213,7 +1235,8 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "review_result_status": "Neuer Status: {status}.",
         "review_result_what_changed": "Was sich geändert hat",
         "review_suggested_changes": "Vorgeschlagene Änderungen prüfen",
-        "review_suggested_changes_action_copy": "{count} Einträge warten projektübergreifend auf menschliche Entscheidung.",
+        "review_suggested_changes_action_copy_many": "{count} Einträge warten projektübergreifend auf menschliche Entscheidung.",
+        "review_suggested_changes_action_copy_one": "{count} Eintrag wartet projektübergreifend auf menschliche Entscheidung.",
         "review_suggested_changes_copy": "{count} Einträge warten projektübergreifend.",
         "review_queue_empty_next_step": "Gerade wartet nichts auf Prüfung. Wenn eine Karte erscheint, prüfe Satz und Quelle, bevor du sie merkst oder verwirfst.",
         "review_queue_next_step": "Öffne eine Karte, prüfe Satz und Quelle und merke oder verwirf sie dann. Nichts wird automatisch übernommen.",
@@ -1262,7 +1285,8 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "work_state_review_body": "Vorgeschlagene Änderungen bleiben getrennt, bis ein Mensch sie merkt oder verwirft.",
         "work_state_review_empty": "Keine vorgeschlagenen Änderungen warten.",
         "work_state_review_label": "Prüf-Warteschlange",
-        "work_state_review_metric": "Prüfeinträge: {count}",
+        "work_state_review_metric_many": "Prüfeinträge: {count}",
+        "work_state_review_metric_one": "Prüfeintrag: {count}",
         "work_state_review_waiting": "Vorgeschlagene Änderungen warten auf menschliche Entscheidung.",
         "workspace_sidebar_agent_meta": "Sichtbare Kontextübergabe vorbereiten.",
         "workspace_sidebar_label": "Projekt-Arbeitsseitenleiste",
@@ -1294,6 +1318,20 @@ def translator(language: str) -> Callable[..., str]:
         return text.format(**kwargs) if kwargs else text
 
     return translate
+
+
+def pluralizer(language: str) -> Callable[..., str]:
+    translate = translator(language)
+
+    def pluralize(key: str, count: object, **kwargs: object) -> str:
+        try:
+            numeric_count = int(count)
+        except (TypeError, ValueError):
+            numeric_count = 0
+        plural_key = f"{key}_one" if numeric_count == 1 else f"{key}_many"
+        return translate(plural_key, count=numeric_count, **kwargs)
+
+    return pluralize
 
 
 def localize_ui_text(text: object, language: str) -> str:

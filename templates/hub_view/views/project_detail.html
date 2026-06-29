@@ -41,7 +41,7 @@
           {% elif card.kind == 'attention' %}
             {{ t('work_state_attention_metric', risks=card.risk_count, questions=card.question_count) }}
           {% elif card.kind == 'review' %}
-            {{ t('work_state_review_metric', count=card.review_count) }}
+            {{ tn('work_state_review_metric', card.review_count) }}
           {% endif %}
         </small>
       </a>
@@ -85,7 +85,7 @@
           {% elif card.kind == 'attention' %}
             {{ t('work_state_attention_metric', risks=card.risk_count, questions=card.question_count) }} · {% if card.title %}{{ card.title }}{% else %}{{ t(card.title_key) }}{% endif %}
           {% elif card.kind == 'review' %}
-            {{ t('work_state_review_metric', count=card.review_count) }} · {% if card.title %}{{ card.title }}{% else %}{{ t(card.title_key) }}{% endif %}
+            {{ tn('work_state_review_metric', card.review_count) }} · {% if card.title %}{{ card.title }}{% else %}{{ t(card.title_key) }}{% endif %}
           {% endif %}
         </small>
         <span class="project-timeline-action">{{ t(card.action_key) }}</span>
@@ -123,7 +123,7 @@
     <a class="action-link action-review" href="{{ url_for('/inbox') }}">
       <span class="action-kicker">{{ t('nav_review') }}</span>
       <span class="action-title">{{ t('review_suggested_changes') }}</span>
-      <span class="action-copy">{{ t('review_suggested_changes_action_copy', count=draft_total | default(0)) }}</span>
+      <span class="action-copy">{{ tn('review_suggested_changes_action_copy', draft_total | default(0)) }}</span>
     </a>
     <a class="action-link action-agent-handoff" href="#connect-agent">
       <span class="action-kicker">{{ t('nav_agent_handoff') }}</span>
@@ -184,7 +184,7 @@
           {% elif card.kind == 'attention' %}
             {{ t('work_state_attention_metric', risks=card.risk_count, questions=card.question_count) }}
           {% elif card.kind == 'review' %}
-            {{ t('work_state_review_metric', count=card.review_count) }}
+            {{ tn('work_state_review_metric', card.review_count) }}
           {% elif card.kind == 'quality' %}
             {{ t('work_state_quality_metric', score=card.quality_score) }}
           {% endif %}

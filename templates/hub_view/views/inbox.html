@@ -252,7 +252,7 @@
             <p class="section-kicker">{{ t('inbox_project_queue') }}</p>
             <h2>{{ group.project_name }}</h2>
           </div>
-          <div class="project-meta">{{ group.drafts | length }} {{ t('review_items') }}</div>
+          <div class="project-meta">{{ tn('count_review_items', group.drafts | length) }}</div>
         </div>
         <div class="list">
           {% for draft in group.drafts %}

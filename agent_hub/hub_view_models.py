@@ -27,6 +27,7 @@ from agent_hub.hub_view_i18n import (
     DEFAULT_LANGUAGE,
     language_switch_links,
     localize_ui_text,
+    pluralizer,
     resolve_language,
     translator,
     with_language,
@@ -1425,6 +1426,7 @@ def render_page(
     template = env.get_template("page.html")
     resolved_language = resolve_language(language)
     t = translator(resolved_language)
+    tn = pluralizer(resolved_language)
     return template.render(
         page_title=t("hub_view"),
         app_name=t("hub_view"),
@@ -1435,6 +1437,7 @@ def render_page(
         inbox_enabled=inbox_enabled,
         language=resolved_language,
         t=t,
+        tn=tn,
         ui_text=lambda text: localize_ui_text(text, resolved_language),
         url_for=lambda url: with_language(url, resolved_language),
         language_links=language_switch_links(current_path, query_string),

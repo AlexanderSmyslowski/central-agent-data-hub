@@ -10,13 +10,24 @@ import uuid
 import pytest
 
 from agent_hub import hub_view
-from agent_hub.hub_view_i18n import language_switch_links, localize_ui_text
+from agent_hub.hub_view_i18n import language_switch_links, localize_ui_text, pluralizer
 from agent_hub import hub_view_models
 from agent_hub.commands import inbox
 from agent_hub.writeback_routing import lint_card_text
 
 
 DRAFT_ID = uuid.UUID("10000000-0000-4000-8000-000000000701")
+
+
+def test_hub_view_pluralizer_handles_visible_count_labels() -> None:
+    en = pluralizer("en")
+    de = pluralizer("de")
+
+    assert en("count_review_items", 1) == "1 review item"
+    assert en("count_review_items", 2) == "2 review items"
+    assert de("count_decisions", 1) == "1 Entscheidung"
+    assert de("count_review_items", 0) == "0 Prüfeinträge"
+    assert de("count_review_items", 1) == "1 Prüfeintrag"
 
 
 def draft_row(*, status: str = "draft") -> dict[str, object]:
@@ -564,12 +575,12 @@ def test_project_overview_renders_german_work_center() -> None:
                     "project_type": "demo",
                     "counts": {
                         "facts": 1,
-                        "decisions": 0,
+                        "decisions": 1,
                         "risks": 0,
                         "open_questions": 1,
                         "reports": 0,
                     },
-                    "reviewed_count": 2,
+                    "reviewed_count": 3,
                     "attention_count": 1,
                     "draft_count": 0,
                     "signal_key": "project_overview_signal_attention",
@@ -612,6 +623,11 @@ def test_project_overview_renders_german_work_center() -> None:
     assert "Kontext an KI geben" in body
     assert "Agent verbinden" in body
     assert "Wähle Chatbot, Codex, Claude Code, Hermes oder einen anderen lokalen Agenten und sieh die Kontextübergabe." in body
+    assert "1 Fakt" in body
+    assert "1 Entscheidung" in body
+    assert "0 Risiken" in body
+    assert "1 offene Frage" in body
+    assert "0 Prüfeinträge" in body
     assert "1 Risiken/Fragen" in body
     assert "Geprüftes Gedächtnis" in body
     assert "Empfohlener nächster Schritt" in body
@@ -1020,6 +1036,7 @@ def test_inbox_page_renders_german_queue_language() -> None:
     assert "Prüf-Warteschlange filtern" in body
     assert "Projekt, Fakt, Quelle, Zuständig..." in body
     assert "Sichtbare Prüfeinträge: 1." in body
+    assert "1 Prüfeintrag" in body
     assert "Kein Prüfeintrag passt zu diesem Filter." in body
     assert "Vorgeschlagene Änderung · Fakt" in body
     assert "Projekt-Warteschlange" in body

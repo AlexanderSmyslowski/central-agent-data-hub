@@ -4161,7 +4161,7 @@
           {% endif %}
           <a class="sidebar-action{% if view_name in ('inbox', 'review_activity') %} active{% endif %}" href="{{ url_for('/inbox') }}">
             {{ t('review_inbox') }}
-            <span class="sidebar-action-meta">{{ draft_total | default(0) }} {{ t('review_items') }}</span>
+            <span class="sidebar-action-meta">{{ tn('count_review_items', draft_total | default(0)) }}</span>
           </a>
           {% if view_name not in ('inbox', 'review_activity') %}
             <div class="sidebar-title">{{ t('active_projects') }}</div>
@@ -4177,11 +4177,11 @@
                     <p class="project-blurb">{{ ui_text(project.description) }}</p>
                   {% endif %}
                   <div class="project-counts">
-                    <span>{{ project.counts.facts }} {{ t('facts') }}</span>
-                    <span>{{ project.counts.decisions }} {{ t('agent_status_decisions') | lower }}</span>
-                    <span>{{ project.counts.risks }} {{ t('risks') }}</span>
-                    <span>{{ project.counts.open_questions }} {{ t('open_questions') }}</span>
-                    <span>{{ project.draft_count }} {{ t('review_items') }}</span>
+                    <span>{{ tn('count_facts', project.counts.facts) }}</span>
+                    <span>{{ tn('count_decisions', project.counts.decisions) }}</span>
+                    <span>{{ tn('count_risks', project.counts.risks) }}</span>
+                    <span>{{ tn('count_open_questions', project.counts.open_questions) }}</span>
+                    <span>{{ tn('count_review_items', project.draft_count) }}</span>
                   </div>
                   {% if project.latest_report_title %}
                     <p class="project-blurb">{{ project.latest_report_title }}</p>
