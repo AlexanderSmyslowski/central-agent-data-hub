@@ -627,6 +627,11 @@ def test_inbox_page_lists_drafts_as_plain_cards() -> None:
     assert lint_card_text(card) == []
     assert "Review queue" in body
     assert "Review one suggested memory change at a time." in body
+    assert 'aria-label="Review Inbox quick actions"' in body
+    assert "Review next suggestion" in body
+    assert "Jump straight to the first waiting review card." in body
+    assert "Filter waiting items" in body
+    assert "Open review history" in body
     assert 'aria-label="Current review decision"' in body
     assert "Open the next suggestion" in body
     assert "Jump to first suggestion" in body
@@ -712,6 +717,9 @@ def test_inbox_page_empty_state() -> None:
     assert "No items to review." in body
     assert "Nothing is waiting" in body
     assert "When a suggestion arrives, this page will show the exact sentence, source, and consequence" in body
+    assert "Back to projects" in body
+    assert "No card is waiting; return to the project overview." in body
+    assert "Open review history" in body
     assert "Keep it strict" in body
     assert "The result is explicit" in body
     assert "When agents suggest memory changes" in body
@@ -949,6 +957,11 @@ def test_inbox_page_renders_german_queue_language() -> None:
 
     assert "Prüf-Warteschlange" in body
     assert "Prüfe jeweils eine vorgeschlagene Änderung." in body
+    assert 'aria-label="Schnellzugriff im Prüfungseingang"' in body
+    assert "Nächsten Vorschlag prüfen" in body
+    assert "Springe direkt zur ersten wartenden Prüfkarte." in body
+    assert "Wartende Einträge filtern" in body
+    assert "Prüfverlauf öffnen" in body
     assert 'aria-label="Karte der Prüfentscheidung"' in body
     assert "Wartet" in body
     assert "Vorgeschlagene Änderungen brauchen eine menschliche Entscheidung." in body

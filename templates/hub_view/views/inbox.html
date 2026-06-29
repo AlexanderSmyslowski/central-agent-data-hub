@@ -8,6 +8,37 @@
   </div>
 </div>
 
+<nav class="inbox-action-strip" aria-label="{{ t('inbox_fast_actions') }}">
+  {% if inbox.groups %}
+    <a class="inbox-action-card primary" href="#first-review-item">
+      <span>{{ t('recommended_next') }}</span>
+      <strong>{{ t('inbox_fast_first') }}</strong>
+      <small>{{ t('inbox_fast_first_copy') }}</small>
+    </a>
+    <a class="inbox-action-card" href="#review-filter">
+      <span>{{ t('review_decision_find') }}</span>
+      <strong>{{ t('inbox_fast_filter') }}</strong>
+      <small>{{ t('inbox_fast_filter_copy') }}</small>
+    </a>
+    <a class="inbox-action-card" href="{% if recent_review_count %}#review-activity{% else %}{{ url_for('/inbox/activity') }}{% endif %}">
+      <span>{{ t('review_decision_history') }}</span>
+      <strong>{{ t('inbox_fast_history') }}</strong>
+      <small>{{ t('inbox_fast_history_copy') }}</small>
+    </a>
+  {% else %}
+    <a class="inbox-action-card primary" href="{{ url_for('/') }}">
+      <span>{{ t('recommended_next') }}</span>
+      <strong>{{ t('inbox_fast_projects') }}</strong>
+      <small>{{ t('inbox_fast_projects_copy') }}</small>
+    </a>
+    <a class="inbox-action-card" href="{{ url_for('/inbox/activity') }}">
+      <span>{{ t('review_decision_history') }}</span>
+      <strong>{{ t('inbox_fast_history') }}</strong>
+      <small>{{ t('inbox_fast_history_copy') }}</small>
+    </a>
+  {% endif %}
+</nav>
+
 {% if inbox.review_result %}
   <section class="review-result" id="review-result" aria-labelledby="review-result-title">
     <p class="section-kicker">{{ t('review_result_kicker') }}</p>
