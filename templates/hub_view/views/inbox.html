@@ -122,7 +122,7 @@
       <small>{{ t('review_decision_queue_copy') }}</small>
     </a>
     <div class="review-decision-step">
-      <span>{{ t('review_decision_reviewer') }}</span>
+      <span>{{ t('review_local_reviewer') }}</span>
       <strong>{% if inbox.reviewer %}{{ inbox.reviewer }}{% else %}{{ t('inbox_reviewer_missing') }}{% endif %}</strong>
       <small>
         {% if review_enabled %}
@@ -152,7 +152,7 @@
       <div class="queue-summary-value">{{ draft_total | default(0) }}</div>
     </div>
     <div class="queue-summary-item">
-      <div class="queue-summary-label">{{ t('review_owner') }}</div>
+      <div class="queue-summary-label">{{ t('review_local_reviewer') }}</div>
       <div class="queue-summary-value">{% if inbox.reviewer %}{{ inbox.reviewer }}{% else %}{{ t('inbox_reviewer_missing') }}{% endif %}</div>
     </div>
     <div class="queue-summary-item">
@@ -273,7 +273,7 @@
               <div class="draft-meta">
                 <span class="draft-pill">{{ draft.project }}</span>
                 <span class="draft-pill">{{ ui_text(draft.type_label) }}</span>
-                <span class="draft-pill">{{ t('review_owner') }}: {{ ui_text(draft.responsible_reviewer) }}</span>
+                <span class="draft-pill">{{ t('review_card_owner') }}: {{ ui_text(draft.responsible_reviewer) }}</span>
                 {% if draft.updated_at %}
                   <span class="draft-pill">{{ draft.updated_at }}</span>
                 {% endif %}

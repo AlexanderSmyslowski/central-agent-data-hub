@@ -679,7 +679,7 @@ def test_inbox_page_lists_drafts_as_plain_cards() -> None:
     assert "Suggested change · Fact" in body
     assert "Human decision needed" in body
     assert "Project queue" in body
-    assert "Reviewer" in body
+    assert "Local reviewer" in body
     assert "Review actions" in body
     assert "Suggested memory change summary" in body
     assert "What ADH would remember" in body
@@ -694,7 +694,7 @@ def test_inbox_page_lists_drafts_as_plain_cards() -> None:
     assert "Use this to judge the cost of a wrong assumption." in body
     assert "Should this become reviewed memory?" in body
     assert "Accept only if the sentence is correct, useful, and safe for future agents." in body
-    assert "Reviewer: alice" in body
+    assert "Assigned reviewer: alice" in body
     assert "Why this card is here" in body
     assert 'action="/inbox/accept"' in body
     assert 'action="/inbox/reject"' in body
@@ -742,10 +742,10 @@ def test_inbox_page_empty_state() -> None:
     assert "Review queue" in body
     assert "Review decision map" in body
     assert "Suggested memory changes need a human decision." in body
-    assert "Choose a reviewer before accepting or rejecting." in body
+    assert "Set who is making the local click. The assigned reviewer stays visible on each card." in body
     assert "Set a reviewer before this card can be accepted or rejected." not in body
     assert "Items to decide" not in body
-    assert "Reviewer not set" in body
+    assert "Local reviewer not set" in body
     assert "Nothing here becomes reviewed memory" in body
     assert "Review actions are disabled because Hub View is not bound to a loopback address." not in body
     assert "Drafts stay unconfirmed" not in body
@@ -982,7 +982,7 @@ def test_inbox_page_renders_german_queue_language() -> None:
     assert 'aria-label="Karte der Prüfentscheidung"' in body
     assert "Wartet" in body
     assert "Vorgeschlagene Änderungen brauchen eine menschliche Entscheidung." in body
-    assert "Zuständig" in body
+    assert "Lokale Prüfperson" in body
     assert "Merken und Verwerfen sind verfügbar." in body
     assert "Eintrag finden" in body
     assert "Suche oder öffne die Warteschlange unten." in body
@@ -1332,7 +1332,7 @@ def test_hub_view_without_reviewer_disables_buttons_and_blocks_post(monkeypatch)
 
     assert "Set HUB_VIEW_REVIEWER or start Hub View with --reviewer" in body
     assert "Reviewer required" in body
-    assert "Set a reviewer before this card can be accepted or rejected." in body
+    assert "Set the local reviewer first. The assigned reviewer stays visible on the card." in body
     assert "disabled>Accept</button>" in body
     assert captured["status"] == "403 Forbidden"
     assert "HUB_VIEW_REVIEWER" in post_body
