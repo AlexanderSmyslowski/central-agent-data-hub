@@ -49,6 +49,7 @@
     {% else %}
       <h2 id="review-result-title">{{ t('review_result_reject_title') }}</h2>
     {% endif %}
+    <p class="review-result-summary">{{ t('review_result_summary') }}</p>
     {% if inbox.review_result.status %}
       <p>{{ t('review_result_status', status=ui_text(inbox.review_result.status)) }}</p>
     {% endif %}
@@ -69,6 +70,7 @@
         <p>{{ t('review_result_no_hidden_change') }}</p>
       </div>
     </div>
+    <p class="review-result-queue-note">{{ t('review_result_queue_updated') }}</p>
     <div class="review-result-actions" aria-label="{{ t('review_result_next') }}">
       <a class="button primary-button" href="{{ url_for('/inbox') }}">{{ t('review_result_queue') }}</a>
       {% if inbox.review_result.project %}

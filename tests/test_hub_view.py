@@ -822,10 +822,12 @@ def test_inbox_page_renders_accept_result_card() -> None:
     assert "Review result" in body
     assert 'id="review-result"' in body
     assert "Saved as reviewed memory" in body
+    assert "This review is done. This card is no longer waiting for a decision." in body
     assert "This Fact is no longer a draft. ADH can now hand it to agents as reviewed context." in body
     assert "What changed" in body
     assert "What did not happen" in body
     assert "ADH did not edit other memory, run an agent, or silently promote anything else." in body
+    assert "The queue below is refreshed and shows the remaining suggestions." in body
     assert "New status: verified." in body
     assert "Audit trail: bob via Hub View." in body
     assert "Review another item" in body
@@ -865,10 +867,12 @@ def test_inbox_page_renders_german_reject_result_card() -> None:
 
     assert "Prüfergebnis" in body
     assert "Vorschlag verworfen" in body
+    assert "Diese Prüfung ist erledigt. Diese Karte wartet nicht mehr auf eine Entscheidung." in body
     assert "Dieser Eintrag vom Typ Fakt wurde archiviert" in body
     assert "Was sich geändert hat" in body
     assert "Was nicht passiert ist" in body
     assert "ADH hat kein anderes Gedächtnis geändert" in body
+    assert "Die Warteschlange unten ist aktualisiert und zeigt die übrigen Vorschläge." in body
     assert "Neuer Status: archiviert." in body
     assert "Prüfspur: bob über Hub View." in body
     assert "Weiteren Eintrag prüfen" in body
