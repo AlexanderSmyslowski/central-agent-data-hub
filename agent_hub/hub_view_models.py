@@ -423,6 +423,23 @@ def build_project_card(
     if latest_report is MISSING_LATEST_REPORT:
         latest_report = fetch_latest_report(cur, project_id)
     latest_report = latest_report if isinstance(latest_report, dict) else None
+    reviewed_count = sum(
+        counts.get(key, 0)
+        for key in ("facts", "decisions", "risks", "open_questions", "reports")
+    )
+    attention_count = counts.get("risks", 0) + counts.get("open_questions", 0)
+    if draft_count:
+        signal_key = "project_overview_signal_review"
+        signal_state = "review"
+    elif attention_count:
+        signal_key = "project_overview_signal_attention"
+        signal_state = "attention"
+    elif latest_report:
+        signal_key = "project_overview_signal_ready"
+        signal_state = "ready"
+    else:
+        signal_key = "project_overview_signal_empty"
+        signal_state = "quiet"
     return {
         "name": project["name"],
         "slug": project["slug"],
@@ -435,6 +452,10 @@ def build_project_card(
         "latest_report_summary": (
             truncate(latest_report.get("summary") or "", 96) if latest_report else None
         ),
+        "reviewed_count": reviewed_count,
+        "attention_count": attention_count,
+        "signal_key": signal_key,
+        "signal_state": signal_state,
         "updated_at": format_timestamp(project.get("updated_at")),
     }
 
@@ -1174,7 +1195,15 @@ def load_view_model(selected_slug: str | None) -> tuple[int, dict[str, object]]:
                     "draft_total": draft_total,
                 }
 
-            selected = selected_slug or str(projects[0]["slug"])
+            if selected_slug is None:
+                return 200, {
+                    "projects": cards,
+                    "selected_project": None,
+                    "not_found_slug": None,
+                    "draft_total": draft_total,
+                }
+
+            selected = selected_slug
             project = _compat_attr("fetch_project", fetch_project)(cur, selected)
             if project is None or project.get("status") != "active":
                 return 404, {

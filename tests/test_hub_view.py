@@ -368,9 +368,111 @@ def test_build_project_cards_batches_counts_and_latest_reports(monkeypatch) -> N
     ]
     assert cards[0]["counts"]["facts"] == 3
     assert cards[0]["latest_report_title"] == "Latest report"
+    assert cards[0]["reviewed_count"] == 7
+    assert cards[0]["attention_count"] == 1
+    assert cards[0]["signal_key"] == "project_overview_signal_attention"
+    assert cards[0]["signal_state"] == "attention"
     assert cards[1]["counts"]["open_questions"] == 1
     assert cards[1]["draft_count"] == 4
     assert cards[1]["latest_report_title"] is None
+    assert cards[1]["reviewed_count"] == 1
+    assert cards[1]["attention_count"] == 1
+    assert cards[1]["signal_key"] == "project_overview_signal_review"
+    assert cards[1]["signal_state"] == "review"
+
+
+def test_project_overview_renders_as_work_center() -> None:
+    body = hub_view.render_page(
+        {
+            "projects": [
+                {
+                    "name": "Central Agent Data Hub Demo",
+                    "slug": "central-agent-data-hub-demo",
+                    "status": "active",
+                    "description": "Neutral demo project.",
+                    "project_type": "demo",
+                    "counts": {
+                        "facts": 3,
+                        "decisions": 1,
+                        "risks": 1,
+                        "open_questions": 2,
+                        "reports": 1,
+                    },
+                    "reviewed_count": 8,
+                    "attention_count": 3,
+                    "draft_count": 2,
+                    "signal_key": "project_overview_signal_review",
+                    "signal_state": "review",
+                    "latest_report_title": "Latest demo report",
+                    "latest_report_summary": "A compact project status.",
+                    "updated_at": "2026-06-28 10:00 UTC",
+                }
+            ],
+            "selected_project": None,
+            "not_found_slug": None,
+            "draft_total": 2,
+        },
+        200,
+    ).decode("utf-8")
+
+    assert "Project work center" in body
+    assert "Central Agent Data Hub Demo" in body
+    assert "Review waiting" in body
+    assert "Latest demo report" in body
+    assert "Attention" in body
+    assert "3 risks/questions" in body
+    assert "Review queue" in body
+    assert "2 items" in body
+    assert "Reviewed memory" in body
+    assert "8 items" in body
+    assert 'href="/projects/central-agent-data-hub-demo#risks-and-questions"' in body
+    assert 'href="/projects/central-agent-data-hub-demo#project-memory"' in body
+    assert 'href="/projects/central-agent-data-hub-demo"' in body
+
+
+def test_project_overview_renders_german_work_center() -> None:
+    body = hub_view.render_page(
+        {
+            "projects": [
+                {
+                    "name": "Central Agent Data Hub Demo",
+                    "slug": "central-agent-data-hub-demo",
+                    "status": "active",
+                    "description": "Neutral demo project.",
+                    "project_type": "demo",
+                    "counts": {
+                        "facts": 1,
+                        "decisions": 0,
+                        "risks": 0,
+                        "open_questions": 1,
+                        "reports": 0,
+                    },
+                    "reviewed_count": 2,
+                    "attention_count": 1,
+                    "draft_count": 0,
+                    "signal_key": "project_overview_signal_attention",
+                    "signal_state": "attention",
+                    "latest_report_title": None,
+                    "latest_report_summary": None,
+                    "updated_at": "2026-06-28 10:00 UTC",
+                }
+            ],
+            "selected_project": None,
+            "not_found_slug": None,
+            "draft_total": 0,
+        },
+        200,
+        language="de",
+        current_path="/",
+        query_string="lang=de",
+    ).decode("utf-8")
+
+    assert "Projekt-Arbeitszentrale" in body
+    assert "Braucht Aufmerksamkeit" in body
+    assert "Noch kein Bericht." in body
+    assert "1 Risiken/Fragen" in body
+    assert "Geprüftes Gedächtnis" in body
+    assert "Projekt öffnen" in body
 
 
 def test_inbox_page_lists_drafts_as_plain_cards() -> None:

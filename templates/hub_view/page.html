@@ -334,6 +334,132 @@
         line-height: 1.45;
       }
 
+      .project-overview {
+        display: grid;
+        gap: 18px;
+      }
+
+      .project-overview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 14px;
+      }
+
+      .project-overview-card {
+        display: grid;
+        gap: 16px;
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.66);
+      }
+
+      .project-overview-card.attention,
+      .project-overview-card.review {
+        border-color: rgba(45, 74, 95, 0.34);
+        background: rgba(255, 255, 255, 0.78);
+      }
+
+      .project-overview-card-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: start;
+      }
+
+      .project-overview-card h2 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.2;
+      }
+
+      .project-overview-signal {
+        max-width: 150px;
+        padding: 5px 8px;
+        border: 1px solid rgba(45, 74, 95, 0.2);
+        border-radius: 999px;
+        background: rgba(45, 74, 95, 0.08);
+        color: var(--accent);
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1.2;
+        text-align: center;
+        text-transform: uppercase;
+      }
+
+      .project-overview-latest {
+        padding: 13px 14px;
+        border: 1px solid rgba(45, 74, 95, 0.18);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.54);
+      }
+
+      .project-overview-latest strong {
+        display: block;
+        margin-top: 4px;
+        font-size: 15px;
+      }
+
+      .project-overview-latest p {
+        margin: 5px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .project-overview-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .project-overview-metric {
+        display: grid;
+        gap: 4px;
+        min-height: 82px;
+        padding: 11px;
+        border: 1px solid rgba(45, 74, 95, 0.18);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.54);
+        color: var(--text);
+      }
+
+      .project-overview-metric:hover,
+      .project-overview-metric:focus-visible {
+        border-color: rgba(45, 74, 95, 0.34);
+        background: var(--surface-strong);
+      }
+
+      .project-overview-metric span {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.25;
+      }
+
+      .project-overview-metric strong {
+        font-size: 22px;
+        line-height: 1;
+      }
+
+      .project-overview-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: 10px 14px;
+        border-radius: 8px;
+        background: var(--accent);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 700;
+        text-align: center;
+      }
+
+      .project-overview-action:hover,
+      .project-overview-action:focus-visible {
+        background: var(--accent-strong);
+      }
+
       .project-workbench {
         display: grid;
         gap: 16px;
@@ -2055,6 +2181,16 @@
           gap: 8px;
         }
 
+        .project-overview-card-header,
+        .project-overview-metrics {
+          grid-template-columns: 1fr;
+        }
+
+        .project-overview-signal {
+          justify-self: start;
+          max-width: none;
+        }
+
         .review-guide {
           grid-template-columns: 1fr;
         }
@@ -2175,6 +2311,60 @@
             {% include "views/memory_item.html" %}
           {% elif selected_project %}
             {% include "views/project_detail.html" %}
+          {% elif projects %}
+            <section class="project-overview" aria-labelledby="project-overview-title">
+              <div class="detail-header">
+                <div>
+                  <h2 class="detail-title" id="project-overview-title">{{ t('project_overview_title') }}</h2>
+                  <p class="detail-description">{{ t('project_overview_body') }}</p>
+                </div>
+              </div>
+              <div class="project-overview-grid">
+                {% for project in projects %}
+                  <article class="project-overview-card {{ project.signal_state }}">
+                    <div class="project-overview-card-header">
+                      <div>
+                        <p class="section-kicker">{{ project.slug }}{% if project.project_type %} · {{ project.project_type }}{% endif %}</p>
+                        <h2>{{ project.name }}</h2>
+                        {% if project.description %}
+                          <p class="project-blurb">{{ ui_text(project.description) }}</p>
+                        {% endif %}
+                      </div>
+                      <span class="project-overview-signal">{{ t(project.signal_key) }}</span>
+                    </div>
+                    <div class="project-overview-latest">
+                      <span class="section-kicker">{{ t('project_overview_latest') }}</span>
+                      {% if project.latest_report_title %}
+                        <strong>{{ project.latest_report_title }}</strong>
+                        {% if project.latest_report_summary %}
+                          <p>{{ project.latest_report_summary }}</p>
+                        {% endif %}
+                      {% else %}
+                        <p>{{ t('project_overview_no_report') }}</p>
+                      {% endif %}
+                    </div>
+                    <div class="project-overview-metrics" aria-label="{{ t('project_overview_title') }}">
+                      <a class="project-overview-metric" href="{{ url_for('/projects/' ~ project.slug) }}#risks-and-questions">
+                        <span>{{ t('project_overview_attention') }}</span>
+                        <strong>{{ project.attention_count }}</strong>
+                        <span>{{ t('project_overview_attention_metric', count=project.attention_count) }}</span>
+                      </a>
+                      <a class="project-overview-metric" href="{{ url_for('/inbox') }}">
+                        <span>{{ t('project_overview_review_queue') }}</span>
+                        <strong>{{ project.draft_count }}</strong>
+                        <span>{{ t('project_overview_review_metric', count=project.draft_count) }}</span>
+                      </a>
+                      <a class="project-overview-metric" href="{{ url_for('/projects/' ~ project.slug) }}#project-memory">
+                        <span>{{ t('project_overview_memory') }}</span>
+                        <strong>{{ project.reviewed_count }}</strong>
+                        <span>{{ t('project_overview_memory_metric', count=project.reviewed_count) }}</span>
+                      </a>
+                    </div>
+                    <a class="project-overview-action" href="{{ url_for('/projects/' ~ project.slug) }}">{{ t('project_overview_open') }}</a>
+                  </article>
+                {% endfor %}
+              </div>
+            </section>
           {% else %}
             <div class="detail-header">
               <div>
