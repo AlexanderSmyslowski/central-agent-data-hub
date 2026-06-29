@@ -812,6 +812,10 @@ def build_detail_view(
         project_slug=project["slug"],
         item_type="report",
     )
+    memory_total = sum(
+        int(compiled["counts"].get(key, 0) or 0)
+        for key in ("facts", "decisions", "risks", "open_questions", "reports")
+    )
 
     return {
         "name": project["name"],
@@ -821,6 +825,9 @@ def build_detail_view(
         "project_type": metadata.get("project_type"),
         "work_mode": metadata.get("work_mode"),
         "counts": compiled["counts"],
+        "memory_total": memory_total,
+        "is_empty": memory_total == 0 and draft_count == 0,
+        "has_project_folder": bool(metadata.get("local_path")),
         "draft_count": draft_count,
         "draft_preview": build_project_draft_preview(
             draft_rows or [],

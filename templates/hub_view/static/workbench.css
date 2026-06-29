@@ -82,6 +82,76 @@
   line-height: 1.4;
 }
 
+.new-project-guide {
+  display: grid;
+  gap: 14px;
+  margin: 18px 0 18px;
+  padding: 18px;
+  border: 1px solid rgba(45, 74, 95, 0.22);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.new-project-guide h2 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.new-project-guide p {
+  max-width: 780px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.new-project-guide-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.new-project-guide-card {
+  display: grid;
+  gap: 6px;
+  min-height: 122px;
+  padding: 14px;
+  border: 1px solid rgba(45, 74, 95, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.58);
+  color: var(--text);
+}
+
+.new-project-guide-card.primary {
+  border-color: rgba(45, 74, 95, 0.32);
+  background: rgba(45, 74, 95, 0.08);
+}
+
+.new-project-guide-card:hover,
+.new-project-guide-card:focus-visible {
+  border-color: rgba(45, 74, 95, 0.38);
+  background: var(--surface-strong);
+}
+
+.new-project-guide-card span,
+.new-project-guide-card small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.new-project-guide-card strong {
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.new-project-guide-boundary {
+  padding-top: 2px;
+  font-size: 13px;
+}
+
 .current-state {
   display: grid;
   gap: 14px;
@@ -279,4 +349,3 @@
   font-size: 13px;
   line-height: 1.35;
 }
-

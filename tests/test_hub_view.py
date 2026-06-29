@@ -2493,6 +2493,118 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert '<button type="submit" aria-current="true">Deutsch</button>' in body
 
 
+def test_project_detail_empty_project_shows_start_guidance() -> None:
+    empty_project = {
+        "name": "My Project",
+        "slug": "my-project",
+        "description": "Local project.",
+        "status": "active",
+        "project_type": "product",
+        "updated_at": None,
+        "draft_preview": [],
+        "memory_total": 0,
+        "is_empty": True,
+        "has_project_folder": True,
+        "counts": {
+            "facts": 0,
+            "decisions": 0,
+            "risks": 0,
+            "open_questions": 0,
+            "reports": 0,
+        },
+        "quality": {
+            "score": 100,
+            "status": "ok",
+            "relation_count": 0,
+            "relation_coverage": "0.00",
+            "gaps": [],
+            "check_cards": [],
+        },
+        "work_state": [
+            {
+                "kind": "latest",
+                "priority": "1",
+                "label_key": "work_state_latest_label",
+                "href": "#latest-status",
+                "report_count": 0,
+                "title": None,
+                "title_key": "latest_status_empty",
+                "body": None,
+                "body_key": "work_state_latest_empty",
+                "action_key": "work_state_latest_action",
+                "state": "quiet",
+            },
+            {
+                "kind": "attention",
+                "priority": "2",
+                "label_key": "work_state_attention_label",
+                "href": "#risks-and-questions",
+                "risk_count": 0,
+                "question_count": 0,
+                "title": None,
+                "title_key": "needs_attention_empty",
+                "body": None,
+                "body_key": "work_state_attention_body",
+                "action_key": "work_state_attention_action",
+                "state": "quiet",
+            },
+            {
+                "kind": "review",
+                "priority": "3",
+                "label_key": "work_state_review_label",
+                "href": "/inbox",
+                "review_count": 0,
+                "title": None,
+                "title_key": "work_state_review_empty",
+                "body": None,
+                "body_key": "work_state_review_body",
+                "action_key": "work_state_review_action",
+                "state": "quiet",
+            },
+            {
+                "kind": "quality",
+                "priority": "4",
+                "label_key": "work_state_quality_label",
+                "href": "#quality",
+                "quality_score": 100,
+                "title": None,
+                "title_key": "work_state_quality_ok",
+                "body": None,
+                "body_key": "quality_snapshot_note",
+                "action_key": "work_state_quality_action",
+                "state": "quiet",
+            },
+        ],
+        "decisions": [],
+        "facts": [],
+        "risks": [],
+        "open_questions": [],
+        "reports": [],
+        "relations": [],
+    }
+    body = hub_view.render_page(
+        {
+            "projects": [],
+            "selected_project": empty_project,
+            "not_found_slug": None,
+            "draft_total": 0,
+        },
+        200,
+        current_path="/projects/my-project",
+    ).decode("utf-8")
+
+    assert "Project registered. No reviewed memory yet." in body
+    assert "ADH knows this local project folder." in body
+    assert "Nothing was imported automatically." in body
+    assert "Hand context to an agent" in body
+    assert "Review suggestions" in body
+    assert "Open reviewed memory" in body
+    assert 'href="#connect-agent"' in body
+    assert 'href="/inbox"' in body
+    assert 'href="/projects/my-project/memory"' in body
+    assert body.index("new-project-guide") < body.index("project-section-nav")
+
+
 def test_memory_item_page_renders_read_only_german_detail() -> None:
     body = hub_view.render_page(
         {
