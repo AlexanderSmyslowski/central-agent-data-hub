@@ -21,6 +21,27 @@
   {% if agent_context.setup_error %}
     <p class="setup-feedback error">{{ agent_context.setup_error }}</p>
   {% endif %}
+  <div class="agent-start-panel" aria-label="{{ t('agent_start_label') }}">
+    <div class="agent-start-copy">
+      <p class="section-kicker">{{ t('agent_start_kicker') }}</p>
+      <h3>{{ t('agent_start_title') }}</h3>
+      <p>{{ t('agent_start_body') }}</p>
+    </div>
+    <div class="agent-start-actions">
+      <a class="agent-start-card" href="#agent-choices">
+        <strong>{{ t('agent_start_choose_title') }}</strong>
+        <span>{{ t('agent_start_choose_body') }}</span>
+      </a>
+      <a class="agent-start-card" href="#connection-checklist">
+        <strong>{{ t('agent_start_check_title') }}</strong>
+        <span>{{ t('agent_start_check_body') }}</span>
+      </a>
+      <a class="agent-start-card" href="#chatbot-context-pack-section">
+        <strong>{{ t('agent_start_chatbot_title') }}</strong>
+        <span>{{ t('agent_start_chatbot_body') }}</span>
+      </a>
+    </div>
+  </div>
   <div class="agent-setup-guide" aria-labelledby="agent-setup-guide-title">
     <div class="agent-setup-guide-copy">
       <p class="section-kicker">{{ t('agent_setup_guide_kicker') }}</p>

@@ -605,6 +605,11 @@
     grid-template-columns: 1fr;
   }
 
+  .agent-start-panel,
+  .agent-start-actions {
+    grid-template-columns: 1fr;
+  }
+
   .agent-setup-panel {
     grid-template-columns: 1fr;
   }

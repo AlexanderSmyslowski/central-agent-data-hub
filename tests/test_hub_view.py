@@ -2918,6 +2918,15 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "Known gaps" in body
     assert "1 unanswered questions" in body
     assert "Connect your agent" in body
+    assert 'aria-label="Start here"' in body
+    assert "Choose how ADH reaches your agent" in body
+    assert "Pick one path first." in body
+    assert "Choose your path" in body
+    assert "Check it worked" in body
+    assert "Copy text for chat" in body
+    assert 'href="#agent-choices"' in body
+    assert 'href="#connection-checklist"' in body
+    assert 'href="#chatbot-context-pack-section"' in body
     assert "Setup guide" in body
     assert "Set up one visible handoff" in body
     assert "ADH does not run the agent" in body
@@ -3013,6 +3022,7 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "For local agents: start a new task" in body
     assert "ADH cannot prove that an unconnected agent read the context" in body
     assert body.index("<h2>Connect your agent</h2>") < body.index("<h2>Task</h2>")
+    assert body.index('aria-label="Start here"') < body.index('aria-label="Agent setup guide"')
     assert body.index('aria-label="Agent setup guide"') < body.index('id="agent-choices"')
     assert body.index('id="agent-choices"') < body.index('aria-label="Connection status"')
     assert body.index('id="agent-choices"') < body.index('id="agent-chatbot"')
