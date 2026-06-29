@@ -22,25 +22,29 @@
     </div>
     <p>{{ t('project_workbench_copy') }}</p>
   </div>
-  <nav class="action-strip" aria-label="{{ t('project_actions') }}">
-    <a class="action-link primary" href="#connect-agent">
+  <nav class="action-strip area-map" aria-label="{{ t('project_actions') }}">
+    <a class="action-link primary" href="#current-state-title">
       <span class="action-kicker">{{ t('recommended_next') }}</span>
-      <span class="action-title">{{ t('use_adh_agent') }}</span>
-      <span class="action-copy">{{ t('use_adh_agent_action_copy') }}</span>
+      <span class="action-title">{{ t('nav_work_state') }}</span>
+      <span class="action-copy">{{ t('current_state_copy') }}</span>
     </a>
     <a class="action-link" href="#memory-explorer">
+      <span class="action-kicker">{{ t('nav_memory') }}</span>
       <span class="action-title">{{ t('find_reviewed_memory') }}</span>
       <span class="action-copy">{{ t('reviewed_memory_action_copy') }}</span>
     </a>
-    <a class="action-link" href="#latest-status">
-      <span class="action-title">{{ t('read_latest_status') }}</span>
-      <span class="action-copy">{{ t('read_latest_status_copy') }}</span>
-    </a>
     <a class="action-link" href="{{ url_for('/inbox') }}">
+      <span class="action-kicker">{{ t('nav_review') }}</span>
       <span class="action-title">{{ t('review_suggested_changes') }}</span>
       <span class="action-copy">{{ t('review_suggested_changes_action_copy', count=draft_total | default(0)) }}</span>
     </a>
+    <a class="action-link" href="#connect-agent">
+      <span class="action-kicker">{{ t('nav_agent_handoff') }}</span>
+      <span class="action-title">{{ t('use_adh_agent') }}</span>
+      <span class="action-copy">{{ t('use_adh_agent_action_copy') }}</span>
+    </a>
     <a class="action-link" href="#quality">
+      <span class="action-kicker">{{ t('quality') }}</span>
       <span class="action-title">{{ t('check_memory_quality') }}</span>
       <span class="action-copy">{{ t('check_memory_quality_copy') }}</span>
     </a>

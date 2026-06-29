@@ -1475,9 +1475,10 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert 'href="/projects/central-agent-data-hub#current-state-title"' in body
     assert 'href="/projects/central-agent-data-hub#project-memory"' in body
     assert 'href="/projects/central-agent-data-hub#connect-agent"' in body
-    assert 'aria-label="Project actions"' in body
-    assert "What can I do here?" in body
-    assert "Use this project as a local work surface" in body
+    assert 'aria-label="Workspace areas"' in body
+    assert 'class="action-strip area-map"' in body
+    assert "Project workspace" in body
+    assert "Use these areas like a local app" in body
     assert "Recommended next" in body
     assert "Current work state" in body
     assert "Read this first. It shows the latest report" in body
@@ -1506,11 +1507,11 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "2 items wait for a human decision across projects." in body
     assert "Find reviewed memory" in body
     assert "Search facts, decisions, risks, questions, reports, and relations already on this page." in body
-    assert "Read latest status" in body
-    assert "Start with the newest report before changing direction." in body
     assert "Check memory quality" in body
+    assert body.index("Project workspace") < body.index("Current work state")
     assert 'href="#connect-agent"' in body
     assert 'href="#memory-explorer"' in body
+    assert 'href="#current-state-title"' in body
     assert 'id="project-memory"' in body
     assert "Project memory" in body
     assert "Search and inspect the reviewed context this project can hand to a chatbot or local agent." in body
@@ -1730,8 +1731,8 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert 'href="/projects/central-agent-data-hub-demo?lang=de#project-memory"' in body
     assert 'href="/projects/central-agent-data-hub-demo?lang=de#connect-agent"' in body
     assert "Diese Seite durchsuchen" in body
-    assert "Was kann ich hier tun?" in body
-    assert "Nutze dieses Projekt als lokale Arbeitsfläche" in body
+    assert "Projekt-Arbeitsfläche" in body
+    assert "Nutze diese Bereiche wie eine lokale App" in body
     assert "Projektgedächtnis" in body
     assert "Durchsuche und prüfe den bestätigten Kontext" in body
     assert "Agentenübergabe und Prüfung" in body
@@ -1765,7 +1766,7 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert "Nächster Schritt: Auswirkung und Gegenmaßnahme ergänzen" in body
     assert "Agent verbinden" in body
     assert "Dieses Projekt mit ADH-Kontext prüfen" in body
-    assert "Letzten Stand lesen" in body
+    assert "Arbeitsstand" in body
     assert "Reviewed facts are visible in Hub View." in body
     assert "Demo risk stays in the original stored language." in body
     assert "Detail öffnen" in body
