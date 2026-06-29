@@ -1376,11 +1376,43 @@ def test_hub_view_without_reviewer_disables_buttons_and_blocks_post(monkeypatch)
     )
 
     assert "Set HUB_VIEW_REVIEWER or start Hub View with --reviewer" in body
+    assert "Set the reviewer before deciding" in body
+    assert "This is attribution for the audit trail, not a login or permission system." in body
+    assert "AGENT_HUB_PUBLIC_DEMO=1 scripts/hub_view.sh --reviewer alice" in body
     assert "Reviewer required" in body
     assert "Set the local reviewer first. The assigned reviewer stays visible on the card." in body
     assert "disabled>Accept</button>" in body
     assert captured["status"] == "403 Forbidden"
     assert "HUB_VIEW_REVIEWER" in post_body
+
+
+def test_hub_view_missing_reviewer_setup_is_localized() -> None:
+    groups = hub_view.group_draft_cards([draft_row()])
+    body = hub_view.render_page(
+        {
+            "projects": [],
+            "selected_project": None,
+            "not_found_slug": None,
+            "inbox": {
+                "groups": groups,
+                "csrf_token": "token",
+                "enabled": True,
+                "review_enabled": False,
+                "reviewer": None,
+                "reviewer_error": "reviewer handle is required; set HUB_VIEW_REVIEWER",
+                "message": None,
+                "error": None,
+            },
+        },
+        200,
+        view_name="inbox",
+        language="de",
+    ).decode("utf-8")
+
+    assert "Prüfperson vor der Entscheidung setzen" in body
+    assert "Zuordnung für die Prüfspur, keine Anmeldung und kein Rechtesystem" in body
+    assert "Merken und Verwerfen bleiben gesperrt" in body
+    assert "AGENT_HUB_PUBLIC_DEMO=1 scripts/hub_view.sh --reviewer alice" in body
 
 
 def test_inbox_get_paths_do_not_write(monkeypatch) -> None:

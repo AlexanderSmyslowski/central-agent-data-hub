@@ -146,6 +146,25 @@
     </a>
   </nav>
 
+  {% if inbox.enabled and not review_enabled %}
+    <section class="reviewer-setup-card" aria-labelledby="reviewer-setup-title">
+      <div>
+        <p class="section-kicker">{{ t('reviewer_setup_kicker') }}</p>
+        <h3 id="reviewer-setup-title">{{ t('reviewer_setup_title') }}</h3>
+        <p>{{ t('reviewer_setup_body') }}</p>
+        <p class="reviewer-setup-note">{{ t('reviewer_setup_note') }}</p>
+      </div>
+      <div class="reviewer-setup-command">
+        <span>{{ t('reviewer_setup_command_label') }}</span>
+        <div class="copy-row">
+          <code id="reviewer-setup-command" class="command-box">{{ t('reviewer_setup_command') }}</code>
+          <button class="button copy-button" type="button" data-copy-target="reviewer-setup-command">{{ t('copy') }}</button>
+        </div>
+        <small>{{ t('reviewer_setup_after') }}</small>
+      </div>
+    </section>
+  {% endif %}
+
   <div class="queue-summary" aria-label="{{ t('inbox_queue_title') }}">
     <div class="queue-summary-item">
       <div class="queue-summary-label">{{ t('review_items') }}</div>

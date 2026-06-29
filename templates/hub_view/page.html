@@ -2942,6 +2942,56 @@
         line-height: 1.35;
       }
 
+      .reviewer-setup-card {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 0.95fr);
+        gap: 16px;
+        align-items: start;
+        margin: 0 0 20px;
+        padding: 17px;
+        border: 1px solid rgba(45, 74, 95, 0.26);
+        border-radius: 8px;
+        background: rgba(45, 74, 95, 0.07);
+      }
+
+      .reviewer-setup-card h3 {
+        margin: 0 0 8px;
+        font-size: 20px;
+        line-height: 1.2;
+      }
+
+      .reviewer-setup-card p {
+        margin: 0 0 8px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      .reviewer-setup-note {
+        font-weight: 700;
+      }
+
+      .reviewer-setup-command {
+        display: grid;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .reviewer-setup-command span {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        line-height: 1.25;
+        text-transform: uppercase;
+      }
+
+      .reviewer-setup-command small {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.35;
+      }
+
       .queue-summary {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
@@ -3771,11 +3821,11 @@
         }
 
         body.view-inbox .review-card-section {
-          order: 5;
+          order: 6;
         }
 
         body.view-inbox #review-workbench {
-          order: 6;
+          order: 5;
         }
 
         body.view-inbox .review-activity {
@@ -3952,6 +4002,10 @@
         }
 
         .review-focus {
+          grid-template-columns: 1fr;
+        }
+
+        .reviewer-setup-card {
           grid-template-columns: 1fr;
         }
 
