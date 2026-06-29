@@ -1598,6 +1598,12 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "2 suggestions wait." in body
     assert "Prepare visible context handoff." in body
     assert "Quality score 92." in body
+    assert 'aria-label="Project work snapshot"' in body
+    assert "Project snapshot" in body
+    assert "What needs attention now?" in body
+    assert "Start with the newest status, check visible concerns" in body
+    assert "Prepare agent context" in body
+    assert "Prepare handoff." in body
     assert "Work state" in body
     assert "Memory" in body
     assert "Agent handoff" in body

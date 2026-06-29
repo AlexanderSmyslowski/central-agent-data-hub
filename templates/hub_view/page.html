@@ -383,6 +383,74 @@
         line-height: 1.35;
       }
 
+      .project-brief {
+        display: grid;
+        grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+        gap: 16px;
+        margin: 18px 0 0;
+        padding: 16px;
+        border: 1px solid rgba(45, 74, 95, 0.2);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.6);
+      }
+
+      .project-brief-copy {
+        display: grid;
+        gap: 6px;
+        align-content: start;
+      }
+
+      .project-brief-copy strong {
+        font-size: 18px;
+        line-height: 1.25;
+      }
+
+      .project-brief-copy p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .project-brief-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .project-brief-link {
+        display: grid;
+        gap: 5px;
+        min-height: 82px;
+        padding: 11px 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.56);
+      }
+
+      .project-brief-link.needs-review {
+        border-color: rgba(45, 74, 95, 0.28);
+        background: rgba(45, 74, 95, 0.08);
+      }
+
+      .project-brief-link:hover,
+      .project-brief-link:focus-visible {
+        border-color: rgba(45, 74, 95, 0.36);
+        background: var(--surface-strong);
+      }
+
+      .project-brief-link span,
+      .project-brief-link small {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.25;
+      }
+
+      .project-brief-link strong {
+        font-size: 14px;
+        line-height: 1.25;
+      }
+
       .project-name {
         margin: 0;
         font-size: 17px;
@@ -2487,6 +2555,10 @@
         }
 
         .summary-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .project-brief {
           grid-template-columns: 1fr;
         }
       }
