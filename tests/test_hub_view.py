@@ -1689,6 +1689,10 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert 'href="/projects/central-agent-data-hub#connect-agent"' in body
     assert 'aria-label="Workspace areas"' in body
     assert 'class="action-strip area-map"' in body
+    assert 'class="action-link primary action-work-state"' in body
+    assert 'class="action-link action-agent-handoff"' in body
+    assert "body.view-projects.has-selected-project .action-work-state" in body
+    assert "body.view-projects.has-selected-project .action-agent-handoff" in body
     assert "Project workspace" in body
     assert "Use these areas like a local app" in body
     assert "Recommended next" in body
