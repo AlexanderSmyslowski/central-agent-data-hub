@@ -65,10 +65,49 @@ last_error: Exception | None = None
 for _ in range(50):
     try:
         checks = {
-            "/static/app.css": (
-                "body.view-projects.has-selected-project",
+            "/static/base.css": (
+                ":root",
+                ".masthead",
+            ),
+            "/static/layout.css": (
+                ".layout",
+                ".project-brief",
+            ),
+            "/static/project_overview.css": (
+                ".project-overview",
                 ".project-workbench",
+            ),
+            "/static/workbench.css": (
+                ".workbench-header",
+                ".current-state",
+            ),
+            "/static/memory_library.css": (
+                ".memory-library-view",
+                ".project-section-nav",
+            ),
+            "/static/memory_search.css": (
                 ".memory-explorer",
+                ".memory-filter-match",
+            ),
+            "/static/review_surfaces.css": (
+                ".review-callout",
+                ".review-preview",
+            ),
+            "/static/agent_handoff.css": (
+                ".agent-form",
+                ".agent-picker-card",
+            ),
+            "/static/quality_detail.css": (
+                ".quality-overview",
+                ".quality-check-grid",
+            ),
+            "/static/memory_detail.css": (
+                ".memory-detail-view",
+                ".memory-item-brief",
+            ),
+            "/static/responsive.css": (
+                "@media (max-width: 980px)",
+                "body.view-projects.has-selected-project",
             ),
             "/static/shared.js": (
                 "reviewSearchAliases",
@@ -100,7 +139,17 @@ for _ in range(50):
             ),
             "/": (
                 "Hub View",
-                "/static/app.css",
+                "/static/base.css",
+                "/static/layout.css",
+                "/static/project_overview.css",
+                "/static/workbench.css",
+                "/static/memory_library.css",
+                "/static/memory_search.css",
+                "/static/review_surfaces.css",
+                "/static/agent_handoff.css",
+                "/static/quality_detail.css",
+                "/static/memory_detail.css",
+                "/static/responsive.css",
                 "/static/shared.js",
                 "/static/copy.js",
                 "/static/memory_search.js",

@@ -164,7 +164,12 @@ def test_v019_release_notes_describe_memory_explorer() -> None:
 
 def test_hub_view_template_is_split_into_view_partials() -> None:
     page = read_script("templates/hub_view/page.html")
-    css = read_script("templates/hub_view/static/app.css")
+    base_css = read_script("templates/hub_view/static/base.css")
+    layout_css = read_script("templates/hub_view/static/layout.css")
+    project_overview_css = read_script("templates/hub_view/static/project_overview.css")
+    memory_search_css = read_script("templates/hub_view/static/memory_search.css")
+    agent_handoff_css = read_script("templates/hub_view/static/agent_handoff.css")
+    responsive_css = read_script("templates/hub_view/static/responsive.css")
     copy_js = read_script("templates/hub_view/static/copy.js")
     shared_js = read_script("templates/hub_view/static/shared.js")
     memory_search_js = read_script("templates/hub_view/static/memory_search.js")
@@ -176,7 +181,17 @@ def test_hub_view_template_is_split_into_view_partials() -> None:
         "templates/hub_view/views/inbox.html",
         "templates/hub_view/views/agent_context.html",
         "templates/hub_view/views/project_detail.html",
-        "templates/hub_view/static/app.css",
+        "templates/hub_view/static/base.css",
+        "templates/hub_view/static/layout.css",
+        "templates/hub_view/static/project_overview.css",
+        "templates/hub_view/static/workbench.css",
+        "templates/hub_view/static/memory_library.css",
+        "templates/hub_view/static/memory_search.css",
+        "templates/hub_view/static/review_surfaces.css",
+        "templates/hub_view/static/agent_handoff.css",
+        "templates/hub_view/static/quality_detail.css",
+        "templates/hub_view/static/memory_detail.css",
+        "templates/hub_view/static/responsive.css",
         "templates/hub_view/static/shared.js",
         "templates/hub_view/static/copy.js",
         "templates/hub_view/static/memory_search.js",
@@ -193,8 +208,12 @@ def test_hub_view_template_is_split_into_view_partials() -> None:
     assert "{% for asset in script_assets %}" in page
     assert "<style>" not in page
     assert "<script>" not in page
-    assert "Sections: base chrome, layout, overview" in css
-    assert "body.view-projects.has-selected-project" in css
+    assert "/* Base chrome */" in base_css
+    assert ".project-brief" in layout_css
+    assert ".project-overview" in project_overview_css
+    assert ".memory-explorer" in memory_search_css
+    assert ".agent-form" in agent_handoff_css
+    assert "body.view-projects.has-selected-project" in responsive_css
     assert "data-copy-target" in copy_js
     assert "window.ADHHubView.searchTerms" in shared_js
     assert "itemHaystack" in memory_search_js

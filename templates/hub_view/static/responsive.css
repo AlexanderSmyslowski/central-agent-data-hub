@@ -1,0 +1,623 @@
+/* Responsive rules */
+@media (max-width: 980px) {
+  .app-status {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .content {
+    order: 1;
+  }
+
+  .sidebar {
+    order: 2;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .project-brief {
+    grid-template-columns: 1fr;
+  }
+
+  .project-timeline-header {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .project-timeline-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .shell {
+    width: min(100vw - 24px, 1280px);
+    padding-top: 18px;
+  }
+
+  .masthead,
+  .detail-header {
+    display: block;
+  }
+
+  .masthead-actions {
+    justify-items: start;
+    margin-top: 14px;
+    width: 100%;
+  }
+
+  .language-switcher {
+    width: 100%;
+  }
+
+  .language-switcher button {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .read-only {
+    display: inline-block;
+    margin-top: 14px;
+  }
+
+  .app-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .app-nav-link {
+    justify-content: center;
+    min-width: 0;
+    text-align: center;
+  }
+
+  body.has-selected-project .masthead {
+    padding-bottom: 12px;
+  }
+
+  body.has-selected-project .brand-home .claim,
+  body.has-selected-project .brand-home .prototype-note {
+    display: none;
+  }
+
+  body.has-selected-project h1 {
+    font-size: 28px;
+    line-height: 1.08;
+  }
+
+  body.has-selected-project .eyebrow {
+    margin-bottom: 4px;
+  }
+
+  body.has-selected-project .masthead-actions {
+    margin-top: 10px;
+  }
+
+  body.has-selected-project .app-nav {
+    display: flex;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding: 10px 0 2px;
+    scrollbar-width: none;
+  }
+
+  body.has-selected-project .app-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  body.has-selected-project .app-nav-link {
+    flex: 0 0 auto;
+    padding: 8px 11px;
+    white-space: nowrap;
+  }
+
+  body.has-selected-project .app-status {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  body.has-selected-project .app-status::-webkit-scrollbar {
+    display: none;
+  }
+
+  body.has-selected-project .app-status-item {
+    flex: 0 0 152px;
+    min-height: 58px;
+  }
+
+  body.has-selected-project .app-status-project {
+    flex-basis: 230px;
+  }
+
+  body.has-selected-project .app-status-item strong {
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+    white-space: normal;
+  }
+
+  body.view-projects.has-selected-project .content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  body.view-projects.has-selected-project .detail-header {
+    order: 0;
+  }
+
+  body.view-projects.has-selected-project .detail-title {
+    font-size: 30px;
+    line-height: 1.08;
+  }
+
+  body.view-projects.has-selected-project .detail-description {
+    margin-top: 10px;
+    font-size: 16px;
+  }
+
+  body.view-projects.has-selected-project .detail-header .project-meta {
+    display: none;
+  }
+
+  body.view-projects.has-selected-project .project-section-nav {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    order: 1;
+    margin: 10px 0 14px;
+    padding: 8px;
+    box-shadow: 0 8px 18px rgba(35, 42, 44, 0.08);
+  }
+
+  body.view-projects.has-selected-project #current-state-title,
+  body.view-projects.has-selected-project #memory-explorer,
+  body.view-projects.has-selected-project #connect-agent,
+  body.view-projects.has-selected-project #risks-and-questions,
+  body.view-projects.has-selected-project #reviewed-memory,
+  body.view-projects.has-selected-project #quality,
+  body.view-projects.has-selected-project #relations {
+    scroll-margin-top: 76px;
+  }
+
+  body.view-projects.has-selected-project .project-timeline {
+    display: none;
+  }
+
+  body.view-projects.has-selected-project .project-brief {
+    order: 2;
+    gap: 12px;
+    margin: 0 0 14px;
+    padding: 14px;
+  }
+
+  body.view-projects.has-selected-project .project-brief-copy strong {
+    font-size: 17px;
+  }
+
+  body.view-projects.has-selected-project .project-brief-actions {
+    display: flex;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  body.view-projects.has-selected-project .project-brief-actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  body.view-projects.has-selected-project .project-brief-link {
+    flex: 0 0 188px;
+    min-height: 104px;
+  }
+
+  body.view-projects.has-selected-project .project-brief-link:first-child {
+    flex-basis: 220px;
+  }
+
+  body.view-projects.has-selected-project .project-workbench {
+    order: 3;
+    gap: 12px;
+    margin: 14px 0;
+    padding: 14px;
+  }
+
+  body.view-projects.has-selected-project .project-workbench .workbench-header p {
+    font-size: 13px;
+  }
+
+  body.view-projects.has-selected-project .action-strip.area-map {
+    display: flex;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  body.view-projects.has-selected-project .action-strip.area-map::-webkit-scrollbar {
+    display: none;
+  }
+
+  body.view-projects.has-selected-project .action-strip.area-map .action-link {
+    flex: 0 0 188px;
+    min-height: 108px;
+  }
+
+  body.view-projects.has-selected-project .action-work-state {
+    order: 0;
+  }
+
+  body.view-projects.has-selected-project .action-agent-handoff {
+    order: 1;
+    border-color: rgba(45, 74, 95, 0.42);
+    background: rgba(255, 255, 255, 0.78);
+  }
+
+  body.view-projects.has-selected-project .action-review {
+    order: 2;
+  }
+
+  body.view-projects.has-selected-project .action-memory {
+    order: 3;
+  }
+
+  body.view-projects.has-selected-project .action-quality {
+    order: 4;
+  }
+
+  body.view-projects.has-selected-project #memory-explorer {
+    order: 3;
+    margin-bottom: 16px;
+  }
+
+  body.view-projects.has-selected-project .current-state {
+    order: 4;
+    margin-bottom: 16px;
+  }
+
+  body.view-projects.has-selected-project #agent-review {
+    order: 5;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  body.view-projects.has-selected-project #connect-agent {
+    order: 0;
+    margin: 0;
+    border-color: rgba(45, 74, 95, 0.42);
+    background: rgba(255, 255, 255, 0.86);
+  }
+
+  body.view-projects.has-selected-project #project-review-preview {
+    order: 1;
+  }
+
+  body.view-projects.has-selected-project #agent-review .review-callout {
+    order: 2;
+  }
+
+  body.view-projects.has-selected-project #memory-details {
+    order: 6;
+  }
+
+  body.view-projects.has-selected-project #project-memory {
+    order: 7;
+  }
+
+  body.view-inbox .content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  body.view-inbox .content > .nav-link {
+    order: 0;
+  }
+
+  body.view-inbox .detail-header {
+    order: 1;
+  }
+
+  body.view-inbox .inbox-action-strip {
+    order: 2;
+  }
+
+  body.view-inbox .review-result {
+    order: 3;
+  }
+
+  body.view-inbox .flash,
+  body.view-inbox .content > .notice {
+    order: 4;
+  }
+
+  body.view-inbox .review-card-section {
+    order: 6;
+  }
+
+  body.view-inbox #review-workbench {
+    order: 5;
+  }
+
+  body.view-inbox .review-activity {
+    order: 7;
+  }
+
+  .content {
+    padding: 22px 18px 24px;
+  }
+
+  .memory-detail-view {
+    gap: 14px;
+  }
+
+  .memory-item-detail .detail-header {
+    padding-bottom: 12px;
+  }
+
+  .memory-item-detail .detail-title {
+    font-size: 22px;
+    line-height: 1.12;
+  }
+
+  .memory-item-detail .detail-description {
+    margin-top: 8px;
+    font-size: 16px;
+  }
+
+  .memory-item-detail .project-meta {
+    display: none;
+  }
+
+  .memory-action-strip {
+    display: flex;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .memory-action-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .memory-action-card {
+    flex: 0 0 188px;
+  }
+
+  .memory-action-card.primary {
+    flex-basis: 212px;
+  }
+
+  .relation-row {
+    grid-template-columns: 1fr;
+  }
+
+  .workbench-header {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .project-timeline-list {
+    grid-template-columns: 1fr;
+  }
+
+  .state-header {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .workbench-area-header {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .review-preview-header {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .project-overview-start-strip {
+    display: flex;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .project-overview-start-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .project-overview-start-card {
+    flex: 0 0 188px;
+    min-height: 116px;
+  }
+
+  .project-overview-start-card.primary {
+    flex-basis: 220px;
+  }
+
+  .project-overview-card {
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .project-overview-card-header {
+    order: 0;
+  }
+
+  .project-overview-next-block {
+    order: 1;
+  }
+
+  .project-overview-actions-label {
+    order: 2;
+    margin: 0;
+  }
+
+  .project-overview-actions {
+    order: 3;
+    display: flex;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .project-overview-actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .project-overview-action {
+    flex: 0 0 156px;
+  }
+
+  .project-overview-action:first-child {
+    flex-basis: 184px;
+  }
+
+  .project-overview-latest {
+    order: 4;
+  }
+
+  .project-overview-map {
+    order: 5;
+  }
+
+  .project-overview-metrics {
+    order: 6;
+  }
+
+  .project-overview-map,
+  .project-overview-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .project-overview-signal {
+    justify-self: start;
+    max-width: none;
+  }
+
+  .review-guide {
+    grid-template-columns: 1fr;
+  }
+
+  .review-focus {
+    grid-template-columns: 1fr;
+  }
+
+  .reviewer-setup-card {
+    grid-template-columns: 1fr;
+  }
+
+  .inbox-action-strip {
+    display: flex;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .inbox-action-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .inbox-action-card {
+    flex: 0 0 188px;
+    min-height: 112px;
+  }
+
+  .inbox-action-card.primary {
+    flex-basis: 212px;
+  }
+
+  .review-result-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .review-activity .section-header,
+  .review-activity-card {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .review-filter-row {
+    grid-template-columns: 1fr;
+  }
+
+  .memory-filter-control {
+    grid-template-columns: 1fr;
+  }
+
+  .memory-library-hero,
+  .memory-library-card {
+    grid-template-columns: 1fr;
+  }
+
+  .memory-library-total {
+    align-content: start;
+  }
+
+  .draft-decision-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .draft-review-impact {
+    grid-template-columns: 1fr;
+  }
+
+  .memory-workflow {
+    grid-template-columns: 1fr;
+  }
+
+  .memory-item-brief {
+    grid-template-columns: 1fr;
+  }
+
+  .draft-actions {
+    justify-content: flex-start;
+  }
+
+  .agent-form,
+  .agent-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .agent-setup-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .section-header.compact {
+    grid-template-columns: 1fr;
+  }
+
+  .copy-row {
+    grid-template-columns: 1fr;
+  }
+
+  .copy-button {
+    justify-self: start;
+  }
+}

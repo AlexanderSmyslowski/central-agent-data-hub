@@ -87,7 +87,19 @@ DRAFT_REMEMBER_TEXT_KEYS = {
 }
 
 DEFAULT_AGENT_TASK = "Use reviewed Agent Data Hub context for this project."
-HUB_VIEW_STYLESHEET_ASSETS = ("app.css",)
+HUB_VIEW_STYLESHEET_ASSETS = (
+    "base.css",
+    "layout.css",
+    "project_overview.css",
+    "workbench.css",
+    "memory_library.css",
+    "memory_search.css",
+    "review_surfaces.css",
+    "agent_handoff.css",
+    "quality_detail.css",
+    "memory_detail.css",
+    "responsive.css",
+)
 HUB_VIEW_SCRIPT_ASSETS = (
     "shared.js",
     "copy.js",

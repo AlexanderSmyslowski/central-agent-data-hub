@@ -1,0 +1,303 @@
+/* Project overview */
+.project-overview {
+  display: grid;
+  gap: 18px;
+}
+
+.project-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.project-overview-start-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.project-overview-start-header {
+  display: grid;
+  gap: 4px;
+  margin-bottom: -6px;
+}
+
+.project-overview-start-title {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.project-overview-start-header p {
+  max-width: 720px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.project-overview-start-card {
+  display: grid;
+  gap: 5px;
+  min-height: 120px;
+  padding: 13px;
+  border: 1px solid rgba(45, 74, 95, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.64);
+  color: var(--text);
+}
+
+.project-overview-start-card:hover,
+.project-overview-start-card:focus-visible {
+  border-color: rgba(45, 74, 95, 0.34);
+  background: var(--surface-strong);
+}
+
+.project-overview-start-card.primary {
+  border-color: rgba(45, 74, 95, 0.34);
+  background: rgba(45, 74, 95, 0.08);
+}
+
+.project-overview-start-card span,
+.project-overview-start-card small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.project-overview-start-card strong {
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.project-overview-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.66);
+}
+
+.project-overview-card > * {
+  min-width: 0;
+}
+
+.project-overview-card.attention,
+.project-overview-card.review {
+  border-color: rgba(45, 74, 95, 0.34);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.project-overview-card-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+}
+
+.project-overview-card h2 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.project-overview-signal {
+  max-width: 150px;
+  padding: 5px 8px;
+  border: 1px solid rgba(45, 74, 95, 0.2);
+  border-radius: 999px;
+  background: rgba(45, 74, 95, 0.08);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.project-overview-latest {
+  padding: 13px 14px;
+  border: 1px solid rgba(45, 74, 95, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.54);
+}
+
+.project-overview-latest strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+.project-overview-latest p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.project-overview-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.project-overview-map {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.project-overview-map-item {
+  display: grid;
+  gap: 5px;
+  min-height: 86px;
+  padding: 11px;
+  border: 1px solid rgba(45, 74, 95, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.58);
+  color: var(--text);
+}
+
+.project-overview-map-item:hover,
+.project-overview-map-item:focus-visible {
+  border-color: rgba(45, 74, 95, 0.34);
+  background: var(--surface-strong);
+}
+
+.project-overview-map-item span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.project-overview-map-item strong {
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.project-overview-map-item.ready {
+  border-color: rgba(45, 74, 95, 0.28);
+}
+
+.project-overview-map-item.needs-review,
+.project-overview-map-item.needs-attention {
+  border-color: rgba(135, 86, 32, 0.28);
+  background: rgba(255, 248, 235, 0.68);
+}
+
+.project-overview-metric {
+  display: grid;
+  gap: 4px;
+  min-height: 82px;
+  padding: 11px;
+  border: 1px solid rgba(45, 74, 95, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.54);
+  color: var(--text);
+}
+
+.project-overview-metric:hover,
+.project-overview-metric:focus-visible {
+  border-color: rgba(45, 74, 95, 0.34);
+  background: var(--surface-strong);
+}
+
+.project-overview-metric span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.project-overview-metric strong {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.project-overview-next {
+  display: grid;
+  gap: 10px;
+  padding: 13px 14px;
+  border: 1px solid rgba(45, 74, 95, 0.2);
+  border-radius: 8px;
+  background: rgba(45, 74, 95, 0.06);
+}
+
+.project-overview-next-block,
+.project-overview-actions-label {
+  min-width: 0;
+}
+
+.project-overview-next strong {
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.project-overview-next a {
+  justify-self: start;
+  min-height: 40px;
+  padding: 9px 13px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.project-overview-next a:hover,
+.project-overview-next a:focus-visible {
+  background: var(--accent-strong);
+  color: #fff;
+}
+
+.project-overview-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.project-overview-action:hover,
+.project-overview-action:focus-visible {
+  background: var(--accent-strong);
+}
+
+.project-overview-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.project-overview-action.secondary {
+  border: 1px solid rgba(45, 74, 95, 0.22);
+  background: rgba(255, 255, 255, 0.64);
+  color: var(--accent);
+}
+
+.project-overview-action.secondary:hover,
+.project-overview-action.secondary:focus-visible {
+  border-color: rgba(45, 74, 95, 0.36);
+  background: var(--surface-strong);
+}
+
+.project-workbench {
+  display: grid;
+  gap: 16px;
+  margin: 22px 0 22px;
+  padding: 18px;
+  border: 1px solid rgba(45, 74, 95, 0.22);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.62);
+}
+

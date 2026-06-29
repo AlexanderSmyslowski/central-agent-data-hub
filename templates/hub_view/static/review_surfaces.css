@@ -1,0 +1,102 @@
+/* Review surfaces */
+.review-callout {
+  display: block;
+  margin: -8px 0 28px;
+  padding: 14px 16px;
+  border: 1px solid rgba(45, 74, 95, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.review-callout:hover {
+  border-color: rgba(45, 74, 95, 0.36);
+  background: var(--surface-strong);
+}
+
+.review-callout strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text);
+  font-size: 15px;
+}
+
+.review-callout span {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.review-preview {
+  display: grid;
+  gap: 14px;
+  margin: 0 0 22px;
+  padding: 18px;
+  border: 1px solid rgba(45, 74, 95, 0.22);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.review-preview-header {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.review-preview-header h2 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.review-preview-header p,
+.review-preview-empty p,
+.review-preview-more {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.review-preview-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.review-preview .draft-card {
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.review-preview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.review-preview-actions .project-overview-action {
+  min-width: 180px;
+}
+
+.agent-connect {
+  margin: 0 0 28px;
+  padding: 20px;
+  border: 1px solid rgba(45, 74, 95, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.agent-connect h2,
+.agent-context h2 {
+  margin-bottom: 8px;
+}
+
+.agent-connect p,
+.agent-context p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+

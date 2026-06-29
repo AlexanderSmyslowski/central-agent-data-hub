@@ -235,7 +235,9 @@ def test_render_page_includes_local_review_claim() -> None:
 
     assert "Hub View" in body
     assert 'class="view-projects"' in body
-    assert '<link rel="stylesheet" href="/static/app.css">' in body
+    for asset in hub_view.HUB_VIEW_STYLESHEET_ASSETS:
+        assert f'<link rel="stylesheet" href="/static/{asset}">' in body
+    assert '<link rel="stylesheet" href="/static/app.css">' not in body
     for asset in hub_view.HUB_VIEW_SCRIPT_ASSETS:
         assert f'<script src="/static/{asset}" defer></script>' in body
     assert "<style>" not in body
@@ -328,12 +330,16 @@ def test_application_rejects_non_get_requests() -> None:
 def test_hub_view_serves_static_assets_with_narrow_paths() -> None:
     app = hub_view.create_application(bind_host="127.0.0.1", csrf_token="token")
 
-    captured, css = call_app(app, path="/static/app.css")
+    captured, css = call_app(app, path="/static/layout.css")
     headers = dict(captured["headers"])
     assert captured["status"] == "200 OK"
     assert headers["Content-Type"] == "text/css; charset=utf-8"
     assert headers["X-Content-Type-Options"] == "nosniff"
     assert ".project-brief" in css
+
+    captured, css = call_app(app, path="/static/memory_search.css")
+    assert captured["status"] == "200 OK"
+    assert ".memory-explorer" in css
 
     captured, js = call_app(app, path="/static/copy.js")
     headers = dict(captured["headers"])
@@ -763,10 +769,11 @@ def test_inbox_page_lists_drafts_as_plain_cards() -> None:
     assert "Visible review items: 1." in body
     assert "No review item matches this filter." in body
     assert 'class="section review-card-section"' in body
-    static_dir = hub_view.hub_view_static_dir()
-    css = static_dir.joinpath("app.css").read_text(encoding="utf-8")
-    assert "body.view-inbox .review-card-section" in css
-    assert "body.view-inbox #review-workbench" in css
+    responsive_css = hub_view.hub_view_static_dir().joinpath(
+        "responsive.css"
+    ).read_text(encoding="utf-8")
+    assert "body.view-inbox .review-card-section" in responsive_css
+    assert "body.view-inbox #review-workbench" in responsive_css
     assert "data-inbox-filter" in body
     assert "data-inbox-item" in body
     assert "data-inbox-group" in body
@@ -1894,20 +1901,23 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "data-section-target" in body
 
     static_dir = hub_view.hub_view_static_dir()
-    css = static_dir.joinpath("app.css").read_text(encoding="utf-8")
-    assert "body.view-projects.has-selected-project .project-brief" in css
-    assert "body.view-projects.has-selected-project .project-brief-actions" in css
-    assert "body.view-projects.has-selected-project .project-brief-link:first-child" in css
-    assert "body.view-projects.has-selected-project .detail-header .project-meta" in css
-    assert "body.view-projects.has-selected-project .project-timeline" in css
-    assert "body.view-projects.has-selected-project .project-section-nav" in css
-    assert "body.view-projects.has-selected-project #agent-review" in css
-    assert "body.view-projects.has-selected-project #connect-agent" in css
-    assert "body.view-projects.has-selected-project #project-review-preview" in css
-    assert "body.view-projects.has-selected-project #memory-details" in css
-    assert "body.view-projects.has-selected-project .action-work-state" in css
-    assert "body.view-projects.has-selected-project .action-agent-handoff" in css
-    assert ".project-section-nav a.active" in css
+    responsive_css = static_dir.joinpath("responsive.css").read_text(encoding="utf-8")
+    memory_library_css = static_dir.joinpath("memory_library.css").read_text(
+        encoding="utf-8"
+    )
+    assert "body.view-projects.has-selected-project .project-brief" in responsive_css
+    assert "body.view-projects.has-selected-project .project-brief-actions" in responsive_css
+    assert "body.view-projects.has-selected-project .project-brief-link:first-child" in responsive_css
+    assert "body.view-projects.has-selected-project .detail-header .project-meta" in responsive_css
+    assert "body.view-projects.has-selected-project .project-timeline" in responsive_css
+    assert "body.view-projects.has-selected-project .project-section-nav" in responsive_css
+    assert "body.view-projects.has-selected-project #agent-review" in responsive_css
+    assert "body.view-projects.has-selected-project #connect-agent" in responsive_css
+    assert "body.view-projects.has-selected-project #project-review-preview" in responsive_css
+    assert "body.view-projects.has-selected-project #memory-details" in responsive_css
+    assert "body.view-projects.has-selected-project .action-work-state" in responsive_css
+    assert "body.view-projects.has-selected-project .action-agent-handoff" in responsive_css
+    assert ".project-section-nav a.active" in memory_library_css
     project_nav_js = static_dir.joinpath("project_nav.js").read_text(encoding="utf-8")
     assert "setActiveProjectSection" in project_nav_js
     assert "updateProjectSectionNav" in project_nav_js
