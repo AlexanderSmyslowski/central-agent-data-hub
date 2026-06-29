@@ -1396,11 +1396,14 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Agent handoff and review" in body
     assert "Prepare context for a chatbot or local agent, then handle suggested memory changes separately." in body
     assert "Memory details" in body
-    assert "Open the sections below when you need the reviewed items, risks, latest report, quality signals, or relations." in body
+    assert "Start with latest status, then check risks and questions" in body
     assert "Use these entries as the verified base." in body
     assert "Read the newest report first." in body
     assert "Check whether an active risk or open question" in body
     assert "Fix or consciously accept the visible signals" in body
+    assert body.index('id="latest-status"') < body.index('id="risks-and-questions"')
+    assert body.index('id="risks-and-questions"') < body.index('id="reviewed-memory"')
+    assert body.index('id="reviewed-memory"') < body.index('id="quality"')
     assert 'href="#reviewed-memory"' in body
     assert 'href="#risks-and-questions"' in body
     assert 'href="#latest-status"' in body
@@ -1612,10 +1615,14 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert "Durchsuche und prüfe den bestätigten Kontext" in body
     assert "Agentenübergabe und Prüfung" in body
     assert "Detailansicht" in body
+    assert "Beginne mit dem letzten Stand, prüfe dann Risiken und Fragen" in body
     assert "Nutze diese Einträge als geprüfte Grundlage." in body
     assert "Lies zuerst den neuesten Bericht." in body
     assert "Prüfe, ob ein aktives Risiko oder eine offene Frage" in body
     assert "Behebe oder akzeptiere die sichtbaren Signale bewusst" in body
+    assert body.index('id="latest-status"') < body.index('id="risks-and-questions"')
+    assert body.index('id="risks-and-questions"') < body.index('id="reviewed-memory"')
+    assert body.index('id="reviewed-memory"') < body.index('id="quality"')
     assert "Empfohlen" in body
     assert "Aktueller Arbeitsstand" in body
     assert "Lies das zuerst. Hier siehst du letzten Bericht" in body
