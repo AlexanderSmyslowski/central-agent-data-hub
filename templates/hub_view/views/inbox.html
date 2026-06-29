@@ -294,6 +294,18 @@
                 {% endfor %}
               </div>
               <p class="draft-card-reason">{{ t('inbox_card_reason') }}: {{ ui_text(draft.resolution_reason) }}</p>
+              <div class="draft-review-impact" aria-label="{{ t('draft_review_impact_label') }}">
+                <div class="draft-review-impact-card">
+                  <span>{{ t('draft_review_accept_label') }}</span>
+                  <strong>{{ t('draft_review_accept_title') }}</strong>
+                  <p>{{ t('draft_review_accept_copy') }}</p>
+                </div>
+                <div class="draft-review-impact-card">
+                  <span>{{ t('draft_review_reject_label') }}</span>
+                  <strong>{{ t('draft_review_reject_title') }}</strong>
+                  <p>{{ t('draft_review_reject_copy') }}</p>
+                </div>
+              </div>
               <div class="draft-decision-panel">
                 <div>
                   <strong>{{ t('draft_decision_question') }}</strong>

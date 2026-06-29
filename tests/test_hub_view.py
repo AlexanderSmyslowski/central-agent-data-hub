@@ -694,6 +694,13 @@ def test_inbox_page_lists_drafts_as_plain_cards() -> None:
     assert "Use this to judge the cost of a wrong assumption." in body
     assert "Should this become reviewed memory?" in body
     assert "Accept only if the sentence is correct, useful, and safe for future agents." in body
+    assert 'aria-label="Decision impact"' in body
+    assert "If accepted" in body
+    assert "Becomes reviewed memory" in body
+    assert "ADH stores it as reviewed context and records who accepted it." in body
+    assert "If rejected" in body
+    assert "Stays out of reviewed memory" in body
+    assert "ADH archives the suggestion and records who rejected it." in body
     assert "Assigned reviewer: alice" in body
     assert "Why this card is here" in body
     assert 'action="/inbox/accept"' in body
@@ -1015,6 +1022,13 @@ def test_inbox_page_renders_german_queue_language() -> None:
     assert "Nutze das, um die Folgen einer falschen Annahme einzuschätzen." in body
     assert "Soll das zu geprüftem Projektgedächtnis werden?" in body
     assert "Merke nur, wenn der Satz korrekt, nützlich und sicher für spätere Agenten ist." in body
+    assert 'aria-label="Folge der Entscheidung"' in body
+    assert "Wenn gemerkt" in body
+    assert "Wird geprüftes Projektgedächtnis" in body
+    assert "ADH übernimmt es als geprüften Kontext und protokolliert, wer entschieden hat." in body
+    assert "Wenn verworfen" in body
+    assert "Bleibt draußen" in body
+    assert "ADH archiviert den Vorschlag und protokolliert, wer verworfen hat." in body
     assert "Warum diese Karte hier ist" in body
     assert "Als geprüftes Projektgedächtnis speichern" in body
     assert "Archivieren, ohne zu übernehmen" in body
