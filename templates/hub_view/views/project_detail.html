@@ -14,14 +14,14 @@
   </div>
 </div>
 
-<nav class="project-section-nav" aria-label="{{ t('project_section_nav') }}">
+<nav class="project-section-nav" aria-label="{{ t('project_section_nav') }}" data-project-section-nav>
   <span>{{ t('project_section_nav_kicker') }}</span>
-  <a href="#current-state-title">{{ t('nav_work_state') }}</a>
-  <a href="#memory-explorer">{{ t('find_reviewed_memory') }}</a>
-  <a href="#connect-agent">{{ t('nav_agent_handoff') }}</a>
+  <a href="#current-state-title" data-section-target="current-state-title">{{ t('nav_work_state') }}</a>
+  <a href="#memory-explorer" data-section-target="memory-explorer">{{ t('find_reviewed_memory') }}</a>
+  <a href="#connect-agent" data-section-target="connect-agent">{{ t('nav_agent_handoff') }}</a>
   <a href="{{ url_for('/inbox') }}">{{ t('nav_review') }}</a>
-  <a href="#risks-and-questions">{{ t('risks_and_questions') }}</a>
-  <a href="#quality">{{ t('quality') }}</a>
+  <a href="#risks-and-questions" data-section-target="risks-and-questions">{{ t('risks_and_questions') }}</a>
+  <a href="#quality" data-section-target="quality">{{ t('quality') }}</a>
 </nav>
 
 <section class="project-brief" aria-label="{{ t('project_brief_label') }}">

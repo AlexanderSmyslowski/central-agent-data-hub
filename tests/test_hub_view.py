@@ -1721,6 +1721,12 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert 'aria-label="Project sections"' in body
     assert "On this project" in body
     assert body.index('class="project-section-nav"') < body.index('class="project-workbench"')
+    assert "data-project-section-nav" in body
+    assert "data-section-target" in body
+    assert ".project-section-nav a.active" in body
+    assert "setActiveProjectSection" in body
+    assert "updateProjectSectionNav" in body
+    assert "aria-current\", \"location\"" in body
     assert 'href="#current-state-title"' in body
     assert 'href="#memory-explorer"' in body
     assert 'href="#connect-agent"' in body
@@ -2018,6 +2024,8 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert 'aria-label="Projektbereiche"' in body
     assert "In diesem Projekt" in body
     assert body.index('class="project-section-nav"') < body.index('class="project-workbench"')
+    assert "data-project-section-nav" in body
+    assert "data-section-target" in body
     assert 'href="/projects/central-agent-data-hub-demo?lang=de#current-state-title"' in body
     assert 'href="/projects/central-agent-data-hub-demo?lang=de#memory-explorer"' in body
     assert 'href="/projects/central-agent-data-hub-demo?lang=de#connect-agent"' in body
