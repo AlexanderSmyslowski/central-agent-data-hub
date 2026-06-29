@@ -228,6 +228,60 @@
     <p>{{ t('agent_review_area_copy') }}</p>
   </div>
 
+  <section class="review-preview" id="project-review-preview" aria-labelledby="project-review-preview-title">
+    <div class="review-preview-header">
+      <div>
+        <p class="section-kicker">{{ t('review_preview_kicker') }}</p>
+        <h2 id="project-review-preview-title">{{ t('review_preview_title') }}</h2>
+      </div>
+      <p>{{ t('review_preview_copy') }}</p>
+    </div>
+    {% if selected_project.draft_preview %}
+      <div class="review-preview-list">
+        {% for draft in selected_project.draft_preview %}
+          <article class="draft-card">
+            <div class="draft-card-heading">
+              <h3 class="draft-card-title">{{ t('review_preview_card_title') }} · {{ ui_text(draft.type_label) }}</h3>
+              <span class="draft-decision-badge">{{ t('inbox_card_priority') }}</span>
+            </div>
+            <div class="draft-meta">
+              <span class="draft-pill">{{ draft.project }}</span>
+              <span class="draft-pill">{{ ui_text(draft.type_label) }}</span>
+              <span class="draft-pill">{{ t('review_owner') }}: {{ ui_text(draft.responsible_reviewer) }}</span>
+              {% if draft.updated_at %}
+                <span class="draft-pill">{{ draft.updated_at }}</span>
+              {% endif %}
+            </div>
+            <div class="draft-card-body" aria-label="{{ t('draft_review_summary') }}">
+              {% for section in draft.card_sections %}
+                <div class="draft-card-field">
+                  <span class="draft-card-field-label">{{ t(section.label_key) }}</span>
+                  <p>{{ section.text }}</p>
+                  <small>{{ t(section.help_key) }}</small>
+                </div>
+              {% endfor %}
+            </div>
+            <p class="draft-card-reason">{{ t('inbox_card_reason') }}: {{ ui_text(draft.resolution_reason) }}</p>
+          </article>
+        {% endfor %}
+      </div>
+      {% if selected_project.draft_count > (selected_project.draft_preview | length) %}
+        <p class="review-preview-more">
+          {{ t('review_preview_more', count=selected_project.draft_count - (selected_project.draft_preview | length)) }}
+        </p>
+      {% endif %}
+    {% else %}
+      <div class="review-preview-empty">
+        <strong>{{ t('review_preview_empty_title') }}</strong>
+        <p>{{ t('review_preview_empty_copy') }}</p>
+      </div>
+    {% endif %}
+    <div class="review-preview-actions">
+      <a class="project-overview-action" href="{{ url_for('/inbox') }}">{{ t('review_preview_open_inbox') }}</a>
+      <span class="empty">{{ t('review_preview_boundary') }}</span>
+    </div>
+  </section>
+
   <section class="agent-connect" id="connect-agent">
     <h2>{{ t('connect_an_agent') }}</h2>
     <p>{{ t('agent_handoff_form_help') }}</p>

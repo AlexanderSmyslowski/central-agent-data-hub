@@ -658,6 +658,7 @@ def build_detail_view(
     project: dict[str, object],
     *,
     draft_count: int = 0,
+    draft_rows: list[dict[str, object]] | None = None,
 ) -> dict[str, object]:
     metadata = project.get("metadata") or {}
     compiled = fetch_compiled_payload(cur, project, limit=8)
@@ -711,6 +712,10 @@ def build_detail_view(
         "work_mode": metadata.get("work_mode"),
         "counts": compiled["counts"],
         "draft_count": draft_count,
+        "draft_preview": build_project_draft_preview(
+            draft_rows or [],
+            project["slug"],
+        ),
         "quality": quality_view,
         "work_state": build_work_state_cards(
             reports=reports,
@@ -823,6 +828,7 @@ def load_memory_item_view_model(
                 cur,
                 project,
                 draft_count=draft_counts.get(str(project["slug"]), 0),
+                draft_rows=drafts,
             )
             try:
                 parsed_item_id = UUID(str(item_id))
@@ -1104,6 +1110,7 @@ def load_agent_context_view_model(selected_slug: str, task: str) -> tuple[int, d
                     cur,
                     project,
                     draft_count=draft_counts.get(str(project["slug"]), 0),
+                    draft_rows=drafts,
                 ),
                 "not_found_slug": None,
                 "draft_total": draft_total,
@@ -1116,6 +1123,18 @@ def draft_counts_by_project(rows: list[dict[str, object]]) -> dict[str, int]:
         slug = str(row["project"])
         counts[slug] = counts.get(slug, 0) + 1
     return counts
+
+def build_project_draft_preview(
+    rows: list[dict[str, object]],
+    project_slug: object,
+    *,
+    limit: int = 2,
+) -> list[dict[str, object]]:
+    return [
+        draft_card(row)
+        for row in rows
+        if str(row.get("project")) == str(project_slug)
+    ][:limit]
 
 def draft_card(row: dict[str, object]) -> dict[str, object]:
     card = card_for_item(row)
@@ -1277,6 +1296,7 @@ def load_view_model(selected_slug: str | None) -> tuple[int, dict[str, object]]:
                     cur,
                     project,
                     draft_count=draft_counts.get(str(project["slug"]), 0),
+                    draft_rows=drafts,
                 ),
                 "not_found_slug": None,
                 "draft_total": draft_total,

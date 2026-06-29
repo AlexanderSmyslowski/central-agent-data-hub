@@ -397,6 +397,30 @@ def test_build_project_cards_batches_counts_and_latest_reports(monkeypatch) -> N
     assert cards[1]["next_step_href"] == "/inbox"
 
 
+def test_project_draft_preview_filters_project_and_uses_inbox_card_shape() -> None:
+    other_project = {
+        **draft_row(),
+        "id": uuid.UUID("10000000-0000-4000-8000-000000000702"),
+        "project": "other-project",
+        "project_name": "Other Project",
+    }
+
+    preview = hub_view_models.build_project_draft_preview(
+        [draft_row(), other_project],
+        "central-agent-data-hub",
+    )
+
+    assert len(preview) == 1
+    assert preview[0]["project"] == "central-agent-data-hub"
+    assert preview[0]["type_label"] == "Fact"
+    assert "Drafts require explicit review" in preview[0]["card"]
+    assert [section["label_key"] for section in preview[0]["card_sections"]] == [
+        "draft_section_remember",
+        "draft_section_source",
+        "draft_section_if_wrong",
+    ]
+
+
 def test_project_overview_next_step_falls_back_to_latest_or_open() -> None:
     project = {
         "id": "project-1",
@@ -1444,6 +1468,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
                 "project_type": "ops",
                 "updated_at": "2026-06-05 08:00 UTC",
                 "draft_count": 2,
+                "draft_preview": [hub_view_models.draft_card(draft_row())],
                 "counts": {
                     "facts": 3,
                     "decisions": 1,
@@ -1666,6 +1691,15 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Prepare reviewed context before a chatbot or local agent starts work." in body
     assert "Review suggested changes" in body
     assert "2 items wait for a human decision across projects." in body
+    assert "Human review" in body
+    assert "What needs a human decision?" in body
+    assert "These suggestions are not reviewed memory yet." in body
+    assert "Needs human decision" in body
+    assert "What ADH would remember" in body
+    assert "Drafts require explicit review." in body
+    assert "Source to check" in body
+    assert "If this is wrong" in body
+    assert "Preview only. Accept or reject in the Review Inbox" in body
     assert "Find reviewed memory" in body
     assert "Search facts, decisions, risks, questions, reports, and relations already on this page." in body
     assert "Check memory quality" in body
@@ -1790,6 +1824,7 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
                 "status": "active",
                 "project_type": "demo",
                 "updated_at": "2026-06-05 08:00 UTC",
+                "draft_preview": [],
                 "counts": {
                     "facts": 1,
                     "decisions": 0,
@@ -1940,6 +1975,12 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert "Noch unklar" in body
     assert "Geprüfte Unsicherheiten, die sichtbar bleiben sollen." in body
     assert "Agentenübergabe und Prüfung" in body
+    assert "Menschliche Prüfung" in body
+    assert "Was braucht eine menschliche Entscheidung?" in body
+    assert "Diese Vorschläge sind noch kein geprüftes Gedächtnis." in body
+    assert "Für dieses Projekt wartet kein Vorschlag." in body
+    assert "Prüfungseingang öffnen" in body
+    assert "Nur Vorschau. Merken oder Verwerfen passiert im Prüfungseingang" in body
     assert "Detailansicht" in body
     assert "Beginne mit dem letzten Stand, prüfe dann Risiken und Fragen" in body
     assert 'aria-label="Detailbereiche im Projektgedächtnis"' in body
