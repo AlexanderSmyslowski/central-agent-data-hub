@@ -11,57 +11,6 @@
 </div>
 
 <section class="section agent-context">
-  <h2>{{ t('task') }}</h2>
-  <p>{{ agent_context.task }}</p>
-  <div class="agent-status">
-    <div class="agent-status-item">
-      <div class="agent-status-label">{{ t('agent_status_facts') }}</div>
-      <div class="agent-status-value">{{ agent_context.counts.facts }}</div>
-    </div>
-    <div class="agent-status-item">
-      <div class="agent-status-label">{{ t('agent_status_decisions') }}</div>
-      <div class="agent-status-value">{{ agent_context.counts.decisions }}</div>
-    </div>
-    <div class="agent-status-item">
-      <div class="agent-status-label">{{ t('agent_status_risks') }}</div>
-      <div class="agent-status-value">{{ agent_context.counts.risks }}</div>
-    </div>
-    <div class="agent-status-item">
-      <div class="agent-status-label">{{ t('agent_status_open_questions') }}</div>
-      <div class="agent-status-value">{{ agent_context.counts.open_questions }}</div>
-    </div>
-    <div class="agent-status-item">
-      <div class="agent-status-label">{{ t('agent_status_reports') }}</div>
-      <div class="agent-status-value">{{ agent_context.counts.reports }}</div>
-    </div>
-    <div class="agent-status-item">
-      <div class="agent-status-label">{{ t('agent_status_trail_entries') }}</div>
-      <div class="agent-status-value">{{ agent_context.source_count }}</div>
-    </div>
-  </div>
-  <p>{{ t('source_of_truth_line') }}</p>
-</section>
-
-<section class="section agent-context">
-  <h2>{{ t('influence_agent') }}</h2>
-  <ul class="agent-list">
-    {% for line in agent_context.influence %}
-      <li>{{ line }}</li>
-    {% endfor %}
-  </ul>
-</section>
-
-<section class="section agent-context">
-  <h2>{{ t('known_gaps') }}</h2>
-  <div class="project-counts">
-    <span>{{ agent_context.gap_summary.stale }} {{ t('stale_items') }}</span>
-    <span>{{ agent_context.gap_summary.unanswered }} {{ t('unanswered_questions') }}</span>
-    <span>{{ agent_context.gap_summary.blind_spots }} {{ t('task_blind_spots') }}</span>
-    <span>{{ agent_context.gap_summary.pending_drafts }} {{ t('items_pending_review') }}</span>
-  </div>
-</section>
-
-<section class="section agent-context">
   <h2>{{ t('connect_your_agent') }}</h2>
   <p>{{ t('connect_agent_body') }}</p>
   {% if agent_context.setup_message %}
@@ -87,33 +36,7 @@
       <p>{{ t('local_agent_handoff_line') }}</p>
     </div>
   </div>
-  <div class="verification-panel">
-    <h3>{{ t('connection_verification') }}</h3>
-    <p class="verification-intro"><strong>{{ t('codex_can_check') }}</strong> {{ t('external_manual_check') }}</p>
-    <div class="verification-grid" aria-label="{{ t('connection_verification') }}">
-      <div class="verification-card {{ agent_context.local_agent.codex.verification.state }}">
-        <div class="verification-label">Codex</div>
-        <div class="verification-status">{{ ui_text(agent_context.local_agent.codex.verification.label) }}</div>
-        <p class="verification-detail">{{ ui_text(agent_context.local_agent.codex.verification.detail) }}</p>
-      </div>
-      <div class="verification-card manual">
-        <div class="verification-label">{{ t('claude_code') }}</div>
-        <div class="verification-status">{{ t('claude_manual_check') }}</div>
-        <p class="verification-detail">{{ t('claude_manual_detail') }}</p>
-      </div>
-      <div class="verification-card manual">
-        <div class="verification-label">{{ t('custom_agent') }}</div>
-        <div class="verification-status">{{ t('persistent_rule_needed') }}</div>
-        <p class="verification-detail">{{ t('persistent_rule_detail') }}</p>
-      </div>
-      <div class="verification-card manual">
-        <div class="verification-label">{{ t('chatbot') }}</div>
-        <div class="verification-status">{{ t('per_task_copy_paste') }}</div>
-        <p class="verification-detail">{{ t('chatbot_detail') }}</p>
-      </div>
-    </div>
-  </div>
-  <h3>{{ t('choose_agent') }}</h3>
+  <h3 id="agent-choices">{{ t('agent_picker_title') }}</h3>
   <div class="agent-picker" aria-label="{{ t('choose_agent') }}">
     <a class="agent-picker-card" href="#agent-chatbot">
       <span class="agent-picker-label">{{ t('chatbot') }}</span>
@@ -152,6 +75,7 @@
       <span class="agent-picker-proof">{{ t('agent_picker_fallback_proof') }}</span>
     </a>
   </div>
+  <h3>{{ t('connect_once') }}</h3>
   <div class="connection-grid">
     <article class="connection-card" id="agent-chatbot">
       <div class="connection-card-label">{{ t('manual_every_task') }}</div>
@@ -277,7 +201,87 @@
       <li>{{ t('terminal_handoff_line') }}</li>
     </ul>
   </div>
-  <h3>{{ t('chatbot_heading') }}</h3>
+  <div class="verification-panel">
+    <h3>{{ t('connection_verification') }}</h3>
+    <p class="verification-intro"><strong>{{ t('codex_can_check') }}</strong> {{ t('external_manual_check') }}</p>
+    <div class="verification-grid" aria-label="{{ t('connection_verification') }}">
+      <div class="verification-card {{ agent_context.local_agent.codex.verification.state }}">
+        <div class="verification-label">Codex</div>
+        <div class="verification-status">{{ ui_text(agent_context.local_agent.codex.verification.label) }}</div>
+        <p class="verification-detail">{{ ui_text(agent_context.local_agent.codex.verification.detail) }}</p>
+      </div>
+      <div class="verification-card manual">
+        <div class="verification-label">{{ t('claude_code') }}</div>
+        <div class="verification-status">{{ t('claude_manual_check') }}</div>
+        <p class="verification-detail">{{ t('claude_manual_detail') }}</p>
+      </div>
+      <div class="verification-card manual">
+        <div class="verification-label">{{ t('custom_agent') }}</div>
+        <div class="verification-status">{{ t('persistent_rule_needed') }}</div>
+        <p class="verification-detail">{{ t('persistent_rule_detail') }}</p>
+      </div>
+      <div class="verification-card manual">
+        <div class="verification-label">{{ t('chatbot') }}</div>
+        <div class="verification-status">{{ t('per_task_copy_paste') }}</div>
+        <p class="verification-detail">{{ t('chatbot_detail') }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section agent-context">
+  <h2>{{ t('task') }}</h2>
+  <p>{{ agent_context.task }}</p>
+  <div class="agent-status">
+    <div class="agent-status-item">
+      <div class="agent-status-label">{{ t('agent_status_facts') }}</div>
+      <div class="agent-status-value">{{ agent_context.counts.facts }}</div>
+    </div>
+    <div class="agent-status-item">
+      <div class="agent-status-label">{{ t('agent_status_decisions') }}</div>
+      <div class="agent-status-value">{{ agent_context.counts.decisions }}</div>
+    </div>
+    <div class="agent-status-item">
+      <div class="agent-status-label">{{ t('agent_status_risks') }}</div>
+      <div class="agent-status-value">{{ agent_context.counts.risks }}</div>
+    </div>
+    <div class="agent-status-item">
+      <div class="agent-status-label">{{ t('agent_status_open_questions') }}</div>
+      <div class="agent-status-value">{{ agent_context.counts.open_questions }}</div>
+    </div>
+    <div class="agent-status-item">
+      <div class="agent-status-label">{{ t('agent_status_reports') }}</div>
+      <div class="agent-status-value">{{ agent_context.counts.reports }}</div>
+    </div>
+    <div class="agent-status-item">
+      <div class="agent-status-label">{{ t('agent_status_trail_entries') }}</div>
+      <div class="agent-status-value">{{ agent_context.source_count }}</div>
+    </div>
+  </div>
+  <p>{{ t('source_of_truth_line') }}</p>
+</section>
+
+<section class="section agent-context">
+  <h2>{{ t('influence_agent') }}</h2>
+  <ul class="agent-list">
+    {% for line in agent_context.influence %}
+      <li>{{ line }}</li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="section agent-context">
+  <h2>{{ t('known_gaps') }}</h2>
+  <div class="project-counts">
+    <span>{{ agent_context.gap_summary.stale }} {{ t('stale_items') }}</span>
+    <span>{{ agent_context.gap_summary.unanswered }} {{ t('unanswered_questions') }}</span>
+    <span>{{ agent_context.gap_summary.blind_spots }} {{ t('task_blind_spots') }}</span>
+    <span>{{ agent_context.gap_summary.pending_drafts }} {{ t('items_pending_review') }}</span>
+  </div>
+</section>
+
+<section class="section agent-context" id="chatbot-context-pack-section">
+  <h2>{{ t('chatbot_heading') }}</h2>
   <div class="command-list">
     <div class="copy-row">
       <code id="prepare-command" class="command-box">{{ agent_context.commands.prepare }}</code>

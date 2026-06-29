@@ -229,6 +229,8 @@ for _ in range(50):
                 "Connect your agent",
                 "Agent connection steps",
                 "Choose agent",
+                "Which agent do you use?",
+                "Connect once where possible",
                 "Connect once",
                 "Check the handoff",
                 "#agent-chatbot",

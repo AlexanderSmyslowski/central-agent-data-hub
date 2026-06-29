@@ -2057,7 +2057,7 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "Choose agent" in body
     assert "Connect once" in body
     assert "Check the handoff" in body
-    assert "Choose agent" in body
+    assert "Which agent do you use?" in body
     assert 'href="#agent-chatbot"' in body
     assert 'href="#agent-codex"' in body
     assert 'href="#agent-claude"' in body
@@ -2096,7 +2096,7 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "Check: the agent shows an ADH receipt or matching counts" in body
     assert "Check: the terminal prints one visible ADH-backed run" in body
     assert "Show Claude manual setup pieces" in body
-    assert "It never runs an agent" in body
+    assert "it never runs an agent" in body
     assert "writes only after an explicit local click" in body
     assert "is instructed to request ADH context" in body
     assert "AGENTS.md" in body
@@ -2115,6 +2115,12 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "it is not automation" in body
     assert "For local agents: start a new task" in body
     assert "ADH cannot prove that an unconnected agent read the context" in body
+    assert body.index("<h2>Connect your agent</h2>") < body.index("<h2>Task</h2>")
+    assert body.index('id="agent-choices"') < body.index('id="agent-chatbot"')
+    assert body.index('id="agent-chatbot"') < body.index('id="test-handoff"')
+    assert body.index('id="test-handoff"') < body.index('aria-label="Connection verification"')
+    assert body.index('aria-label="Connection verification"') < body.index("<h2>Task</h2>")
+    assert body.index("<h2>Known gaps</h2>") < body.index("<h2>Text to paste into a chatbot</h2>")
     assert 'data-copy-target="claude-code-setup-command"' in body
     assert 'data-copy-target="codex-setup-command"' in body
     assert 'data-copy-target="custom-startup-instruction"' in body
