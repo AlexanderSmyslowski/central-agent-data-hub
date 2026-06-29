@@ -1401,9 +1401,15 @@
 
       .memory-filter-control {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-columns: minmax(0, 1fr);
         gap: 8px;
         align-items: center;
+      }
+
+      .memory-filter-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
       }
 
       .memory-filter-label {
@@ -1425,6 +1431,7 @@
       }
 
       .memory-filter-clear {
+        flex: 1 1 150px;
         white-space: nowrap;
         min-height: 42px;
         border: 1px solid var(--line);
@@ -1440,6 +1447,7 @@
 
       .memory-filter-action {
         display: inline-flex;
+        flex: 2 1 190px;
         min-height: 42px;
         align-items: center;
         justify-content: center;
@@ -1495,9 +1503,21 @@
         font-size: 13px;
       }
 
+      .memory-explorer.search-active .memory-filter-meta {
+        color: var(--text);
+        font-weight: 700;
+      }
+
       .memory-filter-hits {
         display: grid;
         gap: 8px;
+      }
+
+      .memory-explorer.search-active .memory-filter-hits {
+        padding: 10px;
+        border: 1px solid rgba(45, 74, 95, 0.22);
+        border-radius: 8px;
+        background: rgba(45, 74, 95, 0.05);
       }
 
       .memory-filter-hit {

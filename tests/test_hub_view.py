@@ -1835,10 +1835,13 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert 'id="relations"' in body
     assert 'data-memory-explorer' in body
     assert 'data-memory-filter' in body
+    assert 'class="memory-filter-actions"' in body
     assert 'data-memory-first' in body
     assert 'data-memory-clear' in body
     assert 'data-memory-results' in body
+    assert 'role="status" aria-live="polite"' in body
     assert 'data-memory-hits' in body
+    assert 'aria-label="Search matches"' in body
     assert 'data-memory-empty' in body
     assert 'enterkeyhint="done"' in body
     assert "Search this page" in body
@@ -2042,6 +2045,8 @@ def test_project_detail_can_render_german_chrome_without_translating_memory() ->
     assert 'href="/projects/central-agent-data-hub-demo?lang=de#memory-explorer"' in body
     assert 'href="/projects/central-agent-data-hub-demo?lang=de#connect-agent"' in body
     assert "Diese Seite durchsuchen" in body
+    assert "Suchtreffer" in body
+    assert 'role="status" aria-live="polite"' in body
     assert "Drücke Enter oder öffne den ersten Treffer" in body
     assert "Ersten Treffer öffnen" in body
     assert "Arbeitsreihenfolge" in body

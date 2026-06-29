@@ -136,12 +136,14 @@
     <label class="memory-filter-label" for="memory-filter">{{ t('memory_search_label') }}</label>
     <div class="memory-filter-control">
       <input id="memory-filter" class="memory-filter-input" type="search" data-memory-filter placeholder="{{ t('memory_search_placeholder') }}" autocomplete="off" enterkeyhint="done">
-      <a class="memory-filter-action" href="#memory-explorer" data-memory-first hidden>{{ t('memory_search_first_action') }}</a>
-      <button class="memory-filter-clear" type="button" data-memory-clear hidden>{{ t('memory_search_clear') }}</button>
+      <div class="memory-filter-actions">
+        <a class="memory-filter-action" href="#memory-explorer" data-memory-first hidden>{{ t('memory_search_first_action') }}</a>
+        <button class="memory-filter-clear" type="button" data-memory-clear hidden>{{ t('memory_search_clear') }}</button>
+      </div>
     </div>
   </div>
-  <p class="memory-filter-meta" data-memory-results>{{ t('memory_search_initial') }}</p>
-  <div class="memory-filter-hits" data-memory-hits hidden></div>
+  <p class="memory-filter-meta" data-memory-results role="status" aria-live="polite">{{ t('memory_search_initial') }}</p>
+  <div class="memory-filter-hits" data-memory-hits aria-label="{{ t('memory_search_matches_label') }}" hidden></div>
   <p class="empty" data-memory-empty hidden>{{ t('memory_search_empty') }}</p>
   <div class="memory-type-links" aria-label="{{ t('reviewed_memory') }}">
     <a href="#latest-status">{{ t('latest_status') }}</a>
