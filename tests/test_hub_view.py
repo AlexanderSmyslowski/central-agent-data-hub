@@ -517,11 +517,18 @@ def test_project_overview_renders_as_work_center() -> None:
     assert "Work state" in body
     assert "Status visible" in body
     assert "Handoff available" in body
-    assert 'aria-label="Project overview quick actions"' in body
-    assert "App areas" in body
-    assert "Choose what you want to do now: open a project, review suggestions, or prepare an agent handoff." in body
-    assert "Review suggested memory changes across projects." in body
-    assert "Prepare a visible handoff for the selected project." in body
+    assert 'aria-label="What can I do now?"' in body
+    assert "Start here" in body
+    assert "What do you want to do now?" in body
+    assert "Pick one path: read the current project state, review suggested memory changes, or prepare context for an agent." in body
+    assert "Understand the project" in body
+    assert "Read project state" in body
+    assert "Open the project state with latest status, risks, questions, and reviewed memory." in body
+    assert "Human review" in body
+    assert "Accept or reject suggested memory changes before agents rely on them." in body
+    assert "Give context to AI" in body
+    assert "Connect an agent" in body
+    assert "Choose chatbot, Codex, Claude Code, Hermes, or another local agent and see the context handoff." in body
     assert "2 to review" in body
     assert "Attention" in body
     assert "3 risks/questions" in body
@@ -593,11 +600,18 @@ def test_project_overview_renders_german_work_center() -> None:
     assert "Noch kein Stand" in body
     assert "Nichts wartet" in body
     assert "Übergabe möglich" in body
-    assert 'aria-label="Schnellstart der Projektübersicht"' in body
-    assert "App-Bereiche" in body
-    assert "Wähle, was du jetzt tun willst: Projekt öffnen, Vorschläge prüfen oder Agentenübergabe vorbereiten." in body
-    assert "Prüfe vorgeschlagene Änderungen projektübergreifend." in body
-    assert "Bereite eine sichtbare Übergabe für dieses Projekt vor." in body
+    assert 'aria-label="Was kann ich jetzt tun?"' in body
+    assert "Hier starten" in body
+    assert "Was willst du jetzt tun?" in body
+    assert "Wähle einen Weg: aktuellen Projektstand lesen, vorgeschlagene Änderungen prüfen oder Kontext für einen Agenten vorbereiten." in body
+    assert "Projekt verstehen" in body
+    assert "Projektstand lesen" in body
+    assert "Öffne den Projektstand mit letztem Bericht, Risiken, Fragen und geprüftem Gedächtnis." in body
+    assert "Menschliche Prüfung" in body
+    assert "Akzeptiere oder verwerfe vorgeschlagene Änderungen, bevor Agenten sich darauf stützen." in body
+    assert "Kontext an KI geben" in body
+    assert "Agent verbinden" in body
+    assert "Wähle Chatbot, Codex, Claude Code, Hermes oder einen anderen lokalen Agenten und sieh die Kontextübergabe." in body
     assert "1 Risiken/Fragen" in body
     assert "Geprüftes Gedächtnis" in body
     assert "Empfohlener nächster Schritt" in body

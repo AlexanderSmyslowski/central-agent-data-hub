@@ -605,6 +605,12 @@
         margin-bottom: -6px;
       }
 
+      .project-overview-start-title {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.2;
+      }
+
       .project-overview-start-header p {
         max-width: 720px;
         margin: 0;
@@ -4186,6 +4192,7 @@
               {% set first_project = projects[0] %}
               <div class="project-overview-start-header">
                 <p class="section-kicker">{{ t('project_overview_start_kicker') }}</p>
+                <h3 class="project-overview-start-title">{{ t('project_overview_start_title') }}</h3>
                 <p>{{ t('project_overview_start_body') }}</p>
               </div>
               <nav class="project-overview-start-strip" aria-label="{{ t('project_overview_start_actions') }}">
@@ -4195,18 +4202,18 @@
                   <small>{{ t(first_project.next_step_key) }}</small>
                 </a>
                 <a class="project-overview-start-card" href="{{ url_for('/projects/' ~ first_project.slug) }}">
-                  <span>{{ t('project_overview_open') }}</span>
-                  <strong>{{ first_project.name }}</strong>
+                  <span>{{ t('project_overview_start_read_label') }}</span>
+                  <strong>{{ t('project_overview_start_read_title') }}</strong>
                   <small>{{ t('project_overview_start_open_copy') }}</small>
                 </a>
                 <a class="project-overview-start-card" href="{{ url_for('/inbox') }}">
-                  <span>{{ t('project_overview_review') }}</span>
-                  <strong>{{ t('project_overview_review_queue') }}</strong>
+                  <span>{{ t('project_overview_start_review_label') }}</span>
+                  <strong>{{ t('project_overview_start_review_title') }}</strong>
                   <small>{{ t('project_overview_start_review_copy') }}</small>
                 </a>
                 <a class="project-overview-start-card" href="{{ url_for('/projects/' ~ first_project.slug ~ '/agent-context') }}">
-                  <span>{{ t('project_overview_agent') }}</span>
-                  <strong>{{ t('project_overview_agent_area') }}</strong>
+                  <span>{{ t('project_overview_start_agent_label') }}</span>
+                  <strong>{{ t('project_overview_start_agent_title') }}</strong>
                   <small>{{ t('project_overview_start_agent_copy') }}</small>
                 </a>
               </nav>
