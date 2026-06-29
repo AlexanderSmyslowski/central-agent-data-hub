@@ -222,6 +222,10 @@ def test_render_page_includes_local_review_claim() -> None:
     ).decode("utf-8")
 
     assert "Hub View" in body
+    assert 'class="view-projects"' in body
+    body_tag = re.search(r"<body[^>]+>", body)
+    assert body_tag is not None
+    assert "has-selected-project" not in body_tag.group(0)
     assert 'class="brand-home" href="/"' in body
     assert "local review surface for Agent Data Hub" in body
     assert "Read surface + review actions" in body
@@ -1637,6 +1641,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     ).decode("utf-8")
 
     assert captured["status"] == "200 OK"
+    assert 'class="view-projects has-selected-project"' in body
     assert "Central Agent Data Hub" in body
     assert 'href="#main-content"' in body
     assert 'id="main-content" tabindex="-1"' in body
@@ -1646,6 +1651,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert 'aria-label="App navigation"' in body
     assert 'href="/projects/central-agent-data-hub" aria-current="page"' in body
     assert 'aria-label="Current app status"' in body
+    assert 'class="app-status-item app-status-project"' in body
     assert "Area" in body
     assert "Project workspace" in body
     assert "Central Agent Data Hub" in body

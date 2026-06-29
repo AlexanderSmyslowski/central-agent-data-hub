@@ -3131,6 +3131,72 @@
           text-align: center;
         }
 
+        body.has-selected-project .masthead {
+          padding-bottom: 12px;
+        }
+
+        body.has-selected-project .brand-home .claim,
+        body.has-selected-project .brand-home .prototype-note {
+          display: none;
+        }
+
+        body.has-selected-project h1 {
+          font-size: 28px;
+          line-height: 1.08;
+        }
+
+        body.has-selected-project .eyebrow {
+          margin-bottom: 4px;
+        }
+
+        body.has-selected-project .masthead-actions {
+          margin-top: 10px;
+        }
+
+        body.has-selected-project .app-nav {
+          display: flex;
+          overflow-x: auto;
+          flex-wrap: nowrap;
+          padding: 10px 0 2px;
+          scrollbar-width: none;
+        }
+
+        body.has-selected-project .app-nav::-webkit-scrollbar {
+          display: none;
+        }
+
+        body.has-selected-project .app-nav-link {
+          flex: 0 0 auto;
+          padding: 8px 11px;
+          white-space: nowrap;
+        }
+
+        body.has-selected-project .app-status {
+          display: flex;
+          overflow-x: auto;
+          padding-bottom: 2px;
+          scrollbar-width: none;
+        }
+
+        body.has-selected-project .app-status::-webkit-scrollbar {
+          display: none;
+        }
+
+        body.has-selected-project .app-status-item {
+          flex: 0 0 152px;
+          min-height: 58px;
+        }
+
+        body.has-selected-project .app-status-project {
+          flex-basis: 230px;
+        }
+
+        body.has-selected-project .app-status-item strong {
+          overflow-wrap: anywhere;
+          text-overflow: clip;
+          white-space: normal;
+        }
+
         .content {
           padding: 22px 18px 24px;
         }
@@ -3240,7 +3306,7 @@
       }
     </style>
   </head>
-  <body data-copied-label="{{ t('copied') }}">
+  <body class="view-{{ view_name }}{% if selected_project %} has-selected-project{% endif %}" data-copied-label="{{ t('copied') }}">
     <a class="skip-link" href="#main-content">{{ t('skip_to_content') }}</a>
     <main class="shell">
       <header class="masthead">
@@ -3278,7 +3344,7 @@
 
       {% set status_review_count = draft_total | default(0) %}
       <section class="app-status" aria-label="{{ t('app_status_label') }}">
-        <div class="app-status-item active">
+        <div class="app-status-item app-status-area active">
           <span>{{ t('app_status_area') }}</span>
           <strong>
             {% if view_name in ('inbox', 'review_activity') %}
@@ -3294,11 +3360,11 @@
             {% endif %}
           </strong>
         </div>
-        <a class="app-status-item" href="{{ url_for('/') }}">
+        <a class="app-status-item app-status-project" href="{{ url_for('/') }}">
           <span>{{ t('app_status_project') }}</span>
           <strong>{% if selected_project %}{{ selected_project.name }}{% else %}{{ t('app_status_project_overview') }}{% endif %}</strong>
         </a>
-        <a class="app-status-item{% if view_name in ('inbox', 'review_activity') %} active{% endif %}" href="{{ url_for('/inbox') }}">
+        <a class="app-status-item app-status-review{% if view_name in ('inbox', 'review_activity') %} active{% endif %}" href="{{ url_for('/inbox') }}">
           <span>{{ t('app_status_review') }}</span>
           <strong>
             {% if status_review_count == 1 %}
@@ -3309,12 +3375,12 @@
           </strong>
         </a>
         {% if selected_project %}
-          <a class="app-status-item{% if view_name == 'agent_context' %} active{% endif %}" href="{{ url_for('/projects/' ~ selected_project.slug ~ '/agent-context') }}">
+          <a class="app-status-item app-status-agent{% if view_name == 'agent_context' %} active{% endif %}" href="{{ url_for('/projects/' ~ selected_project.slug ~ '/agent-context') }}">
             <span>{{ t('app_status_agent') }}</span>
             <strong>{{ t('app_status_agent_ready') }}</strong>
           </a>
         {% else %}
-          <div class="app-status-item">
+          <div class="app-status-item app-status-agent">
             <span>{{ t('app_status_agent') }}</span>
             <strong>{{ t('app_status_agent_select_project') }}</strong>
           </div>
