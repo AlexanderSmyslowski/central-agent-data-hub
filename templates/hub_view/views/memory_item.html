@@ -21,6 +21,43 @@
         </div>
       </div>
 
+      <section class="memory-item-brief" aria-label="{{ t('memory_item_brief_label') }}">
+        <div class="memory-item-brief-card primary">
+          <span>{{ t('memory_item_brief_kind') }}</span>
+          <strong>{{ t(memory_item.type_label_key) }}</strong>
+          <p>{{ t('memory_item_brief_kind_copy') }}</p>
+        </div>
+        <div class="memory-item-brief-card">
+          <span>{{ t('memory_item_brief_trust') }}</span>
+          <strong>
+            {% if memory_item.status %}
+              {{ t('memory_item_workflow_status', status=ui_text(memory_item.status)) }}
+            {% else %}
+              {{ t('memory_item_workflow_status_unknown') }}
+            {% endif %}
+          </strong>
+          <p>
+            {% if memory_item.source %}
+              {{ t('memory_item_workflow_source', source=ui_text(memory_item.source)) }}
+            {% elif memory_item.updated_at %}
+              {{ t('memory_item_workflow_updated', updated=memory_item.updated_at) }}
+            {% else %}
+              {{ t('memory_item_workflow_read_only') }}
+            {% endif %}
+          </p>
+        </div>
+        <div class="memory-item-brief-card">
+          <span>{{ t('memory_item_brief_use') }}</span>
+          {% if memory_item.item_type in ('risk', 'open_question') %}
+            <strong>{{ t('memory_item_workflow_attention_title') }}</strong>
+            <p>{{ t('memory_item_workflow_attention_copy') }}</p>
+          {% else %}
+            <strong>{{ t('memory_item_workflow_context_title') }}</strong>
+            <p>{{ t('memory_item_workflow_context_copy') }}</p>
+          {% endif %}
+        </div>
+      </section>
+
       <nav class="memory-action-strip" aria-label="{{ t('memory_item_quick_actions') }}">
         <a class="memory-action-card primary" href="#memory-trust">
           <span>{{ t('memory_item_quick_trust') }}</span>

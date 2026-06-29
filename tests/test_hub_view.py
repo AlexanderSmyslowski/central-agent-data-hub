@@ -2179,6 +2179,11 @@ def test_memory_item_page_renders_read_only_german_detail() -> None:
     assert "Sichtbare Kontextübergabe vorbereiten." in body
     assert "Reviewed facts are visible in Hub View." in body
     assert "Diese Seite liest nur den ausgewählten Eintrag" in body
+    assert 'aria-label="Eintrag auf einen Blick"' in body
+    assert "Was ist das?" in body
+    assert "Ein sichtbarer Eintrag aus dem lokalen Projektgedächtnis." in body
+    assert "Warum vertrauenswürdig?" in body
+    assert "Wie nutzen?" in body
     assert 'aria-label="Schnellzugriff im Gedächtnisdetail"' in body
     assert "Nachweis" in body
     assert "Prüfe Status und Quelle, bevor du dich darauf stützt." in body
