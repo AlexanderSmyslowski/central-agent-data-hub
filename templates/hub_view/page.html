@@ -1231,7 +1231,8 @@
         line-height: 1.5;
       }
 
-      .project-section-nav {
+      .project-section-nav,
+      .context-nav {
         display: flex;
         gap: 8px;
         align-items: center;
@@ -1244,17 +1245,21 @@
         scrollbar-width: none;
       }
 
-      .project-section-nav::-webkit-scrollbar {
+      .project-section-nav::-webkit-scrollbar,
+      .context-nav::-webkit-scrollbar {
         display: none;
       }
 
       .project-section-nav span,
-      .project-section-nav a {
+      .project-section-nav a,
+      .context-nav span,
+      .context-nav a {
         flex: 0 0 auto;
         white-space: nowrap;
       }
 
-      .project-section-nav span {
+      .project-section-nav span,
+      .context-nav span {
         color: var(--muted);
         font-size: 11px;
         font-weight: 700;
@@ -1262,7 +1267,8 @@
         text-transform: uppercase;
       }
 
-      .project-section-nav a {
+      .project-section-nav a,
+      .context-nav a {
         min-height: 36px;
         display: inline-flex;
         align-items: center;
@@ -1278,12 +1284,15 @@
       }
 
       .project-section-nav a:hover,
-      .project-section-nav a:focus-visible {
+      .project-section-nav a:focus-visible,
+      .context-nav a:hover,
+      .context-nav a:focus-visible {
         border-color: rgba(45, 74, 95, 0.34);
         background: var(--surface-strong);
       }
 
-      .project-section-nav a.active {
+      .project-section-nav a.active,
+      .context-nav a.active {
         border-color: rgba(45, 74, 95, 0.42);
         background: rgba(45, 74, 95, 0.1);
         color: var(--text);

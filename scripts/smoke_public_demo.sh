@@ -240,6 +240,10 @@ for _ in range(50):
                 "00000000-0000-4000-8000-000000000201"
             ): (
                 "Back to Central Agent Data Hub Demo",
+                "Continue in this app",
+                "/projects/central-agent-data-hub-demo#memory-explorer",
+                "/inbox",
+                "/projects/central-agent-data-hub-demo/agent-context",
                 "Facts",
                 "Reviewed memory is context with a source and a review status before agents use it.",
                 "This page only reads the selected project memory item",
@@ -314,6 +318,9 @@ for _ in range(50):
                 f"?task={quote('Review the public demo with ADH context')}"
             ): (
                 "ADH context loaded",
+                "Continue in this app",
+                "/projects/central-agent-data-hub-demo#memory-explorer",
+                "/inbox",
                 "Review the public demo with ADH context",
                 "Source of truth: local Agent Data Hub database",
                 "How this should influence the agent",
@@ -520,6 +527,10 @@ for _ in range(50):
             ): (
                 "<html lang=\"de\">",
                 "Zurück zu Central Agent Data Hub Demo",
+                "Weiter in der App",
+                "Geprüftes Gedächtnis",
+                "Prüfungseingang",
+                "Agentenübergabe",
                 "Fakten",
                 "Reviewed memory is context with a source and a review status before agents use it.",
                 "Diese Seite liest nur den ausgewählten Eintrag",
@@ -540,6 +551,9 @@ for _ in range(50):
             "/inbox?lang=de": (
                 "<html lang=\"de\">",
                 "Prüfungseingang",
+                "Weiter in der App",
+                "Projekte",
+                "Prüfverlauf",
                 "Vorgeschlagene Änderungen am Projektgedächtnis bleiben unbestätigt",
                 "Schnellzugriff im Prüfungseingang",
                 "Nächsten Vorschlag prüfen",

@@ -1,6 +1,8 @@
 {% set review_enabled = inbox.review_enabled if inbox.review_enabled is defined else (inbox.enabled and inbox.reviewer) %}
 {% set recent_review_count = inbox.recent_reviews | default([]) | length %}
 <a class="nav-link" href="{{ url_for('/') }}">{{ t('back_to_projects') }}</a>
+{% set context_nav_active = 'review' %}
+{% include "partials/context_nav.html" %}
 <div class="detail-header">
   <div>
     <h2 class="detail-title">{{ t('inbox_title') }}</h2>

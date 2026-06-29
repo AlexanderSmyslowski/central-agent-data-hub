@@ -3,6 +3,9 @@
     {{ t('back_to_project', project=selected_project.name) }}
   </a>
 
+  {% set context_nav_active = 'memory' %}
+  {% include "partials/context_nav.html" %}
+
   {% if memory_item %}
     <section class="memory-item-detail" aria-labelledby="memory-item-title">
       <div class="detail-header">

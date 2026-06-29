@@ -1,0 +1,14 @@
+{% set context_project = context_project | default(selected_project) %}
+<nav class="context-nav" aria-label="{{ t('context_nav_label') }}">
+  <span>{{ t('context_nav_label') }}</span>
+  {% if context_project %}
+    <a href="{{ url_for('/projects/' ~ context_project.slug) }}"{% if context_nav_active == 'project' %} class="active" aria-current="page"{% endif %}>{{ t('context_nav_project') }}</a>
+    <a href="{{ url_for('/projects/' ~ context_project.slug) }}#memory-explorer"{% if context_nav_active == 'memory' %} class="active" aria-current="page"{% endif %}>{{ t('context_nav_memory') }}</a>
+    <a href="{{ url_for('/inbox') }}"{% if context_nav_active == 'review' %} class="active" aria-current="page"{% endif %}>{{ t('context_nav_review') }}</a>
+    <a href="{{ url_for('/projects/' ~ context_project.slug ~ '/agent-context') }}"{% if context_nav_active == 'agent' %} class="active" aria-current="page"{% endif %}>{{ t('context_nav_agent') }}</a>
+  {% else %}
+    <a href="{{ url_for('/') }}"{% if context_nav_active == 'projects' %} class="active" aria-current="page"{% endif %}>{{ t('context_nav_projects') }}</a>
+    <a href="{{ url_for('/inbox') }}"{% if context_nav_active == 'review' %} class="active" aria-current="page"{% endif %}>{{ t('context_nav_review') }}</a>
+    <a href="{{ url_for('/inbox/activity') }}"{% if context_nav_active == 'activity' %} class="active" aria-current="page"{% endif %}>{{ t('context_nav_activity') }}</a>
+  {% endif %}
+</nav>

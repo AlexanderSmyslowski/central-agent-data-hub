@@ -875,6 +875,10 @@ def test_inbox_page_renders_german_recent_review_activity() -> None:
     ).decode("utf-8")
 
     assert "Zuletzt geprüft" in body
+    assert 'aria-label="Weiter in der App"' in body
+    assert 'href="/?lang=de">Projekte</a>' in body
+    assert 'href="/inbox?lang=de" class="active" aria-current="page">Prüfungseingang</a>' in body
+    assert 'href="/inbox/activity?lang=de">Prüfverlauf</a>' in body
     assert "Letzte menschliche Prüfentscheidungen aus der lokalen Prüfspur." in body
     assert "Gesamten Prüfverlauf öffnen" in body
     assert 'href="/inbox/activity?lang=de"' in body
@@ -2157,6 +2161,11 @@ def test_memory_item_page_renders_read_only_german_detail() -> None:
 
     assert '<html lang="de">' in body
     assert "Zurück zu Central Agent Data Hub Demo" in body
+    assert 'aria-label="Weiter in der App"' in body
+    assert 'href="/projects/central-agent-data-hub-demo?lang=de">Projekt</a>' in body
+    assert 'href="/projects/central-agent-data-hub-demo?lang=de#memory-explorer" class="active" aria-current="page">Geprüftes Gedächtnis</a>' in body
+    assert 'href="/inbox?lang=de">Prüfungseingang</a>' in body
+    assert 'href="/projects/central-agent-data-hub-demo/agent-context?lang=de">Agentenübergabe</a>' in body
     assert "Fakten" in body
     assert 'aria-label="Projekt-Arbeitsseitenleiste"' in body
     assert "Projektbereiche" in body
@@ -2420,6 +2429,11 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "ADH context loaded" in body
     assert "This is the visible handoff" in body
     assert 'href="/projects/central-agent-data-hub#connect-agent" aria-current="page"' in body
+    assert 'aria-label="Continue in this app"' in body
+    assert 'href="/projects/central-agent-data-hub">Project</a>' in body
+    assert 'href="/projects/central-agent-data-hub#memory-explorer">Reviewed memory</a>' in body
+    assert 'href="/inbox">Review Inbox</a>' in body
+    assert 'href="/projects/central-agent-data-hub/agent-context" class="active" aria-current="page">Agent handoff</a>' in body
     assert "Review release readiness" in body
     assert "Source of truth: local Agent Data Hub database" in body
     assert "How this should influence the agent" in body
