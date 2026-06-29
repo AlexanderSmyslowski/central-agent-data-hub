@@ -460,6 +460,24 @@
         background: var(--accent-strong);
       }
 
+      .project-overview-actions {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .project-overview-action.secondary {
+        border: 1px solid rgba(45, 74, 95, 0.22);
+        background: rgba(255, 255, 255, 0.64);
+        color: var(--accent);
+      }
+
+      .project-overview-action.secondary:hover,
+      .project-overview-action.secondary:focus-visible {
+        border-color: rgba(45, 74, 95, 0.36);
+        background: var(--surface-strong);
+      }
+
       .project-workbench {
         display: grid;
         gap: 16px;
@@ -2182,7 +2200,8 @@
         }
 
         .project-overview-card-header,
-        .project-overview-metrics {
+        .project-overview-metrics,
+        .project-overview-actions {
           grid-template-columns: 1fr;
         }
 
@@ -2360,7 +2379,15 @@
                         <span>{{ t('project_overview_memory_metric', count=project.reviewed_count) }}</span>
                       </a>
                     </div>
-                    <a class="project-overview-action" href="{{ url_for('/projects/' ~ project.slug) }}">{{ t('project_overview_open') }}</a>
+                    <div>
+                      <p class="section-kicker">{{ t('project_overview_actions') }}</p>
+                      <div class="project-overview-actions">
+                        <a class="project-overview-action" href="{{ url_for('/projects/' ~ project.slug) }}">{{ t('project_overview_open') }}</a>
+                        <a class="project-overview-action secondary" href="{{ url_for('/projects/' ~ project.slug ~ '/agent-context') }}">{{ t('project_overview_agent') }}</a>
+                        <a class="project-overview-action secondary" href="{{ url_for('/inbox') }}">{{ t('project_overview_review') }}</a>
+                        <a class="project-overview-action secondary" href="{{ url_for('/projects/' ~ project.slug) }}#latest-status">{{ t('project_overview_status') }}</a>
+                      </div>
+                    </div>
                   </article>
                 {% endfor %}
               </div>
