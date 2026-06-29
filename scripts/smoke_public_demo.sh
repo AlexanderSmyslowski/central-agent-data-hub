@@ -70,22 +70,43 @@ for _ in range(50):
                 ".project-workbench",
                 ".memory-explorer",
             ),
-            "/static/app.js": (
+            "/static/shared.js": (
+                "reviewSearchAliases",
+                "window.ADHHubView.searchTerms",
+                "window.ADHHubView.fillTemplate",
+            ),
+            "/static/copy.js": (
                 "data-copy-target",
+                "navigator.clipboard",
+            ),
+            "/static/memory_search.js": (
                 "data-memory-filter",
-                "data-connection-check",
                 "memory-filter-match",
                 "itemHaystack",
                 "openFirstMemoryMatch",
                 "filter.blur()",
+            ),
+            "/static/project_nav.js": (
                 "updateProjectSectionNav",
-                "updateConnectionChecklist",
                 "aria-current\", \"location\"",
+            ),
+            "/static/inbox_filter.js": (
+                "data-inbox-filter",
+                "inboxHaystack",
+            ),
+            "/static/connection_checklist.js": (
+                "data-connection-check",
+                "updateConnectionChecklist",
             ),
             "/": (
                 "Hub View",
                 "/static/app.css",
-                "/static/app.js",
+                "/static/shared.js",
+                "/static/copy.js",
+                "/static/memory_search.js",
+                "/static/project_nav.js",
+                "/static/inbox_filter.js",
+                "/static/connection_checklist.js",
                 "Skip to main content",
                 "id=\"main-content\" tabindex=\"-1\"",
                 "local review surface",

@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ page_title }}</title>
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="{{ static_url('app.css') }}">
+    {% for asset in stylesheet_assets %}
+      <link rel="stylesheet" href="{{ static_url(asset) }}">
+    {% endfor %}
   </head>
   <body class="view-{{ view_name }}{% if selected_project %} has-selected-project{% endif %}" data-copied-label="{{ t('copied') }}">
     <a class="skip-link" href="#main-content">{{ t('skip_to_content') }}</a>
@@ -327,6 +329,8 @@
         </section>
       </div>
     </main>
-    <script src="{{ static_url('app.js') }}" defer></script>
+    {% for asset in script_assets %}
+      <script src="{{ static_url(asset) }}" defer></script>
+    {% endfor %}
   </body>
 </html>

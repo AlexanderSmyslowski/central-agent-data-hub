@@ -165,26 +165,42 @@ def test_v019_release_notes_describe_memory_explorer() -> None:
 def test_hub_view_template_is_split_into_view_partials() -> None:
     page = read_script("templates/hub_view/page.html")
     css = read_script("templates/hub_view/static/app.css")
-    js = read_script("templates/hub_view/static/app.js")
+    copy_js = read_script("templates/hub_view/static/copy.js")
+    shared_js = read_script("templates/hub_view/static/shared.js")
+    memory_search_js = read_script("templates/hub_view/static/memory_search.js")
+    project_nav_js = read_script("templates/hub_view/static/project_nav.js")
+    inbox_filter_js = read_script("templates/hub_view/static/inbox_filter.js")
+    connection_js = read_script("templates/hub_view/static/connection_checklist.js")
 
     for partial in (
         "templates/hub_view/views/inbox.html",
         "templates/hub_view/views/agent_context.html",
         "templates/hub_view/views/project_detail.html",
         "templates/hub_view/static/app.css",
-        "templates/hub_view/static/app.js",
+        "templates/hub_view/static/shared.js",
+        "templates/hub_view/static/copy.js",
+        "templates/hub_view/static/memory_search.js",
+        "templates/hub_view/static/project_nav.js",
+        "templates/hub_view/static/inbox_filter.js",
+        "templates/hub_view/static/connection_checklist.js",
     ):
         assert (ROOT / partial).is_file()
 
     assert '{% include "views/inbox.html" %}' in page
     assert '{% include "views/agent_context.html" %}' in page
     assert '{% include "views/project_detail.html" %}' in page
-    assert '<link rel="stylesheet" href="{{ static_url(\'app.css\') }}">' in page
-    assert '<script src="{{ static_url(\'app.js\') }}" defer></script>' in page
+    assert "{% for asset in stylesheet_assets %}" in page
+    assert "{% for asset in script_assets %}" in page
     assert "<style>" not in page
     assert "<script>" not in page
+    assert "Sections: base chrome, layout, overview" in css
     assert "body.view-projects.has-selected-project" in css
-    assert "data-copy-target" in js
+    assert "data-copy-target" in copy_js
+    assert "window.ADHHubView.searchTerms" in shared_js
+    assert "itemHaystack" in memory_search_js
+    assert "updateProjectSectionNav" in project_nav_js
+    assert "inboxHaystack" in inbox_filter_js
+    assert "updateConnectionChecklist" in connection_js
 
 
 def test_hub_view_python_entrypoint_delegates_to_split_modules() -> None:

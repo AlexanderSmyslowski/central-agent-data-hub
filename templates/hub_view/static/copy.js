@@ -1,0 +1,48 @@
+(function () {
+  function markCopied(button) {
+    var original = button.getAttribute("data-copy-label") || button.textContent;
+    var copied = document.body.getAttribute("data-copied-label") || "Copied";
+    button.setAttribute("data-copy-label", original);
+    button.textContent = copied;
+    window.setTimeout(function () {
+      button.textContent = original;
+    }, 1200);
+  }
+
+  function fallbackCopy(text, button) {
+    var area = document.createElement("textarea");
+    area.value = text;
+    area.setAttribute("readonly", "");
+    area.style.position = "absolute";
+    area.style.left = "-9999px";
+    document.body.appendChild(area);
+    area.select();
+    try {
+      document.execCommand("copy");
+      markCopied(button);
+    } finally {
+      document.body.removeChild(area);
+    }
+  }
+
+  document.addEventListener("click", function (event) {
+    var button = event.target.closest("[data-copy-target]");
+    if (!button) {
+      return;
+    }
+    var target = document.getElementById(button.getAttribute("data-copy-target"));
+    if (!target) {
+      return;
+    }
+    var text = target.value || target.textContent || "";
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(function () {
+        markCopied(button);
+      }).catch(function () {
+        fallbackCopy(text, button);
+      });
+    } else {
+      fallbackCopy(text, button);
+    }
+  });
+}());

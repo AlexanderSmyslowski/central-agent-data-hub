@@ -10,6 +10,8 @@ from agent_hub.commands.prepare import prepare_markdown
 from agent_hub.db import connect
 from agent_hub.hub_view_models import (
     DEFAULT_AGENT_TASK,
+    HUB_VIEW_SCRIPT_ASSETS,
+    HUB_VIEW_STYLESHEET_ASSETS,
     build_agent_context_view,
     build_codex_setup_view,
     build_detail_view,

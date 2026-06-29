@@ -87,6 +87,15 @@ DRAFT_REMEMBER_TEXT_KEYS = {
 }
 
 DEFAULT_AGENT_TASK = "Use reviewed Agent Data Hub context for this project."
+HUB_VIEW_STYLESHEET_ASSETS = ("app.css",)
+HUB_VIEW_SCRIPT_ASSETS = (
+    "shared.js",
+    "copy.js",
+    "memory_search.js",
+    "project_nav.js",
+    "inbox_filter.js",
+    "connection_checklist.js",
+)
 PROJECT_CARD_COUNT_KEYS = (
     "documents",
     "facts",
@@ -1690,6 +1699,8 @@ def render_page(
         ui_text=lambda text: localize_ui_text(text, resolved_language),
         url_for=lambda url: with_language(url, resolved_language),
         static_url=static_url,
+        stylesheet_assets=HUB_VIEW_STYLESHEET_ASSETS,
+        script_assets=HUB_VIEW_SCRIPT_ASSETS,
         language_links=language_switch_links(current_path, query_string),
         **view_model,
     ).encode("utf-8")
