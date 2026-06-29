@@ -2278,6 +2278,13 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "Choose agent" in body
     assert "Connect once" in body
     assert "Check the handoff" in body
+    assert 'aria-label="Connection status"' in body
+    assert "Connection status" in body
+    assert "Recommended next step" in body
+    assert "Codex is not connected yet." in body
+    assert "Install the ADH block once." in body
+    assert 'href="#connection-verification"' in body
+    assert "View all checks" in body
     assert "Which agent do you use?" in body
     assert 'href="#agent-chatbot"' in body
     assert 'href="#agent-codex"' in body
@@ -2287,6 +2294,7 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert 'href="#agent-terminal"' in body
     assert "Claude Code" in body
     assert "Codex" in body
+    assert 'id="connection-verification"' in body
     assert 'aria-label="Connection verification"' in body
     assert "ADH can check Codex here" in body
     assert "Codex setup not installed yet" in body
@@ -2337,6 +2345,7 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "For local agents: start a new task" in body
     assert "ADH cannot prove that an unconnected agent read the context" in body
     assert body.index("<h2>Connect your agent</h2>") < body.index("<h2>Task</h2>")
+    assert body.index('aria-label="Connection status"') < body.index('id="agent-choices"')
     assert body.index('id="agent-choices"') < body.index('id="agent-chatbot"')
     assert body.index('id="agent-chatbot"') < body.index('id="test-handoff"')
     assert body.index('id="test-handoff"') < body.index('aria-label="Connection verification"')

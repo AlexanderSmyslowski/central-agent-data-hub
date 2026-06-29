@@ -36,6 +36,18 @@ KNOWN_UI_TEXT_TRANSLATIONS = {
             "Neutrales Demo-Projekt: Es zeigt, wie geprüfter Kontext lokal "
             "gespeichert und gelesen wird."
         ),
+        "Reviewed decisions become task constraints for the agent.": (
+            "Geprüfte Entscheidungen werden zu Arbeitsgrenzen für den Agenten."
+        ),
+        "Verified facts may be used as project assumptions.": (
+            "Geprüfte Fakten dürfen als Projektannahmen genutzt werden."
+        ),
+        "Active risks and open questions stay visible instead of being guessed away.": (
+            "Aktive Risiken und offene Fragen bleiben sichtbar, statt weggeschätzt zu werden."
+        ),
+        "Drafts stay labelled as unconfirmed until a human reviews them.": (
+            "Entwürfe bleiben als unbestätigt markiert, bis ein Mensch sie prüft."
+        ),
         "Fact": "Fakt",
         "Decision": "Entscheidung",
         "Risk": "Risiko",
@@ -88,6 +100,21 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "agent_status_reports": "Reports",
         "agent_status_risks": "Risks",
         "agent_status_trail_entries": "Trail entries",
+        "agent_setup_check_handoff": "Check handoff",
+        "agent_setup_choose_agent": "Choose an agent path",
+        "agent_setup_demo_body": "The public demo can show the target and the context pack, but it will not install setup into this checkout.",
+        "agent_setup_demo_title": "Demo project: no local write.",
+        "agent_setup_install_codex": "Install Codex setup",
+        "agent_setup_missing_body": "Install the ADH block once. After that, Codex reads the project rule at task start.",
+        "agent_setup_missing_title": "Codex is not connected yet.",
+        "agent_setup_next_step": "Recommended next step",
+        "agent_setup_open_codex": "Open Codex setup",
+        "agent_setup_ready_body": "Start a new Codex task and look for the ADH Context Loaded receipt before work.",
+        "agent_setup_ready_title": "Codex is connected for this project.",
+        "agent_setup_status_label": "Connection status",
+        "agent_setup_unknown_body": "Register the project folder before ADH can install or check Codex setup.",
+        "agent_setup_unknown_title": "Project folder missing.",
+        "agent_setup_view_checks": "View all checks",
         "all_items_to_review": "all items to review",
         "app_navigation": "App navigation",
         "app_status_agent": "Agent",
@@ -559,6 +586,21 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "agent_status_reports": "Berichte",
         "agent_status_risks": "Risiken",
         "agent_status_trail_entries": "Kontextspuren",
+        "agent_setup_check_handoff": "Übergabe prüfen",
+        "agent_setup_choose_agent": "Agentenweg wählen",
+        "agent_setup_demo_body": "Die öffentliche Demo zeigt Ziel und Kontextpaket, installiert aber keine Einrichtung in diesen Checkout.",
+        "agent_setup_demo_title": "Demo-Projekt: kein lokales Schreiben.",
+        "agent_setup_install_codex": "Codex-Einrichtung installieren",
+        "agent_setup_missing_body": "Installiere den ADH-Block einmal. Danach liest Codex die Projektregel beim Aufgabenstart.",
+        "agent_setup_missing_title": "Codex ist noch nicht verbunden.",
+        "agent_setup_next_step": "Empfohlener nächster Schritt",
+        "agent_setup_open_codex": "Codex-Einrichtung öffnen",
+        "agent_setup_ready_body": "Starte eine neue Codex-Aufgabe und achte vor der Arbeit auf den ADH-Kontext-Beleg.",
+        "agent_setup_ready_title": "Codex ist für dieses Projekt verbunden.",
+        "agent_setup_status_label": "Verbindungsstatus",
+        "agent_setup_unknown_body": "Registriere zuerst den Projektordner, bevor ADH die Codex-Einrichtung installieren oder prüfen kann.",
+        "agent_setup_unknown_title": "Projektordner fehlt.",
+        "agent_setup_view_checks": "Alle Prüfungen ansehen",
         "all_items_to_review": "alle zu prüfenden Einträge",
         "app_navigation": "App-Navigation",
         "app_status_agent": "Agent",

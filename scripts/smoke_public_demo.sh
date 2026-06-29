@@ -289,6 +289,12 @@ for _ in range(50):
                 "Connect your agent",
                 "Agent connection steps",
                 "Choose agent",
+                "Connection status",
+                "Recommended next step",
+                "Demo project: no local write.",
+                "The public demo can show the target and the context pack",
+                "Choose an agent path",
+                "View all checks",
                 "Which agent do you use?",
                 "Connect once where possible",
                 "Connect once",
@@ -422,6 +428,28 @@ for _ in range(50):
                 "/inbox?lang=de",
                 "/projects/central-agent-data-hub-demo/agent-context",
                 "name=\"lang\" value=\"de\"",
+            ),
+            (
+                "/projects/central-agent-data-hub-demo/agent-context"
+                f"?lang=de&task={quote('Dieses Projekt mit ADH-Kontext prüfen')}"
+            ): (
+                "<html lang=\"de\">",
+                "ADH-Kontext geladen",
+                "Agent verbinden",
+                "Verbindungsstatus",
+                "Empfohlener nächster Schritt",
+                "Demo-Projekt: kein lokales Schreiben.",
+                "Die öffentliche Demo zeigt Ziel und Kontextpaket",
+                "Agentenweg wählen",
+                "Alle Prüfungen ansehen",
+                "Welchen Agenten nutzt du?",
+                "Verbindung prüfen",
+                "Geprüfte Entscheidungen werden zu Arbeitsgrenzen",
+                "Geprüfte Fakten dürfen als Projektannahmen genutzt werden.",
+                "Aktive Risiken und offene Fragen bleiben sichtbar",
+                "Entwürfe bleiben als unbestätigt markiert",
+                "ADH kann Codex hier prüfen.",
+                "ADH kann nicht beweisen, dass ein unverbundener Agent den Kontext gelesen hat.",
             ),
             (
                 "/projects/central-agent-data-hub-demo/memory/fact/"

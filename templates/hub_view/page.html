@@ -1444,6 +1444,81 @@
         margin-bottom: 18px;
       }
 
+      .agent-setup-panel {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(180px, 0.85fr) minmax(170px, 0.7fr);
+        gap: 12px;
+        align-items: stretch;
+        margin: 16px 0 18px;
+        padding: 14px;
+        border: 1px solid rgba(45, 74, 95, 0.28);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.76);
+      }
+
+      .agent-setup-summary h3 {
+        margin: 0 0 6px;
+      }
+
+      .agent-setup-summary p,
+      .agent-setup-status p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      .agent-setup-status {
+        padding: 12px 13px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.68);
+      }
+
+      .agent-setup-status.connected {
+        border-color: rgba(45, 95, 61, 0.34);
+      }
+
+      .agent-setup-status.missing,
+      .agent-setup-status.demo,
+      .agent-setup-status.unknown,
+      .agent-setup-status.error {
+        border-color: rgba(45, 74, 95, 0.24);
+      }
+
+      .agent-setup-status span {
+        display: block;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .agent-setup-status strong {
+        display: block;
+        margin: 5px 0 6px;
+      }
+
+      .agent-setup-actions {
+        display: grid;
+        align-content: start;
+        gap: 9px;
+      }
+
+      .agent-setup-actions > strong {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .setup-actions.compact {
+        display: block;
+        margin: 0;
+      }
+
       .agent-picker-card {
         display: block;
         padding: 13px 14px;
@@ -2829,6 +2904,10 @@
 
         .agent-form,
         .agent-form-row {
+          grid-template-columns: 1fr;
+        }
+
+        .agent-setup-panel {
           grid-template-columns: 1fr;
         }
 

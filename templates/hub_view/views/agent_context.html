@@ -36,6 +36,50 @@
       <p>{{ t('local_agent_handoff_line') }}</p>
     </div>
   </div>
+
+  {% set codex_state = agent_context.local_agent.codex.verification.state %}
+  <div class="agent-setup-panel" aria-label="{{ t('agent_setup_status_label') }}">
+    <div class="agent-setup-summary">
+      <p class="section-kicker">{{ t('agent_setup_status_label') }}</p>
+      {% if codex_state == 'connected' %}
+        <h3>{{ t('agent_setup_ready_title') }}</h3>
+        <p>{{ t('agent_setup_ready_body') }}</p>
+      {% elif codex_state == 'missing' %}
+        <h3>{{ t('agent_setup_missing_title') }}</h3>
+        <p>{{ t('agent_setup_missing_body') }}</p>
+      {% elif codex_state == 'demo' %}
+        <h3>{{ t('agent_setup_demo_title') }}</h3>
+        <p>{{ t('agent_setup_demo_body') }}</p>
+      {% else %}
+        <h3>{{ t('agent_setup_unknown_title') }}</h3>
+        <p>{{ t('agent_setup_unknown_body') }}</p>
+      {% endif %}
+    </div>
+    <div class="agent-setup-status {{ codex_state }}">
+      <span>{{ t('codex') }}</span>
+      <strong>{{ ui_text(agent_context.local_agent.codex.verification.label) }}</strong>
+      <p>{{ ui_text(agent_context.local_agent.codex.verification.detail) }}</p>
+    </div>
+    <div class="agent-setup-actions">
+      <strong>{{ t('agent_setup_next_step') }}</strong>
+      {% if codex_state == 'connected' %}
+        <a class="button primary-button" href="#test-handoff">{{ t('agent_setup_check_handoff') }}</a>
+      {% elif codex_state == 'missing' and inbox_enabled and agent_context.local_agent.codex.can_install %}
+        <form class="setup-actions compact" method="post" action="/projects/{{ agent_context.project_slug }}/codex-setup">
+          <input type="hidden" name="lang" value="{{ language }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <input type="hidden" name="task" value="{{ agent_context.task }}">
+          <button class="button primary-button" type="submit">{{ t('agent_setup_install_codex') }}</button>
+        </form>
+      {% elif codex_state == 'missing' %}
+        <a class="button primary-button" href="#agent-codex">{{ t('agent_setup_open_codex') }}</a>
+      {% else %}
+        <a class="button primary-button" href="#agent-choices">{{ t('agent_setup_choose_agent') }}</a>
+      {% endif %}
+      <a class="inline-action" href="#connection-verification">{{ t('agent_setup_view_checks') }}</a>
+    </div>
+  </div>
+
   <h3 id="agent-choices">{{ t('agent_picker_title') }}</h3>
   <div class="agent-picker" aria-label="{{ t('choose_agent') }}">
     <a class="agent-picker-card" href="#agent-chatbot">
@@ -201,7 +245,7 @@
       <li>{{ t('terminal_handoff_line') }}</li>
     </ul>
   </div>
-  <div class="verification-panel">
+  <div class="verification-panel" id="connection-verification">
     <h3>{{ t('connection_verification') }}</h3>
     <p class="verification-intro"><strong>{{ t('codex_can_check') }}</strong> {{ t('external_manual_check') }}</p>
     <div class="verification-grid" aria-label="{{ t('connection_verification') }}">
@@ -265,7 +309,7 @@
   <h2>{{ t('influence_agent') }}</h2>
   <ul class="agent-list">
     {% for line in agent_context.influence %}
-      <li>{{ line }}</li>
+      <li>{{ ui_text(line) }}</li>
     {% endfor %}
   </ul>
 </section>
