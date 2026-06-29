@@ -2493,7 +2493,8 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
     assert "For local agents: start a new task" in body
     assert "ADH cannot prove that an unconnected agent read the context" in body
     assert body.index("<h2>Connect your agent</h2>") < body.index("<h2>Task</h2>")
-    assert body.index('aria-label="Connection status"') < body.index('id="agent-choices"')
+    assert body.index('id="agent-choices"') < body.index('aria-label="Agent connection steps"')
+    assert body.index('aria-label="Agent connection steps"') < body.index('aria-label="Connection status"')
     assert body.index('id="agent-choices"') < body.index('id="agent-chatbot"')
     assert body.index('id="agent-chatbot"') < body.index('id="test-handoff"')
     assert body.index('id="test-handoff"') < body.index('id="connection-checklist"')

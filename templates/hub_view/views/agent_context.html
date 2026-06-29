@@ -19,6 +19,46 @@
   {% if agent_context.setup_error %}
     <p class="setup-feedback error">{{ agent_context.setup_error }}</p>
   {% endif %}
+  <h3 id="agent-choices">{{ t('agent_picker_title') }}</h3>
+  <div class="agent-picker" aria-label="{{ t('choose_agent') }}">
+    <a class="agent-picker-card" href="#agent-chatbot">
+      <span class="agent-picker-label">{{ t('chatbot') }}</span>
+      <strong>{{ t('agent_picker_chatbot_title') }}</strong>
+      <span class="agent-picker-body">{{ t('agent_picker_chatbot_body') }}</span>
+      <span class="agent-picker-proof">{{ t('agent_picker_chatbot_proof') }}</span>
+    </a>
+    <a class="agent-picker-card featured" href="#agent-codex">
+      <span class="agent-picker-label">{{ t('codex') }}</span>
+      <strong>{{ ui_text(agent_context.local_agent.codex.verification.label) }}</strong>
+      <span class="agent-picker-body">{{ t('agent_picker_codex_body') }}</span>
+      <span class="agent-picker-proof">{{ t('agent_picker_codex_proof') }}</span>
+    </a>
+    <a class="agent-picker-card" href="#agent-claude">
+      <span class="agent-picker-label">{{ t('claude_code') }}</span>
+      <strong>{{ t('agent_picker_claude_title') }}</strong>
+      <span class="agent-picker-body">{{ t('agent_picker_claude_body') }}</span>
+      <span class="agent-picker-proof">{{ t('agent_picker_claude_proof') }}</span>
+    </a>
+    <a class="agent-picker-card" href="#agent-custom">
+      <span class="agent-picker-label">{{ t('custom_agent_short') }}</span>
+      <strong>{{ t('agent_picker_custom_title') }}</strong>
+      <span class="agent-picker-body">{{ t('agent_picker_custom_body') }}</span>
+      <span class="agent-picker-proof">{{ t('agent_picker_custom_proof') }}</span>
+    </a>
+    <a class="agent-picker-card" href="#agent-mcp">
+      <span class="agent-picker-label">{{ t('agent_picker_mcp_label') }}</span>
+      <strong>{{ t('agent_picker_mcp_title') }}</strong>
+      <span class="agent-picker-body">{{ t('agent_picker_mcp_body') }}</span>
+      <span class="agent-picker-proof">{{ t('agent_picker_mcp_proof') }}</span>
+    </a>
+    <a class="agent-picker-card" href="#agent-terminal">
+      <span class="agent-picker-label">{{ t('agent_picker_fallback_label') }}</span>
+      <strong>{{ t('agent_picker_fallback_title') }}</strong>
+      <span class="agent-picker-body">{{ t('agent_picker_fallback_body') }}</span>
+      <span class="agent-picker-proof">{{ t('agent_picker_fallback_proof') }}</span>
+    </a>
+  </div>
+
   <div class="wizard-steps" aria-label="{{ t('handoff_steps') }}">
     <div class="wizard-step">
       <span>1</span>
@@ -78,46 +118,6 @@
       {% endif %}
       <a class="inline-action" href="#connection-checklist">{{ t('agent_setup_view_checks') }}</a>
     </div>
-  </div>
-
-  <h3 id="agent-choices">{{ t('agent_picker_title') }}</h3>
-  <div class="agent-picker" aria-label="{{ t('choose_agent') }}">
-    <a class="agent-picker-card" href="#agent-chatbot">
-      <span class="agent-picker-label">{{ t('chatbot') }}</span>
-      <strong>{{ t('agent_picker_chatbot_title') }}</strong>
-      <span class="agent-picker-body">{{ t('agent_picker_chatbot_body') }}</span>
-      <span class="agent-picker-proof">{{ t('agent_picker_chatbot_proof') }}</span>
-    </a>
-    <a class="agent-picker-card featured" href="#agent-codex">
-      <span class="agent-picker-label">{{ t('codex') }}</span>
-      <strong>{{ ui_text(agent_context.local_agent.codex.verification.label) }}</strong>
-      <span class="agent-picker-body">{{ t('agent_picker_codex_body') }}</span>
-      <span class="agent-picker-proof">{{ t('agent_picker_codex_proof') }}</span>
-    </a>
-    <a class="agent-picker-card" href="#agent-claude">
-      <span class="agent-picker-label">{{ t('claude_code') }}</span>
-      <strong>{{ t('agent_picker_claude_title') }}</strong>
-      <span class="agent-picker-body">{{ t('agent_picker_claude_body') }}</span>
-      <span class="agent-picker-proof">{{ t('agent_picker_claude_proof') }}</span>
-    </a>
-    <a class="agent-picker-card" href="#agent-custom">
-      <span class="agent-picker-label">{{ t('custom_agent_short') }}</span>
-      <strong>{{ t('agent_picker_custom_title') }}</strong>
-      <span class="agent-picker-body">{{ t('agent_picker_custom_body') }}</span>
-      <span class="agent-picker-proof">{{ t('agent_picker_custom_proof') }}</span>
-    </a>
-    <a class="agent-picker-card" href="#agent-mcp">
-      <span class="agent-picker-label">{{ t('agent_picker_mcp_label') }}</span>
-      <strong>{{ t('agent_picker_mcp_title') }}</strong>
-      <span class="agent-picker-body">{{ t('agent_picker_mcp_body') }}</span>
-      <span class="agent-picker-proof">{{ t('agent_picker_mcp_proof') }}</span>
-    </a>
-    <a class="agent-picker-card" href="#agent-terminal">
-      <span class="agent-picker-label">{{ t('agent_picker_fallback_label') }}</span>
-      <strong>{{ t('agent_picker_fallback_title') }}</strong>
-      <span class="agent-picker-body">{{ t('agent_picker_fallback_body') }}</span>
-      <span class="agent-picker-proof">{{ t('agent_picker_fallback_proof') }}</span>
-    </a>
   </div>
   <h3>{{ t('connect_once') }}</h3>
   <div class="connection-grid">
