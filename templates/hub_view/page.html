@@ -340,6 +340,49 @@
         line-height: 1.35;
       }
 
+      .workspace-sidebar {
+        display: grid;
+        gap: 6px;
+        margin-bottom: 12px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .workspace-sidebar .sidebar-title {
+        padding-bottom: 8px;
+      }
+
+      .workspace-link {
+        display: grid;
+        gap: 4px;
+        padding: 11px 12px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.42);
+      }
+
+      .workspace-link:hover,
+      .workspace-link:focus-visible {
+        border-color: var(--line-strong);
+        background: var(--surface-strong);
+      }
+
+      .workspace-link.attention {
+        border-color: rgba(45, 74, 95, 0.24);
+        background: rgba(45, 74, 95, 0.07);
+      }
+
+      .workspace-link strong {
+        font-size: 14px;
+        line-height: 1.25;
+      }
+
+      .workspace-link span {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
       .project-name {
         margin: 0;
         font-size: 17px;
@@ -2652,6 +2695,42 @@
 
       <div class="layout">
         <aside class="panel sidebar">
+          {% if selected_project and view_name not in ('inbox', 'review_activity') %}
+            {% set sidebar_review_count = draft_total | default(0) %}
+            <nav class="workspace-sidebar" aria-label="{{ t('workspace_sidebar_label') }}">
+              <div class="sidebar-title">{{ t('workspace_sidebar_title') }}</div>
+              <a class="workspace-link" href="{{ url_for('/projects/' ~ selected_project.slug) }}#current-state-title">
+                <strong>{{ t('nav_work_state') }}</strong>
+                <span>{{ t('workspace_sidebar_state_meta') }}</span>
+              </a>
+              <a class="workspace-link" href="{{ url_for('/projects/' ~ selected_project.slug) }}#project-memory">
+                <strong>{{ t('nav_memory') }}</strong>
+                <span>{{ t('workspace_sidebar_memory_meta') }}</span>
+              </a>
+              <a class="workspace-link{% if sidebar_review_count %} attention{% endif %}" href="{{ url_for('/inbox') }}">
+                <strong>{{ t('review_suggested_changes') }}</strong>
+                <span>
+                  {% if sidebar_review_count == 0 %}
+                    {{ t('workspace_sidebar_review_zero') }}
+                  {% elif sidebar_review_count == 1 %}
+                    {{ t('workspace_sidebar_review_one') }}
+                  {% else %}
+                    {{ t('workspace_sidebar_review_many', count=sidebar_review_count) }}
+                  {% endif %}
+                </span>
+              </a>
+              <a class="workspace-link" href="{{ url_for('/projects/' ~ selected_project.slug ~ '/agent-context') }}">
+                <strong>{{ t('nav_agent_handoff') }}</strong>
+                <span>{{ t('workspace_sidebar_agent_meta') }}</span>
+              </a>
+              {% if selected_project.quality is defined %}
+                <a class="workspace-link" href="{{ url_for('/projects/' ~ selected_project.slug) }}#quality">
+                  <strong>{{ t('quality') }}</strong>
+                  <span>{{ t('workspace_sidebar_quality_meta', score=selected_project.quality.score) }}</span>
+                </a>
+              {% endif %}
+            </nav>
+          {% endif %}
           <a class="sidebar-action{% if view_name in ('inbox', 'review_activity') %} active{% endif %}" href="{{ url_for('/inbox') }}">
             {{ t('review_inbox') }}
             <span class="sidebar-action-meta">{{ draft_total | default(0) }} {{ t('review_items') }}</span>

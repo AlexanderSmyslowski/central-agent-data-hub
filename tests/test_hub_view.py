@@ -1591,6 +1591,13 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Review" in body
     assert "2 items" in body
     assert "Handoff ready" in body
+    assert 'aria-label="Project workspace sidebar"' in body
+    assert "Project areas" in body
+    assert "Latest status and watch points." in body
+    assert "Search reviewed facts and decisions." in body
+    assert "2 suggestions wait." in body
+    assert "Prepare visible context handoff." in body
+    assert "Quality score 92." in body
     assert "Work state" in body
     assert "Memory" in body
     assert "Agent handoff" in body
@@ -1983,6 +1990,12 @@ def test_memory_item_page_renders_read_only_german_detail() -> None:
     assert '<html lang="de">' in body
     assert "Zurück zu Central Agent Data Hub Demo" in body
     assert "Fakten" in body
+    assert 'aria-label="Projekt-Arbeitsseitenleiste"' in body
+    assert "Projektbereiche" in body
+    assert "Letzter Stand und Beobachtungspunkte." in body
+    assert "Geprüfte Fakten und Entscheidungen suchen." in body
+    assert "Keine Vorschläge warten." in body
+    assert "Sichtbare Kontextübergabe vorbereiten." in body
     assert "Reviewed facts are visible in Hub View." in body
     assert "Diese Seite liest nur den ausgewählten Eintrag" in body
     assert "Quelle" in body
