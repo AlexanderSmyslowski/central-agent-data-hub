@@ -228,6 +228,22 @@ def test_v015_release_notes_describe_public_demo_doctor_path() -> None:
     assert "no new Hub-memory write path" in notes
 
 
+def test_v016_release_notes_describe_root_aware_offline_hints() -> None:
+    readme = read_script("README.md")
+    notes = read_script("docs/public/v0.1.16-release-notes.md")
+
+    assert "[v0.1.16 release notes](docs/public/v0.1.16-release-notes.md)" in readme
+    assert "[v0.1.16 release notes]" in readme.split("[v0.1.15 release notes]")[0]
+    assert "Agent Data Hub v0.1.16" in notes
+    assert "operational-stability polish release" in notes
+    assert "ADH-root-aware diagnosis and start" in notes
+    assert "non-ADH working directories" in notes
+    assert "no schema change" in notes
+    assert "no migration" in notes
+    assert "no new Hub-memory write path" in notes
+    assert "no automatic recovery" in notes
+
+
 def test_hub_view_template_is_split_into_view_partials() -> None:
     page = read_script("templates/hub_view/page.html")
     base_css = read_script("templates/hub_view/static/base.css")
@@ -304,8 +320,8 @@ def test_package_version_is_ready_for_next_public_patch_release() -> None:
     checklist = read_script("docs/public/release-checklist.md")
     readme = read_script("README.md")
 
-    assert 'version = "0.1.15"' in pyproject
-    assert "[v0.1.15 release notes](docs/public/v0.1.15-release-notes.md)" in readme
+    assert 'version = "0.1.16"' in pyproject
+    assert "[v0.1.16 release notes](docs/public/v0.1.16-release-notes.md)" in readme
     assert "version` matches the tag" in checklist
     assert "Do not move an already published tag" in checklist
     assert "[Release checklist](docs/public/release-checklist.md)" in readme
@@ -333,7 +349,7 @@ def test_preflight_uses_bounded_docker_checks() -> None:
     assert "scripts/db_doctor.sh" in common
     assert "scripts/db_doctor.sh --public-demo" in common
     assert "Use the same AGENT_HUB_* overrides if this demo run used any." in common
-    assert "scripts/db_recover.sh --apply" in common
+    assert "$ROOT_DIR/scripts/db_recover.sh --apply" in common
     assert "AGENT_HUB_COMPOSE_PROJECT_NAME=adh-demo-fresh" in common
     assert 'docker_quick logs --tail 40 "$DB_CONTAINER"' in common
     assert "pg_isready -h localhost -p \"$DB_PORT\"" in common
@@ -348,6 +364,11 @@ def test_preflight_uses_bounded_docker_checks() -> None:
     assert "Bitte Docker starten oder kurz warten" in preflight
     assert "docker is not responding within" in preflight
     assert "Restart Docker Desktop" in preflight
+    assert "Diagnose:" in preflight
+    assert "Start:" in preflight
+    assert '$ROOT_DIR/scripts/db_doctor.sh' in preflight
+    assert '$ROOT_DIR/scripts/db_start.sh' in preflight
+    assert '$ROOT_DIR/scripts/db_status.sh' in preflight
     assert "postgres_ready" in preflight
     assert "compose exec -T \"$DB_SERVICE\" pg_isready" not in preflight
 
@@ -374,7 +395,8 @@ def test_db_doctor_and_recover_are_safe_local_ops_paths() -> None:
         'source "$(cd "$(dirname "${BASH_SOURCE[0]}")"'
     )
     assert "bogus data in lock file" in doctor
-    assert "scripts/db_recover.sh --apply" in doctor
+    assert "$ROOT_DIR/scripts/db_recover.sh --apply" in doctor
+    assert 'echo "  scripts/db_recover.sh --apply"' not in doctor
     assert "run_agent_hub status" in doctor
     assert "run_agent_hub check" in doctor
 
@@ -384,6 +406,8 @@ def test_db_doctor_and_recover_are_safe_local_ops_paths() -> None:
     assert "compose rm -sf \"$DB_SERVICE\"" in recover
     assert "compose up -d \"$DB_SERVICE\"" in recover
     assert "run_agent_hub status" in recover
+    assert "$ROOT_DIR/scripts/db_recover.sh --apply" in recover
+    assert "$ROOT_DIR/scripts/db_start.sh if this is a new checkout." in recover
 
     for forbidden in ("docker volume rm", "DROP DATABASE", "DROP SCHEMA", "rm -rf"):
         assert forbidden not in doctor

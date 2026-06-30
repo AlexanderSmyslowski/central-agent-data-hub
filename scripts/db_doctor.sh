@@ -129,7 +129,7 @@ elif grep -q "bogus data in lock file" <<<"$log_output"; then
   else
     echo
     echo "Recovery hint:"
-    echo "  scripts/db_recover.sh --apply"
+    echo "  $ROOT_DIR/scripts/db_recover.sh --apply"
     mark_operational_issue
   fi
 else
@@ -160,7 +160,7 @@ fi
 
 if [[ "$operational_issue" -eq 1 ]]; then
   echo "Doctor result: operational issue"
-  echo "Run scripts/db_recover.sh --apply only for this local Docker Postgres instance."
+  echo "Run $ROOT_DIR/scripts/db_recover.sh --apply only for this local Docker Postgres instance."
   exit 2
 fi
 

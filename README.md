@@ -460,6 +460,7 @@ volumes, or alter Hub memory rows.
 - [Public getting started](docs/public/getting-started.md)
 - [First-run demo session](docs/public/first-run-demo-session.md)
 - [Hub View app roadmap](docs/hub-view-app-roadmap.md)
+- [v0.1.16 release notes](docs/public/v0.1.16-release-notes.md)
 - [v0.1.15 release notes](docs/public/v0.1.15-release-notes.md)
 - [v0.1.14 release notes](docs/public/v0.1.14-release-notes.md)
 - [v0.1.13 release notes](docs/public/v0.1.13-release-notes.md)

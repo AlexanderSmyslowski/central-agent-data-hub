@@ -27,9 +27,15 @@ COMPACT=0
 ALLOW_DIRECT_DB=0
 
 hub_unavailable_message() {
-  cat >&2 <<'EOF'
+  cat >&2 <<EOF
 Der zentrale Agent Data Hub laeuft lokal gerade nicht.
 Bitte Docker starten oder kurz warten, bis der gemeinsame Projektspeicher wieder bereit ist.
+
+Diagnose:
+  $ROOT_DIR/scripts/db_doctor.sh
+
+Start:
+  $ROOT_DIR/scripts/db_start.sh
 EOF
 }
 
@@ -120,13 +126,13 @@ set -e
 if [[ "$inspect_code" -eq 124 ]]; then
   hub_unavailable_message
   echo "Operational error: docker is not responding within ${AGENT_HUB_DOCKER_TIMEOUT_SECONDS}s." >&2
-  echo "Restart Docker Desktop, then run scripts/db_status.sh." >&2
+  echo "Restart Docker Desktop, then run $ROOT_DIR/scripts/db_status.sh." >&2
   exit 2
 fi
 if [[ "$inspect_code" -ne 0 ]]; then
   hub_unavailable_message
   echo "Operational error: durable DB container is missing." >&2
-  echo "Run scripts/db_start.sh first." >&2
+  echo "Run $ROOT_DIR/scripts/db_start.sh first." >&2
   exit 2
 fi
 
@@ -137,13 +143,13 @@ set -e
 if [[ "$running_code" -eq 124 ]]; then
   hub_unavailable_message
   echo "Operational error: docker is not responding within ${AGENT_HUB_DOCKER_TIMEOUT_SECONDS}s." >&2
-  echo "Restart Docker Desktop, then run scripts/db_status.sh." >&2
+  echo "Restart Docker Desktop, then run $ROOT_DIR/scripts/db_status.sh." >&2
   exit 2
 fi
 if [[ "$running_state" != "true" ]]; then
   hub_unavailable_message
   echo "Operational error: durable DB container is not running." >&2
-  echo "Run scripts/db_start.sh first." >&2
+  echo "Run $ROOT_DIR/scripts/db_start.sh first." >&2
   exit 2
 fi
 
@@ -172,7 +178,7 @@ if echo "$migration_status" | grep -Eq ': (pending|failed|changed)$'; then
     echo "$migration_status"
   fi
   echo "Operational error: schema migrations are pending or failed." >&2
-  echo "Run scripts/db_start.sh or agent-hub migrate --apply before agent writeback." >&2
+  echo "Run $ROOT_DIR/scripts/db_start.sh or agent-hub migrate --apply before agent writeback." >&2
   exit 2
 fi
 if [[ "$COMPACT" -eq 1 ]]; then

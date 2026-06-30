@@ -51,7 +51,7 @@ echo "  URL:       $(mask_database_url "$DATABASE_URL")"
 echo
 
 if [[ "$APPLY" -eq 0 ]]; then
-  cat <<'EOF'
+  cat <<EOF
 Dry run only. No container or volume changes were made.
 
 This recovery path is intentionally narrow:
@@ -61,7 +61,7 @@ This recovery path is intentionally narrow:
 - it never removes Docker volumes or drops database objects
 
 Run:
-  scripts/db_recover.sh --apply
+  $ROOT_DIR/scripts/db_recover.sh --apply
 EOF
   exit 0
 fi
@@ -78,7 +78,7 @@ fi
 
 if ! docker_quick volume inspect "$DB_VOLUME" >/dev/null 2>&1; then
   echo "Error: Docker volume not found: $DB_VOLUME" >&2
-  echo "Run scripts/db_start.sh if this is a new checkout." >&2
+  echo "Run $ROOT_DIR/scripts/db_start.sh if this is a new checkout." >&2
   exit 2
 fi
 

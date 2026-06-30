@@ -201,7 +201,7 @@ print_postgres_start_failure() {
   echo >&2
   echo "If doctor reports stale Postgres lock files, run the guarded recovery path:" >&2
   echo >&2
-  echo "  scripts/db_recover.sh --apply" >&2
+  echo "  $ROOT_DIR/scripts/db_recover.sh --apply" >&2
   echo >&2
   echo "For a public demo failure, you can also use a fresh isolated demo instance:" >&2
   echo >&2
