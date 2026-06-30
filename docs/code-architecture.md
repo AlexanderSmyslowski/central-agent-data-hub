@@ -32,7 +32,8 @@ agent-hub = agent_hub.cli:main
 It should stay thin. Command registration lives in `agent_hub/commands/parser.py`.
 Command handlers live in focused command modules:
 
-- `commands/system.py`: status, check, migration, export, project listing.
+- `commands/system.py`: status, check, doctor, migration, export, project
+  listing.
 - `commands/read.py`: read-only entrypoints and dispatch.
 - `commands/briefs.py`: brief and compiled project memory.
 - `commands/summaries.py`: daily, handoff, and review summaries.

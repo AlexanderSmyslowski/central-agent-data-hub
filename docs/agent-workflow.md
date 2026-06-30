@@ -148,8 +148,28 @@ scripts/project_context.sh --all-websites
 ```
 
 The helper runs the operational preflight first. It requires the durable local
-database to be running, a verified local backup to exist, `agent-hub check` to
-have no errors, and the relevant project brief to be readable.
+database to be running, a fresh verified local backup to exist, `agent-hub
+check` to have no errors, and the relevant project brief to be readable. A
+configured remote backup target is checked and reported, but remote parity is
+strict only when `AGENT_HUB_REQUIRE_REMOTE_BACKUP=1` or
+`scripts/db_backup_health.sh --require-remote` is used.
+
+If preflight reports that the central Hub is offline, do not guess at the
+failure. Run the local doctor first:
+
+```bash
+agent-hub doctor
+```
+
+When the doctor reports a known stale Postgres lock-file problem, use the
+guarded recovery script:
+
+```bash
+scripts/db_recover.sh --apply
+```
+
+The recovery path snapshots the Docker volume before changes, recreates only
+the container, and never removes volumes or writes Hub memory.
 
 For focused work, use a context pack after the brief:
 

@@ -192,10 +192,11 @@ if [[ "$COMPACT" -eq 0 || "$backup_code" -ne 0 ]]; then
 fi
 if [[ "$backup_code" -ne 0 ]]; then
   if [[ "$backup_code" -eq 1 ]]; then
-    echo "Data error: backup checksum or remote parity failed." >&2
+    echo "Data error: local backup checksum failed." >&2
     exit 1
   fi
   echo "Operational error: backup health is not ready." >&2
+  echo "Remote backup parity can be made strict with AGENT_HUB_REQUIRE_REMOTE_BACKUP=1." >&2
   exit 2
 fi
 if [[ "$COMPACT" -eq 1 ]]; then

@@ -188,9 +188,17 @@ print_postgres_start_failure() {
   echo "Recent container logs:" >&2
   docker_quick logs --tail 40 "$DB_CONTAINER" >&2 || true
   echo >&2
-  echo "For the public demo path, this usually means the local demo volume is stale or corrupted." >&2
   echo "This script will not delete local Docker volumes automatically." >&2
-  echo "Use a fresh isolated demo instance, for example:" >&2
+  echo "Diagnose the local database runtime with:" >&2
+  echo >&2
+  echo "  agent-hub doctor" >&2
+  echo "  scripts/db_doctor.sh" >&2
+  echo >&2
+  echo "If doctor reports stale Postgres lock files, run the guarded recovery path:" >&2
+  echo >&2
+  echo "  scripts/db_recover.sh --apply" >&2
+  echo >&2
+  echo "For a public demo failure, you can also use a fresh isolated demo instance:" >&2
   echo >&2
   echo "  AGENT_HUB_COMPOSE_PROJECT_NAME=adh-demo-fresh \\" >&2
   echo "  AGENT_HUB_DB_CONTAINER=adh-demo-fresh-postgres \\" >&2

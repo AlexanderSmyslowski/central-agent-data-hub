@@ -176,6 +176,19 @@ def run_setup(args: argparse.Namespace) -> int:
     return int(result.returncode)
 
 
+def run_doctor(_args: argparse.Namespace) -> int:
+    script_path = REPO_ROOT / "scripts" / "db_doctor.sh"
+    if not script_path.is_file():
+        print(f"Error: doctor script not found: {script_path}", file=sys.stderr)
+        return 2
+
+    try:
+        result = subprocess.run([str(script_path)], check=False)
+    except OSError as exc:
+        return exception_error(exc)
+    return int(result.returncode)
+
+
 def run_projects(args: argparse.Namespace) -> int:
     if error_code := require_database_url():
         return error_code

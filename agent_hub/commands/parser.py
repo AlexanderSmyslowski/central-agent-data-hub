@@ -24,6 +24,7 @@ from agent_hub.commands.summaries import (
 )
 from agent_hub.commands.system import (
     run_check,
+    run_doctor,
     run_export,
     run_export_okf,
     run_migrate,
@@ -172,6 +173,12 @@ def build_parser() -> argparse.ArgumentParser:
         "check",
         "Run consistency checks for export and review readiness.",
         run_check,
+    )
+    add_command(
+        subparsers,
+        "doctor",
+        "Diagnose the local Docker/Postgres Hub runtime.",
+        run_doctor,
     )
     setup_parser = subparsers.add_parser(
         "setup",

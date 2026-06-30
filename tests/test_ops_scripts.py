@@ -262,8 +262,10 @@ def test_preflight_uses_bounded_docker_checks() -> None:
     assert "postgres_container_state()" in common
     assert "print_postgres_start_failure()" in common
     assert "did not become ready" in common
-    assert "local demo volume is stale or corrupted" in common
     assert "This script will not delete local Docker volumes automatically." in common
+    assert "agent-hub doctor" in common
+    assert "scripts/db_doctor.sh" in common
+    assert "scripts/db_recover.sh --apply" in common
     assert "AGENT_HUB_COMPOSE_PROJECT_NAME=adh-demo-fresh" in common
     assert 'docker_quick logs --tail 40 "$DB_CONTAINER"' in common
     assert "pg_isready -h localhost -p \"$DB_PORT\"" in common
@@ -282,6 +284,52 @@ def test_preflight_uses_bounded_docker_checks() -> None:
     assert "compose exec -T \"$DB_SERVICE\" pg_isready" not in preflight
 
 
+def test_db_doctor_and_recover_are_safe_local_ops_paths() -> None:
+    doctor = read_script("scripts/db_doctor.sh")
+    recover = read_script("scripts/db_recover.sh")
+    parser = read_script("agent_hub/commands/parser.py")
+    system = read_script("agent_hub/commands/system.py")
+    readme = read_script("README.md")
+    workflow = read_script("docs/agent-workflow.md")
+    boundaries = read_script("docs/automation-boundaries.md")
+    architecture = read_script("docs/code-architecture.md")
+
+    assert (ROOT / "scripts/db_doctor.sh").exists()
+    assert os.access(ROOT / "scripts/db_doctor.sh", os.X_OK)
+    assert (ROOT / "scripts/db_recover.sh").exists()
+    assert os.access(ROOT / "scripts/db_recover.sh", os.X_OK)
+
+    assert "Central Agent Data Hub doctor" in doctor
+    assert "bogus data in lock file" in doctor
+    assert "scripts/db_recover.sh --apply" in doctor
+    assert "run_agent_hub status" in doctor
+    assert "run_agent_hub check" in doctor
+
+    assert "Dry run only. No container or volume changes were made." in recover
+    assert "Snapshot written" in recover
+    assert "removed NUL-only postmaster.pid" in recover
+    assert "compose rm -sf \"$DB_SERVICE\"" in recover
+    assert "compose up -d \"$DB_SERVICE\"" in recover
+    assert "run_agent_hub status" in recover
+
+    for forbidden in ("docker volume rm", "DROP DATABASE", "DROP SCHEMA", "rm -rf"):
+        assert forbidden not in doctor
+        assert forbidden not in recover
+
+    assert '"doctor"' in parser
+    assert "run_doctor" in parser
+    assert "db_doctor.sh" in system
+    assert "agent-hub doctor" in readme
+    assert "scripts/db_recover.sh --apply" in readme
+    assert "never removes volumes or writes Hub memory" in workflow
+    assert "`agent-hub doctor`" in boundaries
+    assert "explicit local operator action" in boundaries
+    assert "It must not delete volumes" in boundaries
+    assert "drop databases" in boundaries
+    assert "write Hub" in boundaries
+    assert "doctor, migration" in architecture
+
+
 def test_db_status_uses_fast_healthcheck_paths() -> None:
     status = read_script("scripts/db_status.sh")
 
@@ -289,6 +337,22 @@ def test_db_status_uses_fast_healthcheck_paths() -> None:
     assert "docker_quick volume inspect" in status
     assert "postgres_ready" in status
     assert "compose exec -T \"$DB_SERVICE\" pg_isready" not in status
+
+
+def test_backup_health_keeps_remote_parity_explicit_not_default_blocking() -> None:
+    backup_health = read_script("scripts/db_backup_health.sh")
+    preflight = read_script("scripts/agent_preflight.sh")
+    workflow = read_script("docs/agent-workflow.md")
+
+    assert "--require-remote" in backup_health
+    assert "AGENT_HUB_REQUIRE_REMOTE_BACKUP" in backup_health
+    assert "mark_remote_problem()" in backup_health
+    assert "Backup health:    ok (remote warning)" in backup_health
+    assert "local backup checksum failed" in preflight
+    assert "Remote backup parity can be made strict" in preflight
+    assert "fresh verified local backup" in workflow
+    assert "remote parity is" in workflow
+    assert "strict only" in workflow
 
 
 def test_agent_finish_surfaces_question_answer_dry_run() -> None:

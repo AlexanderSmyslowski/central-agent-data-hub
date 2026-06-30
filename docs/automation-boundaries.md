@@ -15,6 +15,7 @@ already reviewed state:
 
 - `agent-hub status`
 - `agent-hub check`
+- `agent-hub doctor`
 - `agent-hub quality`
 - `agent-hub receipt`
 - `agent-hub export`
@@ -189,6 +190,13 @@ real working set.
 
 This keeps public onboarding scripts from writing into the maintainer's
 operational memory store.
+
+`agent-hub doctor` and `scripts/db_doctor.sh` are read-only diagnostics for
+the local Docker/Postgres runtime. `scripts/db_recover.sh --apply` is an
+explicit local operator action for known stale Postgres lock-file failures: it
+creates a volume snapshot, recreates the container, and removes only empty or
+NUL-only lock files. It must not delete volumes, drop databases, or write Hub
+memory.
 
 ### Human Review Required
 

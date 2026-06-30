@@ -449,6 +449,24 @@ is intentionally ignored by that path.
 The maintainer path exists for the operator's own daily work and seeds real
 local working data. It continues to use the configured `.env` database.
 
+If the local Hub appears offline, diagnose it before restarting random pieces:
+
+```bash
+agent-hub doctor
+```
+
+For known local Docker/Postgres stale-lock failures, the guarded recovery path
+is:
+
+```bash
+scripts/db_recover.sh --apply
+```
+
+Recovery first creates a local Docker-volume snapshot, removes only empty or
+NUL-only Postgres lock files, recreates the container without deleting the
+volume, and then runs a status check. It does not drop databases, remove
+volumes, or alter Hub memory rows.
+
 ## Further Reading
 
 - [Public overview](docs/public/agent-data-hub-overview.md)

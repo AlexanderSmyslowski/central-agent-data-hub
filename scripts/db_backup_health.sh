@@ -7,16 +7,18 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/db_common.sh"
 LABEL="de.alexandersmyslowski.central-agent-data-hub.backup"
 MAX_AGE_HOURS="${AGENT_HUB_BACKUP_MAX_AGE_HOURS:-36}"
 REQUIRE=0
+REQUIRE_REMOTE="${AGENT_HUB_REQUIRE_REMOTE_BACKUP:-0}"
 
 usage() {
   cat <<'EOF'
-Usage: scripts/db_backup_health.sh [--require] [--max-age-hours HOURS]
+Usage: scripts/db_backup_health.sh [--require] [--require-remote] [--max-age-hours HOURS]
 
 Checks local backup freshness, local SHA256, optional remote backup parity, and
 macOS LaunchAgent scheduling status.
 
 Options:
-  --require              Exit non-zero when freshness or remote parity fails.
+  --require              Exit non-zero when local freshness or checksum fails.
+  --require-remote       Also exit non-zero when configured remote parity fails.
   --max-age-hours HOURS  Maximum allowed local backup age. Default: 36.
 EOF
 }
@@ -25,6 +27,10 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --require)
       REQUIRE=1
+      shift
+      ;;
+    --require-remote)
+      REQUIRE_REMOTE=1
       shift
       ;;
     --max-age-hours)
@@ -48,17 +54,32 @@ if ! [[ "$MAX_AGE_HOURS" =~ ^[0-9]+$ ]] || (( MAX_AGE_HOURS < 1 )); then
   exit 2
 fi
 
+if [[ "$REQUIRE_REMOTE" != "0" && "$REQUIRE_REMOTE" != "1" ]]; then
+  echo "Error: AGENT_HUB_REQUIRE_REMOTE_BACKUP must be 0 or 1." >&2
+  exit 2
+fi
+
 fail_code=0
+remote_warning=0
 
 mark_problem() {
   local code="$1"
   fail_code="$code"
 }
 
+mark_remote_problem() {
+  local code="$1"
+  remote_warning=1
+  if [[ "$REQUIRE_REMOTE" -eq 1 ]]; then
+    mark_problem "$code"
+  fi
+}
+
 echo "Central Agent Data Hub backup health"
 echo "Backup dir:       $AGENT_HUB_BACKUP_DIR"
 echo "Max age hours:    $MAX_AGE_HOURS"
 echo "Remote:           ${AGENT_HUB_BACKUP_REMOTE:-not configured}"
+echo "Require remote:   $REQUIRE_REMOTE"
 echo
 
 dump_path="$(latest_backup_dump)"
@@ -106,7 +127,7 @@ if [[ -n "${AGENT_HUB_BACKUP_REMOTE:-}" ]]; then
   remote_spec="${AGENT_HUB_BACKUP_REMOTE%/}"
   if [[ "$remote_spec" != *:* ]]; then
     echo "Remote backup:    unsupported remote format"
-    mark_problem 2
+    mark_remote_problem 2
   else
     remote_host="${remote_spec%%:*}"
     remote_dir="${remote_spec#*:}"
@@ -124,14 +145,14 @@ if [[ -n "${AGENT_HUB_BACKUP_REMOTE:-}" ]]; then
 
     if [[ "$remote_code" -ne 0 || -z "$remote_sha" ]]; then
       echo "Remote backup:    missing or unreachable"
-      mark_problem 2
+      mark_remote_problem 2
     else
       local_sha="$(awk '{print $1}' "$sha_path")"
       if [[ "$local_sha" == "$remote_sha" ]]; then
         echo "Remote checksum:  ok"
       else
         echo "Remote checksum:  mismatch"
-        mark_problem 1
+        mark_remote_problem 1
       fi
     fi
   fi
@@ -155,7 +176,11 @@ fi
 
 if [[ "$fail_code" -eq 0 ]]; then
   echo
-  echo "Backup health:    ok"
+  if [[ "$remote_warning" -eq 1 ]]; then
+    echo "Backup health:    ok (remote warning)"
+  else
+    echo "Backup health:    ok"
+  fi
   exit 0
 fi
 
