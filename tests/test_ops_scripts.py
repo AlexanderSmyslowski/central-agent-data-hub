@@ -51,6 +51,20 @@ def test_automation_boundaries_describe_guarded_codex_setup_action() -> None:
     assert "no shell command is executed from Hub View" in docs
 
 
+def test_seed_readme_separates_public_demo_from_maintainer_ops() -> None:
+    seed_readme = read_script("seed/README.md")
+    readme = read_script("README.md")
+
+    assert "`demo.sql` is the neutral public demo dataset" in seed_readme
+    assert "`business_sites.sql` and `agentic_projects.sql` are maintainer-local operator" in seed_readme
+    assert "scripts/db_start_public_demo.sh" in seed_readme
+    assert "scripts/first_run_demo.sh" in seed_readme
+    assert "scripts/db_start.sh" in seed_readme
+    assert "not part of the public first-run path" in seed_readme
+    assert "Do not add secrets" in seed_readme
+    assert "[`seed/README.md`](seed/README.md)" in readme
+
+
 def test_v015_release_notes_describe_guarded_codex_setup_without_overclaim() -> None:
     readme = read_script("README.md")
     notes = read_script("docs/public/v0.1.5-release-notes.md")
@@ -183,6 +197,21 @@ def test_v013_release_notes_describe_first_run_compression() -> None:
     assert "It does not prove hosted deployment" in demo_session
 
 
+def test_v014_release_notes_describe_seed_boundary_polish() -> None:
+    readme = read_script("README.md")
+    notes = read_script("docs/public/v0.1.14-release-notes.md")
+
+    assert "[v0.1.14 release notes](docs/public/v0.1.14-release-notes.md)" in readme
+    assert "[v0.1.14 release notes]" in readme.split("[v0.1.13 release notes]")[0]
+    assert "Agent Data Hub v0.1.14" in notes
+    assert "public-preview hygiene release" in notes
+    assert "seed/README.md" in notes
+    assert "neutral public demo seed" in notes
+    assert "maintainer-local operator seeds" in notes
+    assert "no schema change" in notes
+    assert "no new Hub-memory write path" in notes
+
+
 def test_hub_view_template_is_split_into_view_partials() -> None:
     page = read_script("templates/hub_view/page.html")
     base_css = read_script("templates/hub_view/static/base.css")
@@ -259,8 +288,8 @@ def test_package_version_is_ready_for_next_public_patch_release() -> None:
     checklist = read_script("docs/public/release-checklist.md")
     readme = read_script("README.md")
 
-    assert 'version = "0.1.13"' in pyproject
-    assert "[v0.1.13 release notes](docs/public/v0.1.13-release-notes.md)" in readme
+    assert 'version = "0.1.14"' in pyproject
+    assert "[v0.1.14 release notes](docs/public/v0.1.14-release-notes.md)" in readme
     assert "version` matches the tag" in checklist
     assert "Do not move an already published tag" in checklist
     assert "[Release checklist](docs/public/release-checklist.md)" in readme

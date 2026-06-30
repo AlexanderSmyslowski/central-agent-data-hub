@@ -429,7 +429,8 @@ run if the effective target is not the demo database. `DATABASE_URL` in `.env`
 is intentionally ignored by that path.
 
 The maintainer path exists for the operator's own daily work and seeds real
-local working data. It continues to use the configured `.env` database.
+local working data. It continues to use the configured `.env` database. The
+seed boundary is documented in [`seed/README.md`](seed/README.md).
 
 If the local Hub appears offline, diagnose it before restarting random pieces:
 
@@ -455,6 +456,7 @@ volumes, or alter Hub memory rows.
 - [Public getting started](docs/public/getting-started.md)
 - [First-run demo session](docs/public/first-run-demo-session.md)
 - [Hub View app roadmap](docs/hub-view-app-roadmap.md)
+- [v0.1.14 release notes](docs/public/v0.1.14-release-notes.md)
 - [v0.1.13 release notes](docs/public/v0.1.13-release-notes.md)
 - [v0.1.12 release notes](docs/public/v0.1.12-release-notes.md)
 - [v0.1.11 release notes](docs/public/v0.1.11-release-notes.md)
