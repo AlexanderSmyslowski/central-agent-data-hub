@@ -1,14 +1,11 @@
 # Public Getting Started
 
-This path is the recommended public preview path for the repository. It uses
-the neutral demo dataset, not the maintainer's own daily project seeds.
+This is the recommended public preview path. It uses a neutral demo database,
+not the maintainer's daily working data.
 
-## 1. Run The Public Demo
+## Fast Path
 
-Use Python 3.11+, Docker, and Docker Compose. Make sure Docker is running
-before starting the local database.
-
-From a fresh folder:
+Use Python 3.11+, Docker, and Docker Compose. Make sure Docker is running.
 
 ```bash
 git clone https://github.com/AlexanderSmyslowski/central-agent-data-hub.git
@@ -21,9 +18,42 @@ The script creates `.venv` if needed, installs or reuses the local CLI, creates
 database, runs the public demo check, then starts Hub View and prints the local
 URL to open. It does not overwrite an existing `.env`.
 
-The demo includes one neutral suggested memory change in Review Inbox so you can
-see the review flow. The one-command path uses `demo-reviewer` only for local
-demo attribution; this is not authentication and is not written to `.env`.
+The demo includes one neutral suggested memory change in Review Inbox. The
+one-command path uses `demo-reviewer` only for local demo attribution; this is
+not authentication and is not written to `.env`.
+
+## What To Check First
+
+In the first ten minutes, check only this:
+
+1. Open the printed Hub View URL.
+2. Open the demo project.
+3. Open Review Inbox and inspect the suggested memory change.
+4. Accept or reject it; both actions are explicit review actions.
+5. Open **Connect an agent** and prepare one agent handoff.
+6. Notice the boundary: Hub View shows context; it does not run an agent.
+
+For the same path with expected screen-by-screen observations, see
+[`first-run-demo-session.md`](first-run-demo-session.md).
+
+## If Something Fails
+
+Run the local doctor before changing Docker state by hand:
+
+```bash
+agent-hub doctor
+# or, from this checkout:
+.venv/bin/python -m agent_hub.cli doctor
+```
+
+If the doctor reports a known stale Postgres lock-file problem, use:
+
+```bash
+scripts/db_recover.sh --apply
+```
+
+The recovery path creates a Docker-volume snapshot first, recreates only the
+container, and never removes volumes or writes Hub memory.
 
 For a non-blocking check without starting Hub View:
 
@@ -31,22 +61,23 @@ For a non-blocking check without starting Hub View:
 scripts/first_run_demo.sh --no-hub-view
 ```
 
+## Optional Mobile Preview
+
 To open the demo from a phone on the same trusted Wi-Fi:
 
 ```bash
 scripts/first_run_demo.sh --mobile
 ```
 
-The script prints the laptop URL and, when it can detect one, a phone URL such
-as `http://192.168.x.x:8765`. Use this only on a trusted local network. Mobile
-preview is for reading and orientation; Review Inbox and Codex setup writes
-stay disabled when Hub View is not bound to loopback. Direct non-loopback Hub
-View starts require `--allow-lan-read` so reviewed memory is not exposed on the
-local network by accident.
+The script prints a laptop URL and, when it can detect one, a phone URL such as
+`http://192.168.x.x:8765`. Use this only on a trusted local network. Mobile
+preview is read-oriented: Review Inbox and Codex setup writes stay disabled
+when Hub View is not bound to loopback. Direct non-loopback Hub View starts
+require `--allow-lan-read`.
 
-## 2. Manual Path For Troubleshooting
+## Manual Path
 
-If you want to run the same path step by step, use:
+Use this only when you want to see each step separately:
 
 ```bash
 python3 -m venv .venv
@@ -61,9 +92,6 @@ The `.env.example` file contains local defaults. Copying it to `.env` creates
 your local configuration file. Existing `.env` files are local and should not be
 committed.
 
-Pip may print upgrade notices. You can ignore those during the first demo run
-as long as the install command finishes successfully.
-
 For a later guided local operator setup, run:
 
 ```bash
@@ -72,79 +100,11 @@ agent-hub setup
 
 The setup assistant is optional and is not required for the public demo.
 
-If you prefer not to create `.env`, export the required variables manually:
+## Startup Boundary
 
-```bash
-export DATABASE_URL="postgresql://postgres:changeme@localhost:55432/agent_hub"
-export OBSIDIAN_EXPORT_DIR=".local/obsidian-export"
-```
+`scripts/db_start_public_demo.sh` is the public sample path. It forces a
+separate demo database identity and ignores `DATABASE_URL` from `.env` for its
+own process.
 
-## 3. Direct Public Demo Database Start
-
-```bash
-scripts/db_start_public_demo.sh
-```
-
-This script starts PostgreSQL, applies migrations, seeds only `seed/demo.sql`,
-and prints a demo-focused readiness check.
-
-It does not wipe an existing local operator database. For the quietest first
-run, use it against a fresh local database or Docker volume.
-
-If you need to run a second local copy alongside an existing Agent Data Hub
-instance, set demo overrides in the shell before starting the script. Use a
-database name containing `demo`, and set matching `AGENT_HUB_DB_NAME`,
-`AGENT_HUB_DB_PORT`, `AGENT_HUB_DB_CONTAINER`, `AGENT_HUB_DB_VOLUME`, and
-`AGENT_HUB_COMPOSE_PROJECT_NAME` values. The public demo path ignores
-`DATABASE_URL` from `.env` for its own process.
-
-## 4. Run The Demo Check
-
-```bash
-bash scripts/smoke_public_demo.sh
-```
-
-This checks the demo database, core read paths, Markdown export, and Hub View
-startup. `Public demo smoke: ok` means the demo path is working.
-
-## 5. Open Hub View
-
-Start Hub View:
-
-```bash
-AGENT_HUB_PUBLIC_DEMO=1 AGENT_HUB_REVIEWERS=demo-reviewer HUB_VIEW_REVIEWER=demo-reviewer scripts/hub_view.sh
-```
-
-Hub View is a local review surface. It reads reviewed memory and can accept or
-reject draft candidates as explicit review actions. PostgreSQL remains the
-reviewed source of truth.
-
-To see how an agent would use ADH, open a project in Hub View and use
-**Connect an agent**. Enter a task and click **Prepare agent handoff**. Hub View
-will show the reviewed context being handed to the agent and provide a
-copy-ready text for chatbots. For local agents, Hub View shows the one-time MCP
-or startup-rule setup. Hub View does not run the agent by itself; the local
-agent must still be configured once. After setup, the local agent is instructed
-to request ADH context when work starts. Hub View provides copy buttons for the
-matching setup path: Claude Code, Codex, Hermes/custom startup rule, generic
-MCP-compatible agent, terminal fallback, and chatbot text.
-
-For Codex, Hub View can be a little more direct. When it knows the project
-folder, it shows the target `AGENTS.md` file, previews the block, and can
-install it after an explicit local click. The copyable terminal command remains
-available as a fallback.
-
-Optional: export the Markdown projection manually if you want to inspect the
-generated files:
-
-```bash
-.venv/bin/python -m agent_hub.cli export
-```
-
-## Important Note About Startup Paths
-
-`scripts/db_start_public_demo.sh` is the public sample path.
-
-`scripts/db_start.sh` reflects the maintainer's own operator workflow and loads
-maintainer-local working seeds. It is useful for real daily operations, but not
-the recommended public preview path.
+`scripts/db_start.sh` is the maintainer local ops path. It loads
+maintainer-local working seeds and is not the recommended public preview path.

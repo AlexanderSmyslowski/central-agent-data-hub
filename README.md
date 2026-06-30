@@ -95,7 +95,9 @@ flowchart TD
 
 ## Public Quickstart
 
-For the public demo path, start from a fresh clone and run one script:
+Requirements: Python 3.11+, Docker, and Docker Compose. Start Docker first.
+
+For the neutral public demo, run one script:
 
 ```bash
 git clone https://github.com/AlexanderSmyslowski/central-agent-data-hub.git
@@ -108,57 +110,37 @@ The script creates `.venv` if needed, installs or reuses the local CLI, creates
 database, runs the public demo check, then starts Hub View and prints the local
 URL to open. It does not overwrite an existing `.env`.
 
-The demo includes one neutral suggested memory change in Review Inbox so the
-review flow is visible. The one-command path uses `demo-reviewer` only for
-local demo attribution; this is not authentication and is not written to
-`.env`.
+In the first ten minutes, check only this path:
 
-For a non-blocking check without starting Hub View:
+- open the printed Hub View URL
+- open the demo project
+- review the one neutral suggested memory change in Review Inbox
+- prepare one agent handoff from the demo project
+- run `agent-hub doctor` if the local Hub appears offline
+
+The one-command path uses `demo-reviewer` only for local demo attribution; this
+is not authentication and is not written to `.env`.
+
+For a step-by-step walkthrough, see
+[`docs/public/first-run-demo-session.md`](docs/public/first-run-demo-session.md).
+
+Other first-run modes:
 
 ```bash
 scripts/first_run_demo.sh --no-hub-view
-```
-
-To inspect the demo from a phone on the same trusted Wi-Fi:
-
-```bash
 scripts/first_run_demo.sh --mobile
 ```
 
-This prints a local network URL for the phone. Mobile preview is for reading
-and orientation; Hub View disables Review Inbox and Codex setup writes when it
-is not bound to loopback. Direct non-loopback Hub View starts require an
-explicit `--allow-lan-read` confirmation because they expose reviewed memory
-read-only on the local network.
+Mobile preview is for reading and orientation on a trusted Wi-Fi or local
+network; Hub View disables Review Inbox and Codex setup writes when it is not
+bound to loopback. Direct non-loopback Hub View starts require
+`--allow-lan-read`.
 
-Manual path:
-
-```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install -e .
-cp .env.example .env
-scripts/db_start_public_demo.sh
-scripts/smoke_public_demo.sh
-AGENT_HUB_PUBLIC_DEMO=1 AGENT_HUB_REVIEWERS=demo-reviewer HUB_VIEW_REVIEWER=demo-reviewer scripts/hub_view.sh
-```
-
-For a later guided local operator setup with calm defaults, run:
+Troubleshooting:
 
 ```bash
-agent-hub setup
+agent-hub doctor
 ```
-
-The setup assistant is optional and is not required for the public demo.
-
-The public demo database path can also be started directly:
-
-```bash
-scripts/db_start_public_demo.sh
-```
-
-This path forces a separate local demo database (`agent_hub_demo` by default).
-It ignores `DATABASE_URL` from `.env` for the demo process so a maintainer's
-configured working database cannot be migrated or seeded by a public demo start.
 
 Hub View is a local review surface, not the operational source of truth. The
 interface can be switched between English and German; stored memory stays in
@@ -471,7 +453,9 @@ volumes, or alter Hub memory rows.
 
 - [Public overview](docs/public/agent-data-hub-overview.md)
 - [Public getting started](docs/public/getting-started.md)
+- [First-run demo session](docs/public/first-run-demo-session.md)
 - [Hub View app roadmap](docs/hub-view-app-roadmap.md)
+- [v0.1.13 release notes](docs/public/v0.1.13-release-notes.md)
 - [v0.1.12 release notes](docs/public/v0.1.12-release-notes.md)
 - [v0.1.11 release notes](docs/public/v0.1.11-release-notes.md)
 - [v0.1.10 release notes](docs/public/v0.1.10-release-notes.md)

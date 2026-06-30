@@ -162,6 +162,27 @@ def test_v019_release_notes_describe_memory_explorer() -> None:
     assert "visible reviewed memory on the page" in protocol
 
 
+def test_v013_release_notes_describe_first_run_compression() -> None:
+    readme = read_script("README.md")
+    notes = read_script("docs/public/v0.1.13-release-notes.md")
+    getting_started = read_script("docs/public/getting-started.md")
+    demo_session = read_script("docs/public/first-run-demo-session.md")
+
+    assert "[v0.1.13 release notes](docs/public/v0.1.13-release-notes.md)" in readme
+    assert "[v0.1.13 release notes]" in readme.split("[v0.1.12 release notes]")[0]
+    assert "[First-run demo session](docs/public/first-run-demo-session.md)" in readme
+    assert "Agent Data Hub v0.1.13" in notes
+    assert "Public First-Run Compression" in notes
+    assert "Local Ops Reliability" in notes
+    assert "agent-hub doctor" in notes
+    assert "scripts/db_recover.sh --apply" in notes
+    assert "no automatic recovery without explicit `--apply`" in notes
+    assert "What To Check First" in getting_started
+    assert "[`first-run-demo-session.md`](first-run-demo-session.md)" in getting_started
+    assert "What A Successful First Run Proves" in demo_session
+    assert "It does not prove hosted deployment" in demo_session
+
+
 def test_hub_view_template_is_split_into_view_partials() -> None:
     page = read_script("templates/hub_view/page.html")
     base_css = read_script("templates/hub_view/static/base.css")
@@ -238,8 +259,8 @@ def test_package_version_is_ready_for_next_public_patch_release() -> None:
     checklist = read_script("docs/public/release-checklist.md")
     readme = read_script("README.md")
 
-    assert 'version = "0.1.12"' in pyproject
-    assert "[v0.1.12 release notes](docs/public/v0.1.12-release-notes.md)" in readme
+    assert 'version = "0.1.13"' in pyproject
+    assert "[v0.1.13 release notes](docs/public/v0.1.13-release-notes.md)" in readme
     assert "version` matches the tag" in checklist
     assert "Do not move an already published tag" in checklist
     assert "[Release checklist](docs/public/release-checklist.md)" in readme
@@ -599,6 +620,8 @@ def test_first_run_demo_stays_public_and_docs_reference_it() -> None:
 
     assert "scripts/first_run_demo.sh" in readme
     assert "scripts/first_run_demo.sh" in getting_started
+    assert "first-run-demo-session.md" in readme
+    assert "first-run-demo-session.md" in getting_started
     assert "installs or reuses the local CLI" in readme
     assert "installs or reuses the local CLI" in getting_started
     assert "one neutral suggested memory change" in readme
