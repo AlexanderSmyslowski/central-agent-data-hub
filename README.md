@@ -116,7 +116,7 @@ In the first ten minutes, check only this path:
 - open the demo project
 - review the one neutral suggested memory change in Review Inbox
 - prepare one agent handoff from the demo project
-- run `agent-hub doctor` if the local Hub appears offline
+- run `scripts/db_doctor.sh --public-demo` if the demo Hub appears offline
 
 The one-command path uses `demo-reviewer` only for local demo attribution; this
 is not authentication and is not written to `.env`.
@@ -139,7 +139,7 @@ bound to loopback. Direct non-loopback Hub View starts require
 Troubleshooting:
 
 ```bash
-agent-hub doctor
+scripts/db_doctor.sh --public-demo
 ```
 
 Hub View is a local review surface, not the operational source of truth. The
@@ -435,6 +435,10 @@ seed boundary is documented in [`seed/README.md`](seed/README.md).
 If the local Hub appears offline, diagnose it before restarting random pieces:
 
 ```bash
+# Public demo path:
+scripts/db_doctor.sh --public-demo
+
+# Configured operator path:
 agent-hub doctor
 ```
 
@@ -456,6 +460,7 @@ volumes, or alter Hub memory rows.
 - [Public getting started](docs/public/getting-started.md)
 - [First-run demo session](docs/public/first-run-demo-session.md)
 - [Hub View app roadmap](docs/hub-view-app-roadmap.md)
+- [v0.1.15 release notes](docs/public/v0.1.15-release-notes.md)
 - [v0.1.14 release notes](docs/public/v0.1.14-release-notes.md)
 - [v0.1.13 release notes](docs/public/v0.1.13-release-notes.md)
 - [v0.1.12 release notes](docs/public/v0.1.12-release-notes.md)

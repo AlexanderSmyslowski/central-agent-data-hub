@@ -1,25 +1,48 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# shellcheck disable=SC1091
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/db_common.sh"
+PUBLIC_DEMO=0
 
 usage() {
   cat <<'EOF'
-Usage: scripts/db_doctor.sh
+Usage: scripts/db_doctor.sh [--public-demo]
 
 Diagnoses the local Agent Data Hub Postgres runtime without writing data.
 
 The doctor checks Docker, the compose service, the configured container and
 volume, Postgres readiness, recent logs, and the normal agent-hub status/check
 commands when the database is reachable.
+
+Options:
+  --public-demo  Diagnose the isolated public demo database instead of the
+                 configured operator database.
 EOF
 }
 
-if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
-  usage
-  exit 0
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --public-demo)
+      PUBLIC_DEMO=1
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Error: unknown argument: $1" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+done
+
+if [[ "$PUBLIC_DEMO" -eq 1 ]]; then
+  export AGENT_HUB_PUBLIC_DEMO=1
 fi
+
+# shellcheck disable=SC1091
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/db_common.sh"
 
 healthy=1
 operational_issue=0
@@ -44,14 +67,14 @@ echo
 if ! command -v docker >/dev/null 2>&1; then
   echo "Docker: error (docker command not found)"
   echo
-  echo "Recovery hint: install or start Docker Desktop, then rerun agent-hub doctor."
+  echo "Recovery hint: install or start Docker Desktop, then rerun this doctor command."
   exit 2
 fi
 
 if ! run_with_timeout "$AGENT_HUB_DOCKER_TIMEOUT_SECONDS" docker info >/dev/null 2>&1; then
   echo "Docker: error (not responding within ${AGENT_HUB_DOCKER_TIMEOUT_SECONDS}s)"
   echo
-  echo "Recovery hint: restart Docker Desktop, then rerun agent-hub doctor."
+  echo "Recovery hint: restart Docker Desktop, then rerun this doctor command."
   exit 2
 fi
 echo "Docker: ok"

@@ -212,6 +212,22 @@ def test_v014_release_notes_describe_seed_boundary_polish() -> None:
     assert "no new Hub-memory write path" in notes
 
 
+def test_v015_release_notes_describe_public_demo_doctor_path() -> None:
+    readme = read_script("README.md")
+    notes = read_script("docs/public/v0.1.15-release-notes.md")
+
+    assert "[v0.1.15 release notes](docs/public/v0.1.15-release-notes.md)" in readme
+    assert "[v0.1.15 release notes]" in readme.split("[v0.1.14 release notes]")[0]
+    assert "Agent Data Hub v0.1.15" in notes
+    assert "public-demo reliability release" in notes
+    assert "scripts/db_doctor.sh --public-demo" in notes
+    assert "scripts/first_run_demo.sh" in notes
+    assert "configured operator doctor path" in notes
+    assert "no schema change" in notes
+    assert "no migration" in notes
+    assert "no new Hub-memory write path" in notes
+
+
 def test_hub_view_template_is_split_into_view_partials() -> None:
     page = read_script("templates/hub_view/page.html")
     base_css = read_script("templates/hub_view/static/base.css")
@@ -288,8 +304,8 @@ def test_package_version_is_ready_for_next_public_patch_release() -> None:
     checklist = read_script("docs/public/release-checklist.md")
     readme = read_script("README.md")
 
-    assert 'version = "0.1.14"' in pyproject
-    assert "[v0.1.14 release notes](docs/public/v0.1.14-release-notes.md)" in readme
+    assert 'version = "0.1.15"' in pyproject
+    assert "[v0.1.15 release notes](docs/public/v0.1.15-release-notes.md)" in readme
     assert "version` matches the tag" in checklist
     assert "Do not move an already published tag" in checklist
     assert "[Release checklist](docs/public/release-checklist.md)" in readme
@@ -315,6 +331,8 @@ def test_preflight_uses_bounded_docker_checks() -> None:
     assert "This script will not delete local Docker volumes automatically." in common
     assert "agent-hub doctor" in common
     assert "scripts/db_doctor.sh" in common
+    assert "scripts/db_doctor.sh --public-demo" in common
+    assert "Use the same AGENT_HUB_* overrides if this demo run used any." in common
     assert "scripts/db_recover.sh --apply" in common
     assert "AGENT_HUB_COMPOSE_PROJECT_NAME=adh-demo-fresh" in common
     assert 'docker_quick logs --tail 40 "$DB_CONTAINER"' in common
@@ -350,6 +368,11 @@ def test_db_doctor_and_recover_are_safe_local_ops_paths() -> None:
     assert os.access(ROOT / "scripts/db_recover.sh", os.X_OK)
 
     assert "Central Agent Data Hub doctor" in doctor
+    assert "--public-demo" in doctor
+    assert "export AGENT_HUB_PUBLIC_DEMO=1" in doctor
+    assert doctor.index("export AGENT_HUB_PUBLIC_DEMO=1") < doctor.index(
+        'source "$(cd "$(dirname "${BASH_SOURCE[0]}")"'
+    )
     assert "bogus data in lock file" in doctor
     assert "scripts/db_recover.sh --apply" in doctor
     assert "run_agent_hub status" in doctor
@@ -378,6 +401,21 @@ def test_db_doctor_and_recover_are_safe_local_ops_paths() -> None:
     assert "drop databases" in boundaries
     assert "write Hub" in boundaries
     assert "doctor, migration" in architecture
+
+
+def test_public_demo_docs_use_demo_doctor_not_operator_doctor_for_first_run() -> None:
+    readme = read_script("README.md")
+    getting_started = read_script("docs/public/getting-started.md")
+    demo_session = read_script("docs/public/first-run-demo-session.md")
+
+    assert "run `scripts/db_doctor.sh --public-demo` if the demo Hub appears offline" in readme
+    assert "scripts/db_doctor.sh --public-demo" in getting_started
+    assert "scripts/db_doctor.sh --public-demo" in demo_session
+
+    public_quickstart = readme.split("## Public Quickstart", 1)[1].split("## Agent Workflow", 1)[0]
+    assert "agent-hub doctor" not in public_quickstart
+    assert "agent-hub doctor\n# or, from this checkout:" not in getting_started
+    assert "agent-hub doctor\n# or, from this checkout:" not in demo_session
 
 
 def test_db_status_uses_fast_healthcheck_paths() -> None:

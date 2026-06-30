@@ -191,8 +191,13 @@ print_postgres_start_failure() {
   echo "This script will not delete local Docker volumes automatically." >&2
   echo "Diagnose the local database runtime with:" >&2
   echo >&2
-  echo "  agent-hub doctor" >&2
-  echo "  scripts/db_doctor.sh" >&2
+  if [[ "$PUBLIC_DEMO_REQUESTED" == "1" ]]; then
+    echo "  scripts/db_doctor.sh --public-demo" >&2
+    echo "  Use the same AGENT_HUB_* overrides if this demo run used any." >&2
+  else
+    echo "  agent-hub doctor" >&2
+    echo "  scripts/db_doctor.sh" >&2
+  fi
   echo >&2
   echo "If doctor reports stale Postgres lock files, run the guarded recovery path:" >&2
   echo >&2

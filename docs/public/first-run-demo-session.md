@@ -74,10 +74,11 @@ The first run should make these boundaries visible:
 Run:
 
 ```bash
-agent-hub doctor
-# or, from this checkout:
-.venv/bin/python -m agent_hub.cli doctor
+scripts/db_doctor.sh --public-demo
 ```
+
+That command diagnoses the isolated public demo database. `agent-hub doctor`
+diagnoses the configured operator database instead.
 
 For known local Docker/Postgres stale-lock failures, the guarded recovery path
 is:

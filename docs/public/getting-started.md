@@ -41,10 +41,12 @@ For the same path with expected screen-by-screen observations, see
 Run the local doctor before changing Docker state by hand:
 
 ```bash
-agent-hub doctor
-# or, from this checkout:
-.venv/bin/python -m agent_hub.cli doctor
+scripts/db_doctor.sh --public-demo
 ```
+
+That command diagnoses the same isolated public demo database used by the
+first-run script. `agent-hub doctor` is still available for the configured
+operator database.
 
 If the doctor reports a known stale Postgres lock-file problem, use:
 
