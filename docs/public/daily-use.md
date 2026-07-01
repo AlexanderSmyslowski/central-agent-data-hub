@@ -112,6 +112,15 @@ For the public demo database:
 scripts/db_doctor.sh --public-demo
 ```
 
+For the public demo path as a whole:
+
+```bash
+scripts/smoke_public_demo.sh
+```
+
+The smoke checks status, consistency, prepare context with Context Trail and
+Known Gaps, deterministic OKF export, Markdown export, and Hub View rendering.
+
 Doctor and recovery paths are local operator tools. They should explain what is
 wrong before anything changes.
 

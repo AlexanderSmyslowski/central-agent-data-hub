@@ -17,8 +17,9 @@ run_agent_hub export >/dev/null
 
 demo_project_export="$OBSIDIAN_EXPORT_DIR/Projects/central-agent-data-hub-demo.md"
 demo_compiled_export="$OBSIDIAN_EXPORT_DIR/Compiled/central-agent-data-hub-demo.md"
+smoke_tmp_dir="$(mktemp -d)"
 hub_view_smoke_port="${HUB_VIEW_SMOKE_PORT:-9876}"
-hub_view_log="$(mktemp)"
+hub_view_log="$smoke_tmp_dir/hub-view.log"
 hub_view_pid=""
 
 cleanup() {
@@ -26,7 +27,7 @@ cleanup() {
     kill "$hub_view_pid" >/dev/null 2>&1 || true
     wait "$hub_view_pid" >/dev/null 2>&1 || true
   fi
-  rm -f "$hub_view_log"
+  rm -rf "$smoke_tmp_dir"
 }
 trap cleanup EXIT
 
@@ -37,6 +38,93 @@ fi
 
 if [[ ! -f "$demo_compiled_export" ]]; then
   echo "Error: missing demo compiled export: $demo_compiled_export" >&2
+  exit 1
+fi
+
+prepare_json="$smoke_tmp_dir/prepare.json"
+prepare_markdown="$smoke_tmp_dir/prepare.md"
+run_agent_hub prepare \
+  --project central-agent-data-hub-demo \
+  --task "review public demo reliability" \
+  --format json >"$prepare_json"
+run_agent_hub prepare \
+  --project central-agent-data-hub-demo \
+  --task "review public demo reliability" >"$prepare_markdown"
+
+"$PYTHON_BIN" - "$prepare_json" "$prepare_markdown" <<'PY'
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+prepare_json = Path(sys.argv[1])
+prepare_markdown = Path(sys.argv[2])
+payload = json.loads(prepare_json.read_text(encoding="utf-8"))
+markdown = prepare_markdown.read_text(encoding="utf-8")
+
+errors: list[str] = []
+
+def require(condition: bool, message: str) -> None:
+    if not condition:
+        errors.append(message)
+
+trail = payload.get("context_trail") or {}
+gaps = payload.get("gaps") or {}
+summary = gaps.get("summary") if isinstance(gaps, dict) else {}
+task_selection = trail.get("task_selection") if isinstance(trail, dict) else {}
+
+require(payload.get("context_pack_version") == 1, "prepare context version missing")
+require(
+    (payload.get("project") or {}).get("slug") == "central-agent-data-hub-demo",
+    "prepare project slug mismatch",
+)
+require(payload.get("task") == "review public demo reliability", "prepare task mismatch")
+require(bool(trail.get("sources")), "prepare context trail has no sources")
+require(trail.get("gap_summary") == summary, "prepare gap summary mismatch")
+require(
+    (summary.get("thresholds") or {}).get("stale_after_days") == 42,
+    "prepare stale threshold missing",
+)
+require(
+    task_selection.get("mode") == "deterministic_full_text",
+    "prepare task selection mode mismatch",
+)
+require("# Agent Context Pack" in markdown, "prepare markdown missing title")
+require("## ADH Context Loaded" in markdown, "prepare markdown missing receipt")
+require("## Context Trail" in markdown, "prepare markdown missing context trail")
+require("## Known Gaps" in markdown, "prepare markdown missing known gaps")
+
+if errors:
+    print("Error: public demo prepare smoke failed:", file=sys.stderr)
+    for error in errors:
+        print(f"- {error}", file=sys.stderr)
+    raise SystemExit(1)
+PY
+
+okf_dir_one="$smoke_tmp_dir/okf-one"
+okf_dir_two="$smoke_tmp_dir/okf-two"
+run_agent_hub export-okf --project central-agent-data-hub-demo --out "$okf_dir_one" >/dev/null
+run_agent_hub export-okf --project central-agent-data-hub-demo --out "$okf_dir_two" >/dev/null
+
+if ! diff -ru "$okf_dir_one" "$okf_dir_two" >/dev/null; then
+  echo "Error: OKF export is not byte-stable for identical demo input." >&2
+  diff -ru "$okf_dir_one" "$okf_dir_two" >&2 || true
+  exit 1
+fi
+
+if [[ ! -f "$okf_dir_one/index.md" || ! -f "$okf_dir_one/log.md" ]]; then
+  echo "Error: OKF export did not write index.md and log.md." >&2
+  exit 1
+fi
+
+if ! grep -q "Snapshot timestamp:" "$okf_dir_one/index.md"; then
+  echo "Error: OKF export index is missing the stable snapshot timestamp." >&2
+  exit 1
+fi
+
+if grep -q "Generated at" "$okf_dir_one/index.md" "$okf_dir_one/log.md"; then
+  echo "Error: OKF export contains a wall-clock generated timestamp." >&2
   exit 1
 fi
 

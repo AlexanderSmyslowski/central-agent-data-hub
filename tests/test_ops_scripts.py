@@ -260,6 +260,24 @@ def test_v017_release_notes_describe_daily_use_path() -> None:
     assert "no new Hub-memory write path" in notes
 
 
+def test_v018_release_notes_describe_operational_reliability_smoke() -> None:
+    readme = read_script("README.md")
+    notes = read_script("docs/public/v0.1.18-release-notes.md")
+
+    assert "[v0.1.18 release notes](docs/public/v0.1.18-release-notes.md)" in readme
+    assert "[v0.1.18 release notes]" in readme.split("[v0.1.17 release notes]")[0]
+    assert "Agent Data Hub v0.1.18" in notes
+    assert "operational reliability release" in notes
+    assert "scripts/smoke_public_demo.sh" in notes
+    assert "demo `prepare` path" in notes
+    assert "Context Trail" in notes
+    assert "Known Gaps" in notes
+    assert "exports OKF twice" in notes
+    assert "stable OKF preview bundle" in notes
+    assert "no schema change" in notes
+    assert "no new Hub-memory write path" in notes
+
+
 def test_hub_view_template_is_split_into_view_partials() -> None:
     page = read_script("templates/hub_view/page.html")
     base_css = read_script("templates/hub_view/static/base.css")
@@ -336,8 +354,8 @@ def test_package_version_is_ready_for_next_public_patch_release() -> None:
     checklist = read_script("docs/public/release-checklist.md")
     readme = read_script("README.md")
 
-    assert 'version = "0.1.17"' in pyproject
-    assert "[v0.1.17 release notes](docs/public/v0.1.17-release-notes.md)" in readme
+    assert 'version = "0.1.18"' in pyproject
+    assert "[v0.1.18 release notes](docs/public/v0.1.18-release-notes.md)" in readme
     assert "version` matches the tag" in checklist
     assert "Do not move an already published tag" in checklist
     assert "[Release checklist](docs/public/release-checklist.md)" in readme
@@ -768,6 +786,9 @@ def test_public_daily_use_path_bridges_demo_to_real_project_loop() -> None:
     assert "scripts/memory_receipt.sh --project <project-slug> --since 24h" in daily_use
     assert "agent-hub doctor" in daily_use
     assert "scripts/db_doctor.sh --public-demo" in daily_use
+    assert "scripts/smoke_public_demo.sh" in daily_use
+    assert "prepare context with Context Trail and" in daily_use
+    assert "deterministic OKF export" in daily_use
     assert "there is no time-based auto-accept and no silent promotion" in daily_use
     assert "The goal is not to remember everything" in daily_use
 
@@ -837,6 +858,17 @@ def test_public_demo_smoke_verifies_demo_exports() -> None:
     assert 'run_agent_hub compile --project central-agent-data-hub-demo --limit 4' in script
     assert 'run_agent_hub quality --project central-agent-data-hub-demo' in script
     assert 'run_agent_hub export >/dev/null' in script
+    assert "run_agent_hub prepare" in script
+    assert '--task "review public demo reliability"' in script
+    assert "--format json" in script
+    assert "context_pack_version" in script
+    assert "context_trail" in script
+    assert "gap_summary" in script
+    assert "deterministic_full_text" in script
+    assert "## Known Gaps" in script
+    assert "run_agent_hub export-okf --project central-agent-data-hub-demo" in script
+    assert 'diff -ru "$okf_dir_one" "$okf_dir_two"' in script
+    assert "Generated at" in script
     assert 'central-agent-data-hub-demo.md' in script
     assert 'Compiled/central-agent-data-hub-demo.md' in script
     assert 'HUB_VIEW_SMOKE_PORT:-9876' in script
