@@ -146,6 +146,25 @@ Hub View is a local review surface, not the operational source of truth. The
 interface can be switched between English and German; stored memory stays in
 its original language.
 
+## After The Demo: Daily Local Use
+
+The public demo proves the shape. Daily use starts when you register a real
+local project, install or copy the repo-local agent rule, and run one reviewed
+work loop:
+
+```bash
+scripts/register_project.sh --repo /path/to/project --slug <project-slug> --name "Project Name"
+scripts/agent_start.sh --project <project-slug> --query "<current focus>" --review
+# work inside that project boundary
+scripts/agent_finish.sh --project <project-slug> --review
+```
+
+Use Hub View as the local human workbench: inspect reviewed memory, review
+drafts, and prepare visible agent handoffs. Use the CLI/MCP paths for exact
+agent automation. See
+[`docs/public/daily-use.md`](docs/public/daily-use.md) for the canonical daily
+workflow.
+
 ## Agent Workflow
 
 Hub View can make the agent handoff visible from the UI. Open a project, use
@@ -458,8 +477,10 @@ volumes, or alter Hub memory rows.
 
 - [Public overview](docs/public/agent-data-hub-overview.md)
 - [Public getting started](docs/public/getting-started.md)
+- [Daily local use](docs/public/daily-use.md)
 - [First-run demo session](docs/public/first-run-demo-session.md)
 - [Hub View app roadmap](docs/hub-view-app-roadmap.md)
+- [v0.1.17 release notes](docs/public/v0.1.17-release-notes.md)
 - [v0.1.16 release notes](docs/public/v0.1.16-release-notes.md)
 - [v0.1.15 release notes](docs/public/v0.1.15-release-notes.md)
 - [v0.1.14 release notes](docs/public/v0.1.14-release-notes.md)

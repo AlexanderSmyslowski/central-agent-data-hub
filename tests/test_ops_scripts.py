@@ -244,6 +244,22 @@ def test_v016_release_notes_describe_root_aware_offline_hints() -> None:
     assert "no automatic recovery" in notes
 
 
+def test_v017_release_notes_describe_daily_use_path() -> None:
+    readme = read_script("README.md")
+    notes = read_script("docs/public/v0.1.17-release-notes.md")
+
+    assert "[v0.1.17 release notes](docs/public/v0.1.17-release-notes.md)" in readme
+    assert "[v0.1.17 release notes]" in readme.split("[v0.1.16 release notes]")[0]
+    assert "Agent Data Hub v0.1.17" in notes
+    assert "product-coherence documentation release" in notes
+    assert "docs/public/daily-use.md" in notes
+    assert "public demo first" in notes
+    assert "registered project" in notes
+    assert "visible agent handoff" in notes
+    assert "no schema change" in notes
+    assert "no new Hub-memory write path" in notes
+
+
 def test_hub_view_template_is_split_into_view_partials() -> None:
     page = read_script("templates/hub_view/page.html")
     base_css = read_script("templates/hub_view/static/base.css")
@@ -320,8 +336,8 @@ def test_package_version_is_ready_for_next_public_patch_release() -> None:
     checklist = read_script("docs/public/release-checklist.md")
     readme = read_script("README.md")
 
-    assert 'version = "0.1.16"' in pyproject
-    assert "[v0.1.16 release notes](docs/public/v0.1.16-release-notes.md)" in readme
+    assert 'version = "0.1.17"' in pyproject
+    assert "[v0.1.17 release notes](docs/public/v0.1.17-release-notes.md)" in readme
     assert "version` matches the tag" in checklist
     assert "Do not move an already published tag" in checklist
     assert "[Release checklist](docs/public/release-checklist.md)" in readme
@@ -712,8 +728,9 @@ def test_first_run_demo_stays_public_and_docs_reference_it() -> None:
     script = read_script("scripts/first_run_demo.sh")
     readme = read_script("README.md")
     getting_started = read_script("docs/public/getting-started.md")
+    daily_use = read_script("docs/public/daily-use.md")
 
-    for text in (script, readme, getting_started):
+    for text in (script, readme, getting_started, daily_use):
         assert "commcats-de" not in text
         assert "the-one-catering" not in text
         assert "lamour" not in text
@@ -730,6 +747,29 @@ def test_first_run_demo_stays_public_and_docs_reference_it() -> None:
     assert "demo-reviewer" in getting_started
     assert "not authentication" in readme
     assert "not authentication" in getting_started
+
+
+def test_public_daily_use_path_bridges_demo_to_real_project_loop() -> None:
+    readme = read_script("README.md")
+    getting_started = read_script("docs/public/getting-started.md")
+    daily_use = read_script("docs/public/daily-use.md")
+
+    assert "[`docs/public/daily-use.md`](docs/public/daily-use.md)" in readme
+    assert "[`daily-use.md`](daily-use.md)" in getting_started
+    assert "## After The Demo: Daily Local Use" in readme
+    assert "register project -> connect agent -> start with reviewed context" in daily_use
+    assert "scripts/register_project.sh" in daily_use
+    assert "scripts/install_repo_agent_memory.sh" in daily_use
+    assert "agent-hub mcp-serve" in daily_use
+    assert "scripts/agent_start.sh" in daily_use
+    assert "agent-hub prepare" in daily_use
+    assert "agent-hub inbox --accept <draft-id> --reviewer alice" in daily_use
+    assert "scripts/agent_finish.sh --project <project-slug> --review" in daily_use
+    assert "scripts/memory_receipt.sh --project <project-slug> --since 24h" in daily_use
+    assert "agent-hub doctor" in daily_use
+    assert "scripts/db_doctor.sh --public-demo" in daily_use
+    assert "there is no time-based auto-accept and no silent promotion" in daily_use
+    assert "The goal is not to remember everything" in daily_use
 
 
 def test_public_demo_mode_forces_demo_database_when_database_url_is_set() -> None:

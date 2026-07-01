@@ -101,6 +101,10 @@ agent-hub setup
 ```
 
 The setup assistant is optional and is not required for the public demo.
+After the demo makes sense, continue with
+[`daily-use.md`](daily-use.md). It describes the normal local loop for a real
+project: register the repo, connect an agent, start work with reviewed context,
+review drafts explicitly, and finish with an auditable handoff.
 
 ## Startup Boundary
 
