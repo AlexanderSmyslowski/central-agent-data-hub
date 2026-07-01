@@ -278,6 +278,23 @@ def test_v018_release_notes_describe_operational_reliability_smoke() -> None:
     assert "no new Hub-memory write path" in notes
 
 
+def test_v019_release_notes_describe_fresh_clone_ci_drill() -> None:
+    readme = read_script("README.md")
+    notes = read_script("docs/public/v0.1.19-release-notes.md")
+
+    assert "[v0.1.19 release notes](docs/public/v0.1.19-release-notes.md)" in readme
+    assert "[v0.1.19 release notes]" in readme.split("[v0.1.18 release notes]")[0]
+    assert "Agent Data Hub v0.1.19" in notes
+    assert "fresh-clone public demo job" in notes
+    assert "documented manual public demo path" in notes
+    assert "copy `.env.example`" in notes
+    assert "public demo doctor" in notes
+    assert "public demo smoke" in notes
+    assert "clean Ubuntu runner" in notes
+    assert "no schema change" in notes
+    assert "no new product feature" in notes
+
+
 def test_hub_view_template_is_split_into_view_partials() -> None:
     page = read_script("templates/hub_view/page.html")
     base_css = read_script("templates/hub_view/static/base.css")
@@ -354,8 +371,8 @@ def test_package_version_is_ready_for_next_public_patch_release() -> None:
     checklist = read_script("docs/public/release-checklist.md")
     readme = read_script("README.md")
 
-    assert 'version = "0.1.18"' in pyproject
-    assert "[v0.1.18 release notes](docs/public/v0.1.18-release-notes.md)" in readme
+    assert 'version = "0.1.19"' in pyproject
+    assert "[v0.1.19 release notes](docs/public/v0.1.19-release-notes.md)" in readme
     assert "version` matches the tag" in checklist
     assert "Do not move an already published tag" in checklist
     assert "[Release checklist](docs/public/release-checklist.md)" in readme
@@ -368,6 +385,22 @@ def test_ci_uses_node24_github_actions() -> None:
     assert "actions/setup-python@v6" in ci
     assert "actions/checkout@v4" not in ci
     assert "actions/setup-python@v5" not in ci
+
+
+def test_ci_runs_fresh_clone_public_demo_drill() -> None:
+    ci = read_script(".github/workflows/ci.yml")
+
+    assert "fresh-clone-public-demo:" in ci
+    assert 'python-version: "3.12"' in ci
+    assert "Run documented public demo path" in ci
+    assert "python -m venv .venv" in ci
+    assert ".venv/bin/python -m pip install -e ." in ci
+    assert "cp .env.example .env" in ci
+    assert "scripts/db_start_public_demo.sh" in ci
+    assert "scripts/db_doctor.sh --public-demo" in ci
+    assert "scripts/smoke_public_demo.sh" in ci
+    assert "AGENT_HUB_DOCKER_TIMEOUT_SECONDS" in ci
+    assert "AGENT_HUB_DB_START_TIMEOUT_SECONDS" in ci
 
 
 def test_preflight_uses_bounded_docker_checks() -> None:

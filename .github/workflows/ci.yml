@@ -47,3 +47,25 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:ci-password@localhost:55432/agent_hub
         run: pytest -q
+
+  fresh-clone-public-demo:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Run documented public demo path
+        env:
+          AGENT_HUB_DOCKER_TIMEOUT_SECONDS: "30"
+          AGENT_HUB_DB_START_TIMEOUT_SECONDS: "90"
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install -e .
+          cp .env.example .env
+          scripts/db_start_public_demo.sh
+          scripts/db_doctor.sh --public-demo
+          scripts/smoke_public_demo.sh

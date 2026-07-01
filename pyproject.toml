@@ -1,6 +1,6 @@
 [project]
 name = "central-agent-data-hub"
-version = "0.1.18"
+version = "0.1.19"
 description = "Verified project memory for agentic work."
 license = {file = "LICENSE"}
 readme = "README.md"
