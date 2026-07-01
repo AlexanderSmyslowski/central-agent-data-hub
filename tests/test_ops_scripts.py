@@ -327,6 +327,15 @@ def test_package_version_is_ready_for_next_public_patch_release() -> None:
     assert "[Release checklist](docs/public/release-checklist.md)" in readme
 
 
+def test_ci_uses_node24_github_actions() -> None:
+    ci = read_script(".github/workflows/ci.yml")
+
+    assert "actions/checkout@v7" in ci
+    assert "actions/setup-python@v6" in ci
+    assert "actions/checkout@v4" not in ci
+    assert "actions/setup-python@v5" not in ci
+
+
 def test_preflight_uses_bounded_docker_checks() -> None:
     common = read_script("scripts/db_common.sh")
     preflight = read_script("scripts/agent_preflight.sh")
