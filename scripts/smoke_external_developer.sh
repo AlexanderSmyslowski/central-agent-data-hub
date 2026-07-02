@@ -40,6 +40,8 @@ echo
 compose up -d "$DB_SERVICE"
 wait_for_postgres
 
+mkdir -p "$OBSIDIAN_EXPORT_DIR"
+
 echo "Resetting public schema in isolated external-developer demo database..."
 compose exec -T "$DB_SERVICE" \
   psql -v ON_ERROR_STOP=1 -U "$DB_USER" -d "$DB_NAME" \

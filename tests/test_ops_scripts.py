@@ -344,6 +344,7 @@ def test_ci_runs_external_developer_smoke() -> None:
 
     assert "agent_hub_external_dev_demo" in script
     assert "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;" in script
+    assert 'mkdir -p "$OBSIDIAN_EXPORT_DIR"' in script
     assert "agent_hub-external-developer-demo.dump" in script
     assert '"$ROOT_DIR/scripts/db_backup_health.sh" --require' in script
     assert "scripts/register_project.sh" in script
