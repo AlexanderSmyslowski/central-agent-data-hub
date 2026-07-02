@@ -1265,12 +1265,15 @@ def test_v07_definition_tracks_release_candidate_evidence() -> None:
 
 
 def test_v10_definition_tracks_local_reliability_end_goal() -> None:
+    ci = read_script(".github/workflows/ci.yml")
     readme = read_script("README.md")
     roadmap = read_script("ROADMAP.md")
     definition = read_script("docs/public/v1.0-definition.md")
     finish = read_script("scripts/agent_finish.sh")
     v1_readiness = read_script("scripts/v1_readiness_check.sh")
 
+    assert "v1 readiness contract" in ci
+    assert "scripts/v1_readiness_check.sh --contract-only" in ci
     assert "[`docs/public/v1.0-definition.md`](docs/public/v1.0-definition.md)" in readme
     assert "[v1.0 definition](docs/public/v1.0-definition.md)" in readme
     assert "docs/public/v1.0-definition.md" in roadmap

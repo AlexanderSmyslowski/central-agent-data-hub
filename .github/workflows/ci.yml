@@ -40,6 +40,9 @@ jobs:
       - name: Syntax check scripts
         run: bash -n scripts/*.sh
 
+      - name: v1 readiness contract
+        run: scripts/v1_readiness_check.sh --contract-only
+
       - name: Compile Python
         run: python -m compileall agent_hub
 
