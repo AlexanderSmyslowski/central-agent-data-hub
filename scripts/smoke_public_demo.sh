@@ -8,6 +8,7 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/db_common.sh"
 
 echo "Running public demo smoke..."
 
+mkdir -p "$OBSIDIAN_EXPORT_DIR"
 run_agent_hub status >/dev/null
 run_agent_hub check >/dev/null
 run_agent_hub brief --project central-agent-data-hub-demo --limit 4 >/dev/null

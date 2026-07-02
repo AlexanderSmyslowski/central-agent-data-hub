@@ -975,9 +975,13 @@ def test_public_demo_smoke_verifies_demo_exports() -> None:
     script = read_script("scripts/smoke_public_demo.sh")
 
     assert "AGENT_HUB_PUBLIC_DEMO=1" in script
+    assert script.index('mkdir -p "$OBSIDIAN_EXPORT_DIR"') < script.index(
+        "run_agent_hub status"
+    )
     assert 'run_agent_hub brief --project central-agent-data-hub-demo --limit 4' in script
     assert 'run_agent_hub compile --project central-agent-data-hub-demo --limit 4' in script
     assert 'run_agent_hub quality --project central-agent-data-hub-demo' in script
+    assert 'mkdir -p "$OBSIDIAN_EXPORT_DIR"' in script
     assert 'run_agent_hub export >/dev/null' in script
     assert "run_agent_hub prepare" in script
     assert '--task "review public demo reliability"' in script
