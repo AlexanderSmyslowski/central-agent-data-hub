@@ -49,6 +49,34 @@ run_step() {
   echo "ok: $title"
 }
 
+require_release_docker_runtime() {
+  echo "Release Docker runtime gate:"
+  if ! command -v docker >/dev/null 2>&1; then
+    echo "  Docker: error (docker command not found)" >&2
+    echo "  Recovery: install or start Docker Desktop, then rerun this release check." >&2
+    return 2
+  fi
+  if ! docker_quick info >/dev/null 2>&1; then
+    echo "  Docker: error (daemon did not answer within ${AGENT_HUB_DOCKER_TIMEOUT_SECONDS}s)" >&2
+    echo "  Recovery: restart Docker Desktop, then rerun this release check." >&2
+    echo "  Diagnose: $ROOT_DIR/scripts/db_doctor.sh" >&2
+    return 2
+  fi
+  if ! run_with_timeout "$AGENT_HUB_DOCKER_TIMEOUT_SECONDS" docker compose version >/dev/null 2>&1; then
+    echo "  Docker Compose: error (not available or not responding within ${AGENT_HUB_DOCKER_TIMEOUT_SECONDS}s)" >&2
+    echo "  Recovery: install/enable Docker Compose, then rerun this release check." >&2
+    echo "  Diagnose: $ROOT_DIR/scripts/db_doctor.sh" >&2
+    return 2
+  fi
+  echo "  Docker: ok"
+  echo "  Docker Compose: ok"
+}
+
+run_docker_step() {
+  require_release_docker_runtime
+  "$@"
+}
+
 run_python_tests() {
   (
     cd "$ROOT_DIR"
@@ -107,12 +135,12 @@ run_step "Git whitespace check" git -C "$ROOT_DIR" diff --check
 run_step "Shell syntax" bash -n "$ROOT_DIR"/scripts/*.sh
 run_step "Python compile" "$PYTHON_BIN" -m compileall "$ROOT_DIR/agent_hub"
 run_step "Python tests" run_python_tests
-run_step "Public demo startup" run_public_demo_start
-run_step "Public demo smoke" run_public_demo_smoke
-run_step "External-developer smoke" clean_demo_env "$ROOT_DIR/scripts/smoke_external_developer.sh"
-run_step "Trust-loop smoke" clean_demo_env "$ROOT_DIR/scripts/smoke_trust_loop.sh"
+run_step "Public demo startup" run_docker_step run_public_demo_start
+run_step "Public demo smoke" run_docker_step run_public_demo_smoke
+run_step "External-developer smoke" run_docker_step clean_demo_env "$ROOT_DIR/scripts/smoke_external_developer.sh"
+run_step "Trust-loop smoke" run_docker_step clean_demo_env "$ROOT_DIR/scripts/smoke_trust_loop.sh"
 run_step "Offline-agent smoke" clean_demo_env "$ROOT_DIR/scripts/smoke_agent_offline.sh"
-run_step "Upgrade drill" clean_demo_env "$ROOT_DIR/scripts/upgrade_drill.sh"
+run_step "Upgrade drill" run_docker_step clean_demo_env "$ROOT_DIR/scripts/upgrade_drill.sh"
 run_step "Agent Hub status" run_agent_hub status
 run_step "Agent Hub check" run_agent_hub check
 
