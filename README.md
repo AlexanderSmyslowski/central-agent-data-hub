@@ -52,7 +52,7 @@ destructive actions, and external publishing require explicit human approval.
 This repository should currently be read as an **early local-first technical
 preview**.
 
-The next milestone is defined narrowly in
+The early milestones are defined narrowly in
 [`docs/public/v0.2-definition.md`](docs/public/v0.2-definition.md): a reliable
 local reviewed-context loop, not a hosted product or broad automation platform.
 The following milestone is
@@ -67,6 +67,9 @@ one real local project and completing a reviewed context loop.
 The CLI-first bootstrap milestone is
 [`docs/public/v0.6-definition.md`](docs/public/v0.6-definition.md): registering
 that project through the installed `agent-hub` command.
+The release-candidate evidence milestone is
+[`docs/public/v0.7-definition.md`](docs/public/v0.7-definition.md): keeping the
+major public and operational loops visible as separate proofs before tagging.
 
 What is already real:
 
@@ -548,6 +551,7 @@ volumes, or alter Hub memory rows.
 - [v0.4 definition](docs/public/v0.4-definition.md)
 - [v0.5 definition](docs/public/v0.5-definition.md)
 - [v0.6 definition](docs/public/v0.6-definition.md)
+- [v0.7 definition](docs/public/v0.7-definition.md)
 - [Installation boundary](docs/public/installation.md)
 - [Trust model](docs/public/trust-model.md)
 - [Daily local use](docs/public/daily-use.md)

@@ -1131,6 +1131,33 @@ def test_v06_definition_tracks_cli_first_bootstrap_contract() -> None:
     assert "run_agent_hub register-project" in smoke
 
 
+def test_v07_definition_tracks_release_candidate_evidence() -> None:
+    readme = read_script("README.md")
+    roadmap = read_script("ROADMAP.md")
+    checklist = read_script("docs/public/release-checklist.md")
+    definition = read_script("docs/public/v0.7-definition.md")
+
+    assert "[`docs/public/v0.7-definition.md`](docs/public/v0.7-definition.md)" in readme
+    assert "[v0.7 definition](docs/public/v0.7-definition.md)" in readme
+    assert "docs/public/v0.7-definition.md" in roadmap
+    assert "# v0.7 Definition" in definition
+    assert "release candidate is evidence-led" in roadmap
+    assert "Release Candidate Loop" in definition
+    assert "scripts/smoke_public_demo.sh" in definition
+    assert "scripts/smoke_external_developer.sh" in definition
+    assert "scripts/smoke_trust_loop.sh" in definition
+    assert "scripts/smoke_agent_offline.sh" in definition
+    assert "scripts/upgrade_drill.sh" in definition
+    assert "agent-hub status" in definition
+    assert "agent-hub check" in definition
+    assert "A green unit-test" in definition
+    assert "not enough evidence for release readiness" in definition
+    assert "production authentication or roles" in definition
+    assert "write-capable MCP tools" in definition
+    assert "v0.7-definition.md" in checklist
+    assert "separate behavioral" in checklist
+
+
 def test_register_project_script_is_cli_compatibility_wrapper() -> None:
     script = read_script("scripts/register_project.sh")
 

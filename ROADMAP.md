@@ -57,6 +57,16 @@ loop.
 The v0.6 definition lives in `docs/public/v0.6-definition.md`. CI should keep
 the external-developer smoke on the CLI bootstrap path.
 
+## v0.7 Milestone Boundary
+
+v0.7 should mean a small public release candidate is evidence-led: fresh clone,
+public demo, first external project, trust loop, offline behavior, upgrade
+drill, status, and check are visible as separate proofs before tagging.
+
+The v0.7 definition lives in `docs/public/v0.7-definition.md`. CI should keep
+the behavioral smokes separate so release readiness is not reduced to unit
+tests alone.
+
 ## v0 Priorities
 
 1. Operational readiness
