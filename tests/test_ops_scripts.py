@@ -475,6 +475,28 @@ def test_installation_boundary_documents_checkout_as_installation_unit() -> None
     assert "requires an Agent Data Hub repository checkout" in system
 
 
+def test_v02_definition_keeps_milestone_scope_narrow_and_testable() -> None:
+    readme = read_script("README.md")
+    roadmap = read_script("ROADMAP.md")
+    definition = read_script("docs/public/v0.2-definition.md")
+
+    assert "[v0.2 definition](docs/public/v0.2-definition.md)" in readme
+    assert "docs/public/v0.2-definition.md" in roadmap
+    assert "reviewed context for humans and agents" in roadmap
+    assert "verified memory for agentic work" not in roadmap
+
+    assert "# v0.2 Definition" in definition
+    assert "reviewed context for humans and agents" in definition
+    assert "clone the repository, start the public demo" in definition
+    assert "`agent-hub prepare` produces a task-specific context pack" in definition
+    assert "Draft memory candidates stay outside reviewed memory" in definition
+    assert "fresh-clone public demo job" in definition
+    assert "baseline-to-head upgrade drill" in definition
+    assert "write-capable MCP tools" in definition
+    assert "non-checkout package installation as the main path" in definition
+    assert "Telegram or other chat adapters inside this repository" in definition
+
+
 def test_operator_notes_are_separated_from_public_path() -> None:
     operator_readme = read_script("docs/operator/README.md")
     workflow = read_script("docs/agent-workflow.md")

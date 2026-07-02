@@ -2,6 +2,17 @@
 
 This roadmap keeps v0 focused on safe, reproducible project memory for Codex and Hermes.
 
+## v0.2 Milestone Boundary
+
+v0.2 should mean a reliable local reviewed-context loop for outside developers:
+clone, run the neutral demo, register a local project, connect an agent, prepare
+task-specific context, review drafts explicitly, and verify operational health.
+
+The v0.2 definition lives in `docs/public/v0.2-definition.md`. It keeps the
+claim narrow: reviewed context for humans and agents. It does not require hosted
+SaaS, production auth, background sync workers, embeddings, write-capable MCP
+tools, or a non-checkout package installation path.
+
 ## v0 Priorities
 
 1. Operational readiness
@@ -82,7 +93,7 @@ This roadmap keeps v0 focused on safe, reproducible project memory for Codex and
 12. Public explanation pack
    - Keep anonymized public-facing docs under `docs/public/`.
    - Avoid real project names, private paths, customer data, and deployment details.
-   - Use Agent Data Hub as the project name and "verified memory for agentic work" as the claim.
+   - Use Agent Data Hub as the project name and "reviewed context for humans and agents" as the claim.
 
 13. Product elegance
    - Prefer fewer, sharper workflow entrypoints over many equal-seeming commands.

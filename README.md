@@ -52,6 +52,10 @@ destructive actions, and external publishing require explicit human approval.
 This repository should currently be read as an **early local-first technical
 preview**.
 
+The next milestone is defined narrowly in
+[`docs/public/v0.2-definition.md`](docs/public/v0.2-definition.md): a reliable
+local reviewed-context loop, not a hosted product or broad automation platform.
+
 What is already real:
 
 - a PostgreSQL-backed memory model
@@ -494,6 +498,7 @@ volumes, or alter Hub memory rows.
 
 - [Public overview](docs/public/agent-data-hub-overview.md)
 - [Public getting started](docs/public/getting-started.md)
+- [v0.2 definition](docs/public/v0.2-definition.md)
 - [Installation boundary](docs/public/installation.md)
 - [Trust model](docs/public/trust-model.md)
 - [Daily local use](docs/public/daily-use.md)
