@@ -54,6 +54,20 @@ require_output "$preflight_output" "Operational error: durable DB container is m
 require_output "$preflight_output" "$ROOT_DIR/scripts/db_doctor.sh"
 require_output "$preflight_output" "$ROOT_DIR/scripts/db_start.sh"
 
+start_output="$tmp_dir/start.txt"
+run_expect_operational_failure \
+  "$start_output" \
+  "$ROOT_DIR/scripts/agent_start.sh" \
+    --project central-agent-data-hub-demo \
+    --query "offline reliability smoke" \
+    --review \
+    --no-lock
+
+require_output "$start_output" "Der zentrale Agent Data Hub laeuft lokal gerade nicht."
+require_output "$start_output" "Operational error: durable DB container is missing."
+require_output "$start_output" "$ROOT_DIR/scripts/db_doctor.sh"
+require_output "$start_output" "$ROOT_DIR/scripts/db_start.sh"
+
 finish_output="$tmp_dir/finish.txt"
 run_expect_operational_failure \
   "$finish_output" \

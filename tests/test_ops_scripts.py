@@ -323,6 +323,7 @@ def test_ci_runs_agent_offline_smoke() -> None:
 
     assert "central-agent-data-hub-offline-smoke-postgres-missing" in script
     assert "scripts/agent_preflight.sh" in script
+    assert "scripts/agent_start.sh" in script
     assert "scripts/agent_finish.sh" in script
     assert "Expected operational exit code 2" in script
     assert "Der zentrale Agent Data Hub laeuft lokal gerade nicht." in script
@@ -807,15 +808,17 @@ def test_agent_start_and_project_context_use_compact_preflight() -> None:
     start = read_script("scripts/agent_start.sh")
     context = read_script("scripts/project_context.sh")
 
-    assert '"$ROOT_DIR/scripts/agent_preflight.sh" --compact' in start
+    assert '"$ROOT_DIR/scripts/agent_preflight.sh" --compact --allow-direct-db' in start
     assert '"$ROOT_DIR/scripts/agent_preflight.sh" --compact' in context
 
 
 def test_agent_start_runs_project_guard_before_lock() -> None:
     start = read_script("scripts/agent_start.sh")
 
+    preflight_index = start.index('"$ROOT_DIR/scripts/agent_preflight.sh" --compact --allow-direct-db')
     guard_index = start.index('"$ROOT_DIR/scripts/agent_guard.sh" --project "$PROJECT" --cwd "$PWD"')
     lock_index = start.index("agent_run_lock_acquire")
+    assert preflight_index < guard_index
     assert guard_index < lock_index
 
 

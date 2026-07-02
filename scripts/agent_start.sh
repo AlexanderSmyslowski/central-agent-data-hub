@@ -137,6 +137,9 @@ if [[ "$NO_LOCK" -eq 1 && "$FORCE_LOCK" -eq 1 ]]; then
 fi
 
 if [[ -n "$PROJECT" ]]; then
+  "$ROOT_DIR/scripts/agent_preflight.sh" --compact --allow-direct-db
+  echo
+
   echo "== Agent Guard =="
   "$ROOT_DIR/scripts/agent_guard.sh" --project "$PROJECT" --cwd "$PWD"
   echo
@@ -152,8 +155,6 @@ if [[ -n "$PROJECT" && "$NO_LOCK" -eq 0 ]]; then
 fi
 
 if [[ -n "$PROJECT" ]]; then
-  "$ROOT_DIR/scripts/agent_preflight.sh" --compact --allow-direct-db
-  echo
   (cd "$ROOT_DIR" && "$PYTHON_BIN" -m agent_hub.context_receipt --project "$PROJECT" --task "$QUERY" --limit "$LIMIT")
   echo
   echo "== Compiled Project Memory: $PROJECT =="
