@@ -13,6 +13,9 @@ scripts/agent_start.sh --project <project-slug> --query "<focus>" --review
 scripts/agent_finish.sh --project <project-slug> --review --export --backup
 ```
 
+With `--backup`, the finish wrapper creates a backup and immediately verifies
+the latest timestamped local dump with a restore smoke.
+
 If `agent_finish.sh` cannot reach the local Hub, it must stop before any
 reviewed writeback, export, or backup claim and print the Offline Finish
 Protocol. It also writes a local recovery note under

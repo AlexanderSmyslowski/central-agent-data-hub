@@ -885,7 +885,11 @@ def test_agent_finish_surfaces_question_answer_dry_run() -> None:
     assert "Export only if you write reviewed memory after this finish step." in finish
     assert "Backup only if you write or export important reviewed memory after this finish step." in finish
     assert "This finish step wrote a report; export now" in finish
-    assert "This finish step wrote durable memory; run scripts/db_backup.sh after export." in finish
+    assert "Create and verify local/remote DB backup after finish." in finish
+    assert "== Database Backup Verification ==" in finish
+    assert "scripts/db_verify_backup.sh" in finish
+    assert "database backup verification failed" in finish
+    assert "This finish step wrote durable memory; run scripts/agent_finish.sh --project $PROJECT --review --backup" in finish
 
 
 def test_project_update_decision_wrapper_has_change_guard() -> None:

@@ -116,6 +116,9 @@ scripts/agent_finish.sh --project <project-slug> --review --export --backup
 scripts/memory_receipt.sh --project <project-slug> --since 24h
 ```
 
+The `--backup` option writes a backup and verifies the latest timestamped local
+dump before the finish command is considered complete.
+
 ## 7. Diagnose Before Restarting Things
 
 For the configured operator database:

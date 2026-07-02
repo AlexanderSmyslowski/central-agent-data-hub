@@ -101,4 +101,5 @@ scripts/memory_receipt.sh --project <project-slug> --since 24h
 ```
 
 Use receipts when another channel or agent claims that memory was written and
-exported.
+exported. The `--backup` path creates a dump and verifies the latest timestamped
+local backup before treating the finish as complete.

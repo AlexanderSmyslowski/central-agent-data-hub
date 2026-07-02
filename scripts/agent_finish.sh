@@ -24,7 +24,7 @@ Options:
   --limit <n>        Maximum rows per section, default 8.
   --review           Also print decision/risk/open-question review.
   --export           Export current Hub memory to Obsidian Markdown after finish.
-  --backup           Create local/remote DB backup after finish.
+  --backup           Create and verify local/remote DB backup after finish.
   --no-lock          Do not release a local working-tree run lock.
 
 Exit codes:
@@ -322,7 +322,7 @@ if [[ "$EXPORT" -eq 0 ]]; then
 fi
 if [[ "$BACKUP" -eq 0 ]]; then
   if [[ "$WRITE_REPORT" -eq 1 ]]; then
-    echo "- This finish step wrote durable memory; run scripts/db_backup.sh after export."
+    echo "- This finish step wrote durable memory; run scripts/agent_finish.sh --project $PROJECT --review --backup to create and verify a backup."
   else
     echo "- Backup only if you write or export important reviewed memory after this finish step."
   fi
@@ -342,6 +342,12 @@ if [[ "$BACKUP" -eq 1 ]]; then
   echo "== Database Backup =="
   if ! "$ROOT_DIR/scripts/db_backup.sh"; then
     echo "Operational error: database backup failed." >&2
+    exit 2
+  fi
+  echo
+  echo "== Database Backup Verification =="
+  if ! "$ROOT_DIR/scripts/db_verify_backup.sh"; then
+    echo "Operational error: database backup verification failed." >&2
     exit 2
   fi
 fi
