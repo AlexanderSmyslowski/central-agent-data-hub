@@ -1269,6 +1269,7 @@ def test_v10_definition_tracks_local_reliability_end_goal() -> None:
     roadmap = read_script("ROADMAP.md")
     definition = read_script("docs/public/v1.0-definition.md")
     finish = read_script("scripts/agent_finish.sh")
+    v1_readiness = read_script("scripts/v1_readiness_check.sh")
 
     assert "[`docs/public/v1.0-definition.md`](docs/public/v1.0-definition.md)" in readme
     assert "[v1.0 definition](docs/public/v1.0-definition.md)" in readme
@@ -1276,17 +1277,30 @@ def test_v10_definition_tracks_local_reliability_end_goal() -> None:
     assert "# v1.0 Definition" in definition
     assert "boringly reliable reviewed context infrastructure" in definition
     assert "verified context for humans and agents" in definition
+    assert "scripts/v1_readiness_check.sh" in definition
     assert "scripts/release_candidate_check.sh" in definition
     assert "scripts/agent_finish.sh --project <project-slug> --review --export --backup" in definition
     assert "scripts/memory_receipt.sh --project <project-slug> --since 24h" in definition
     assert "agent-hub prepare --project <project-slug> --task \"<task>\" --format json" in definition
-    assert "Backup completion must mean a dump was written" in definition
-    assert "latest timestamped local backup was restored and checked" in definition
+    assert "The readiness check must verify that this contract" in definition
+    assert "Backup completion" in definition
+    assert "must mean a dump was written" in definition
+    assert "latest timestamped local backup was" in definition
+    assert "restored and checked" in definition
     assert "MCP remains read-only" in definition
     assert "hosted SaaS" in definition
     assert "automatic promotion, demotion, or review" in definition
     assert "raw chats, secrets, private customer data" in definition
     assert "db_verify_backup.sh" in finish
+    assert "v1.0 readiness check" in v1_readiness
+    assert "--contract-only" in v1_readiness
+    assert "scripts/v1_readiness_check.sh" in v1_readiness
+    assert "scripts/release_candidate_check.sh" in v1_readiness
+    assert "External-developer smoke" in v1_readiness
+    assert "== Database Backup Verification ==" in v1_readiness
+    assert "scripts/memory_receipt.sh" in v1_readiness
+    assert "reviewed_memory_written: no" in v1_readiness
+    assert '"$RELEASE_CHECK"' in v1_readiness
 
 
 def test_register_project_script_is_cli_compatibility_wrapper() -> None:
