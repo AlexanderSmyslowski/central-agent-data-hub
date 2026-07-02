@@ -1126,8 +1126,20 @@ def test_v06_definition_tracks_cli_first_bootstrap_contract() -> None:
     assert "agent-hub register-project" in definition
     assert "scripts/register_project.sh" in definition
     assert "compatibility path" in definition
+    assert "delegates to the CLI" in definition
     assert "agent-hub register-project" in v05_definition
     assert "run_agent_hub register-project" in smoke
+
+
+def test_register_project_script_is_cli_compatibility_wrapper() -> None:
+    script = read_script("scripts/register_project.sh")
+
+    assert "Compatibility wrapper" in script
+    assert "agent-hub register-project" in script
+    assert 'run_agent_hub register-project "$@"' in script
+    assert "from agent_hub.project_registration import register_project" not in script
+    assert "scripts/install_repo_agent_memory.sh" not in script
+    assert "registered_by=\"scripts/register_project.sh\"" not in script
 
 
 def test_public_demo_mode_forces_demo_database_when_database_url_is_set() -> None:

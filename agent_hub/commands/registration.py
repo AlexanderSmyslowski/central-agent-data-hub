@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 from pathlib import Path
 
 from agent_hub.commands.common import (
@@ -34,6 +35,25 @@ def _hub_root_for_agent_block() -> Path | None:
     if script_path is None:
         return None
     return script_path.parents[1]
+
+
+def _run_agent_preflight() -> int:
+    script_path = checkout_script_path("agent_preflight.sh", "register-project")
+    if script_path is None:
+        return 2
+
+    try:
+        result = subprocess.run(
+            [str(script_path)],
+            check=False,
+            stdout=subprocess.DEVNULL,
+        )
+    except OSError as exc:
+        return exception_error(exc, 2)
+
+    if result.returncode != 0:
+        return error("agent preflight failed", 2)
+    return 0
 
 
 def _registration_plan(args: argparse.Namespace) -> dict[str, object]:
@@ -155,6 +175,9 @@ def run_register_project(args: argparse.Namespace) -> int:
 
     if error_code := require_database_url():
         return error_code
+
+    if preflight_code := _run_agent_preflight():
+        return preflight_code
 
     try:
         with connect() as conn:

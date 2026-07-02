@@ -183,9 +183,13 @@ def test_register_project_cli_dry_run_does_not_write(
     def fail_connect():
         raise AssertionError("dry-run must not connect to the database")
 
+    def fail_preflight():
+        raise AssertionError("dry-run must not run agent preflight")
+
     monkeypatch.setenv("AGENT_HUB_DISABLE_ENV_AUTOLOAD", "1")
     monkeypatch.delenv("DATABASE_URL", raising=False)
     monkeypatch.setattr(registration_commands, "connect", fail_connect)
+    monkeypatch.setattr(registration_commands, "_run_agent_preflight", fail_preflight)
     monkeypatch.setattr(
         registration_commands,
         "checkout_script_path",
@@ -216,9 +220,17 @@ def test_register_project_cli_registers_and_installs_agent_block(
     monkeypatch, tmp_path, capsys
 ) -> None:
     connection = FakeRegistrationConnection()
+    preflight_calls = 0
+
+    def fake_preflight() -> int:
+        nonlocal preflight_calls
+        preflight_calls += 1
+        return 0
+
     monkeypatch.setenv("AGENT_HUB_DISABLE_ENV_AUTOLOAD", "1")
     monkeypatch.setenv("DATABASE_URL", "postgresql://example.invalid/agent_hub")
     monkeypatch.setattr(registration_commands, "connect", lambda: connection)
+    monkeypatch.setattr(registration_commands, "_run_agent_preflight", fake_preflight)
     monkeypatch.setattr(
         registration_commands,
         "checkout_script_path",
@@ -242,12 +254,45 @@ def test_register_project_cli_registers_and_installs_agent_block(
     captured = capsys.readouterr()
     agents = (tmp_path / "AGENTS.md").read_text(encoding="utf-8")
     assert code == 0
+    assert preflight_calls == 1
     assert connection.committed
     assert len(connection.cursor_instance.calls) == 2
     assert "Registered Hub project: cli-project" in captured.out
     assert "Project registration result: ready" in captured.out
     assert "Project slug: `cli-project`" in agents
     assert "/opt/adh/scripts/agent_start.sh" in agents
+
+
+def test_register_project_cli_stops_when_preflight_fails(
+    monkeypatch, tmp_path
+) -> None:
+    def fail_connect():
+        raise AssertionError("preflight failure must block database writes")
+
+    monkeypatch.setenv("AGENT_HUB_DISABLE_ENV_AUTOLOAD", "1")
+    monkeypatch.setenv("DATABASE_URL", "postgresql://example.invalid/agent_hub")
+    monkeypatch.setattr(registration_commands, "connect", fail_connect)
+    monkeypatch.setattr(registration_commands, "_run_agent_preflight", lambda: 2)
+    monkeypatch.setattr(
+        registration_commands,
+        "checkout_script_path",
+        lambda _script, _command: Path("/opt/adh/scripts/agent_start.sh"),
+    )
+
+    code = cli.main(
+        [
+            "register-project",
+            "--repo",
+            str(tmp_path),
+            "--slug",
+            "cli-project",
+            "--name",
+            "CLI Project",
+        ]
+    )
+
+    assert code == 2
+    assert not (tmp_path / "AGENTS.md").exists()
 
 
 def test_export_okf_command_writes_preview_bundle(monkeypatch, tmp_path, capsys) -> None:
