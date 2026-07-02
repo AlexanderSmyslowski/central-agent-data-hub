@@ -50,7 +50,7 @@ apply_sql_file "seed/demo.sql" >/dev/null
 run_agent_hub check >/dev/null
 
 mkdir -p "$AGENT_HUB_BACKUP_DIR"
-backup_path="$AGENT_HUB_BACKUP_DIR/external-developer-demo.dump"
+backup_path="$AGENT_HUB_BACKUP_DIR/agent_hub-external-developer-demo.dump"
 compose exec -T "$DB_SERVICE" \
   pg_dump -U "$DB_USER" -d "$DB_NAME" --format=custom \
   > "$backup_path"
