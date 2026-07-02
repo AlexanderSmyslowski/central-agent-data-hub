@@ -1248,6 +1248,31 @@ def test_v07_definition_tracks_release_candidate_evidence() -> None:
     assert "gh release" not in release_check
 
 
+def test_v10_definition_tracks_local_reliability_end_goal() -> None:
+    readme = read_script("README.md")
+    roadmap = read_script("ROADMAP.md")
+    definition = read_script("docs/public/v1.0-definition.md")
+    finish = read_script("scripts/agent_finish.sh")
+
+    assert "[`docs/public/v1.0-definition.md`](docs/public/v1.0-definition.md)" in readme
+    assert "[v1.0 definition](docs/public/v1.0-definition.md)" in readme
+    assert "docs/public/v1.0-definition.md" in roadmap
+    assert "# v1.0 Definition" in definition
+    assert "boringly reliable reviewed context infrastructure" in definition
+    assert "verified context for humans and agents" in definition
+    assert "scripts/release_candidate_check.sh" in definition
+    assert "scripts/agent_finish.sh --project <project-slug> --review --export --backup" in definition
+    assert "scripts/memory_receipt.sh --project <project-slug> --since 24h" in definition
+    assert "agent-hub prepare --project <project-slug> --task \"<task>\" --format json" in definition
+    assert "Backup completion must mean a dump was written" in definition
+    assert "latest timestamped local backup was restored and checked" in definition
+    assert "MCP remains read-only" in definition
+    assert "hosted SaaS" in definition
+    assert "automatic promotion, demotion, or review" in definition
+    assert "raw chats, secrets, private customer data" in definition
+    assert "db_verify_backup.sh" in finish
+
+
 def test_register_project_script_is_cli_compatibility_wrapper() -> None:
     script = read_script("scripts/register_project.sh")
 

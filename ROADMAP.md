@@ -77,6 +77,18 @@ diagnosis and one safe next step.
 The v0.8 definition lives in `docs/public/v0.8-definition.md`. It remains a
 diagnostic milestone, not an automatic recovery or hosted monitoring system.
 
+## v1.0 Milestone Boundary
+
+v1.0 should mean boringly reliable reviewed context infrastructure for local
+agent work: a fresh checkout can run the demo, a real project can be registered,
+agents can start from reviewed context, drafts are explicitly reviewed, context
+packs expose trail and gaps, finish can export and verify backups, and offline
+states stop clearly before false success claims.
+
+The v1.0 definition lives in `docs/public/v1.0-definition.md`. It remains a
+local-first infrastructure milestone, not a hosted product, auth system, or
+automation platform.
+
 ## v0 Priorities
 
 1. Operational readiness

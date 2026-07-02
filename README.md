@@ -74,6 +74,9 @@ The runtime-health milestone is
 [`docs/public/v0.8-definition.md`](docs/public/v0.8-definition.md): making
 local disk, temp, Docker, port, backup, migration, status, and check signals
 visible before agent work depends on them.
+The v1.0 target is
+[`docs/public/v1.0-definition.md`](docs/public/v1.0-definition.md): boringly
+reliable reviewed context infrastructure for local agent work.
 
 What is already real:
 
@@ -557,6 +560,7 @@ volumes, or alter Hub memory rows.
 - [v0.6 definition](docs/public/v0.6-definition.md)
 - [v0.7 definition](docs/public/v0.7-definition.md)
 - [v0.8 definition](docs/public/v0.8-definition.md)
+- [v1.0 definition](docs/public/v1.0-definition.md)
 - [Installation boundary](docs/public/installation.md)
 - [Trust model](docs/public/trust-model.md)
 - [Daily local use](docs/public/daily-use.md)
