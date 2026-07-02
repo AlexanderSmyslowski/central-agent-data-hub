@@ -16,7 +16,8 @@ usage() {
 Usage: scripts/db_verify_backup.sh [dump-file]
 
 Restores the newest local backup, or the provided dump file, into a temporary
-Postgres container and runs agent-hub check plus a project brief.
+Postgres container and runs agent-hub check plus one active project brief when
+the restored database contains active projects.
 EOF
 }
 
@@ -80,11 +81,28 @@ echo "Running verification checks..."
     "$PYTHON_BIN" -m agent_hub.cli check
 )
 echo
-(
+brief_project="$(
   cd "$ROOT_DIR"
   DATABASE_URL="$VERIFY_DATABASE_URL" OBSIDIAN_EXPORT_DIR="$OBSIDIAN_EXPORT_DIR" \
-    "$PYTHON_BIN" -m agent_hub.cli brief --project commcats-de --limit 4
-)
+    "$PYTHON_BIN" -m agent_hub.cli projects --format json \
+    | "$PYTHON_BIN" -c '
+import json
+import sys
+
+projects = json.load(sys.stdin)
+print(projects[0]["slug"] if projects else "")
+'
+)"
+if [[ -n "$brief_project" ]]; then
+  echo "Project brief smoke: $brief_project"
+  (
+    cd "$ROOT_DIR"
+    DATABASE_URL="$VERIFY_DATABASE_URL" OBSIDIAN_EXPORT_DIR="$OBSIDIAN_EXPORT_DIR" \
+      "$PYTHON_BIN" -m agent_hub.cli brief --project "$brief_project" --limit 4
+  )
+else
+  echo "Project brief smoke skipped: restored backup has no active projects."
+fi
 
 echo
 echo "Backup verification succeeded."

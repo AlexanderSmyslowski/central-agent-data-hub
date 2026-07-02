@@ -776,6 +776,10 @@ def test_db_doctor_and_recover_are_safe_local_ops_paths() -> None:
     assert "agent_hub-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]" in verify_backup
     assert "-[0-9][0-9][0-9][0-9][0-9][0-9].dump" in verify_backup
     assert "-name '*.dump'" not in verify_backup
+    assert "projects --format json" in verify_backup
+    assert "brief --project \"$brief_project\"" in verify_backup
+    assert "Project brief smoke skipped" in verify_backup
+    assert "commcats-de" not in verify_backup
 
     assert "Dry run only. No container or volume changes were made." in recover
     assert "Snapshot written" in recover
