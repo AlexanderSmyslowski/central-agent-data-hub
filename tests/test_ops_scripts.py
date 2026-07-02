@@ -746,6 +746,7 @@ def test_preflight_uses_bounded_docker_checks() -> None:
 def test_db_doctor_and_recover_are_safe_local_ops_paths() -> None:
     doctor = read_script("scripts/db_doctor.sh")
     recover = read_script("scripts/db_recover.sh")
+    verify_backup = read_script("scripts/db_verify_backup.sh")
     parser = read_script("agent_hub/commands/parser.py")
     system = read_script("agent_hub/commands/system.py")
     readme = read_script("README.md")
@@ -772,6 +773,9 @@ def test_db_doctor_and_recover_are_safe_local_ops_paths() -> None:
     assert "print_host_runtime_health" in doctor
     assert "Port listener:" in doctor
     assert 'lsof -nP -iTCP:"$DB_PORT" -sTCP:LISTEN' in doctor
+    assert "agent_hub-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]" in verify_backup
+    assert "-[0-9][0-9][0-9][0-9][0-9][0-9].dump" in verify_backup
+    assert "-name '*.dump'" not in verify_backup
 
     assert "Dry run only. No container or volume changes were made." in recover
     assert "Snapshot written" in recover

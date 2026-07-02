@@ -27,7 +27,11 @@ fi
 
 dump_path="${1:-}"
 if [[ -z "$dump_path" ]]; then
-  dump_path="$(find "$AGENT_HUB_BACKUP_DIR" -maxdepth 1 -type f -name '*.dump' -print 2>/dev/null | sort | tail -n 1)"
+  dump_path="$(
+    find "$AGENT_HUB_BACKUP_DIR" -maxdepth 1 -type f \
+      -name 'agent_hub-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9].dump' \
+      -print 2>/dev/null | sort | tail -n 1
+  )"
 fi
 
 if [[ -z "$dump_path" || ! -f "$dump_path" ]]; then
