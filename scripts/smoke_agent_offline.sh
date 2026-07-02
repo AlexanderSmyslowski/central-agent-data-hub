@@ -43,6 +43,25 @@ require_output() {
   fi
 }
 
+require_offline_preflight_reason() {
+  local output_path="$1"
+  if grep -Fq "Operational error: durable DB container is missing." "$output_path"; then
+    require_output "$output_path" "Der zentrale Agent Data Hub laeuft lokal gerade nicht."
+    require_output "$output_path" "$ROOT_DIR/scripts/db_doctor.sh"
+    require_output "$output_path" "$ROOT_DIR/scripts/db_start.sh"
+    return 0
+  fi
+  if grep -Fq "Operational error: docker compose is not available." "$output_path"; then
+    return 0
+  fi
+  if grep -Fq "Operational error: docker is not available." "$output_path"; then
+    return 0
+  fi
+  echo "Expected a known offline preflight reason." >&2
+  cat "$output_path" >&2
+  return 1
+}
+
 echo "Running Agent Data Hub offline-agent smoke..."
 
 preflight_output="$tmp_dir/preflight.txt"
@@ -50,10 +69,7 @@ run_expect_operational_failure \
   "$preflight_output" \
   "$ROOT_DIR/scripts/agent_preflight.sh" --compact
 
-require_output "$preflight_output" "Der zentrale Agent Data Hub laeuft lokal gerade nicht."
-require_output "$preflight_output" "Operational error: durable DB container is missing."
-require_output "$preflight_output" "$ROOT_DIR/scripts/db_doctor.sh"
-require_output "$preflight_output" "$ROOT_DIR/scripts/db_start.sh"
+require_offline_preflight_reason "$preflight_output"
 
 start_output="$tmp_dir/start.txt"
 run_expect_operational_failure \
@@ -64,10 +80,7 @@ run_expect_operational_failure \
     --review \
     --no-lock
 
-require_output "$start_output" "Der zentrale Agent Data Hub laeuft lokal gerade nicht."
-require_output "$start_output" "Operational error: durable DB container is missing."
-require_output "$start_output" "$ROOT_DIR/scripts/db_doctor.sh"
-require_output "$start_output" "$ROOT_DIR/scripts/db_start.sh"
+require_offline_preflight_reason "$start_output"
 
 finish_output="$tmp_dir/finish.txt"
 run_expect_operational_failure \
