@@ -353,6 +353,7 @@ def test_ci_runs_external_developer_smoke() -> None:
     assert 'mkdir -p "$OBSIDIAN_EXPORT_DIR"' in script
     assert "agent_hub-external-developer-demo.dump" in script
     assert '"$ROOT_DIR/scripts/db_backup_health.sh" --require' in script
+    assert 'export OBSIDIAN_EXPORT_DIR="$tmp_dir/obsidian-export"' in script
     assert "run_agent_hub register-project" in script
     assert "git -C \"$external_repo\" init" in script
     assert "Project slug: \\`$project_slug\\`" in script
@@ -365,6 +366,15 @@ def test_ci_runs_external_developer_smoke() -> None:
     assert "run_agent_hub prepare" in script
     assert "run_agent_hub handoff" in script
     assert "scripts/agent_finish.sh" in script
+    assert "--export" in script
+    assert "--backup" in script
+    assert "== Obsidian Export ==" in script
+    assert "== Database Backup Verification ==" in script
+    assert "Backup verification succeeded." in script
+    assert "scripts/memory_receipt.sh" in script
+    assert "result: ok" in script
+    assert "fact/verified" in script
+    assert "exported: yes" in script
     assert "External-developer smoke: ok" in script
 
 

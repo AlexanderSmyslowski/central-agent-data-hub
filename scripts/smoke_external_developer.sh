@@ -13,6 +13,7 @@ tmp_dir="$(mktemp -d)"
 export AGENT_HUB_BACKUP_DIR="$tmp_dir/backups"
 export AGENT_HUB_BACKUP_REMOTE=""
 export AGENT_HUB_REQUIRE_REMOTE_BACKUP=0
+export OBSIDIAN_EXPORT_DIR="$tmp_dir/obsidian-export"
 
 cleanup() {
   rm -rf "$tmp_dir"
@@ -104,6 +105,7 @@ inbox_json="$tmp_dir/inbox.json"
 accept_json="$tmp_dir/accept.json"
 prepare_json="$tmp_dir/prepare.json"
 handoff_json="$tmp_dir/handoff.json"
+receipt_txt="$tmp_dir/receipt.txt"
 
 run_agent_hub remember \
   --project "$project_slug" \
@@ -207,12 +209,28 @@ PY
   "$ROOT_DIR/scripts/agent_finish.sh" \
     --project "$project_slug" \
     --review \
+    --export \
+    --backup \
     --no-lock
 ) >"$tmp_dir/agent-finish.txt"
 
 grep -q "Daily Finish Summary: $project_slug" "$tmp_dir/agent-finish.txt"
 grep -q "Handoff: $project_slug" "$tmp_dir/agent-finish.txt"
+grep -q "== Obsidian Export ==" "$tmp_dir/agent-finish.txt"
+grep -q "== Database Backup ==" "$tmp_dir/agent-finish.txt"
+grep -q "== Database Backup Verification ==" "$tmp_dir/agent-finish.txt"
+grep -q "Backup verification succeeded." "$tmp_dir/agent-finish.txt"
 grep -q "Agent finish result: ready" "$tmp_dir/agent-finish.txt"
+
+"$ROOT_DIR/scripts/memory_receipt.sh" \
+  --project "$project_slug" \
+  --since 1d \
+  --type fact \
+  --limit 5 >"$receipt_txt"
+
+grep -q "result: ok" "$receipt_txt"
+grep -q "\\[fact/verified\\]" "$receipt_txt"
+grep -q "exported: yes" "$receipt_txt"
 
 echo
 echo "External-developer smoke: ok"
