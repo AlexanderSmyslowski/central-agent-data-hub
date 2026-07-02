@@ -1247,6 +1247,7 @@ def test_v07_definition_tracks_release_candidate_evidence() -> None:
     assert "smoke_agent_offline.sh" in release_check
     assert "upgrade_drill.sh" in release_check
     assert "run_step \"Upgrade drill\" run_docker_step clean_demo_env" in release_check
+    assert "run_step \"Agent Hub doctor\" run_agent_hub doctor" in release_check
     assert "run_agent_hub status" in release_check
     assert "run_agent_hub check" in release_check
     assert "git tag" not in release_check

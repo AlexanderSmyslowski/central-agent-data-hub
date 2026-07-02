@@ -20,6 +20,7 @@ Runs the local v0.7 release-candidate evidence set:
   - multi-agent trust-loop smoke
   - offline-agent smoke
   - baseline-to-head upgrade drill
+  - agent-hub doctor
   - agent-hub status and check
 
 The runner uses its own temp directory outside the repository so Pytest
@@ -152,6 +153,7 @@ run_step "External-developer smoke" run_docker_step clean_demo_env "$ROOT_DIR/sc
 run_step "Trust-loop smoke" run_docker_step clean_demo_env "$ROOT_DIR/scripts/smoke_trust_loop.sh"
 run_step "Offline-agent smoke" clean_demo_env "$ROOT_DIR/scripts/smoke_agent_offline.sh"
 run_step "Upgrade drill" run_docker_step clean_demo_env "$ROOT_DIR/scripts/upgrade_drill.sh"
+run_step "Agent Hub doctor" run_agent_hub doctor
 run_step "Agent Hub status" run_agent_hub status
 run_step "Agent Hub check" run_agent_hub check
 
