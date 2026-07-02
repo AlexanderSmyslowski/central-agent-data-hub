@@ -6,6 +6,8 @@ COMPOSE_PROJECT_NAME="${AGENT_HUB_COMPOSE_PROJECT_NAME:-central-agent-data-hub}"
 AGENT_HUB_DOCKER_TIMEOUT_SECONDS="${AGENT_HUB_DOCKER_TIMEOUT_SECONDS:-15}"
 AGENT_HUB_DB_READY_TIMEOUT_SECONDS="${AGENT_HUB_DB_READY_TIMEOUT_SECONDS:-5}"
 AGENT_HUB_DB_START_TIMEOUT_SECONDS="${AGENT_HUB_DB_START_TIMEOUT_SECONDS:-60}"
+AGENT_HUB_DISK_WARN_MB="${AGENT_HUB_DISK_WARN_MB:-1024}"
+AGENT_HUB_DISK_ERROR_MB="${AGENT_HUB_DISK_ERROR_MB:-128}"
 PUBLIC_DEMO_REQUESTED="${AGENT_HUB_PUBLIC_DEMO:-0}"
 PUBLIC_DEMO_COMPOSE_PROJECT_NAME="${AGENT_HUB_COMPOSE_PROJECT_NAME:-central-agent-data-hub-demo}"
 PUBLIC_DEMO_DB_CONTAINER="${AGENT_HUB_DB_CONTAINER:-central-agent-data-hub-demo-postgres}"
@@ -214,6 +216,99 @@ print_postgres_start_failure() {
 
 run_agent_hub() {
   (cd "$ROOT_DIR" && "$PYTHON_BIN" -m agent_hub.cli "$@")
+}
+
+nearest_existing_path() {
+  local path="$1"
+  while [[ ! -e "$path" && "$path" != "/" ]]; do
+    path="$(dirname "$path")"
+  done
+  printf '%s\n' "$path"
+}
+
+available_mb_for_path() {
+  local path
+  path="$(nearest_existing_path "$1")"
+  df -Pk "$path" 2>/dev/null | awk 'NR == 2 { print int($4 / 1024) }'
+}
+
+check_temp_dir_writable() {
+  local temp_dir="${TMPDIR:-/tmp}"
+  local temp_path
+
+  temp_path="$(mktemp -d "${temp_dir%/}/adh-health.XXXXXX" 2>/dev/null || true)"
+  if [[ -z "$temp_path" ]]; then
+    return 1
+  fi
+  rmdir "$temp_path" >/dev/null 2>&1 || true
+}
+
+print_host_runtime_health() {
+  local compact=0
+  local fatal=0
+  local warning=0
+  local temp_dir="${TMPDIR:-/tmp}"
+  local root_free_mb=""
+  local temp_free_mb=""
+  local root_status="ok"
+  local temp_status="ok"
+  local temp_write_status="ok"
+
+  if [[ "${1:-}" == "--compact" ]]; then
+    compact=1
+  fi
+
+  root_free_mb="$(available_mb_for_path "$ROOT_DIR")"
+  temp_free_mb="$(available_mb_for_path "$temp_dir")"
+
+  for value_name in root_free_mb temp_free_mb; do
+    if [[ -z "${!value_name}" ]]; then
+      fatal=1
+    elif (( ${!value_name} < AGENT_HUB_DISK_ERROR_MB )); then
+      fatal=1
+      if [[ "$value_name" == "root_free_mb" ]]; then
+        root_status="error"
+      else
+        temp_status="error"
+      fi
+    elif (( ${!value_name} < AGENT_HUB_DISK_WARN_MB )); then
+      warning=1
+      if [[ "$value_name" == "root_free_mb" ]]; then
+        root_status="warning"
+      else
+        temp_status="warning"
+      fi
+    fi
+  done
+
+  if ! check_temp_dir_writable; then
+    fatal=1
+    temp_write_status="error"
+  fi
+
+  if [[ "$compact" -eq 1 ]]; then
+    if [[ "$fatal" -eq 1 ]]; then
+      echo "Host runtime: error"
+    elif [[ "$warning" -eq 1 ]]; then
+      echo "Host runtime: warning"
+    else
+      echo "Host runtime: ok"
+    fi
+  else
+    echo "Host runtime:"
+  fi
+
+  echo "  Repo free space: ${root_status} (${root_free_mb:-unknown} MB available; warn below ${AGENT_HUB_DISK_WARN_MB} MB; error below ${AGENT_HUB_DISK_ERROR_MB} MB)"
+  echo "  Temp free space: ${temp_status} (${temp_free_mb:-unknown} MB available at ${temp_dir}; warn below ${AGENT_HUB_DISK_WARN_MB} MB; error below ${AGENT_HUB_DISK_ERROR_MB} MB)"
+  echo "  Temp writable:   ${temp_write_status} (${temp_dir})"
+
+  if [[ "$fatal" -eq 1 ]]; then
+    return 2
+  fi
+  if [[ "$warning" -eq 1 ]]; then
+    return 1
+  fi
+  return 0
 }
 
 wait_for_postgres() {

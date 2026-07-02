@@ -64,6 +64,15 @@ echo "  Port:            $DB_PORT"
 echo "  URL:             $(mask_database_url "$DATABASE_URL")"
 echo
 
+set +e
+print_host_runtime_health
+host_health_code=$?
+set -e
+if [[ "$host_health_code" -eq 2 ]]; then
+  mark_operational_issue
+fi
+echo
+
 if ! command -v docker >/dev/null 2>&1; then
   echo "Docker: error (docker command not found)"
   echo
@@ -92,6 +101,18 @@ if [[ ! -f "$COMPOSE_FILE" ]]; then
   exit 2
 fi
 echo "Compose file: ok ($COMPOSE_FILE)"
+
+echo
+echo "Port listener:"
+if command -v lsof >/dev/null 2>&1; then
+  if lsof -nP -iTCP:"$DB_PORT" -sTCP:LISTEN >/dev/null 2>&1; then
+    lsof -nP -iTCP:"$DB_PORT" -sTCP:LISTEN | sed 's/^/  /'
+  else
+    echo "  no listener found on localhost:$DB_PORT"
+  fi
+else
+  echo "  lsof unavailable; skipping port listener details."
+fi
 
 if docker_quick volume inspect "$DB_VOLUME" >/dev/null 2>&1; then
   echo "Volume: ok"

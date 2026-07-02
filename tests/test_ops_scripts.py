@@ -676,10 +676,15 @@ def test_operator_notes_are_separated_from_public_path() -> None:
 def test_preflight_uses_bounded_docker_checks() -> None:
     common = read_script("scripts/db_common.sh")
     preflight = read_script("scripts/agent_preflight.sh")
+    readme = read_script("README.md")
+    roadmap = read_script("ROADMAP.md")
+    definition = read_script("docs/public/v0.8-definition.md")
 
     assert "run_with_timeout()" in common
     assert "AGENT_HUB_DOCKER_TIMEOUT_SECONDS" in common
     assert "AGENT_HUB_DB_START_TIMEOUT_SECONDS" in common
+    assert "AGENT_HUB_DISK_WARN_MB" in common
+    assert "AGENT_HUB_DISK_ERROR_MB" in common
     assert "COMPOSE_PROJECT_NAME" in common
     assert "COMMON_GIT_DIR" in common
     assert "SHARED_ROOT" in common
@@ -688,6 +693,12 @@ def test_preflight_uses_bounded_docker_checks() -> None:
     assert "compose_quick()" in common
     assert "postgres_ready()" in common
     assert "postgres_container_state()" in common
+    assert "print_host_runtime_health()" in common
+    assert "available_mb_for_path()" in common
+    assert "check_temp_dir_writable()" in common
+    assert "Repo free space:" in common
+    assert "Temp free space:" in common
+    assert "Temp writable:" in common
     assert "print_postgres_start_failure()" in common
     assert "did not become ready" in common
     assert "This script will not delete local Docker volumes automatically." in common
@@ -705,6 +716,8 @@ def test_preflight_uses_bounded_docker_checks() -> None:
     assert 'OBSIDIAN_EXPORT_DIR="$SHARED_ROOT/$OBSIDIAN_EXPORT_DIR"' in common
     assert 'AGENT_HUB_BACKUP_DIR="$SHARED_ROOT/$AGENT_HUB_BACKUP_DIR"' in common
 
+    assert "print_host_runtime_health --compact" in preflight
+    assert "Operational error: host runtime is not ready." in preflight
     assert "docker_quick inspect \"$DB_CONTAINER\"" in preflight
     assert "Der zentrale Agent Data Hub laeuft lokal gerade nicht." in preflight
     assert "Bitte Docker starten oder kurz warten" in preflight
@@ -721,6 +734,13 @@ def test_preflight_uses_bounded_docker_checks() -> None:
     assert "Project briefs: ok ($brief_count checked)" in preflight
     assert "brief --project commcats-de" not in preflight
     assert "brief --project the-one-catering" not in preflight
+
+    assert "[v0.8 definition](docs/public/v0.8-definition.md)" in readme
+    assert "docs/public/v0.8-definition.md" in roadmap
+    assert "# v0.8 Definition" in definition
+    assert "local runtime health" in definition
+    assert "disk and temp-dir checks" in definition
+    assert "automatic recovery" in definition
 
 
 def test_db_doctor_and_recover_are_safe_local_ops_paths() -> None:
@@ -749,6 +769,9 @@ def test_db_doctor_and_recover_are_safe_local_ops_paths() -> None:
     assert 'echo "  scripts/db_recover.sh --apply"' not in doctor
     assert "run_agent_hub status" in doctor
     assert "run_agent_hub check" in doctor
+    assert "print_host_runtime_health" in doctor
+    assert "Port listener:" in doctor
+    assert 'lsof -nP -iTCP:"$DB_PORT" -sTCP:LISTEN' in doctor
 
     assert "Dry run only. No container or volume changes were made." in recover
     assert "Snapshot written" in recover
@@ -1284,6 +1307,8 @@ def test_public_demo_smoke_verifies_demo_exports() -> None:
     assert 'Compiled/central-agent-data-hub-demo.md' in script
     assert 'HUB_VIEW_SMOKE_PORT:-9876' in script
     assert 'scripts/hub_view.sh" --host 127.0.0.1 --port "$hub_view_smoke_port"' in script
+    assert "for _ in range(100)" in script
+    assert "time.sleep(0.2)" in script
     assert "timeout=5" in script
     assert "TimeoutError" in script
     assert "AGENT_HUB_REVIEWERS=demo-reviewer" in script

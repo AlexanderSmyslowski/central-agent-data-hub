@@ -67,6 +67,16 @@ The v0.7 definition lives in `docs/public/v0.7-definition.md`. CI should keep
 the behavioral smokes separate so release readiness is not reduced to unit
 tests alone.
 
+## v0.8 Milestone Boundary
+
+v0.8 should mean local runtime health is visible before agent work or release
+checks depend on it: disk space, temp directories, Docker, Compose, ports,
+containers, volumes, backups, migrations, status, and check produce clear
+diagnosis and one safe next step.
+
+The v0.8 definition lives in `docs/public/v0.8-definition.md`. It remains a
+diagnostic milestone, not an automatic recovery or hosted monitoring system.
+
 ## v0 Priorities
 
 1. Operational readiness

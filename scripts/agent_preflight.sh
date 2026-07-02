@@ -96,6 +96,20 @@ echo "Central Agent Data Hub agent preflight"
 echo "Mode: read-only"
 echo
 
+set +e
+host_health_output="$(print_host_runtime_health --compact 2>&1)"
+host_health_code=$?
+set -e
+if [[ "$COMPACT" -eq 0 || "$host_health_code" -ne 0 ]]; then
+  echo "$host_health_output"
+  echo
+fi
+if [[ "$host_health_code" -eq 2 ]]; then
+  echo "Operational error: host runtime is not ready." >&2
+  echo "Free disk space or fix the temp directory, then rerun this preflight." >&2
+  exit 2
+fi
+
 if ! command -v docker >/dev/null 2>&1; then
   if [[ "$ALLOW_DIRECT_DB" -eq 1 ]]; then
     direct_db_preflight "docker is not available."

@@ -151,7 +151,7 @@ log_path = Path(sys.argv[2])
 base_url = f"http://127.0.0.1:{port}"
 last_error: Exception | None = None
 
-for _ in range(50):
+for _ in range(100):
     try:
         checks = {
             "/static/base.css": (
@@ -879,7 +879,7 @@ for _ in range(50):
         sys.exit(0)
     except (OSError, TimeoutError, URLError) as exc:
         last_error = exc
-        time.sleep(0.1)
+        time.sleep(0.2)
 
 print(f"Error: Hub View did not answer at {base_url}/.", file=sys.stderr)
 if last_error is not None:

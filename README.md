@@ -70,6 +70,10 @@ that project through the installed `agent-hub` command.
 The release-candidate evidence milestone is
 [`docs/public/v0.7-definition.md`](docs/public/v0.7-definition.md): keeping the
 major public and operational loops visible as separate proofs before tagging.
+The runtime-health milestone is
+[`docs/public/v0.8-definition.md`](docs/public/v0.8-definition.md): making
+local disk, temp, Docker, port, backup, migration, status, and check signals
+visible before agent work depends on them.
 
 What is already real:
 
@@ -552,6 +556,7 @@ volumes, or alter Hub memory rows.
 - [v0.5 definition](docs/public/v0.5-definition.md)
 - [v0.6 definition](docs/public/v0.6-definition.md)
 - [v0.7 definition](docs/public/v0.7-definition.md)
+- [v0.8 definition](docs/public/v0.8-definition.md)
 - [Installation boundary](docs/public/installation.md)
 - [Trust model](docs/public/trust-model.md)
 - [Daily local use](docs/public/daily-use.md)
