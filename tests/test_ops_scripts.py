@@ -295,6 +295,24 @@ def test_v019_release_notes_describe_fresh_clone_ci_drill() -> None:
     assert "no new product feature" in notes
 
 
+def test_v020_release_notes_describe_v02_readiness_cleanup() -> None:
+    readme = read_script("README.md")
+    notes = read_script("docs/public/v0.1.20-release-notes.md")
+
+    assert "[v0.1.20 release notes](docs/public/v0.1.20-release-notes.md)" in readme
+    assert "[v0.1.20 release notes]" in readme.split("[v0.1.19 release notes]")[0]
+    assert "Agent Data Hub v0.1.20" in notes
+    assert "v0.2-readiness cleanup release" in notes
+    assert "reviewed context" in notes
+    assert "docs/public/trust-model.md" in notes
+    assert "docs/public/installation.md" in notes
+    assert "checkout is the installation unit" in notes
+    assert "upgrade-drill" in notes
+    assert "docs/operator/" in notes
+    assert "no schema change" in notes
+    assert "no new Hub-memory write path" in notes
+
+
 def test_hub_view_template_is_split_into_view_partials() -> None:
     page = read_script("templates/hub_view/page.html")
     base_css = read_script("templates/hub_view/static/base.css")
@@ -371,8 +389,8 @@ def test_package_version_is_ready_for_next_public_patch_release() -> None:
     checklist = read_script("docs/public/release-checklist.md")
     readme = read_script("README.md")
 
-    assert 'version = "0.1.19"' in pyproject
-    assert "[v0.1.19 release notes](docs/public/v0.1.19-release-notes.md)" in readme
+    assert 'version = "0.1.20"' in pyproject
+    assert "[v0.1.20 release notes](docs/public/v0.1.20-release-notes.md)" in readme
     assert "version` matches the tag" in checklist
     assert "Do not move an already published tag" in checklist
     assert "[Release checklist](docs/public/release-checklist.md)" in readme
@@ -401,6 +419,76 @@ def test_ci_runs_fresh_clone_public_demo_drill() -> None:
     assert "scripts/smoke_public_demo.sh" in ci
     assert "AGENT_HUB_DOCKER_TIMEOUT_SECONDS" in ci
     assert "AGENT_HUB_DB_START_TIMEOUT_SECONDS" in ci
+
+
+def test_ci_runs_upgrade_drill_against_demo_database() -> None:
+    ci = read_script(".github/workflows/ci.yml")
+    script = read_script("scripts/upgrade_drill.sh")
+
+    assert "upgrade-drill:" in ci
+    assert "Run baseline-to-head upgrade drill" in ci
+    assert "scripts/upgrade_drill.sh" in ci
+    assert "AGENT_HUB_PUBLIC_DEMO=1" in script
+    assert "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;" in script
+    assert 'apply_sql_file "migrations/001_init.sql"' in script
+    assert "Tracking: missing" in script
+    assert "run_agent_hub migrate --apply" in script
+    assert 'apply_sql_file "seed/demo.sql"' in script
+    assert '"$ROOT_DIR/scripts/smoke_public_demo.sh"' in script
+    assert "refused non-demo database" in script
+
+
+def test_public_trust_model_uses_reviewed_claim_and_documents_compat_key() -> None:
+    readme = read_script("README.md")
+    pyproject = read_script("pyproject.toml")
+    boundaries = read_script("docs/automation-boundaries.md")
+    workflow = read_script("docs/agent-workflow.md")
+    daily_use = read_script("docs/public/daily-use.md")
+    trust = read_script("docs/public/trust-model.md")
+
+    assert "> reviewed context for humans and agents" in readme
+    assert "Verified project memory for agentic work." not in pyproject
+    assert "reviewed context for humans and agents" in boundaries
+    assert "durably reviewed" in workflow
+    assert "reviewed project state" in workflow
+    assert "reviewed assumptions" in daily_use
+    assert "# Trust Model" in trust
+    assert "does not prove the real-world claim is objectively true" in trust
+    assert "Facts can still have the database status `verified`" in trust
+    assert "`verified_project_state` remains part of" in trust
+    assert "[Trust model](docs/public/trust-model.md)" in readme
+
+
+def test_installation_boundary_documents_checkout_as_installation_unit() -> None:
+    readme = read_script("README.md")
+    getting_started = read_script("docs/public/getting-started.md")
+    installation = read_script("docs/public/installation.md")
+    system = read_script("agent_hub/commands/system.py")
+
+    assert "[Installation boundary](docs/public/installation.md)" in readme
+    assert "repository checkout is the installation unit" in getting_started
+    assert "# Installation Boundary" in installation
+    assert "git checkout as the installation unit" in installation
+    assert "Native Windows is not a supported v0.2 target" in installation
+    assert "A regular `pip install` can expose importable Python modules" in installation
+    assert "checkout_script_path" in system
+    assert "requires an Agent Data Hub repository checkout" in system
+
+
+def test_operator_notes_are_separated_from_public_path() -> None:
+    operator_readme = read_script("docs/operator/README.md")
+    workflow = read_script("docs/agent-workflow.md")
+    active_projects = read_script("docs/operator/active-projects.md")
+
+    assert "# Operator Notes" in operator_readme
+    assert "not the public product path" in operator_readme
+    assert "Public first-run and daily-use documentation lives under" in operator_readme
+    assert "docs/operator/codex-memory-policy.md" in workflow
+    assert "docs/operator/sensitive-access-handoffs.md" in workflow
+    assert "docs/operator/sensitive-access-handoffs.md" in active_projects
+    assert not (ROOT / "docs/active-projects.md").exists()
+    assert not (ROOT / "docs/codex-memory-policy.md").exists()
+    assert not (ROOT / "docs/sensitive-access-handoffs.md").exists()
 
 
 def test_preflight_uses_bounded_docker_checks() -> None:

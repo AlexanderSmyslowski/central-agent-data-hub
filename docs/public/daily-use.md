@@ -136,4 +136,4 @@ A good daily ADH run has these properties:
 - status, check, backup, and receipt commands can explain the system state
 
 The goal is not to remember everything. The goal is to make tomorrow's agent
-start from fewer, better, verified assumptions.
+start from fewer, better, reviewed assumptions.

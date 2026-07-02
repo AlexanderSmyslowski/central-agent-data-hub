@@ -36,6 +36,29 @@ from agent_hub.quality import (
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
+def checkout_script_path(script_name: str, command_name: str) -> Path | None:
+    script_path = REPO_ROOT / "scripts" / script_name
+    if script_path.is_file():
+        return script_path
+
+    print(
+        f"Error: agent-hub {command_name} requires an Agent Data Hub repository checkout.",
+        file=sys.stderr,
+    )
+    print(
+        "This preview treats the git checkout as the installation unit. "
+        "A non-editable site-packages install does not include the required "
+        f"scripts/{script_name} helper.",
+        file=sys.stderr,
+    )
+    print(
+        "Use the repository checkout and run the matching script directly, "
+        "or install from the checkout with: python -m pip install -e .",
+        file=sys.stderr,
+    )
+    return None
+
+
 def run_export(_args: argparse.Namespace) -> int:
     missing = [
         name
@@ -151,16 +174,8 @@ def run_status(_args: argparse.Namespace) -> int:
 
 
 def run_setup(args: argparse.Namespace) -> int:
-    script_path = REPO_ROOT / "scripts" / "setup_assistant.sh"
-    if not script_path.is_file():
-        print(
-            f"Error: setup assistant script not found: {script_path}",
-            file=sys.stderr,
-        )
-        print(
-            "Run the repository checkout directly or use scripts/setup_assistant.sh.",
-            file=sys.stderr,
-        )
+    script_path = checkout_script_path("setup_assistant.sh", "setup")
+    if script_path is None:
         return 2
 
     command = [str(script_path)]
@@ -177,9 +192,8 @@ def run_setup(args: argparse.Namespace) -> int:
 
 
 def run_doctor(_args: argparse.Namespace) -> int:
-    script_path = REPO_ROOT / "scripts" / "db_doctor.sh"
-    if not script_path.is_file():
-        print(f"Error: doctor script not found: {script_path}", file=sys.stderr)
+    script_path = checkout_script_path("db_doctor.sh", "doctor")
+    if script_path is None:
         return 2
 
     try:

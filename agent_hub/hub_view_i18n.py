@@ -39,7 +39,7 @@ KNOWN_UI_TEXT_TRANSLATIONS = {
         "Reviewed decisions become task constraints for the agent.": (
             "Geprüfte Entscheidungen werden zu Arbeitsgrenzen für den Agenten."
         ),
-        "Verified facts may be used as project assumptions.": (
+        "Reviewed facts may be used as project assumptions.": (
             "Geprüfte Fakten dürfen als Projektannahmen genutzt werden."
         ),
         "Active risks and open questions stay visible instead of being guessed away.": (
@@ -749,7 +749,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "reviewed_memory": "Reviewed memory",
         "reviewed_memory_action_copy": "Browse all reviewed facts, decisions, risks, questions, and reports for this project.",
         "reviewed_memory_copy": "Filter visible facts, decisions, risks, questions, reports, and relations.",
-        "reviewed_memory_next_step": "Use these entries as the verified base. Open details when you need the source, rationale, or related memory.",
+        "reviewed_memory_next_step": "Use these entries as the reviewed base. Open details when you need the source, rationale, or related memory.",
         "risks": "risks",
         "risks_and_questions": "Risks and questions",
         "risks_questions_next_step": "Check whether an active risk or open question should shape the next task before you hand work to an agent.",

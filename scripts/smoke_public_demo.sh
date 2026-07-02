@@ -351,7 +351,7 @@ for _ in range(50):
                 "Decisions, facts, and reports.",
                 "Trust and review-health signals.",
                 "How memory items point to each other.",
-                "Use these entries as the verified base",
+                "Use these entries as the reviewed base",
                 "Read the newest report first",
                 "Check whether an active risk or open question",
                 "Fix or consciously accept the visible signals",

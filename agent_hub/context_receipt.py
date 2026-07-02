@@ -11,7 +11,7 @@ from agent_hub.db import connect
 
 INFLUENCE_LINES = (
     "Reviewed decisions become task constraints for the agent.",
-    "Verified facts may be used as project assumptions.",
+    "Reviewed facts may be used as project assumptions.",
     "Active risks and open questions stay visible instead of being guessed away.",
     "Drafts stay labelled as unconfirmed until a human reviews them.",
 )

@@ -269,4 +269,4 @@ Keep automation boring:
 - keep reviewed writeback explicit
 - keep operational actions behind human approval
 
-This preserves the core promise: verified context for humans and agents.
+This preserves the core promise: reviewed context for humans and agents.

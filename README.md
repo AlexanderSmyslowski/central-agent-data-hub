@@ -1,6 +1,6 @@
 # Agent Data Hub
 
-> verified context for humans and agents
+> reviewed context for humans and agents
 
 Agent Data Hub is an early local-first technical preview for reviewed project
 memory and disciplined agent work.
@@ -63,8 +63,20 @@ What is already real:
 What is still rough:
 
 - some scripts are tuned for the maintainer's own local workflow
-- packaging is still intentionally lightweight
+- installation is currently checkout-based rather than a standalone package
 - the demo path is narrower than the internal day-to-day path
+
+## Trust Model
+
+Agent Data Hub records reviewed project memory. A reviewed item means a human
+or approved local review path accepted the item with source, status, and audit
+metadata. It does not prove the real-world claim is objectively true, current,
+or complete. Review can still be wrong.
+
+The older JSON field name `verified_project_state` remains part of the
+versioned context-pack contract for compatibility. Treat it as reviewed project
+state, not as an external truth guarantee. See
+[`docs/public/trust-model.md`](docs/public/trust-model.md).
 
 ## Architecture
 
@@ -109,6 +121,11 @@ The script creates `.venv` if needed, installs or reuses the local CLI, creates
 `.env` from `.env.example` if missing, starts the isolated public demo
 database, runs the public demo check, then starts Hub View and prints the local
 URL to open. It does not overwrite an existing `.env`.
+
+For this preview, the git checkout is the installation unit. `pip install -e .`
+installs the CLI from the checkout, but the daily operator path still uses
+repo-local scripts. See
+[`docs/public/installation.md`](docs/public/installation.md).
 
 In the first ten minutes, check only this path:
 
@@ -477,9 +494,12 @@ volumes, or alter Hub memory rows.
 
 - [Public overview](docs/public/agent-data-hub-overview.md)
 - [Public getting started](docs/public/getting-started.md)
+- [Installation boundary](docs/public/installation.md)
+- [Trust model](docs/public/trust-model.md)
 - [Daily local use](docs/public/daily-use.md)
 - [First-run demo session](docs/public/first-run-demo-session.md)
 - [Hub View app roadmap](docs/hub-view-app-roadmap.md)
+- [v0.1.20 release notes](docs/public/v0.1.20-release-notes.md)
 - [v0.1.19 release notes](docs/public/v0.1.19-release-notes.md)
 - [v0.1.18 release notes](docs/public/v0.1.18-release-notes.md)
 - [v0.1.17 release notes](docs/public/v0.1.17-release-notes.md)

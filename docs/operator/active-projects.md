@@ -59,7 +59,7 @@ Only store reviewed, non-sensitive memory through:
 - CommCats live-upload access is not Hub memory. If a new agent session needs
   Alfahosting upload access, request a human secure handoff outside the Hub,
   Git, and Obsidian. The rule is documented in
-  `docs/sensitive-access-handoffs.md`.
+  `docs/operator/sensitive-access-handoffs.md`.
 - The Catering Agents Platform is not a website side project. It is the larger
   product/platform project for agentic catering operations. Keep it in its own
   repo and Hub context.

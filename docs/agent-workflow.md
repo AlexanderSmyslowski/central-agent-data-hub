@@ -7,7 +7,7 @@ For the shortest copyable version, use `docs/agent-run-card.md`.
 
 The Hub separates three things:
 
-- **Gedächtnis**: what the project has durably verified.
+- **Gedächtnis**: what the project has durably reviewed.
 - **Arbeitskontext**: what applies to this specific run.
 - **Arbeitsregeln**: how the agent should work in the repo.
 
@@ -95,7 +95,7 @@ does not sync or write back. Drafts in the pack are pending-review signals, not
 reviewed memory. Consumers should check `context_pack_version` before assuming
 they understand the JSON format.
 
-`prepare` includes the task goal, verified project state, relevant decisions,
+`prepare` includes the task goal, reviewed project state, relevant decisions,
 constraints, risks, open questions, allowed actions, actions that require human
 approval, suggested checks, and a Context Trail with included source counts and
 item IDs, status, task scores, and inclusion reasons. It does not write memory
@@ -103,6 +103,10 @@ or promote Signal Inbox content. `--task` ranks facts, decisions, and reports
 with deterministic PostgreSQL full-text search, then fills with recent reviewed
 context. Active risks and open questions remain on a safety floor and are not
 filtered out by task text.
+
+The JSON field name `verified_project_state` is retained as a version-1
+contract key. It means reviewed project-state facts from ADH, not a guarantee
+that the outside world has been independently verified.
 
 `prepare` also reports Known Gaps. This makes the context pack more honest: the
 agent sees stale included items, old unanswered questions, empty memory types,
@@ -177,7 +181,7 @@ For focused work, use a context pack after the brief:
 agent-hub context --project <project-slug> --query "<current work focus>"
 ```
 
-See `docs/codex-memory-policy.md` for the reusable Codex/Hermes policy and
+See `docs/operator/codex-memory-policy.md` for the reusable Codex/Hermes policy and
 `docs/repo-agent-memory-template.md` for per-repository agent instructions.
 
 Projects may also define a repo-local project skill manifest. This manifest is
@@ -466,4 +470,4 @@ Website boundaries:
 - `lamour`: planned future web presence; do not inherit positioning from CommCats or THE ONE without a separate decision.
 
 For protected hosting, deployment, FTP, or production access, use the separate
-handoff rule in `docs/sensitive-access-handoffs.md`.
+handoff rule in `docs/operator/sensitive-access-handoffs.md`.

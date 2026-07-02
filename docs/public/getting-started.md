@@ -18,6 +18,10 @@ The script creates `.venv` if needed, installs or reuses the local CLI, creates
 database, runs the public demo check, then starts Hub View and prints the local
 URL to open. It does not overwrite an existing `.env`.
 
+For this preview, the repository checkout is the installation unit. The CLI is
+installed from the checkout, and operational startup/doctor/smoke paths remain
+repo-local scripts. See [`installation.md`](installation.md).
+
 The demo includes one neutral suggested memory change in Review Inbox. The
 one-command path uses `demo-reviewer` only for local demo attribution; this is
 not authentication and is not written to `.env`.

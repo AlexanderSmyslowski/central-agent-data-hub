@@ -2090,7 +2090,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Decisions, facts, and reports." in body
     assert "Trust and review-health signals." in body
     assert "How memory items point to each other." in body
-    assert "Use these entries as the verified base." in body
+    assert "Use these entries as the reviewed base." in body
     assert "Read the newest report first." in body
     assert "Check whether an active risk or open question" in body
     assert "Fix or consciously accept the visible signals" in body
@@ -2969,7 +2969,7 @@ def test_agent_context_route_renders_visible_context_handoff(monkeypatch) -> Non
                 },
                 "influence": [
                     "Reviewed decisions become task constraints for the agent.",
-                    "Verified facts may be used as project assumptions.",
+                    "Reviewed facts may be used as project assumptions.",
                 ],
                 "commands": {
                     "prepare": (

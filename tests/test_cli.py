@@ -135,7 +135,9 @@ def test_setup_command_has_clear_error_when_script_is_missing(
 
     captured = capsys.readouterr()
     assert code == 2
-    assert "setup assistant script not found" in captured.err
+    assert "requires an Agent Data Hub repository checkout" in captured.err
+    assert "checkout as the installation unit" in captured.err
+    assert "scripts/setup_assistant.sh" in captured.err
 
 
 def test_export_okf_command_writes_preview_bundle(monkeypatch, tmp_path, capsys) -> None:

@@ -1,6 +1,6 @@
 # Agent Data Hub announcement pack
 
-verified context for humans and agents
+reviewed context for humans and agents
 
 This file collects a small set of public-facing texts for the first open-source
 release. The goal is clarity, not marketing volume.
