@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 from agent_hub.export_obsidian import EXPORTS, filename_for, normalize_row
+from agent_hub.statuses import reviewed_statuses_for, sql_status_in_clause
 
 RECEIPT_TYPES = (
     "all",
@@ -143,7 +144,15 @@ def fetch_receipt_rows(
             fetched = list(cur.fetchall())
         else:
             query, _title_key = specs[item_type]
-            cur.execute(query, (project_id, since, limit))
+            status_clause, status_values = sql_status_in_clause(
+                "status",
+                reviewed_statuses_for(item_type),
+            )
+            query = query.replace(
+                "WHERE project_id = %s AND updated_at >= %s",
+                f"WHERE project_id = %s AND updated_at >= %s AND {status_clause}",
+            )
+            cur.execute(query, (project_id, since, *status_values, limit))
             fetched = list(cur.fetchall())
 
         for raw in fetched:

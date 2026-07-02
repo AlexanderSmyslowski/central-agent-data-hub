@@ -1227,6 +1227,7 @@ def test_v07_definition_tracks_release_candidate_evidence() -> None:
     assert "restart Docker Desktop" in release_check
     assert "run_docker_step()" in release_check
     assert "-u DATABASE_URL" in release_check
+    assert "AGENT_HUB_PUBLIC_DEMO=1" in release_check
     assert "-u OBSIDIAN_EXPORT_DIR" in release_check
     assert "-u AGENT_HUB_BACKUP_DIR" in release_check
     assert "-u AGENT_HUB_DB_CONTAINER" in release_check
@@ -1235,6 +1236,10 @@ def test_v07_definition_tracks_release_candidate_evidence() -> None:
     assert "agent_hub_release_demo" in release_check
     assert "run_step \"Public demo startup\" run_docker_step run_public_demo_start" in release_check
     assert "run_step \"Public demo smoke\" run_docker_step run_public_demo_smoke" in release_check
+    assert "run_step \"Public demo receipt\" run_docker_step run_public_demo_receipt" in release_check
+    assert "scripts/memory_receipt.sh" in release_check
+    assert "--project central-agent-data-hub-demo" in release_check
+    assert "--type fact" in release_check
     assert "smoke_public_demo.sh" in release_check
     assert "db_start_public_demo.sh" in release_check
     assert "smoke_external_developer.sh" in release_check

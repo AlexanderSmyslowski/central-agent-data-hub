@@ -15,6 +15,7 @@ Runs the local v0.7 release-candidate evidence set:
   - whitespace, shell syntax, Python compile, and pytest
   - public demo startup
   - public demo smoke
+  - public demo receipt verification
   - first external-developer smoke
   - multi-agent trust-loop smoke
   - offline-agent smoke
@@ -103,6 +104,7 @@ clean_demo_env() {
 release_demo_env() {
   env \
     -u DATABASE_URL \
+    AGENT_HUB_PUBLIC_DEMO=1 \
     AGENT_HUB_COMPOSE_PROJECT_NAME=central-agent-data-hub-release-demo \
     AGENT_HUB_DB_CONTAINER=central-agent-data-hub-release-demo-postgres \
     AGENT_HUB_DB_VOLUME=central-agent-data-hub-release-demo-pgdata \
@@ -117,6 +119,14 @@ run_public_demo_start() {
 
 run_public_demo_smoke() {
   release_demo_env "$ROOT_DIR/scripts/smoke_public_demo.sh"
+}
+
+run_public_demo_receipt() {
+  release_demo_env "$ROOT_DIR/scripts/memory_receipt.sh" \
+    --project central-agent-data-hub-demo \
+    --since 3650d \
+    --type fact \
+    --limit 3
 }
 
 echo "Agent Data Hub release-candidate evidence check"
@@ -137,6 +147,7 @@ run_step "Python compile" "$PYTHON_BIN" -m compileall "$ROOT_DIR/agent_hub"
 run_step "Python tests" run_python_tests
 run_step "Public demo startup" run_docker_step run_public_demo_start
 run_step "Public demo smoke" run_docker_step run_public_demo_smoke
+run_step "Public demo receipt" run_docker_step run_public_demo_receipt
 run_step "External-developer smoke" run_docker_step clean_demo_env "$ROOT_DIR/scripts/smoke_external_developer.sh"
 run_step "Trust-loop smoke" run_docker_step clean_demo_env "$ROOT_DIR/scripts/smoke_trust_loop.sh"
 run_step "Offline-agent smoke" clean_demo_env "$ROOT_DIR/scripts/smoke_agent_offline.sh"
