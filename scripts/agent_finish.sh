@@ -45,6 +45,47 @@ NO_LOCK=0
 UNRESOLVED_QUESTION_COUNT=""
 HAS_RECENT_ACTIVITY=0
 
+print_offline_finish_protocol() {
+  local retry_command="$ROOT_DIR/scripts/agent_finish.sh --project $PROJECT"
+  if [[ "$SINCE" != "24h" ]]; then
+    retry_command+=" --since $SINCE"
+  fi
+  if [[ "$WRITE_REPORT" -eq 1 ]]; then
+    retry_command+=" --write-report"
+  fi
+  if [[ "$REVIEW" -eq 1 ]]; then
+    retry_command+=" --review"
+  fi
+  if [[ "$EXPORT" -eq 1 ]]; then
+    retry_command+=" --export"
+  fi
+  if [[ "$BACKUP" -eq 1 ]]; then
+    retry_command+=" --backup"
+  fi
+  if [[ "$LIMIT" != "8" ]]; then
+    retry_command+=" --limit $LIMIT"
+  fi
+
+  cat >&2 <<EOF
+
+== Offline Finish Protocol ==
+No reviewed memory was written by this finish attempt.
+Do not mark Hub writeback, export, backup, or review-memory as complete.
+
+Keep the useful run summary in the current chat or working notes, then restore
+the local Hub and rerun the same finish command.
+
+Diagnose:
+  $ROOT_DIR/scripts/db_doctor.sh
+
+Start:
+  $ROOT_DIR/scripts/db_start.sh
+
+Retry:
+  $retry_command
+EOF
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --project)
@@ -104,6 +145,7 @@ fi
 
 if ! "$ROOT_DIR/scripts/agent_preflight.sh" --compact; then
   echo "Operational error: agent preflight failed." >&2
+  print_offline_finish_protocol
   exit 2
 fi
 

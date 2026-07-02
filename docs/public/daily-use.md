@@ -90,6 +90,11 @@ Close the loop with a summary and handoff:
 scripts/agent_finish.sh --project <project-slug> --review
 ```
 
+If the Hub is offline, finish stops before writing reviewed memory and prints
+an Offline Finish Protocol. Keep the useful run summary in chat or working
+notes, run the doctor/start path, and rerun the same finish command when the Hub
+is ready.
+
 If durable memory was written and the session should end with projection and
 backup, use:
 

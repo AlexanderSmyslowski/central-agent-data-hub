@@ -313,6 +313,26 @@ def test_v020_release_notes_describe_v02_readiness_cleanup() -> None:
     assert "no new Hub-memory write path" in notes
 
 
+def test_ci_runs_agent_offline_smoke() -> None:
+    ci = read_script(".github/workflows/ci.yml")
+    script = read_script("scripts/smoke_agent_offline.sh")
+
+    assert "agent-offline-smoke:" in ci
+    assert "Run agent offline-behavior smoke" in ci
+    assert "scripts/smoke_agent_offline.sh" in ci
+
+    assert "central-agent-data-hub-offline-smoke-postgres-missing" in script
+    assert "scripts/agent_preflight.sh" in script
+    assert "scripts/agent_finish.sh" in script
+    assert "Expected operational exit code 2" in script
+    assert "Der zentrale Agent Data Hub laeuft lokal gerade nicht." in script
+    assert "Operational error: durable DB container is missing." in script
+    assert "== Offline Finish Protocol ==" in script
+    assert "No reviewed memory was written by this finish attempt." in script
+    assert "Do not mark Hub writeback, export, backup, or review-memory as complete." in script
+    assert "Offline-agent smoke: ok" in script
+
+
 def test_hub_view_template_is_split_into_view_partials() -> None:
     page = read_script("templates/hub_view/page.html")
     base_css = read_script("templates/hub_view/static/base.css")
@@ -557,6 +577,34 @@ def test_v03_definition_tracks_multi_agent_trust_loop_contract() -> None:
     assert "chat adapter code inside this repository" in definition
 
 
+def test_v04_definition_tracks_operational_reliability_contract() -> None:
+    readme = read_script("README.md")
+    roadmap = read_script("ROADMAP.md")
+    definition = read_script("docs/public/v0.4-definition.md")
+    daily_use = read_script("docs/public/daily-use.md")
+    run_loop = read_script("docs/agent-run-loop.md")
+
+    assert "[v0.4 definition](docs/public/v0.4-definition.md)" in readme
+    assert "scripts/smoke_agent_offline.sh" in readme
+    assert "docs/public/v0.4-definition.md" in roadmap
+    assert "scripts/smoke_agent_offline.sh" in roadmap
+    assert "# v0.4 Definition" in definition
+    assert "local daily agent loop is operationally reliable" in roadmap
+    assert "agent_start.sh" in definition
+    assert "agent_finish.sh" in definition
+    assert "Offline Finish Protocol" in definition
+    assert "no reviewed memory" in definition
+    assert "automatic restart or recovery" in definition
+    assert "automatic writeback after reconnect" in definition
+    assert "offline-behavior smoke is green locally" in definition
+    assert "in CI" in definition
+    assert "finish stops before writing reviewed memory" in daily_use
+    assert "rerun the same finish command" in daily_use
+    assert "stop before any" in run_loop
+    assert "reviewed writeback" in run_loop
+    assert "doctor/start path" in run_loop
+
+
 def test_operator_notes_are_separated_from_public_path() -> None:
     operator_readme = read_script("docs/operator/README.md")
     workflow = read_script("docs/agent-workflow.md")
@@ -716,6 +764,12 @@ def test_backup_health_keeps_remote_parity_explicit_not_default_blocking() -> No
 def test_agent_finish_surfaces_question_answer_dry_run() -> None:
     finish = read_script("scripts/agent_finish.sh")
 
+    assert "print_offline_finish_protocol()" in finish
+    assert "== Offline Finish Protocol ==" in finish
+    assert "No reviewed memory was written by this finish attempt." in finish
+    assert "Do not mark Hub writeback, export, backup, or review-memory as complete." in finish
+    assert "Keep the useful run summary in the current chat or working notes" in finish
+    assert "Retry:" in finish
     assert "scripts/project_answer_question.sh" in finish
     assert "scripts/project_update_decision.sh" in finish
     assert "--question-id <open-question-uuid>" in finish

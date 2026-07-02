@@ -109,3 +109,20 @@ jobs:
           .venv/bin/python -m pip install -e .
           cp .env.example .env
           scripts/smoke_trust_loop.sh
+
+  agent-offline-smoke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Run agent offline-behavior smoke
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install -e .
+          cp .env.example .env
+          scripts/smoke_agent_offline.sh

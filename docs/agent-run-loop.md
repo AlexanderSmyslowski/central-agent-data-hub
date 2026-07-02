@@ -13,6 +13,11 @@ scripts/agent_start.sh --project <project-slug> --query "<focus>" --review
 scripts/agent_finish.sh --project <project-slug> --review --export --backup
 ```
 
+If `agent_finish.sh` cannot reach the local Hub, it must stop before any
+reviewed writeback, export, or backup claim and print the Offline Finish
+Protocol. Keep the run summary outside the Hub, restore the local database with
+the documented doctor/start path, then rerun the same finish command.
+
 To inspect recent audited agent writes and system actions:
 
 ```bash

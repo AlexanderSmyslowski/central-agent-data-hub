@@ -58,6 +58,9 @@ local reviewed-context loop, not a hosted product or broad automation platform.
 The following milestone is
 [`docs/public/v0.3-definition.md`](docs/public/v0.3-definition.md): the local
 multi-agent trust loop from draft candidate to reviewed context and handoff.
+The next reliability milestone is
+[`docs/public/v0.4-definition.md`](docs/public/v0.4-definition.md): clear
+agent behavior when the local Hub is ready or offline.
 
 What is already real:
 
@@ -176,6 +179,17 @@ It creates draft candidates from a temporary signal note, verifies Review Inbox
 visibility, accepts one draft with the CLI and one through the public Review
 API, checks the audit trail, and confirms that `prepare`, `handoff`, and the
 read-only MCP prepare payload see the accepted items as reviewed memory.
+
+The offline behavior check deliberately points agent wrappers at a missing test
+container:
+
+```bash
+scripts/smoke_agent_offline.sh
+```
+
+It confirms that preflight reports the Hub as offline and that
+`agent_finish.sh` prints an Offline Finish Protocol instead of implying that
+reviewed memory was written.
 
 Hub View is a local review surface, not the operational source of truth. The
 interface can be switched between English and German; stored memory stays in
@@ -514,6 +528,7 @@ volumes, or alter Hub memory rows.
 - [Public getting started](docs/public/getting-started.md)
 - [v0.2 definition](docs/public/v0.2-definition.md)
 - [v0.3 definition](docs/public/v0.3-definition.md)
+- [v0.4 definition](docs/public/v0.4-definition.md)
 - [Installation boundary](docs/public/installation.md)
 - [Trust model](docs/public/trust-model.md)
 - [Daily local use](docs/public/daily-use.md)

@@ -24,6 +24,17 @@ read-only MCP prepare payload.
 The v0.3 definition lives in `docs/public/v0.3-definition.md`. CI should keep
 `scripts/smoke_trust_loop.sh` green as a separate proof of that path.
 
+## v0.4 Milestone Boundary
+
+v0.4 should mean the local daily agent loop is operationally reliable: when the
+Hub is ready, start/finish wrappers load and close reviewed context; when the
+Hub is offline, they stop clearly, write no reviewed memory, and point to the
+doctor/start/retry path.
+
+The v0.4 definition lives in `docs/public/v0.4-definition.md`. CI should keep
+`scripts/smoke_agent_offline.sh` green as a separate proof of the offline
+behavior.
+
 ## v0 Priorities
 
 1. Operational readiness
