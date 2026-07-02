@@ -243,25 +243,49 @@ echo
 if [[ "$COMPACT" -eq 0 ]]; then
   echo "== Project Briefs =="
 fi
-if ! commcats_brief="$(run_agent_hub brief --project commcats-de --limit 4 2>&1)"; then
-  echo "$commcats_brief"
-  echo "Data error: commcats-de brief is unavailable." >&2
-  exit 1
-fi
-if [[ "$COMPACT" -eq 0 ]]; then
-  echo "$commcats_brief"
+if ! projects_output="$(run_agent_hub projects --format json 2>&1)"; then
+  echo "$projects_output"
+  echo "Operational error: active project list is unavailable." >&2
+  exit 2
 fi
 
-if ! the_one_brief="$(run_agent_hub brief --project the-one-catering --limit 4 2>&1)"; then
-  echo "$the_one_brief"
-  echo "Data error: the-one-catering brief is unavailable." >&2
+brief_project_list="$(
+  printf '%s\n' "$projects_output" | "$PYTHON_BIN" -c '
+import json
+import sys
+
+projects = json.load(sys.stdin)
+for project in projects[:2]:
+    slug = project.get("slug")
+    if slug:
+        print(slug)
+'
+)"
+
+if [[ -z "$brief_project_list" ]]; then
+  echo "Data error: no active Hub projects are available for brief checks." >&2
   exit 1
 fi
-if [[ "$COMPACT" -eq 0 ]]; then
-  echo
-  echo "$the_one_brief"
-else
-  echo "Project briefs: ok"
+
+brief_count=0
+while IFS= read -r project_slug; do
+  [[ -z "$project_slug" ]] && continue
+  brief_count=$((brief_count + 1))
+  if ! project_brief="$(run_agent_hub brief --project "$project_slug" --limit 4 2>&1)"; then
+    echo "$project_brief"
+    echo "Data error: project brief is unavailable for '$project_slug'." >&2
+    exit 1
+  fi
+  if [[ "$COMPACT" -eq 0 ]]; then
+    if (( brief_count > 1 )); then
+      echo
+    fi
+    echo "$project_brief"
+  fi
+done <<< "$brief_project_list"
+
+if [[ "$COMPACT" -eq 1 ]]; then
+  echo "Project briefs: ok ($brief_count checked)"
 fi
 
 echo

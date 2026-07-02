@@ -24,6 +24,13 @@ scripts/register_project.sh \
 This creates the project boundary that later agent runs must respect. Do not
 reuse another project's memory for an unregistered repo.
 
+The external-developer smoke tests this exact first-project path with a
+temporary local repository:
+
+```bash
+scripts/smoke_external_developer.sh
+```
+
 ## 2. Connect The Agent
 
 Use one of these paths:

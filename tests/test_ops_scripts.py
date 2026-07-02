@@ -334,6 +334,31 @@ def test_ci_runs_agent_offline_smoke() -> None:
     assert "Offline-agent smoke: ok" in script
 
 
+def test_ci_runs_external_developer_smoke() -> None:
+    ci = read_script(".github/workflows/ci.yml")
+    script = read_script("scripts/smoke_external_developer.sh")
+
+    assert "external-developer-smoke:" in ci
+    assert "Run first external-developer project smoke" in ci
+    assert "scripts/smoke_external_developer.sh" in ci
+
+    assert "agent_hub_external_dev_demo" in script
+    assert "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;" in script
+    assert "scripts/register_project.sh" in script
+    assert "git -C \"$external_repo\" init" in script
+    assert "Project slug: \\`$project_slug\\`" in script
+    assert "scripts/agent_start.sh" in script
+    assert "ADH Context Loaded" in script
+    assert "run_agent_hub remember" in script
+    assert "--metadata assigned_reviewer=demo-reviewer" in script
+    assert "run_agent_hub inbox" in script
+    assert "--accept \"$draft_id\"" in script
+    assert "run_agent_hub prepare" in script
+    assert "run_agent_hub handoff" in script
+    assert "scripts/agent_finish.sh" in script
+    assert "External-developer smoke: ok" in script
+
+
 def test_hub_view_template_is_split_into_view_partials() -> None:
     page = read_script("templates/hub_view/page.html")
     base_css = read_script("templates/hub_view/static/base.css")
@@ -606,6 +631,29 @@ def test_v04_definition_tracks_operational_reliability_contract() -> None:
     assert "doctor/start path" in run_loop
 
 
+def test_v05_definition_tracks_first_external_developer_contract() -> None:
+    readme = read_script("README.md")
+    roadmap = read_script("ROADMAP.md")
+    definition = read_script("docs/public/v0.5-definition.md")
+    daily_use = read_script("docs/public/daily-use.md")
+
+    assert "[v0.5 definition](docs/public/v0.5-definition.md)" in readme
+    assert "scripts/smoke_external_developer.sh" in readme
+    assert "docs/public/v0.5-definition.md" in roadmap
+    assert "scripts/smoke_external_developer.sh" in roadmap
+    assert "# v0.5 Definition" in definition
+    assert "first external developer success path" in definition
+    assert "Register a new local Git repository" in definition
+    assert "Install the repo-local Agent Data Hub instructions" in definition
+    assert "Create one unreviewed memory candidate and keep it as a draft" in definition
+    assert "Review the draft explicitly with reviewer attribution" in definition
+    assert "CI must run this smoke as its own job" in definition
+    assert "standalone package installation as the main path" in definition
+    assert "hosted deployment" in definition
+    assert "scripts/smoke_external_developer.sh" in daily_use
+    assert "temporary local repository" in daily_use
+
+
 def test_operator_notes_are_separated_from_public_path() -> None:
     operator_readme = read_script("docs/operator/README.md")
     workflow = read_script("docs/agent-workflow.md")
@@ -666,6 +714,10 @@ def test_preflight_uses_bounded_docker_checks() -> None:
     assert '$ROOT_DIR/scripts/db_status.sh' in preflight
     assert "postgres_ready" in preflight
     assert "compose exec -T \"$DB_SERVICE\" pg_isready" not in preflight
+    assert "run_agent_hub projects --format json" in preflight
+    assert "Project briefs: ok ($brief_count checked)" in preflight
+    assert "brief --project commcats-de" not in preflight
+    assert "brief --project the-one-catering" not in preflight
 
 
 def test_db_doctor_and_recover_are_safe_local_ops_paths() -> None:

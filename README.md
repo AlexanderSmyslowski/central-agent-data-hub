@@ -61,6 +61,9 @@ multi-agent trust loop from draft candidate to reviewed context and handoff.
 The next reliability milestone is
 [`docs/public/v0.4-definition.md`](docs/public/v0.4-definition.md): clear
 agent behavior when the local Hub is ready or offline.
+The first external-developer milestone is
+[`docs/public/v0.5-definition.md`](docs/public/v0.5-definition.md): registering
+one real local project and completing a reviewed context loop.
 
 What is already real:
 
@@ -190,6 +193,17 @@ scripts/smoke_agent_offline.sh
 It confirms that preflight reports the Hub as offline and that
 `agent_finish.sh` prints an Offline Finish Protocol instead of implying that
 reviewed memory was written.
+
+The first external-developer check runs a temporary local project through the
+daily-use path:
+
+```bash
+scripts/smoke_external_developer.sh
+```
+
+It registers a new local Git repository, installs the repo-local agent
+instructions, starts from reviewed context, reviews one draft, and confirms
+that `prepare`, `handoff`, and `agent_finish.sh` see the accepted item.
 
 Hub View is a local review surface, not the operational source of truth. The
 interface can be switched between English and German; stored memory stays in
@@ -529,6 +543,7 @@ volumes, or alter Hub memory rows.
 - [v0.2 definition](docs/public/v0.2-definition.md)
 - [v0.3 definition](docs/public/v0.3-definition.md)
 - [v0.4 definition](docs/public/v0.4-definition.md)
+- [v0.5 definition](docs/public/v0.5-definition.md)
 - [Installation boundary](docs/public/installation.md)
 - [Trust model](docs/public/trust-model.md)
 - [Daily local use](docs/public/daily-use.md)

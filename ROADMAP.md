@@ -35,6 +35,16 @@ The v0.4 definition lives in `docs/public/v0.4-definition.md`. CI should keep
 `scripts/smoke_agent_offline.sh` green as a separate proof of the offline
 behavior.
 
+## v0.5 Milestone Boundary
+
+v0.5 should mean a first external developer can move from the public demo into
+one real local project loop: register a repo, install repo-local agent
+instructions, start with reviewed context, review one draft explicitly, and
+finish with a handoff.
+
+The v0.5 definition lives in `docs/public/v0.5-definition.md`. CI should keep
+`scripts/smoke_external_developer.sh` green as a separate proof of that path.
+
 ## v0 Priorities
 
 1. Operational readiness
