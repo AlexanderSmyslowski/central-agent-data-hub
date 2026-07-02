@@ -45,6 +45,18 @@ finish with a handoff.
 The v0.5 definition lives in `docs/public/v0.5-definition.md`. CI should keep
 `scripts/smoke_external_developer.sh` green as a separate proof of that path.
 
+## v0.6 Milestone Boundary
+
+v0.6 should mean the first real-project bootstrap is available through the
+installed CLI, not only through repo-local shell scripts. A developer who has
+installed the checkout with `pip install -e .` can run
+`agent-hub register-project`, get the same project registration and repo-local
+agent instructions, and then continue with the existing start/review/finish
+loop.
+
+The v0.6 definition lives in `docs/public/v0.6-definition.md`. CI should keep
+the external-developer smoke on the CLI bootstrap path.
+
 ## v0 Priorities
 
 1. Operational readiness
@@ -65,6 +77,7 @@ The v0.5 definition lives in `docs/public/v0.5-definition.md`. CI should keep
    - Use `scripts/install_repo_agent_memory.sh` to install or update repo-local Hub instructions in important project repos.
    - Use `scripts/onboard_known_repos.sh` for dry-run/apply onboarding of active projects with explicit `metadata.local_path`.
    - Use `scripts/register_project.sh` as the first step for new project repos before substantial agent work.
+   - Prefer `agent-hub register-project` for public/CLI-first project bootstrap; keep `scripts/register_project.sh` as the repo-local compatibility path.
    - Keep project skill manifests as repo-local orientation maps, not Hub memory payloads.
    - Use `agent-hub actions` to inspect recent audited agent activity before adding any heavier work-session model.
    - Keep thread/worktree self-management as a reviewed workflow layer, not automatic memory capture.

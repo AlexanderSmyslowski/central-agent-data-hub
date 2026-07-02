@@ -64,6 +64,9 @@ agent behavior when the local Hub is ready or offline.
 The first external-developer milestone is
 [`docs/public/v0.5-definition.md`](docs/public/v0.5-definition.md): registering
 one real local project and completing a reviewed context loop.
+The CLI-first bootstrap milestone is
+[`docs/public/v0.6-definition.md`](docs/public/v0.6-definition.md): registering
+that project through the installed `agent-hub` command.
 
 What is already real:
 
@@ -216,7 +219,7 @@ local project, install or copy the repo-local agent rule, and run one reviewed
 work loop:
 
 ```bash
-scripts/register_project.sh --repo /path/to/project --slug <project-slug> --name "Project Name"
+agent-hub register-project --repo /path/to/project --slug <project-slug> --name "Project Name"
 scripts/agent_start.sh --project <project-slug> --query "<current focus>" --review
 # work inside that project boundary
 scripts/agent_finish.sh --project <project-slug> --review
@@ -544,6 +547,7 @@ volumes, or alter Hub memory rows.
 - [v0.3 definition](docs/public/v0.3-definition.md)
 - [v0.4 definition](docs/public/v0.4-definition.md)
 - [v0.5 definition](docs/public/v0.5-definition.md)
+- [v0.6 definition](docs/public/v0.6-definition.md)
 - [Installation boundary](docs/public/installation.md)
 - [Trust model](docs/public/trust-model.md)
 - [Daily local use](docs/public/daily-use.md)

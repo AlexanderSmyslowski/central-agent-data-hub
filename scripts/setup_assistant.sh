@@ -200,7 +200,7 @@ if [[ "$DRY_RUN" -eq 1 ]]; then
   fi
   if [[ "$REGISTER_PROJECT_CHOICE" == "yes" ]]; then
     has_next_steps=1
-    echo "  scripts/register_project.sh --repo \"$FIRST_PROJECT_REPO\" --slug \"$FIRST_PROJECT_SLUG\" --name \"$FIRST_PROJECT_NAME\""
+    echo "  agent-hub register-project --repo \"$FIRST_PROJECT_REPO\" --slug \"$FIRST_PROJECT_SLUG\" --name \"$FIRST_PROJECT_NAME\""
   fi
   if [[ "$has_next_steps" -eq 0 ]]; then
     echo "  none selected"
@@ -222,7 +222,7 @@ if [[ "$SIGNAL_INBOX_CHOICE" == "yes" ]]; then
 fi
 
 if [[ "$REGISTER_PROJECT_CHOICE" == "yes" ]]; then
-  "$ROOT_DIR/scripts/register_project.sh" \
+  run_agent_hub register-project \
     --repo "$FIRST_PROJECT_REPO" \
     --slug "$FIRST_PROJECT_SLUG" \
     --name "$FIRST_PROJECT_NAME" \
@@ -268,7 +268,7 @@ if [[ "$HUB_VIEW_CHOICE" == "yes" ]]; then
 fi
 if [[ "$REGISTER_PROJECT_CHOICE" == "yes" ]]; then
   has_next_steps=1
-  echo "  scripts/register_project.sh --repo \"$FIRST_PROJECT_REPO\" --slug \"$FIRST_PROJECT_SLUG\" --name \"$FIRST_PROJECT_NAME\""
+  echo "  agent-hub register-project --repo \"$FIRST_PROJECT_REPO\" --slug \"$FIRST_PROJECT_SLUG\" --name \"$FIRST_PROJECT_NAME\""
 fi
 if [[ "$SIGNAL_INBOX_CHOICE" == "yes" ]]; then
   has_next_steps=1

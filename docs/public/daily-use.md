@@ -15,7 +15,7 @@ register project -> connect agent -> start with reviewed context -> work
 Register each real repository once:
 
 ```bash
-scripts/register_project.sh \
+agent-hub register-project \
   --repo /path/to/project \
   --slug <project-slug> \
   --name "Project Name"
@@ -23,6 +23,10 @@ scripts/register_project.sh \
 
 This creates the project boundary that later agent runs must respect. Do not
 reuse another project's memory for an unregistered repo.
+
+The repo-local `scripts/register_project.sh` path remains available for
+operators and compatibility, but the public daily path should use the installed
+CLI command.
 
 The external-developer smoke tests this exact first-project path with a
 temporary local repository:

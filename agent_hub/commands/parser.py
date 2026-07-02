@@ -15,6 +15,7 @@ from agent_hub.commands.inbox import run_inbox
 from agent_hub.commands.mcp import run_mcp_serve
 from agent_hub.commands.prepare import run_prepare
 from agent_hub.commands.quality_views import run_actions, run_quality, run_receipt
+from agent_hub.commands.registration import run_register_project
 from agent_hub.commands.search import run_context, run_search
 from agent_hub.commands.summaries import (
     run_compile,
@@ -234,6 +235,65 @@ def build_parser() -> argparse.ArgumentParser:
         help="Filter by projects.metadata.project_type, for example website.",
     )
     projects_parser.set_defaults(func=run_projects)
+
+    register_project_parser = subparsers.add_parser(
+        "register-project",
+        help="Register a local repository as an Agent Data Hub project.",
+    )
+    register_project_parser.add_argument(
+        "--repo",
+        required=True,
+        help="Target repository or project directory.",
+    )
+    register_project_parser.add_argument(
+        "--slug",
+        required=True,
+        help="Stable project slug using lowercase letters, numbers, and hyphens.",
+    )
+    register_project_parser.add_argument(
+        "--name",
+        required=True,
+        help="Human-readable project name.",
+    )
+    register_project_parser.add_argument(
+        "--description",
+        default="",
+        help="Project description. Default is generated from the name.",
+    )
+    register_project_parser.add_argument(
+        "--type",
+        dest="project_type",
+        default="product",
+        help="Project type. Default: product.",
+    )
+    register_project_parser.add_argument(
+        "--memory-scope",
+        default="project",
+        help="Memory scope metadata. Default: project.",
+    )
+    register_project_parser.add_argument(
+        "--domain-profile",
+        default="",
+        help="Optional domain profile metadata.",
+    )
+    register_project_parser.add_argument(
+        "--file",
+        dest="target_file",
+        default="AGENTS.md",
+        help="Repo-local agent instruction file to install. Default: AGENTS.md.",
+    )
+    register_project_parser.add_argument(
+        "--no-install",
+        action="store_true",
+        help="Register in the Hub but do not write repo-local instructions.",
+    )
+    register_project_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show the planned registration and repo-local block without writing.",
+    )
+    add_format_argument(register_project_parser, ("text", "json"), "text")
+    register_project_parser.set_defaults(func=run_register_project)
 
     brief_parser = subparsers.add_parser(
         "brief",

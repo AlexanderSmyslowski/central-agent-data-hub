@@ -69,7 +69,7 @@ register a real repository, load reviewed ADH context, review one draft, and
 finish with a handoff.
 EOF
 
-"$ROOT_DIR/scripts/register_project.sh" \
+run_agent_hub register-project \
   --repo "$external_repo" \
   --slug "$project_slug" \
   --name "$project_name" \

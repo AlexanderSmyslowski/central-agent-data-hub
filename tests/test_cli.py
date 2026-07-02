@@ -15,6 +15,7 @@ from agent_hub import cli
 from agent_hub.errors import ValidationError
 from agent_hub.commands import briefs as brief_commands
 from agent_hub.commands import prepare as prepare_commands
+from agent_hub.commands import registration as registration_commands
 from agent_hub.commands import search as search_commands
 from agent_hub.commands import system as system_commands
 from agent_hub.commands import write as write_commands
@@ -91,6 +92,7 @@ def test_parse_since_rejects_invalid_value() -> None:
         ["prepare", "--help"],
         ["export-okf", "--help"],
         ["mcp-serve", "--help"],
+        ["register-project", "--help"],
         ["setup", "--help"],
     ],
 )
@@ -138,6 +140,114 @@ def test_setup_command_has_clear_error_when_script_is_missing(
     assert "requires an Agent Data Hub repository checkout" in captured.err
     assert "checkout as the installation unit" in captured.err
     assert "scripts/setup_assistant.sh" in captured.err
+
+
+class FakeRegistrationCursor:
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, tuple[object, ...]]] = []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> None:
+        return None
+
+    def execute(self, sql: str, params: tuple[object, ...]) -> None:
+        self.calls.append((sql, params))
+
+    def fetchone(self) -> dict[str, object]:
+        return {"id": "10000000-0000-4000-8000-000000000901"}
+
+
+class FakeRegistrationConnection:
+    def __init__(self) -> None:
+        self.cursor_instance = FakeRegistrationCursor()
+        self.committed = False
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> None:
+        return None
+
+    def cursor(self) -> FakeRegistrationCursor:
+        return self.cursor_instance
+
+    def commit(self) -> None:
+        self.committed = True
+
+
+def test_register_project_cli_dry_run_does_not_write(
+    monkeypatch, tmp_path, capsys
+) -> None:
+    def fail_connect():
+        raise AssertionError("dry-run must not connect to the database")
+
+    monkeypatch.setenv("AGENT_HUB_DISABLE_ENV_AUTOLOAD", "1")
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.setattr(registration_commands, "connect", fail_connect)
+    monkeypatch.setattr(
+        registration_commands,
+        "checkout_script_path",
+        lambda _script, _command: Path("/opt/adh/scripts/agent_start.sh"),
+    )
+
+    code = cli.main(
+        [
+            "register-project",
+            "--repo",
+            str(tmp_path),
+            "--slug",
+            "cli-project",
+            "--name",
+            "CLI Project",
+            "--dry-run",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Dry run: no DB rows or repo files were written." in captured.out
+    assert "Project slug: `cli-project`" in captured.out
+    assert not (tmp_path / "AGENTS.md").exists()
+
+
+def test_register_project_cli_registers_and_installs_agent_block(
+    monkeypatch, tmp_path, capsys
+) -> None:
+    connection = FakeRegistrationConnection()
+    monkeypatch.setenv("AGENT_HUB_DISABLE_ENV_AUTOLOAD", "1")
+    monkeypatch.setenv("DATABASE_URL", "postgresql://example.invalid/agent_hub")
+    monkeypatch.setattr(registration_commands, "connect", lambda: connection)
+    monkeypatch.setattr(
+        registration_commands,
+        "checkout_script_path",
+        lambda _script, _command: Path("/opt/adh/scripts/agent_start.sh"),
+    )
+
+    code = cli.main(
+        [
+            "register-project",
+            "--repo",
+            str(tmp_path),
+            "--slug",
+            "cli-project",
+            "--name",
+            "CLI Project",
+            "--description",
+            "A project registered through the CLI.",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    agents = (tmp_path / "AGENTS.md").read_text(encoding="utf-8")
+    assert code == 0
+    assert connection.committed
+    assert len(connection.cursor_instance.calls) == 2
+    assert "Registered Hub project: cli-project" in captured.out
+    assert "Project registration result: ready" in captured.out
+    assert "Project slug: `cli-project`" in agents
+    assert "/opt/adh/scripts/agent_start.sh" in agents
 
 
 def test_export_okf_command_writes_preview_bundle(monkeypatch, tmp_path, capsys) -> None:

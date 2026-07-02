@@ -347,7 +347,7 @@ def test_ci_runs_external_developer_smoke() -> None:
     assert 'mkdir -p "$OBSIDIAN_EXPORT_DIR"' in script
     assert "agent_hub-external-developer-demo.dump" in script
     assert '"$ROOT_DIR/scripts/db_backup_health.sh" --require' in script
-    assert "scripts/register_project.sh" in script
+    assert "run_agent_hub register-project" in script
     assert "git -C \"$external_repo\" init" in script
     assert "Project slug: \\`$project_slug\\`" in script
     assert "scripts/agent_start.sh" in script
@@ -1091,7 +1091,9 @@ def test_public_daily_use_path_bridges_demo_to_real_project_loop() -> None:
     assert "[`daily-use.md`](daily-use.md)" in getting_started
     assert "## After The Demo: Daily Local Use" in readme
     assert "register project -> connect agent -> start with reviewed context" in daily_use
+    assert 'agent-hub register-project \\' in daily_use
     assert "scripts/register_project.sh" in daily_use
+    assert "compatibility" in daily_use
     assert "scripts/install_repo_agent_memory.sh" in daily_use
     assert "agent-hub mcp-serve" in daily_use
     assert "scripts/agent_start.sh" in daily_use
@@ -1106,6 +1108,26 @@ def test_public_daily_use_path_bridges_demo_to_real_project_loop() -> None:
     assert "deterministic OKF export" in daily_use
     assert "there is no time-based auto-accept and no silent promotion" in daily_use
     assert "The goal is not to remember everything" in daily_use
+
+
+def test_v06_definition_tracks_cli_first_bootstrap_contract() -> None:
+    readme = read_script("README.md")
+    roadmap = read_script("ROADMAP.md")
+    definition = read_script("docs/public/v0.6-definition.md")
+    v05_definition = read_script("docs/public/v0.5-definition.md")
+    smoke = read_script("scripts/smoke_external_developer.sh")
+
+    assert "[v0.6 definition](docs/public/v0.6-definition.md)" in readme
+    assert "agent-hub register-project --repo /path/to/project" in readme
+    assert "docs/public/v0.6-definition.md" in roadmap
+    assert "Prefer `agent-hub register-project`" in roadmap
+    assert "# v0.6 Definition" in definition
+    assert "CLI-first real-project bootstrap" in definition
+    assert "agent-hub register-project" in definition
+    assert "scripts/register_project.sh" in definition
+    assert "compatibility path" in definition
+    assert "agent-hub register-project" in v05_definition
+    assert "run_agent_hub register-project" in smoke
 
 
 def test_public_demo_mode_forces_demo_database_when_database_url_is_set() -> None:
@@ -1280,6 +1302,7 @@ def test_setup_assistant_stays_small_and_model_independent() -> None:
     assert 'if [[ "$value" == "~" ]]' in script
     assert "none selected" in script
     assert "scripts/init_signal_inbox.sh" in script
-    assert "scripts/register_project.sh" in script
+    assert "run_agent_hub register-project" in script
+    assert "agent-hub register-project" in script
     assert "does not write to Agent Data Hub memory" not in script
     assert "Hub model-independent" in script
