@@ -1136,6 +1136,7 @@ def test_v07_definition_tracks_release_candidate_evidence() -> None:
     roadmap = read_script("ROADMAP.md")
     checklist = read_script("docs/public/release-checklist.md")
     definition = read_script("docs/public/v0.7-definition.md")
+    release_check = read_script("scripts/release_candidate_check.sh")
 
     assert "[`docs/public/v0.7-definition.md`](docs/public/v0.7-definition.md)" in readme
     assert "[v0.7 definition](docs/public/v0.7-definition.md)" in readme
@@ -1144,6 +1145,7 @@ def test_v07_definition_tracks_release_candidate_evidence() -> None:
     assert "release candidate is evidence-led" in roadmap
     assert "Release Candidate Loop" in definition
     assert "scripts/smoke_public_demo.sh" in definition
+    assert "scripts/db_start_public_demo.sh" in definition
     assert "scripts/smoke_external_developer.sh" in definition
     assert "scripts/smoke_trust_loop.sh" in definition
     assert "scripts/smoke_agent_offline.sh" in definition
@@ -1156,6 +1158,35 @@ def test_v07_definition_tracks_release_candidate_evidence() -> None:
     assert "write-capable MCP tools" in definition
     assert "v0.7-definition.md" in checklist
     assert "separate behavioral" in checklist
+    assert "scripts/release_candidate_check.sh" in checklist
+    assert "scripts/release_candidate_check.sh" in definition
+    assert "Release-candidate evidence check: ok" in release_check
+    assert "AGENT_HUB_RELEASE_TMPDIR" in release_check
+    assert "/var/tmp/agent-data-hub-release-candidate" in release_check
+    assert 'mkdir -p "$TMPDIR"' in release_check
+    assert "git -C \"$ROOT_DIR\" diff --check" in release_check
+    assert 'bash -n "$ROOT_DIR"/scripts/*.sh' in release_check
+    assert '"$PYTHON_BIN" -m compileall "$ROOT_DIR/agent_hub"' in release_check
+    assert '"$PYTHON_BIN" -m pytest -q' in release_check
+    assert "-u DATABASE_URL" in release_check
+    assert "-u OBSIDIAN_EXPORT_DIR" in release_check
+    assert "-u AGENT_HUB_BACKUP_DIR" in release_check
+    assert "-u AGENT_HUB_DB_CONTAINER" in release_check
+    assert "-u AGENT_HUB_DB_VOLUME" in release_check
+    assert "central-agent-data-hub-release-demo-postgres" in release_check
+    assert "agent_hub_release_demo" in release_check
+    assert "run_public_demo_start" in release_check
+    assert "run_public_demo_smoke" in release_check
+    assert "smoke_public_demo.sh" in release_check
+    assert "db_start_public_demo.sh" in release_check
+    assert "smoke_external_developer.sh" in release_check
+    assert "smoke_trust_loop.sh" in release_check
+    assert "smoke_agent_offline.sh" in release_check
+    assert "upgrade_drill.sh" in release_check
+    assert "run_agent_hub status" in release_check
+    assert "run_agent_hub check" in release_check
+    assert "git tag" not in release_check
+    assert "gh release" not in release_check
 
 
 def test_register_project_script_is_cli_compatibility_wrapper() -> None:
@@ -1253,6 +1284,8 @@ def test_public_demo_smoke_verifies_demo_exports() -> None:
     assert 'Compiled/central-agent-data-hub-demo.md' in script
     assert 'HUB_VIEW_SMOKE_PORT:-9876' in script
     assert 'scripts/hub_view.sh" --host 127.0.0.1 --port "$hub_view_smoke_port"' in script
+    assert "timeout=5" in script
+    assert "TimeoutError" in script
     assert "AGENT_HUB_REVIEWERS=demo-reviewer" in script
     assert "HUB_VIEW_REVIEWER=demo-reviewer" in script
     assert "urllib.request" in script

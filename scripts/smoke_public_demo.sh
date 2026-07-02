@@ -866,7 +866,7 @@ for _ in range(50):
             ),
         }
         for path, expected_texts in checks.items():
-            with urlopen(f"{base_url}{path}", timeout=1) as response:
+            with urlopen(f"{base_url}{path}", timeout=5) as response:
                 body = response.read().decode("utf-8", errors="replace")
             missing = [text for text in expected_texts if text not in body]
             if missing:
@@ -877,7 +877,7 @@ for _ in range(50):
                 )
                 sys.exit(1)
         sys.exit(0)
-    except URLError as exc:
+    except (OSError, TimeoutError, URLError) as exc:
         last_error = exc
         time.sleep(0.1)
 
