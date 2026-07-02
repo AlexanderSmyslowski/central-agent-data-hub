@@ -172,9 +172,10 @@ The broader trust-loop check runs in a separate isolated demo database:
 scripts/smoke_trust_loop.sh
 ```
 
-It creates a draft candidate, verifies Review Inbox visibility, accepts the
-draft with explicit reviewer attribution, checks the audit trail, and confirms
-that `prepare` and `handoff` see the accepted item as reviewed memory.
+It creates draft candidates from a temporary signal note, verifies Review Inbox
+visibility, accepts one draft with the CLI and one through the public Review
+API, checks the audit trail, and confirms that `prepare`, `handoff`, and the
+read-only MCP prepare payload see the accepted items as reviewed memory.
 
 Hub View is a local review surface, not the operational source of truth. The
 interface can be switched between English and German; stored memory stays in

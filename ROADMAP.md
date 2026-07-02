@@ -16,9 +16,10 @@ tools, or a non-checkout package installation path.
 ## v0.3 Milestone Boundary
 
 v0.3 should mean the multi-agent trust loop is executable and tested: an agent
-can create a draft candidate, a reviewer can accept or reject it, audit metadata
-records the review, and the next agent can see the accepted result through
-`prepare` and `handoff`.
+can create draft candidates from a signal, a reviewer can accept or reject them
+through the CLI or the public Review API, audit metadata records the review, and
+the next agent can see the accepted result through `prepare`, `handoff`, and the
+read-only MCP prepare payload.
 
 The v0.3 definition lives in `docs/public/v0.3-definition.md`. CI should keep
 `scripts/smoke_trust_loop.sh` green as a separate proof of that path.

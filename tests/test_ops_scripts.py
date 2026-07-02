@@ -452,16 +452,23 @@ def test_ci_runs_multi_agent_trust_loop_smoke() -> None:
     assert "central-agent-data-hub-trust-loop" in script
     assert "agent_hub_trust_loop_demo" in script
     assert "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;" in script
+    assert "repo-review.md" in script
+    assert "signal_file" in script
     assert "run_agent_hub remember" in script
     assert "--metadata assigned_reviewer=demo-reviewer" in script
     assert "run_agent_hub inbox" in script
     assert "--for demo-reviewer" in script
     assert "--accept \"$draft_id\"" in script
     assert "--reviewer demo-reviewer" in script
+    assert "from agent_hub.review_api import" in script
+    assert 'review_source="telegram"' in script
+    assert "External Review Adapter" in script
     assert "run_agent_hub prepare" in script
     assert "drafts_pending_review" in script
     assert "verified_project_state" in script
     assert "run_agent_hub handoff" in script
+    assert "mcp_server.prepare_context_pack_payload" in script
+    assert "MCP context trail" in script
     assert "SELECT metadata, output" in script
     assert "inbox_accept" in script
     assert "review_source" in script
@@ -538,8 +545,11 @@ def test_v03_definition_tracks_multi_agent_trust_loop_contract() -> None:
     assert "scripts/smoke_trust_loop.sh" in roadmap
     assert "# v0.3 Definition" in definition
     assert "multi-agent trust loop" in definition
+    assert "Signal Inbox-style note" in definition
     assert "Deterministic routing stores ordinary candidates as `draft`" in definition
     assert "who reviewed it, which channel submitted the review" in definition
+    assert "`review_source=telegram`" in definition
+    assert "read-only MCP prepare payload" in definition
     assert "scripts/smoke_trust_loop.sh" in definition
     assert "CI must run this smoke as its own job" in definition
     assert "automatic draft promotion" in definition
