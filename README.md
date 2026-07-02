@@ -55,6 +55,9 @@ preview**.
 The next milestone is defined narrowly in
 [`docs/public/v0.2-definition.md`](docs/public/v0.2-definition.md): a reliable
 local reviewed-context loop, not a hosted product or broad automation platform.
+The following milestone is
+[`docs/public/v0.3-definition.md`](docs/public/v0.3-definition.md): the local
+multi-agent trust loop from draft candidate to reviewed context and handoff.
 
 What is already real:
 
@@ -162,6 +165,16 @@ Troubleshooting:
 ```bash
 scripts/db_doctor.sh --public-demo
 ```
+
+The broader trust-loop check runs in a separate isolated demo database:
+
+```bash
+scripts/smoke_trust_loop.sh
+```
+
+It creates a draft candidate, verifies Review Inbox visibility, accepts the
+draft with explicit reviewer attribution, checks the audit trail, and confirms
+that `prepare` and `handoff` see the accepted item as reviewed memory.
 
 Hub View is a local review surface, not the operational source of truth. The
 interface can be switched between English and German; stored memory stays in
@@ -499,6 +512,7 @@ volumes, or alter Hub memory rows.
 - [Public overview](docs/public/agent-data-hub-overview.md)
 - [Public getting started](docs/public/getting-started.md)
 - [v0.2 definition](docs/public/v0.2-definition.md)
+- [v0.3 definition](docs/public/v0.3-definition.md)
 - [Installation boundary](docs/public/installation.md)
 - [Trust model](docs/public/trust-model.md)
 - [Daily local use](docs/public/daily-use.md)

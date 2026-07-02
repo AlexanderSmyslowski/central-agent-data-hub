@@ -89,3 +89,23 @@ jobs:
           .venv/bin/python -m pip install -e .
           cp .env.example .env
           scripts/upgrade_drill.sh
+
+  trust-loop-smoke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Run multi-agent trust-loop smoke
+        env:
+          AGENT_HUB_DOCKER_TIMEOUT_SECONDS: "30"
+          AGENT_HUB_DB_START_TIMEOUT_SECONDS: "90"
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install -e .
+          cp .env.example .env
+          scripts/smoke_trust_loop.sh

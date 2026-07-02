@@ -438,6 +438,36 @@ def test_ci_runs_upgrade_drill_against_demo_database() -> None:
     assert "refused non-demo database" in script
 
 
+def test_ci_runs_multi_agent_trust_loop_smoke() -> None:
+    ci = read_script(".github/workflows/ci.yml")
+    script = read_script("scripts/smoke_trust_loop.sh")
+
+    assert "trust-loop-smoke:" in ci
+    assert "Run multi-agent trust-loop smoke" in ci
+    assert "scripts/smoke_trust_loop.sh" in ci
+    assert "AGENT_HUB_DOCKER_TIMEOUT_SECONDS" in ci
+    assert "AGENT_HUB_DB_START_TIMEOUT_SECONDS" in ci
+
+    assert "AGENT_HUB_PUBLIC_DEMO=1" in script
+    assert "central-agent-data-hub-trust-loop" in script
+    assert "agent_hub_trust_loop_demo" in script
+    assert "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;" in script
+    assert "run_agent_hub remember" in script
+    assert "--metadata assigned_reviewer=demo-reviewer" in script
+    assert "run_agent_hub inbox" in script
+    assert "--for demo-reviewer" in script
+    assert "--accept \"$draft_id\"" in script
+    assert "--reviewer demo-reviewer" in script
+    assert "run_agent_hub prepare" in script
+    assert "drafts_pending_review" in script
+    assert "verified_project_state" in script
+    assert "run_agent_hub handoff" in script
+    assert "SELECT metadata, output" in script
+    assert "inbox_accept" in script
+    assert "review_source" in script
+    assert "Trust-loop smoke: ok" in script
+
+
 def test_public_trust_model_uses_reviewed_claim_and_documents_compat_key() -> None:
     readme = read_script("README.md")
     pyproject = read_script("pyproject.toml")
@@ -495,6 +525,26 @@ def test_v02_definition_keeps_milestone_scope_narrow_and_testable() -> None:
     assert "write-capable MCP tools" in definition
     assert "non-checkout package installation as the main path" in definition
     assert "Telegram or other chat adapters inside this repository" in definition
+
+
+def test_v03_definition_tracks_multi_agent_trust_loop_contract() -> None:
+    readme = read_script("README.md")
+    roadmap = read_script("ROADMAP.md")
+    definition = read_script("docs/public/v0.3-definition.md")
+
+    assert "[v0.3 definition](docs/public/v0.3-definition.md)" in readme
+    assert "scripts/smoke_trust_loop.sh" in readme
+    assert "docs/public/v0.3-definition.md" in roadmap
+    assert "scripts/smoke_trust_loop.sh" in roadmap
+    assert "# v0.3 Definition" in definition
+    assert "multi-agent trust loop" in definition
+    assert "Deterministic routing stores ordinary candidates as `draft`" in definition
+    assert "who reviewed it, which channel submitted the review" in definition
+    assert "scripts/smoke_trust_loop.sh" in definition
+    assert "CI must run this smoke as its own job" in definition
+    assert "automatic draft promotion" in definition
+    assert "write-capable MCP tools" in definition
+    assert "chat adapter code inside this repository" in definition
 
 
 def test_operator_notes_are_separated_from_public_path() -> None:
