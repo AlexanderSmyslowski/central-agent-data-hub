@@ -16,6 +16,7 @@ offline_env=(
   AGENT_HUB_DB_NAME=agent_hub_offline_smoke
   AGENT_HUB_DB_PORT=55999
   AGENT_HUB_DOCKER_TIMEOUT_SECONDS=5
+  AGENT_HUB_OFFLINE_FINISH_DIR="$tmp_dir/offline-finish"
 )
 
 run_expect_operational_failure() {
@@ -82,5 +83,18 @@ require_output "$finish_output" "No reviewed memory was written by this finish a
 require_output "$finish_output" "Do not mark Hub writeback, export, backup, or review-memory as complete."
 require_output "$finish_output" "Retry:"
 require_output "$finish_output" "$ROOT_DIR/scripts/agent_finish.sh --project central-agent-data-hub-demo --review"
+require_output "$finish_output" "Recovery note:"
+recovery_note="$tmp_dir/offline-finish/central-agent-data-hub-demo-latest.md"
+if [[ ! -f "$recovery_note" ]]; then
+  echo "Expected offline finish recovery note: $recovery_note" >&2
+  cat "$finish_output" >&2
+  exit 1
+fi
+require_output "$recovery_note" "# Offline Finish Recovery"
+require_output "$recovery_note" "reviewed_memory_written: no"
+require_output "$recovery_note" "export_completed: no"
+require_output "$recovery_note" "backup_completed: no"
+require_output "$recovery_note" "$ROOT_DIR/scripts/agent_finish.sh --project central-agent-data-hub-demo --review"
+require_output "$recovery_note" "This file is a local recovery note only."
 
 echo "Offline-agent smoke: ok"

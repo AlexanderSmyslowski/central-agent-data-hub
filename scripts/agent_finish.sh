@@ -44,8 +44,9 @@ BACKUP=0
 NO_LOCK=0
 UNRESOLVED_QUESTION_COUNT=""
 HAS_RECENT_ACTIVITY=0
+OFFLINE_FINISH_DIR="${AGENT_HUB_OFFLINE_FINISH_DIR:-$SHARED_ROOT/.local/offline-finish}"
 
-print_offline_finish_protocol() {
+finish_retry_command() {
   local retry_command="$ROOT_DIR/scripts/agent_finish.sh --project $PROJECT"
   if [[ "$SINCE" != "24h" ]]; then
     retry_command+=" --since $SINCE"
@@ -65,6 +66,79 @@ print_offline_finish_protocol() {
   if [[ "$LIMIT" != "8" ]]; then
     retry_command+=" --limit $LIMIT"
   fi
+  printf '%s\n' "$retry_command"
+}
+
+offline_finish_note_path() {
+  local safe_project
+  safe_project="$(printf '%s' "$PROJECT" | tr -c 'A-Za-z0-9_.-' '-')"
+  printf '%s/%s-latest.md\n' "$OFFLINE_FINISH_DIR" "$safe_project"
+}
+
+write_offline_finish_note() {
+  local reason="$1"
+  local note_path
+  local temp_path
+  local created_at
+  local repo_root
+  local retry_command
+
+  note_path="$(offline_finish_note_path)"
+  temp_path="${note_path}.tmp"
+  created_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+  repo_root="$(agent_run_repo_root "$PWD")"
+  retry_command="$(finish_retry_command)"
+
+  if ! mkdir -p "$OFFLINE_FINISH_DIR" 2>/dev/null; then
+    echo "Warning: could not create offline finish recovery directory: $OFFLINE_FINISH_DIR" >&2
+    return 0
+  fi
+
+  if ! cat > "$temp_path" <<EOF
+# Offline Finish Recovery
+
+- project: $PROJECT
+- created_at: $created_at
+- repo: $repo_root
+- cwd: $PWD
+- reason: $reason
+- reviewed_memory_written: no
+- export_completed: no
+- backup_completed: no
+
+## Retry
+
+\`\`\`bash
+$retry_command
+\`\`\`
+
+## Diagnose
+
+\`\`\`bash
+$ROOT_DIR/scripts/db_doctor.sh
+$ROOT_DIR/scripts/db_start.sh
+\`\`\`
+
+This file is a local recovery note only. It is not Hub memory, not a reviewed
+report, and not proof that finish writeback, export, or backup completed.
+EOF
+  then
+    echo "Warning: could not write offline finish recovery note: $note_path" >&2
+    rm -f "$temp_path" >/dev/null 2>&1 || true
+    return 0
+  fi
+
+  mv "$temp_path" "$note_path"
+  printf '%s\n' "$note_path"
+}
+
+print_offline_finish_protocol() {
+  local reason="${1:-agent preflight failed}"
+  local retry_command
+  local note_path
+
+  retry_command="$(finish_retry_command)"
+  note_path="$(write_offline_finish_note "$reason")"
 
   cat >&2 <<EOF
 
@@ -84,6 +158,13 @@ Start:
 Retry:
   $retry_command
 EOF
+  if [[ -n "$note_path" ]]; then
+    cat >&2 <<EOF
+
+Recovery note:
+  $note_path
+EOF
+  fi
 }
 
 while [[ $# -gt 0 ]]; do
@@ -145,7 +226,7 @@ fi
 
 if ! "$ROOT_DIR/scripts/agent_preflight.sh" --compact; then
   echo "Operational error: agent preflight failed." >&2
-  print_offline_finish_protocol
+  print_offline_finish_protocol "agent preflight failed"
   exit 2
 fi
 

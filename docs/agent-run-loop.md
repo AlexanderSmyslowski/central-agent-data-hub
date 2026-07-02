@@ -15,8 +15,12 @@ scripts/agent_finish.sh --project <project-slug> --review --export --backup
 
 If `agent_finish.sh` cannot reach the local Hub, it must stop before any
 reviewed writeback, export, or backup claim and print the Offline Finish
-Protocol. Keep the run summary outside the Hub, restore the local database with
-the documented doctor/start path, then rerun the same finish command.
+Protocol. It also writes a local recovery note under
+`.local/offline-finish/` with the retry command and explicit
+`reviewed_memory_written: no`, `export_completed: no`, and
+`backup_completed: no` markers. That file is a local note only, not Hub memory.
+Keep the run summary outside the Hub, restore the local database with the
+documented doctor/start path, then rerun the same finish command.
 
 To inspect recent audited agent writes and system actions:
 

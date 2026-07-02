@@ -331,6 +331,12 @@ def test_ci_runs_agent_offline_smoke() -> None:
     assert "== Offline Finish Protocol ==" in script
     assert "No reviewed memory was written by this finish attempt." in script
     assert "Do not mark Hub writeback, export, backup, or review-memory as complete." in script
+    assert "AGENT_HUB_OFFLINE_FINISH_DIR" in script
+    assert "central-agent-data-hub-demo-latest.md" in script
+    assert "reviewed_memory_written: no" in script
+    assert "export_completed: no" in script
+    assert "backup_completed: no" in script
+    assert "Recovery note:" in script
     assert "Offline-agent smoke: ok" in script
 
 
@@ -629,7 +635,11 @@ def test_v04_definition_tracks_operational_reliability_contract() -> None:
     assert "in CI" in definition
     assert "finish stops before writing reviewed memory" in daily_use
     assert "rerun the same finish command" in daily_use
+    assert ".local/offline-finish/" in daily_use
+    assert "explicit markers" in daily_use
     assert "stop before any" in run_loop
+    assert "reviewed_memory_written: no" in run_loop
+    assert "not Hub memory" in run_loop
     assert "reviewed writeback" in run_loop
     assert "doctor/start path" in run_loop
 
@@ -856,6 +866,13 @@ def test_agent_finish_surfaces_question_answer_dry_run() -> None:
     assert "No reviewed memory was written by this finish attempt." in finish
     assert "Do not mark Hub writeback, export, backup, or review-memory as complete." in finish
     assert "Keep the useful run summary in the current chat or working notes" in finish
+    assert "AGENT_HUB_OFFLINE_FINISH_DIR" in finish
+    assert "Offline Finish Recovery" in finish
+    assert "reviewed_memory_written: no" in finish
+    assert "export_completed: no" in finish
+    assert "backup_completed: no" in finish
+    assert "This file is a local recovery note only." in finish
+    assert "Recovery note:" in finish
     assert "Retry:" in finish
     assert "scripts/project_answer_question.sh" in finish
     assert "scripts/project_update_decision.sh" in finish
