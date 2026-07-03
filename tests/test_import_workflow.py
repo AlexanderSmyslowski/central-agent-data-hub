@@ -14,7 +14,7 @@ def test_dry_run_does_not_write(tmp_path: Path) -> None:
         tmp_path / "notes" / "fact.md",
         """
 type: fact
-project_slug: commcats-de
+project_slug: demo-website
 statement: Dry run fact.
 source: smoke test
 """,
@@ -37,7 +37,7 @@ source: smoke test
 
         def fetchone(self):
             if "FROM projects" in self.last_sql:
-                return {"id": "project-id", "slug": "commcats-de", "name": "CommCats"}
+                return {"id": "project-id", "slug": "demo-website", "name": "Demo Website"}
             return None
 
         def fetchall(self):
@@ -61,7 +61,7 @@ def test_dry_run_rejects_missing_database_project(tmp_path: Path) -> None:
         tmp_path / "notes" / "fact.md",
         """
 type: fact
-project_slug: commcats-de
+project_slug: demo-website
 statement: Dry run fact.
 source: smoke test
 """,
@@ -87,7 +87,7 @@ source: smoke test
     result = import_markdown(note, allowlist_path, DryRunConnection(), dry_run=True)
 
     assert result.planned == []
-    assert result.errors[0]["error"] == "Project not found: commcats-de"
+    assert result.errors[0]["error"] == "Project not found: demo-website"
 
 
 def test_duplicate_import_defaults_to_skip(tmp_path: Path) -> None:
@@ -96,8 +96,8 @@ def test_duplicate_import_defaults_to_skip(tmp_path: Path) -> None:
         tmp_path / "notes" / "fact.md",
         """
 type: fact
-project_slug: commcats-de
-import_key: commcats-static-fact
+project_slug: demo-website
+import_key: demo-website-static-fact
 statement: Dry run fact.
 source: smoke test
 """,
@@ -120,7 +120,7 @@ source: smoke test
 
         def fetchone(self):
             if "FROM projects" in self.last_sql:
-                return {"id": "project-id", "slug": "commcats-de", "name": "CommCats"}
+                return {"id": "project-id", "slug": "demo-website", "name": "Demo Website"}
             return None
 
         def fetchall(self):
@@ -134,7 +134,7 @@ source: smoke test
                     "status": "verified",
                     "metadata": {
                         "agent_hub_import": {
-                            "import_key": "commcats-static-fact",
+                            "import_key": "demo-website-static-fact",
                             "content_hash": "old",
                             "data_hash": "old",
                         }
@@ -160,8 +160,8 @@ def test_duplicate_import_can_error(tmp_path: Path) -> None:
         tmp_path / "notes" / "fact.md",
         """
 type: fact
-project_slug: commcats-de
-import_key: commcats-static-fact
+project_slug: demo-website
+import_key: demo-website-static-fact
 statement: Dry run fact.
 source: smoke test
 """,
@@ -182,7 +182,7 @@ source: smoke test
 
         def fetchone(self):
             if "FROM projects" in self.last_sql:
-                return {"id": "project-id", "slug": "commcats-de", "name": "CommCats"}
+                return {"id": "project-id", "slug": "demo-website", "name": "Demo Website"}
             return None
 
         def fetchall(self):
@@ -196,7 +196,7 @@ source: smoke test
                     "status": "verified",
                     "metadata": {
                         "agent_hub_import": {
-                            "import_key": "commcats-static-fact",
+                            "import_key": "demo-website-static-fact",
                             "content_hash": "old",
                             "data_hash": "old",
                         }

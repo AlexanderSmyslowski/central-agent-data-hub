@@ -595,7 +595,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     add_project_argument(
         remember_parser,
-        "Project slug, for example the-one-catering.",
+        "Project slug, for example central-agent-data-hub-demo.",
     )
     remember_parser.add_argument(
         "--create-project",

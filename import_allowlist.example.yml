@@ -1,8 +1,8 @@
 # Copy to import_allowlist.yml and adjust roots before running agent-hub import.
 # Notes may include import_key or db_id for stable dedupe/sync identity.
 projects:
-  - commcats-de
-  - the-one-catering
+  - central-agent-data-hub-demo
+  - demo-website
 
 roots:
   - ./obsidian-import

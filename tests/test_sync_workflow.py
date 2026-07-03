@@ -17,8 +17,8 @@ def test_sync_plan_reports_create(tmp_path: Path) -> None:
         tmp_path / "notes" / "fact.md",
         """
 type: fact
-project_slug: commcats-de
-import_key: commcats-static-fact
+project_slug: demo-website
+import_key: demo-website-static-fact
 statement: Sync fact.
 source: smoke test
 """,
@@ -41,7 +41,7 @@ source: smoke test
 
         def fetchone(self):
             if "FROM projects" in self.last_sql:
-                return {"id": "project-id", "slug": "commcats-de", "name": "CommCats"}
+                return {"id": "project-id", "slug": "demo-website", "name": "Demo Website"}
             return None
 
         def fetchall(self):
@@ -64,8 +64,8 @@ def test_sync_plan_rejects_sensitive_note(tmp_path: Path) -> None:
         tmp_path / "notes" / "fact.md",
         """
 type: fact
-project_slug: commcats-de
-import_key: commcats-static-fact
+project_slug: demo-website
+import_key: demo-website-static-fact
 statement: Sync fact.
 source: smoke test
 """,
@@ -102,8 +102,8 @@ def test_sync_plan_reports_update_with_diff(tmp_path: Path) -> None:
         tmp_path / "notes" / "fact.md",
         """
 type: fact
-project_slug: commcats-de
-import_key: commcats-static-fact
+project_slug: demo-website
+import_key: demo-website-static-fact
 statement: Changed Markdown fact.
 source: smoke test
 """,
@@ -124,7 +124,7 @@ source: smoke test
 
         def fetchone(self):
             if "FROM projects" in self.last_sql:
-                return {"id": "project-id", "slug": "commcats-de", "name": "CommCats"}
+                return {"id": "project-id", "slug": "demo-website", "name": "Demo Website"}
             return None
 
         def fetchall(self):
@@ -138,7 +138,7 @@ source: smoke test
                     "status": "verified",
                     "metadata": {
                         "agent_hub_import": {
-                            "import_key": "commcats-static-fact",
+                            "import_key": "demo-website-static-fact",
                             "content_hash": "previous-note-hash",
                             "data_hash": hash_payload(last_data),
                             "data": last_data,
@@ -180,8 +180,8 @@ def test_sync_plan_reports_database_only_change_as_skip(tmp_path: Path) -> None:
         tmp_path / "notes" / "fact.md",
         """
 type: fact
-project_slug: commcats-de
-import_key: commcats-static-fact
+project_slug: demo-website
+import_key: demo-website-static-fact
 statement: Original fact.
 source: smoke test
 """,
@@ -203,7 +203,7 @@ source: smoke test
 
         def fetchone(self):
             if "FROM projects" in self.last_sql:
-                return {"id": "project-id", "slug": "commcats-de", "name": "CommCats"}
+                return {"id": "project-id", "slug": "demo-website", "name": "Demo Website"}
             return None
 
         def fetchall(self):
@@ -217,7 +217,7 @@ source: smoke test
                     "status": "verified",
                     "metadata": {
                         "agent_hub_import": {
-                            "import_key": "commcats-static-fact",
+                            "import_key": "demo-website-static-fact",
                             "content_hash": item.content_hash,
                             "data_hash": hash_payload(last_data),
                             "data": last_data,
@@ -251,8 +251,8 @@ def test_sync_plan_reports_conflict_with_diff(tmp_path: Path) -> None:
         tmp_path / "notes" / "fact.md",
         """
 type: fact
-project_slug: commcats-de
-import_key: commcats-static-fact
+project_slug: demo-website
+import_key: demo-website-static-fact
 statement: Changed Markdown fact.
 source: smoke test
 """,
@@ -273,7 +273,7 @@ source: smoke test
 
         def fetchone(self):
             if "FROM projects" in self.last_sql:
-                return {"id": "project-id", "slug": "commcats-de", "name": "CommCats"}
+                return {"id": "project-id", "slug": "demo-website", "name": "Demo Website"}
             return None
 
         def fetchall(self):
@@ -287,7 +287,7 @@ source: smoke test
                     "status": "verified",
                     "metadata": {
                         "agent_hub_import": {
-                            "import_key": "commcats-static-fact",
+                            "import_key": "demo-website-static-fact",
                             "content_hash": "previous-note-hash",
                             "data_hash": hash_payload(last_data),
                             "data": last_data,
@@ -328,8 +328,8 @@ def test_sync_apply_conflict_writes_failed_sync_event(tmp_path: Path) -> None:
         tmp_path / "notes" / "fact.md",
         """
 type: fact
-project_slug: commcats-de
-import_key: commcats-static-fact
+project_slug: demo-website
+import_key: demo-website-static-fact
 statement: Changed Markdown fact.
 source: smoke test
 """,
@@ -353,7 +353,7 @@ source: smoke test
 
         def fetchone(self):
             if "FROM projects" in self.last_sql:
-                return {"id": "project-id", "slug": "commcats-de", "name": "CommCats"}
+                return {"id": "project-id", "slug": "demo-website", "name": "Demo Website"}
             return None
 
         def fetchall(self):
@@ -367,7 +367,7 @@ source: smoke test
                     "status": "verified",
                     "metadata": {
                         "agent_hub_import": {
-                            "import_key": "commcats-static-fact",
+                            "import_key": "demo-website-static-fact",
                             "content_hash": "previous-note-hash",
                             "data_hash": hash_payload(last_data),
                             "data": last_data,

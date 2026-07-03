@@ -29,8 +29,8 @@ def test_normalize_import_item_accepts_fact(tmp_path: Path) -> None:
         tmp_path / "notes" / "fact.md",
         """
 type: fact
-project: commcats-de
-statement: CommCats is static.
+project: demo-website
+statement: Demo Website is static.
 source: smoke test
 confidence: 0.9
 metadata:
@@ -41,7 +41,7 @@ metadata:
     item = normalize_import_item(note, allowlist)
 
     assert item.memory_type == "fact"
-    assert item.project_slug == "commcats-de"
+    assert item.project_slug == "demo-website"
     assert item.source_path == "fact.md"
     assert item.data["confidence"] == 0.9
 
@@ -53,8 +53,8 @@ def test_import_metadata_uses_relative_source_path(tmp_path: Path) -> None:
         tmp_path / "notes" / "facts" / "example.md",
         """
 type: fact
-project: commcats-de
-statement: CommCats is static.
+project: demo-website
+statement: Demo Website is static.
 source: smoke test
 confidence: 0.9
 """,
@@ -76,7 +76,7 @@ def test_normalize_import_item_rejects_unknown_project(tmp_path: Path) -> None:
         tmp_path / "notes" / "fact.md",
         """
 type: fact
-project: the-one-catering
+project: demo-catering
 statement: Example.
 source: smoke test
 """,
@@ -92,7 +92,7 @@ def test_normalize_import_item_rejects_unsupported_type(tmp_path: Path) -> None:
         tmp_path / "notes" / "doc.md",
         """
 type: document
-project: commcats-de
+project: demo-website
 title: Nope
 """,
     )
@@ -114,7 +114,7 @@ def test_normalize_import_item_rejects_sensitive_content(tmp_path: Path) -> None
         tmp_path / "notes" / "fact.md",
         """
 type: fact
-project: commcats-de
+project: demo-website
 statement: Do not store this.
 source: smoke test
 """,

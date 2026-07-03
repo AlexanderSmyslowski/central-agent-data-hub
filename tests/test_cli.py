@@ -375,7 +375,7 @@ def test_brief_without_database_url_has_clear_error(monkeypatch, capsys) -> None
     monkeypatch.setenv("AGENT_HUB_DISABLE_ENV_AUTOLOAD", "1")
     monkeypatch.delenv("DATABASE_URL", raising=False)
 
-    code = cli.main(["brief", "--project", "commcats-de"])
+    code = cli.main(["brief", "--project", "demo-website"])
 
     captured = capsys.readouterr()
     assert code == 2
@@ -391,7 +391,7 @@ def test_remember_without_database_url_has_clear_error(monkeypatch, capsys) -> N
         [
             "remember",
             "--project",
-            "commcats-de",
+            "demo-website",
             "--type",
             "fact",
             "--text",
@@ -415,7 +415,7 @@ def test_answer_question_without_database_url_has_clear_error(
         [
             "answer-question",
             "--project",
-            "commcats-de",
+            "demo-website",
             "--question-id",
             "cbf9b149-3e7e-4853-b136-4b86cf4dde8e",
             "--answer",
@@ -459,7 +459,7 @@ def test_answer_question_rejects_invalid_uuid(capsys) -> None:
             [
                 "answer-question",
                 "--project",
-                "commcats-de",
+                "demo-website",
                 "--question-id",
                 "not-a-uuid",
                 "--answer",
@@ -555,7 +555,7 @@ def test_relations_without_database_url_has_clear_error(monkeypatch, capsys) -> 
     monkeypatch.setenv("AGENT_HUB_DISABLE_ENV_AUTOLOAD", "1")
     monkeypatch.delenv("DATABASE_URL", raising=False)
 
-    code = cli.main(["relations", "--project", "commcats-de"])
+    code = cli.main(["relations", "--project", "demo-website"])
 
     captured = capsys.readouterr()
     assert code == 2
@@ -571,7 +571,7 @@ def test_relate_without_database_url_has_clear_error(monkeypatch, capsys) -> Non
         [
             "relate",
             "--project",
-            "commcats-de",
+            "demo-website",
             "--source-type",
             "fact",
             "--source-id",
@@ -594,13 +594,13 @@ def test_relate_without_database_url_has_clear_error(monkeypatch, capsys) -> Non
 @pytest.mark.parametrize(
     "command",
     [
-        ["daily", "--project", "commcats-de"],
-        ["handoff", "--project", "commcats-de"],
-        ["review", "--project", "commcats-de"],
-        ["search", "--project", "commcats-de", "--query", "Alfahosting"],
-        ["context", "--project", "commcats-de", "--query", "Alfahosting"],
-        ["receipt", "--project", "commcats-de"],
-        ["actions", "--project", "commcats-de"],
+        ["daily", "--project", "demo-website"],
+        ["handoff", "--project", "demo-website"],
+        ["review", "--project", "demo-website"],
+        ["search", "--project", "demo-website", "--query", "static hosting"],
+        ["context", "--project", "demo-website", "--query", "static hosting"],
+        ["receipt", "--project", "demo-website"],
+        ["actions", "--project", "demo-website"],
     ],
 )
 def test_retrieval_commands_without_database_url_have_clear_error(
@@ -676,7 +676,7 @@ def test_relations_requires_object_type_and_id_together(monkeypatch, capsys) -> 
         [
             "relations",
             "--project",
-            "commcats-de",
+            "demo-website",
             "--object-type",
             "fact",
         ]
@@ -736,7 +736,7 @@ def test_sync_json_output_includes_diffs(monkeypatch, capsys) -> None:
                 {
                     "action": "update",
                     "path": "notes/fact.md",
-                    "project": "commcats-de",
+                    "project": "demo-website",
                     "type": "fact",
                     "import_key": "fact-key",
                     "diffs": [
@@ -808,8 +808,8 @@ def test_answer_question_json_output(monkeypatch, capsys) -> None:
         lambda *_args, **_kwargs: (
             {
                 "id": uuid.UUID("10000000-0000-4000-8000-000000000001"),
-                "slug": "commcats-de",
-                "name": "CommCats",
+                "slug": "demo-website",
+                "name": "Demo Website",
             },
             {
                 "id": uuid.UUID("10000000-0000-4000-8000-000000000011"),
@@ -831,7 +831,7 @@ def test_answer_question_json_output(monkeypatch, capsys) -> None:
         [
             "answer-question",
             "--project",
-            "commcats-de",
+            "demo-website",
             "--question-id",
             "cbf9b149-3e7e-4853-b136-4b86cf4dde8e",
             "--answer",
@@ -941,8 +941,8 @@ class FakeCursor:
             self.results = [
                 {
                     "id": uuid.UUID("10000000-0000-4000-8000-000000000001"),
-                    "name": "CommCats",
-                    "slug": "commcats-de",
+                    "name": "Demo Website",
+                    "slug": "demo-website",
                     "description": "Static website memory.",
                     "status": "active",
                     "metadata": {"memory_scope": "website"},
@@ -979,7 +979,7 @@ class FakeCursor:
             self.results = [
                 {
                     "id": uuid.UUID("10000000-0000-4000-8000-000000000201"),
-                    "statement": "CommCats is static.",
+                    "statement": "Demo Website is static.",
                     "source": "seed/business_sites.sql",
                     "confidence": 0.95,
                     "status": "verified",
@@ -1011,11 +1011,11 @@ def test_brief_json_output(monkeypatch, capsys) -> None:
     monkeypatch.setenv("DATABASE_URL", "postgresql://example.invalid/test")
     monkeypatch.setattr(brief_commands, "connect", lambda: FakeConnection())
 
-    code = cli.main(["brief", "--project", "commcats-de", "--format", "json"])
+    code = cli.main(["brief", "--project", "demo-website", "--format", "json"])
 
     captured = capsys.readouterr()
     assert code == 0
-    assert '"slug": "commcats-de"' in captured.out
+    assert '"slug": "demo-website"' in captured.out
     assert '"decisions"' in captured.out
     assert '"facts"' in captured.out
 
@@ -1050,7 +1050,7 @@ def test_brief_text_marks_open_questions_as_unresolved(monkeypatch, capsys) -> N
         brief_commands, "connect", lambda: FakeAnsweredQuestionConnection()
     )
 
-    code = cli.main(["brief", "--project", "commcats-de"])
+    code = cli.main(["brief", "--project", "demo-website"])
 
     captured = capsys.readouterr()
     assert code == 0
@@ -1075,15 +1075,15 @@ class FakeProjectsCursor:
         FakeProjectsCursor.last_params = _params
         self.results = [
             {
-                "slug": "commcats-de",
-                "name": "CommCats",
+                "slug": "demo-website",
+                "name": "Demo Website",
                 "status": "active",
                 "description": "Static site work.",
                 "metadata": {"memory_scope": "website", "project_type": "website"},
             },
             {
-                "slug": "lamour",
-                "name": "L'Amour",
+                "slug": "future-website",
+                "name": "Future Website",
                 "status": "active",
                 "description": "Planned future project.",
                 "metadata": {"project_type": "website"},
@@ -1109,8 +1109,8 @@ class FakeContextCursor:
             self.results = [
                 {
                     "id": uuid.UUID("10000000-0000-4000-8000-000000000001"),
-                    "name": "THE ONE",
-                    "slug": "the-one-catering",
+                    "name": "Demo Catering",
+                    "slug": "demo-catering",
                     "description": "Website work.",
                     "status": "active",
                     "metadata": {},
@@ -1123,7 +1123,7 @@ class FakeContextCursor:
                 {
                     "id": uuid.UUID("10000000-0000-4000-8000-000000000401"),
                     "question": "Which staging subdomain should be used?",
-                    "answer": "Use staging.the-one.catering.",
+                    "answer": "Use staging.demo-catering.local.",
                     "status": "answered",
                     "created_at": "2026-05-29T00:00:00Z",
                     "updated_at": "2026-05-30T00:00:00Z",
@@ -1157,7 +1157,7 @@ def test_context_labels_answered_questions_as_updates(monkeypatch, capsys) -> No
     monkeypatch.setattr(search_commands, "connect", lambda: FakeContextConnection())
 
     code = cli.main(
-        ["context", "--project", "the-one-catering", "--query", "staging"]
+        ["context", "--project", "demo-catering", "--query", "staging"]
     )
 
     captured = capsys.readouterr()
@@ -1191,8 +1191,8 @@ def test_projects_text_output(monkeypatch, capsys) -> None:
     captured = capsys.readouterr()
     assert code == 0
     assert "Active projects:" in captured.out
-    assert "commcats-de [active] (website) CommCats" in captured.out
-    assert "lamour [active] (website) L'Amour" in captured.out
+    assert "demo-website [active] (website) Demo Website" in captured.out
+    assert "future-website [active] (website) Future Website" in captured.out
 
 
 def test_projects_json_output(monkeypatch, capsys) -> None:
@@ -1203,8 +1203,8 @@ def test_projects_json_output(monkeypatch, capsys) -> None:
 
     captured = capsys.readouterr()
     assert code == 0
-    assert '"slug": "commcats-de"' in captured.out
-    assert '"name": "L\'Amour"' in captured.out
+    assert '"slug": "demo-website"' in captured.out
+    assert '"name": "Future Website"' in captured.out
 
 
 def test_projects_type_filter_passes_project_type(monkeypatch, capsys) -> None:

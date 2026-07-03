@@ -70,7 +70,7 @@ def test_import_dry_run_routes_new_note_to_draft(tmp_path: Path) -> None:
         tmp_path / "notes" / "fact.md",
         """
 type: fact
-project_slug: commcats-de
+project_slug: demo-website
 statement: Draft import fact.
 source: smoke test
 """,
@@ -93,7 +93,7 @@ source: smoke test
 
         def fetchone(self):
             if "FROM projects" in self.last_sql:
-                return {"id": "project-id", "slug": "commcats-de", "name": "CommCats"}
+                return {"id": "project-id", "slug": "demo-website", "name": "Demo Website"}
             return None
 
         def fetchall(self):
@@ -117,7 +117,7 @@ def test_import_dry_run_routes_money_note_to_ask(tmp_path: Path) -> None:
         tmp_path / "notes" / "fact.md",
         """
 type: fact
-project_slug: commcats-de
+project_slug: demo-website
 statement: Budget is $100.
 source: smoke test
 """,
@@ -140,7 +140,7 @@ source: smoke test
 
         def fetchone(self):
             if "FROM projects" in self.last_sql:
-                return {"id": "project-id", "slug": "commcats-de", "name": "CommCats"}
+                return {"id": "project-id", "slug": "demo-website", "name": "Demo Website"}
             return None
 
         def fetchall(self):

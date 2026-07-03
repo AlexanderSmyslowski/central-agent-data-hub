@@ -46,14 +46,14 @@ func projectMetadataDecodesCodexWorkspaceRoot() throws {
           "project_type": "ops",
           "work_mode": "central-hub-start-finish",
           "local_path": "/repo",
-          "codex_workspace_root": "/Users/example/Documents/Agent Data Hub"
+          "codex_workspace_root": "/path/to/Agent Data Hub"
         }
         """.utf8
     )
 
     let metadata = try JSONDecoder().decode(ProjectMetadata.self, from: data)
 
-    #expect(metadata.codexWorkspaceRoot == "/Users/example/Documents/Agent Data Hub")
+    #expect(metadata.codexWorkspaceRoot == "/path/to/Agent Data Hub")
 }
 
 @MainActor
@@ -114,9 +114,9 @@ func hubStoreSelectProjectClearsStaleDetailImmediately() {
     )
     store.errorMessage = "Alte Meldung."
 
-    store.selectProject("commcats-de")
+    store.selectProject("demo-website")
 
-    #expect(store.selectedProjectID == "commcats-de")
+    #expect(store.selectedProjectID == "demo-website")
     #expect(store.detail == nil)
     #expect(store.preview == nil)
     #expect(store.errorMessage == nil)

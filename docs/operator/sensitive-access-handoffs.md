@@ -25,9 +25,9 @@ production credentials.
    what changed, which environment was touched, whether it succeeded, and what
    still needs review.
 
-## CommCats
+## Website Upload Example
 
-For `commcats-de`, Alfahosting upload access follows this rule.
+For a project such as `demo-website`, protected upload access follows this rule.
 
 - Agents should work from the local static source by default.
 - Live upload happens only after explicit approval.

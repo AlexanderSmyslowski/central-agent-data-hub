@@ -14,7 +14,7 @@ def test_load_allowlist_resolves_roots(tmp_path: Path) -> None:
 
     allowlist = load_allowlist(path)
 
-    assert "commcats-de" in allowlist.projects
+    assert "demo-website" in allowlist.projects
     assert "fact" in allowlist.types
     assert allowlist.roots == [(tmp_path / "notes").resolve()]
 

@@ -8,19 +8,19 @@ Codex/Hermes work.
 Before substantial project work:
 
 ```bash
-/Users/alexandersmyslowski/Projects/central-agent-data-hub/scripts/agent_start.sh --project <project-slug> --query "<current focus>"
+/path/to/central-agent-data-hub/scripts/agent_start.sh --project <project-slug> --query "<current focus>"
 ```
 
 After substantial project work:
 
 ```bash
-/Users/alexandersmyslowski/Projects/central-agent-data-hub/scripts/agent_finish.sh --project <project-slug>
+/path/to/central-agent-data-hub/scripts/agent_finish.sh --project <project-slug>
 ```
 
 Write back only reviewed, non-sensitive memory:
 
 ```bash
-/Users/alexandersmyslowski/Projects/central-agent-data-hub/scripts/project_remember.sh \
+/path/to/central-agent-data-hub/scripts/project_remember.sh \
   --project <project-slug> \
   --type fact \
   --text "Reviewed memory goes here." \
@@ -54,11 +54,12 @@ Never store these in the Hub:
 
 ## Project Boundaries
 
-Project context must stay explicit. For the current website domain profile:
+Project context must stay explicit. A local website domain profile might look
+like this:
 
-- `commcats-de`: live static Alfahosting site.
-- `the-one-catering`: live Framer site; only SEO/AI optimization and migration preparation.
-- `lamour`: separate planned future web presence.
+- `demo-website`: live static website.
+- `demo-catering`: live hosted website; only SEO/AI optimization and migration preparation.
+- `future-website`: separate planned future web presence.
 
 Do not transfer facts, decisions, risks, or assumptions between projects unless
 a reviewed memory or relation explicitly says so.

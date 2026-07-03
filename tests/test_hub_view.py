@@ -2174,7 +2174,7 @@ def test_application_renders_project_detail(monkeypatch) -> None:
     assert "Fact A" in body
     assert "supports" in body
     assert "alexander" not in body.lower()
-    assert "ronak" not in body.lower()
+    assert "reviewer-two" not in body.lower()
 
 
 def test_project_detail_can_render_german_chrome_without_translating_memory() -> None:
@@ -3173,7 +3173,7 @@ def test_agent_context_commands_are_shell_quoted_for_copy_paste(monkeypatch, tmp
                 "name": "Central Agent Data Hub",
                 "metadata": {"local_path": project_path},
             },
-            "task": "Review Ronak's release notes",
+            "task": "Review Demo Reviewer's release notes",
             "verified_project_state": [],
             "relevant_decisions": [],
             "risks": [],
@@ -3199,7 +3199,7 @@ def test_agent_context_commands_are_shell_quoted_for_copy_paste(monkeypatch, tmp
                 },
                 "gap_summary": {},
             },
-            "goal": "Review Ronak's release notes",
+            "goal": "Review Demo Reviewer's release notes",
             "constraints": [],
             "allowed_actions": [],
             "requires_human_approval": [],
@@ -3210,11 +3210,11 @@ def test_agent_context_commands_are_shell_quoted_for_copy_paste(monkeypatch, tmp
 
     assert (
         view["commands"]["prepare"]
-        == "agent-hub prepare --project central-agent-data-hub --task 'Review Ronak'\"'\"'s release notes'"
+        == "agent-hub prepare --project central-agent-data-hub --task 'Review Demo Reviewer'\"'\"'s release notes'"
     )
     assert (
         view["commands"]["agent_start"]
-        == "scripts/agent_start.sh --project central-agent-data-hub --query 'Review Ronak'\"'\"'s release notes' --review"
+        == "scripts/agent_start.sh --project central-agent-data-hub --query 'Review Demo Reviewer'\"'\"'s release notes' --review"
     )
     assert (
         view["local_agent"]["setup_command"]
@@ -3262,7 +3262,7 @@ def test_agent_context_commands_are_shell_quoted_for_copy_paste(monkeypatch, tmp
     assert '"agent_hub.cli"' in view["local_agent"]["mcp_json"]
     assert '"agent-data-hub"' in view["local_agent"]["mcp_json"]
     assert "request reviewed context from Agent Data Hub" in view["local_agent"]["startup_instruction"]
-    assert "Review Ronak's release notes" in view["local_agent"]["startup_instruction"]
+    assert "Review Demo Reviewer's release notes" in view["local_agent"]["startup_instruction"]
 
 
 def test_codex_setup_view_reports_connection_status(tmp_path) -> None:

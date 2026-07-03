@@ -781,8 +781,8 @@ def test_preflight_uses_bounded_docker_checks() -> None:
     assert "compose exec -T \"$DB_SERVICE\" pg_isready" not in preflight
     assert "run_agent_hub projects --format json" in preflight
     assert "Project briefs: ok ($brief_count checked)" in preflight
-    assert "brief --project commcats-de" not in preflight
-    assert "brief --project the-one-catering" not in preflight
+    assert "brief --project demo-website" not in preflight
+    assert "brief --project demo-catering" not in preflight
 
     assert "[v0.8 definition](docs/public/v0.8-definition.md)" in readme
     assert "docs/public/v0.8-definition.md" in roadmap
@@ -828,7 +828,7 @@ def test_db_doctor_and_recover_are_safe_local_ops_paths() -> None:
     assert "projects --format json" in verify_backup
     assert "brief --project \"$brief_project\"" in verify_backup
     assert "Project brief smoke skipped" in verify_backup
-    assert "commcats-de" not in verify_backup
+    assert "demo-website" not in verify_backup
 
     assert "Dry run only. No container or volume changes were made." in recover
     assert "Snapshot written" in recover
@@ -1034,13 +1034,13 @@ def test_public_demo_seed_is_neutral_and_public_safe() -> None:
     lower_seed = seed.lower()
     forbidden_terms = [
         "hermes",
-        "ronak",
+        "reviewer-two",
         "telegram",
         "review_api",
         "review api",
-        "commcats-de",
-        "the-one-catering",
-        "lamour",
+        "demo-website",
+        "demo-catering",
+        "future-website",
         "smoke",
     ]
 
@@ -1079,7 +1079,7 @@ def test_public_demo_start_refuses_stale_operator_artifacts_without_cleanup() ->
     for term in ("'telegram'", "'review_api'", "'review api'", "'smoke'"):
         assert term in script
 
-    for old_private_term in ("'hermes'", "'ronak'", "'commcats-de'", "'the-one-catering'", "'lamour'"):
+    for old_private_term in ("'hermes'", "'reviewer-two'", "'demo-website'", "'demo-catering'", "'future-website'"):
         assert old_private_term not in script
 
 
@@ -1166,9 +1166,9 @@ def test_first_run_demo_stays_public_and_docs_reference_it() -> None:
     daily_use = read_script("docs/public/daily-use.md")
 
     for text in (script, readme, getting_started, daily_use):
-        assert "commcats-de" not in text
-        assert "the-one-catering" not in text
-        assert "lamour" not in text
+        assert "demo-website" not in text
+        assert "demo-catering" not in text
+        assert "future-website" not in text
 
     assert "scripts/first_run_demo.sh" in readme
     assert "scripts/first_run_demo.sh" in getting_started
@@ -1512,8 +1512,8 @@ def test_public_hub_view_entrypoint_is_public_safe() -> None:
     script = read_script("scripts/hub_view.sh")
 
     assert "agent_preflight.sh" not in script
-    assert "commcats-de" not in script
-    assert "the-one-catering" not in script
+    assert "demo-website" not in script
+    assert "demo-catering" not in script
     assert "run_agent_hub check" in script
     assert "scripts/db_start_public_demo.sh" in script
     assert "allow-lan-read" not in script
@@ -1542,18 +1542,18 @@ def test_public_entrypoints_do_not_reference_maintainer_projects() -> None:
 
     for path in public_scripts:
         script = read_script(path)
-        assert "commcats-de" not in script
-        assert "the-one-catering" not in script
+        assert "demo-website" not in script
+        assert "demo-catering" not in script
 
     project_context = read_script("scripts/project_context.sh")
     assert "metadata.project_type=website" in project_context
     assert 'load_project_slugs "website"' in project_context
 
     demo_start = read_script("scripts/db_start_public_demo.sh")
-    assert "commcats-de" not in demo_start
-    assert "the-one-catering" not in demo_start
+    assert "demo-website" not in demo_start
+    assert "demo-catering" not in demo_start
     assert "apply_sql_file \"seed/business_sites.sql\"" not in demo_start
-    assert "run_agent_hub brief --project commcats-de" not in demo_start
+    assert "run_agent_hub brief --project demo-website" not in demo_start
 
 
 def test_signal_inbox_init_script_is_lazy_by_default() -> None:

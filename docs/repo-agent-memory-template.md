@@ -5,13 +5,13 @@ Project slug: `<project-slug>`
 Central Agent Data Hub:
 
 ```txt
-/Users/alexandersmyslowski/Projects/central-agent-data-hub
+/path/to/central-agent-data-hub
 ```
 
 Run card:
 
 ```txt
-/Users/alexandersmyslowski/Projects/central-agent-data-hub/docs/agent-run-card.md
+/path/to/central-agent-data-hub/docs/agent-run-card.md
 ```
 
 Use the Run Card rhythm for substantial work: start with Hub context, work inside
@@ -28,7 +28,7 @@ the reviewed, non-sensitive result.
 Load operational readiness, project memory, daily activity, and focused context:
 
 ```bash
-/Users/alexandersmyslowski/Projects/central-agent-data-hub/scripts/agent_start.sh \
+/path/to/central-agent-data-hub/scripts/agent_start.sh \
   --project <project-slug> \
   --query "<current work focus>" \
   --review
@@ -37,7 +37,7 @@ Load operational readiness, project memory, daily activity, and focused context:
 If there is no focused query yet:
 
 ```bash
-/Users/alexandersmyslowski/Projects/central-agent-data-hub/scripts/agent_start.sh \
+/path/to/central-agent-data-hub/scripts/agent_start.sh \
   --project <project-slug>
 ```
 
@@ -46,7 +46,7 @@ If there is no focused query yet:
 Produce a finish summary and handoff:
 
 ```bash
-/Users/alexandersmyslowski/Projects/central-agent-data-hub/scripts/agent_finish.sh \
+/path/to/central-agent-data-hub/scripts/agent_finish.sh \
   --project <project-slug> \
   --review
 ```
@@ -54,7 +54,7 @@ Produce a finish summary and handoff:
 For a reviewed memory candidate, dry-run first:
 
 ```bash
-/Users/alexandersmyslowski/Projects/central-agent-data-hub/scripts/project_remember.sh \
+/path/to/central-agent-data-hub/scripts/project_remember.sh \
   --project <project-slug> \
   --type fact \
   --text "Reviewed memory candidate." \
@@ -65,7 +65,7 @@ For a reviewed memory candidate, dry-run first:
 Then write only if reviewed and non-sensitive:
 
 ```bash
-/Users/alexandersmyslowski/Projects/central-agent-data-hub/scripts/project_remember.sh \
+/path/to/central-agent-data-hub/scripts/project_remember.sh \
   --project <project-slug> \
   --type fact \
   --text "Reviewed memory candidate." \
@@ -78,7 +78,7 @@ When the new memory clearly supports, answers, mitigates, references, or
 depends on an existing Hub object:
 
 ```bash
-/Users/alexandersmyslowski/Projects/central-agent-data-hub/scripts/project_remember.sh \
+/path/to/central-agent-data-hub/scripts/project_remember.sh \
   --project <project-slug> \
   --type fact \
   --text "Reviewed memory candidate." \

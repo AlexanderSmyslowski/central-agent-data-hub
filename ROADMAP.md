@@ -182,9 +182,10 @@ automation platform.
 
 ## Domain Profile: Websites
 
-- `commcats-de` is a static live Alfahosting site.
-- `the-one-catering` remains live on Framer while SEO/AI work and protected static migration prep happen.
-- These two projects must not be treated as the same operational state.
+- Website projects can share a domain category while still having different
+  hosting, deployment, and content states.
+- Do not treat two website projects as the same operational state without an
+  explicit reviewed decision or relation.
 
 ## Later, Not v0
 

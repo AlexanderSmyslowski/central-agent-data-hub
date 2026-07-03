@@ -16,8 +16,8 @@ def test_load_workspace_labels_reads_codex_global_state(tmp_path) -> None:
         json.dumps(
             {
                 "electron-workspace-root-labels": {
-                    "/Users/example/Documents/commcats.de 2": "commcats.de",
-                    "/Users/example/Documents/old": "",
+                    "/path/to/demo-website.local 2": "demo-website.local",
+                    "/path/to/old": "",
                 }
             }
         ),
@@ -26,35 +26,35 @@ def test_load_workspace_labels_reads_codex_global_state(tmp_path) -> None:
 
     labels = load_workspace_labels(state_path)
 
-    assert labels == {"/Users/example/Documents/commcats.de 2": "commcats.de"}
+    assert labels == {"/path/to/demo-website.local 2": "demo-website.local"}
 
 
 def test_project_display_name_prefers_explicit_codex_workspace_label() -> None:
     project = {
-        "slug": "commcats-de",
-        "name": "CommCats",
+        "slug": "demo-website",
+        "name": "Demo Website",
         "metadata": {
-            "codex_workspace_root": "/Users/example/Documents/commcats.de 2"
+            "codex_workspace_root": "/path/to/demo-website.local 2"
         },
     }
 
     display_name = project_display_name(
         project,
-        {"/Users/example/Documents/commcats.de 2": "commcats.de"},
+        {"/path/to/demo-website.local 2": "demo-website.local"},
     )
 
-    assert display_name == "commcats.de"
+    assert display_name == "demo-website.local"
 
 
 def test_project_display_name_falls_back_to_workspace_folder_name() -> None:
-    label = codex_workspace_label("/Users/example/Documents/the-one.catering", {})
+    label = codex_workspace_label("/path/to/demo-catering.local", {})
 
-    assert label == "the-one.catering"
+    assert label == "demo-catering.local"
 
 
 def test_with_project_display_name_keeps_original_when_no_codex_root() -> None:
-    project = {"slug": "lamour", "name": "L'Amour", "metadata": {}}
+    project = {"slug": "future-website", "name": "Future Website", "metadata": {}}
 
     renamed = with_project_display_name(project, {})
 
-    assert renamed["name"] == "L'Amour"
+    assert renamed["name"] == "Future Website"

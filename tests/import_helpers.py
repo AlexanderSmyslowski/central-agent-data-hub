@@ -5,7 +5,7 @@ from pathlib import Path
 
 ALLOWLIST = """
 projects:
-  - commcats-de
+  - demo-website
 roots:
   - notes
 types:

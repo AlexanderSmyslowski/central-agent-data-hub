@@ -2,10 +2,10 @@
 
 This directory contains maintainer/operator notes for local ADH use.
 
-These files are not the public product path. They may mention local project
-maps, Codex/Hermes conventions, or access-handoff rules used by the maintainer
-environment. Public first-run and daily-use documentation lives under
+These files are not the public product path. They describe operator patterns,
+Codex/Hermes conventions, and access-handoff rules without shipping a real
+maintainer workset. Public first-run and daily-use documentation lives under
 `docs/public/`.
 
-Use this directory when maintaining the repository or the maintainer's own ADH
-workspace. Do not treat it as required reading for a fresh public demo.
+Keep real local project maps, private paths, and customer-specific operational
+notes outside Git. Use this directory only for reusable operator guidance.

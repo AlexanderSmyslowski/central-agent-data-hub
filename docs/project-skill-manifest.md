@@ -48,7 +48,7 @@ sie beschreibt.
 See:
 
 ```text
-/Users/alexandersmyslowski/Projects/central-agent-data-hub/docs/examples/project-skill-manifest.yml
+docs/examples/project-skill-manifest.yml
 ```
 
 ## Beziehung zum Hub

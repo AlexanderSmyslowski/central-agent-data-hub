@@ -1,29 +1,30 @@
 # Active Agent Projects
 
-This is the lightweight project map for Codex/Hermes work. It answers one
-question before a new agent run starts: which project context, repository, and
-start contract should be used?
+This is a template for an operator-local project map. It answers one question
+before a new agent run starts: which project context, repository, and start
+contract should be used?
 
 The Central Agent Data Hub remains the shared memory layer. Each project keeps
 its own repository instructions and project-specific working files.
 
-## Current Projects
+Do not put a real private project map in this public repository. Keep it in a
+local operator note, password manager note, private wiki, or machine-local file.
+
+## Example Projects
 
 | Project | Hub slug | Type | Local path | Start contract |
 | --- | --- | --- | --- | --- |
-| Catering Agents Platform | `catering-agents-platform` | product | `/Users/alexandersmyslowski/Projects/catering-agents-platform` | `/Users/alexandersmyslowski/Projects/catering-agents-platform/AGENTS.md` |
-| Agent Data Hub | `central-agent-data-hub` | ops | `/Users/alexandersmyslowski/Projects/central-agent-data-hub` | `/Users/alexandersmyslowski/Projects/central-agent-data-hub/AGENTS.md` |
-| Zeiterfassung Tool | `zeiterfassung-tool` | product | `/Users/alexandersmyslowski/Projects/zeiterfassung-tool` | `/Users/alexandersmyslowski/Projects/zeiterfassung-tool/CODEX-START-PROMPT.md` |
-| CommCats | `commcats-de` | website | `/Users/alexandersmyslowski/Documents/commcats.de` | `/Users/alexandersmyslowski/Documents/commcats.de/CODEX-START-PROMPT.md` |
-| THE ONE | `the-one-catering` | website | `/Users/alexandersmyslowski/Documents/the-one-catering` | `/Users/alexandersmyslowski/Documents/the-one-catering/CODEX-START-PROMPT.md` |
-| L'Amour | `lamour` | planned website | not assigned yet | Hub brief only |
+| Demo Product | `demo-product` | product | `/path/to/demo-product` | `/path/to/demo-product/AGENTS.md` |
+| Agent Data Hub | `central-agent-data-hub` | ops | `/path/to/central-agent-data-hub` | `/path/to/central-agent-data-hub/AGENTS.md` |
+| Demo Website | `demo-website` | website | `/path/to/demo-website` | `/path/to/demo-website/AGENTS.md` |
+| Future Website | `future-website` | planned website | not assigned yet | Hub brief only |
 
 ## Standard Start
 
 For substantial work, start inside the correct repository and run:
 
 ```bash
-/Users/alexandersmyslowski/Projects/central-agent-data-hub/scripts/agent_start.sh \
+/path/to/central-agent-data-hub/scripts/agent_start.sh \
   --project <hub-slug> \
   --query "<current focus>" \
   --review
@@ -32,7 +33,7 @@ For substantial work, start inside the correct repository and run:
 After substantial work, finish with:
 
 ```bash
-/Users/alexandersmyslowski/Projects/central-agent-data-hub/scripts/agent_finish.sh \
+/path/to/central-agent-data-hub/scripts/agent_finish.sh \
   --project <hub-slug> \
   --review
 ```
@@ -40,7 +41,7 @@ After substantial work, finish with:
 Only store reviewed, non-sensitive memory through:
 
 ```bash
-/Users/alexandersmyslowski/Projects/central-agent-data-hub/scripts/project_remember.sh
+/path/to/central-agent-data-hub/scripts/project_remember.sh
 ```
 
 ## Project Boundaries
@@ -53,18 +54,13 @@ Only store reviewed, non-sensitive memory through:
 
 ## Notes
 
-- CommCats and THE ONE are separate website contexts. CommCats is already a
-  live static Alfahosting site. THE ONE remains live on Framer while static
-  migration work happens in its separate repository.
-- CommCats live-upload access is not Hub memory. If a new agent session needs
-  Alfahosting upload access, request a human secure handoff outside the Hub,
-  Git, and Obsidian. The rule is documented in
+- Separate website contexts should stay separate even when they share a domain
+  category or similar workflow.
+- Live-upload access is not Hub memory. If a new agent session needs protected
+  hosting access, request a human secure handoff outside the Hub, Git, and
+  Obsidian. The reusable rule lives in
   `docs/operator/sensitive-access-handoffs.md`.
-- The Catering Agents Platform is not a website side project. It is the larger
-  product/platform project for agentic catering operations. Keep it in its own
-  repo and Hub context.
-- The Zeiterfassung Tool is a separate product project for single-tenant time
-  tracking. Its current focus is pilot hardening and operational readiness, not
-  platform expansion or multi-tenancy.
-- L'Amour has a Hub project but no active local repo path yet. Register one
-  before substantial implementation work starts.
+- Product projects and website projects should not inherit positioning,
+  deployment state, or risks from each other without a reviewed decision.
+- Planned projects can exist in the Hub before a local repo path exists. Register
+  a path before substantial implementation work starts.
