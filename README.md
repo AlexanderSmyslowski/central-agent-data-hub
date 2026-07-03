@@ -148,9 +148,10 @@ The script creates `.venv` if needed, installs or reuses the local CLI, creates
 database, runs the public demo check, then starts Hub View and prints the local
 URL to open. It does not overwrite an existing `.env`.
 
-For this preview, the git checkout is the installation unit. `pip install -e .`
-installs the CLI from the checkout, but the daily operator path still uses
-repo-local scripts. See
+For this preview, the git checkout is the installation unit: clone is
+installation, and `git pull` plus `pip install -e .` is the upgrade path. The
+daily operator path still uses repo-local Bash scripts, so native Windows is
+not a supported target for this preview. See
 [`docs/public/installation.md`](docs/public/installation.md).
 
 In the first ten minutes, check only this path:

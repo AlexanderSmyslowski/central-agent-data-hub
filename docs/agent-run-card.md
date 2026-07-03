@@ -33,6 +33,13 @@ scripts/agent_lock_status.sh --repo /path/to/project
 scripts/agent_lock_status.sh --all
 ```
 
+If a lock is marked `orphaned: yes`, its recorded repo path no longer exists.
+Clean only those orphaned locks explicitly:
+
+```bash
+scripts/agent_lock_status.sh --all --clean-orphaned
+```
+
 For parallel write-capable work, create a separate worktree first:
 
 ```bash

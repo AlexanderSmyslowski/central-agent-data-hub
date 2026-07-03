@@ -8,14 +8,16 @@ source "$ROOT_DIR/scripts/agent_run_lock.sh"
 
 usage() {
   cat <<'EOF'
-Usage: scripts/agent_lock_status.sh [--repo <path>] [--all]
+Usage: scripts/agent_lock_status.sh [--repo <path>] [--all] [--clean-orphaned]
 
 Show local Agent Data Hub working-tree run locks. This is read-only; it does
-not create, replace, or remove locks.
+not create, replace, or remove locks unless --clean-orphaned is explicitly set.
 
 Options:
-  --repo <path>  Show lock status for one repository or worktree. Default: cwd.
-  --all          List all local run locks under .local/run-locks.
+  --repo <path>       Show lock status for one repository or worktree. Default: cwd.
+  --all               List all local run locks under .local/run-locks.
+  --clean-orphaned    With --all, remove only locks whose recorded repo path no
+                      longer exists. Existing repo paths are never removed.
 
 Exit codes:
   0  no active lock for --repo, or all locks listed
@@ -26,6 +28,7 @@ EOF
 
 REPO_PATH="$PWD"
 ALL=0
+CLEAN_ORPHANED=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -35,6 +38,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --all)
       ALL=1
+      shift
+      ;;
+    --clean-orphaned)
+      CLEAN_ORPHANED=1
       shift
       ;;
     -h|--help)
@@ -54,6 +61,11 @@ if [[ -z "$REPO_PATH" ]]; then
   exit 2
 fi
 
+if [[ "$CLEAN_ORPHANED" -eq 1 && "$ALL" -ne 1 ]]; then
+  echo "Error: --clean-orphaned can only be used with --all." >&2
+  exit 2
+fi
+
 print_lock() {
   local lock_path="$1"
   local project
@@ -63,6 +75,7 @@ print_lock() {
   local head
   local created_at
   local stale="no"
+  local orphaned="no"
 
   project="$(agent_run_lock_field "$lock_path" "project")"
   repo="$(agent_run_lock_field "$lock_path" "repo")"
@@ -74,6 +87,9 @@ print_lock() {
   if agent_run_lock_is_stale "$lock_path"; then
     stale="yes"
   fi
+  if agent_run_lock_is_orphaned "$lock_path"; then
+    orphaned="yes"
+  fi
 
   echo "- lock: $lock_path"
   echo "  project: ${project:-unknown}"
@@ -83,6 +99,7 @@ print_lock() {
   echo "  head: ${head:-unknown}"
   echo "  created_at: ${created_at:-unknown}"
   echo "  stale: $stale"
+  echo "  orphaned: $orphaned"
 }
 
 if [[ "$ALL" -eq 1 ]]; then
@@ -92,9 +109,18 @@ if [[ "$ALL" -eq 1 ]]; then
     exit 0
   fi
 
+  removed_count=0
   while IFS= read -r lock_path; do
     print_lock "$lock_path"
+    if [[ "$CLEAN_ORPHANED" -eq 1 ]] && agent_run_lock_is_orphaned "$lock_path"; then
+      rm -f "$lock_path"
+      removed_count=$((removed_count + 1))
+      echo "  cleanup: removed orphaned lock"
+    fi
   done < <(find "$AGENT_HUB_RUN_LOCK_DIR" -type f -name '*.lock' -print | sort)
+  if [[ "$CLEAN_ORPHANED" -eq 1 ]]; then
+    echo "Orphaned cleanup: removed $removed_count lock(s)."
+  fi
   exit 0
 fi
 

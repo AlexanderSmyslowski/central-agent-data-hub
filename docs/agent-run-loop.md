@@ -54,6 +54,15 @@ scripts/agent_lock_status.sh --repo /path/to/project
 scripts/agent_lock_status.sh --all
 ```
 
+If `--all` shows `orphaned: yes`, the recorded repo path no longer exists.
+Remove only those orphaned locks with an explicit local cleanup:
+
+```bash
+scripts/agent_lock_status.sh --all --clean-orphaned
+```
+
+This does not remove locks for existing repo paths, even when they are stale.
+
 Prepare parallel work without sharing a checkout:
 
 ```bash

@@ -59,6 +59,14 @@ agent_run_lock_is_stale() {
   (( age > AGENT_HUB_RUN_LOCK_MAX_AGE_SECONDS ))
 }
 
+agent_run_lock_is_orphaned() {
+  local lock_path="$1"
+  local repo
+
+  repo="$(agent_run_lock_field "$lock_path" "repo")"
+  [[ -n "$repo" && ! -e "$repo" ]]
+}
+
 agent_run_lock_write() {
   local lock_path="$1"
   local project="$2"

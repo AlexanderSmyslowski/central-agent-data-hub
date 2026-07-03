@@ -914,11 +914,25 @@ def test_project_update_decision_wrapper_has_change_guard() -> None:
 
 def test_agent_start_lock_error_points_to_status_and_force_lock() -> None:
     run_lock = read_script("scripts/agent_run_lock.sh")
+    lock_status = read_script("scripts/agent_lock_status.sh")
+    run_loop = read_script("docs/agent-run-loop.md")
+    run_card = read_script("docs/agent-run-card.md")
+    workflow = read_script("docs/agent-workflow.md")
 
     assert 'AGENT_HUB_RUN_LOCK_ROOT="${SHARED_ROOT:-$ROOT_DIR}"' in run_lock
     assert 'AGENT_HUB_RUN_LOCK_DIR="${AGENT_HUB_RUN_LOCK_ROOT}/.local/run-locks"' in run_lock
+    assert "agent_run_lock_is_orphaned()" in run_lock
+    assert '[[ -n "$repo" && ! -e "$repo" ]]' in run_lock
     assert "scripts/agent_lock_status.sh --repo" in run_lock
     assert "If this is your interrupted run, rerun agent_start.sh with --force-lock." in run_lock
+    assert "--clean-orphaned" in lock_status
+    assert "orphaned:" in lock_status
+    assert "agent_run_lock_is_orphaned" in lock_status
+    assert "rm -f \"$lock_path\"" in lock_status
+    assert "Existing repo paths are never removed." in lock_status
+    assert "scripts/agent_lock_status.sh --all --clean-orphaned" in run_loop
+    assert "scripts/agent_lock_status.sh --all --clean-orphaned" in run_card
+    assert "scripts/agent_lock_status.sh --all --clean-orphaned" in workflow
 
 
 def test_agent_start_and_project_context_use_compact_preflight() -> None:
@@ -1198,7 +1212,9 @@ def test_v07_definition_tracks_release_candidate_evidence() -> None:
     roadmap = read_script("ROADMAP.md")
     checklist = read_script("docs/public/release-checklist.md")
     definition = read_script("docs/public/v0.7-definition.md")
+    db_common = read_script("scripts/db_common.sh")
     release_check = read_script("scripts/release_candidate_check.sh")
+    restore_drill = read_script("scripts/restore_drill.sh")
 
     assert "[`docs/public/v0.7-definition.md`](docs/public/v0.7-definition.md)" in readme
     assert "[v0.7 definition](docs/public/v0.7-definition.md)" in readme
@@ -1257,6 +1273,19 @@ def test_v07_definition_tracks_release_candidate_evidence() -> None:
     assert "smoke_agent_offline.sh" in release_check
     assert "upgrade_drill.sh" in release_check
     assert "run_step \"Upgrade drill\" run_docker_step clean_demo_env" in release_check
+    assert "restore_drill.sh" in release_check
+    assert "run_step \"Restore drill\" run_docker_step clean_demo_env" in release_check
+    assert "AGENT_HUB_DB_CONTAINER" in restore_drill
+    assert "central-agent-data-hub-restore-drill-postgres" in restore_drill
+    assert "agent_hub_restore_demo" in restore_drill
+    assert "scripts/db_backup.sh" in restore_drill
+    assert "scripts/db_verify_backup.sh" in restore_drill
+    assert "Restore drill: ok" in restore_drill
+    assert "This script never targets the configured operator database." in restore_drill
+    assert "AGENT_HUB_IGNORE_ENV_FILE=1" in restore_drill
+    assert "unset AGENT_HUB_BACKUP_REMOTE" in restore_drill
+    assert "never copies drill backups to a remote target" in restore_drill
+    assert 'AGENT_HUB_IGNORE_ENV_FILE:-0' in db_common
     assert "run_step \"Agent Hub doctor\" run_agent_hub doctor" in release_check
     assert "run_agent_hub status" in release_check
     assert "run_agent_hub check" in release_check
@@ -1270,10 +1299,13 @@ def test_v10_definition_tracks_local_reliability_end_goal() -> None:
     roadmap = read_script("ROADMAP.md")
     definition = read_script("docs/public/v1.0-definition.md")
     finish = read_script("scripts/agent_finish.sh")
+    installation = read_script("docs/public/installation.md")
     v1_readiness = read_script("scripts/v1_readiness_check.sh")
 
     assert "v1 readiness contract" in ci
     assert "scripts/v1_readiness_check.sh --contract-only" in ci
+    assert "restore-drill" in ci
+    assert "scripts/restore_drill.sh" in ci
     assert "[`docs/public/v1.0-definition.md`](docs/public/v1.0-definition.md)" in readme
     assert "[v1.0 definition](docs/public/v1.0-definition.md)" in readme
     assert "docs/public/v1.0-definition.md" in roadmap
@@ -1282,15 +1314,18 @@ def test_v10_definition_tracks_local_reliability_end_goal() -> None:
     assert "verified context for humans and agents" in definition
     assert "scripts/v1_readiness_check.sh" in definition
     assert "scripts/release_candidate_check.sh" in definition
+    assert "scripts/restore_drill.sh" in definition
     assert "scripts/agent_finish.sh --project <project-slug> --review --export --backup" in definition
     assert "scripts/memory_receipt.sh --project <project-slug> --since 24h" in definition
     assert "agent-hub prepare --project <project-slug> --task \"<task>\" --format json" in definition
     assert "The readiness check must verify that this contract" in definition
+    assert "restore drill" in definition
     assert "Backup completion" in definition
     assert "must mean a dump was written" in definition
-    assert "latest timestamped local backup was" in definition
-    assert "restored and checked" in definition
+    assert "latest timestamped local" in definition
+    assert "backup was restored and checked" in definition
     assert "MCP remains read-only" in definition
+    assert "Stale and orphaned run locks are visible" in definition
     assert "hosted SaaS" in definition
     assert "automatic promotion, demotion, or review" in definition
     assert "raw chats, secrets, private customer data" in definition
@@ -1299,11 +1334,21 @@ def test_v10_definition_tracks_local_reliability_end_goal() -> None:
     assert "--contract-only" in v1_readiness
     assert "scripts/v1_readiness_check.sh" in v1_readiness
     assert "scripts/release_candidate_check.sh" in v1_readiness
+    assert "scripts/restore_drill.sh" in v1_readiness
     assert "External-developer smoke" in v1_readiness
+    assert "Restore drill" in v1_readiness
     assert "== Database Backup Verification ==" in v1_readiness
     assert "scripts/memory_receipt.sh" in v1_readiness
+    assert "scripts/db_verify_backup.sh" in v1_readiness
     assert "reviewed_memory_written: no" in v1_readiness
     assert '"$RELEASE_CHECK"' in v1_readiness
+    assert "clone is" in readme
+    assert "installation, and `git pull`" in readme
+    assert "native Windows is" in readme
+    assert "not a supported target" in readme
+    assert "clone is installation" in installation
+    assert "git pull" in installation
+    assert "`agent-hub` alone is not the full product surface" in installation
 
 
 def test_register_project_script_is_cli_compatibility_wrapper() -> None:

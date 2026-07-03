@@ -27,7 +27,7 @@ elif [[ -f "$SHARED_ROOT/.env" ]]; then
   ENV_FILE="$SHARED_ROOT/.env"
 fi
 
-if [[ -n "$ENV_FILE" ]]; then
+if [[ "${AGENT_HUB_IGNORE_ENV_FILE:-0}" != "1" && -n "$ENV_FILE" ]]; then
   set -a
   # shellcheck disable=SC1091
   source "$ENV_FILE"

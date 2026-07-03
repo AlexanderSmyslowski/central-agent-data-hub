@@ -51,6 +51,13 @@ Use `scripts/agent_lock_status.sh --repo /path/to/project` or
 `scripts/agent_lock_status.sh --all` when a start is blocked and you need to see
 which checkout is locked.
 
+If `--all` shows `orphaned: yes`, the recorded repo path no longer exists.
+Clean only those orphaned locks explicitly:
+
+```bash
+scripts/agent_lock_status.sh --all --clean-orphaned
+```
+
 If the next step is parallel write-capable work, prepare a separate checkout:
 
 ```bash

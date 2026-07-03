@@ -1,6 +1,6 @@
 # Installation Boundary
 
-Agent Data Hub v0.2 preview uses the git checkout as the installation unit.
+Agent Data Hub currently uses the git checkout as the installation unit.
 
 This is intentional for now. The daily workflow uses both the Python CLI and
 repo-local shell scripts:
@@ -11,7 +11,7 @@ repo-local shell scripts:
 
 ## Supported Preview Path
 
-Use the checkout directly:
+Use the checkout directly. In this preview, clone is installation:
 
 ```bash
 git clone https://github.com/AlexanderSmyslowski/central-agent-data-hub.git
@@ -24,9 +24,9 @@ scripts/db_doctor.sh --public-demo
 scripts/smoke_public_demo.sh
 ```
 
-The editable install makes the `agent-hub` CLI import this checkout. It does not
-turn ADH into a standalone package that can run all operational scripts from
-`site-packages`.
+The editable install makes the `agent-hub` CLI import this checkout. It does
+not turn ADH into a standalone package that can run all operational scripts
+from `site-packages`; `agent-hub` alone is not the full product surface.
 
 ## Platform Statement
 
@@ -42,7 +42,7 @@ plus Docker as the realistic path and verify it locally.
 
 ## Upgrade Model
 
-For the v0.2 preview, upgrade the checkout with Git:
+For this preview, upgrade the checkout with Git:
 
 ```bash
 git pull
