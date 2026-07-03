@@ -54,15 +54,21 @@ def test_automation_boundaries_describe_guarded_codex_setup_action() -> None:
 def test_seed_readme_separates_public_demo_from_maintainer_ops() -> None:
     seed_readme = read_script("seed/README.md")
     readme = read_script("README.md")
+    db_start = read_script("scripts/db_start.sh")
 
     assert "`demo.sql` is the neutral public demo dataset" in seed_readme
-    assert "`business_sites.sql` and `agentic_projects.sql` are maintainer-local operator" in seed_readme
+    assert "operator-specific seed files are not shipped" in seed_readme
     assert "scripts/db_start_public_demo.sh" in seed_readme
     assert "scripts/first_run_demo.sh" in seed_readme
-    assert "scripts/db_start.sh" in seed_readme
-    assert "not part of the public first-run path" in seed_readme
+    assert "scripts/db_start.sh --seed-file /path/to/local-operator-seed.sql" in seed_readme
     assert "Do not add secrets" in seed_readme
     assert "[`seed/README.md`](seed/README.md)" in readme
+    assert "maintainer-specific seed data" in readme
+    assert "--seed-file <path>" in db_start
+    assert "Error: --seed-file requires a path." in db_start
+    assert "No private operator seed files were applied." in db_start
+    assert not (ROOT / "seed/business_sites.sql").exists()
+    assert not (ROOT / "seed/agentic_projects.sql").exists()
 
 
 def test_v015_release_notes_describe_guarded_codex_setup_without_overclaim() -> None:
@@ -207,7 +213,7 @@ def test_v014_release_notes_describe_seed_boundary_polish() -> None:
     assert "public-preview hygiene release" in notes
     assert "seed/README.md" in notes
     assert "neutral public demo seed" in notes
-    assert "maintainer-local operator seeds" in notes
+    assert "private operator seeds belong outside Git" in notes
     assert "no schema change" in notes
     assert "no new Hub-memory write path" in notes
 
@@ -1067,17 +1073,14 @@ def test_public_demo_start_refuses_stale_operator_artifacts_without_cleanup() ->
     assert "Findings:" not in script
     assert "table_name || ':' || item" not in script
 
-    for term in (
-        "'hermes'",
-        "'ronak'",
-        "'telegram'",
-        "'review_api'",
-        "'commcats-de'",
-        "'the-one-catering'",
-        "'lamour'",
-        "'smoke'",
-    ):
+    assert "non_demo_projects AS" in script
+    assert "WHERE slug <> 'central-agent-data-hub-demo'" in script
+
+    for term in ("'telegram'", "'review_api'", "'review api'", "'smoke'"):
         assert term in script
+
+    for old_private_term in ("'hermes'", "'ronak'", "'commcats-de'", "'the-one-catering'", "'lamour'"):
+        assert old_private_term not in script
 
 
 def test_first_run_demo_script_wraps_public_demo_path() -> None:
@@ -1532,6 +1535,9 @@ def test_public_entrypoints_do_not_reference_maintainer_projects() -> None:
     public_scripts = [
         "scripts/hub_view.sh",
         "scripts/smoke_public_demo.sh",
+        "scripts/project_context.sh",
+        "scripts/agent_start.sh",
+        "scripts/db_status.sh",
     ]
 
     for path in public_scripts:
@@ -1539,7 +1545,13 @@ def test_public_entrypoints_do_not_reference_maintainer_projects() -> None:
         assert "commcats-de" not in script
         assert "the-one-catering" not in script
 
+    project_context = read_script("scripts/project_context.sh")
+    assert "metadata.project_type=website" in project_context
+    assert 'load_project_slugs "website"' in project_context
+
     demo_start = read_script("scripts/db_start_public_demo.sh")
+    assert "commcats-de" not in demo_start
+    assert "the-one-catering" not in demo_start
     assert "apply_sql_file \"seed/business_sites.sql\"" not in demo_start
     assert "run_agent_hub brief --project commcats-de" not in demo_start
 

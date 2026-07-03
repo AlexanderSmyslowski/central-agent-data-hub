@@ -52,12 +52,10 @@ echo
 echo "== Applying migration and seeds =="
 run_agent_hub migrate --apply
 apply_sql seed/demo.sql
-apply_sql seed/business_sites.sql
 
 cat > "$TMP_DIR/import_allowlist.yml" <<EOF
 projects:
-  - commcats-de
-  - the-one-catering
+  - central-agent-data-hub-demo
 roots:
   - notes
 types:
@@ -77,9 +75,9 @@ EOF
 cat > "$TMP_DIR/notes/fact.md" <<EOF
 ---
 type: fact
-project_slug: commcats-de
-import_key: smoke/commcats/static-context
-statement: Smoke test confirms CommCats remains a static Alfahosting context.
+project_slug: central-agent-data-hub-demo
+import_key: smoke/demo/reviewed-context
+statement: Smoke test confirms the neutral demo keeps reviewed context separate from drafts.
 source: scripts/smoke_postgres.sh
 confidence: 0.91
 status: verified
@@ -91,11 +89,11 @@ EOF
 cat > "$TMP_DIR/notes/decision.md" <<EOF
 ---
 type: decision
-project_slug: the-one-catering
-import_key: smoke/the-one/framer-live
-decision: Keep THE ONE live on Framer during smoke testing.
-rationale: The smoke test must not imply live migration.
-consequences: Static migration work remains preparatory.
+project_slug: central-agent-data-hub-demo
+import_key: smoke/demo/review-boundary
+decision: Keep smoke data neutral and project-bound.
+rationale: The smoke test should exercise write paths without maintainer-local examples.
+consequences: Public test output stays safe for outside developers.
 status: accepted
 metadata:
   smoke: true
@@ -105,9 +103,9 @@ EOF
 cat > "$TMP_DIR/notes/open-question.md" <<EOF
 ---
 type: open_question
-project_slug: commcats-de
-import_key: smoke/commcats/future-check
-question: Which future smoke checks should cover the CommCats static source?
+project_slug: central-agent-data-hub-demo
+import_key: smoke/demo/future-check
+question: Which future smoke checks should cover the neutral demo path?
 status: open
 metadata:
   smoke: true
@@ -117,11 +115,11 @@ EOF
 cat > "$TMP_DIR/notes/risk.md" <<EOF
 ---
 type: risk
-project_slug: the-one-catering
-import_key: smoke/the-one/context-mix-risk
-title: Smoke imports could mix website project context if slugs are wrong.
+project_slug: central-agent-data-hub-demo
+import_key: smoke/demo/context-mix-risk
+title: Smoke imports could mix project context if slugs are wrong.
 severity: medium
-impact: Agents may act on the wrong website state.
+impact: Agents may act on the wrong project state.
 mitigation: Keep explicit project_slug and allowlist checks.
 status: open
 metadata:
@@ -132,8 +130,8 @@ EOF
 cat > "$TMP_DIR/notes/report.md" <<EOF
 ---
 type: report
-project_slug: commcats-de
-import_key: smoke/commcats/report
+project_slug: central-agent-data-hub-demo
+import_key: smoke/demo/report
 title: PostgreSQL smoke report
 report_type: smoke
 summary: Smoke test exercised import, sync plan, export, and Human Notes.
@@ -148,48 +146,47 @@ echo
 echo "== CLI diagnostics =="
 run_agent_hub status
 run_agent_hub check
-run_agent_hub brief --project commcats-de --limit 4
-run_agent_hub brief --project the-one-catering --limit 4
-run_agent_hub daily --project commcats-de --since 30d --limit 4 --write-report
-run_agent_hub handoff --project the-one-catering --since 30d --limit 4
-run_agent_hub review --project commcats-de --limit 4
-run_agent_hub search --project commcats-de --query Alfahosting --limit 4
-run_agent_hub context --project the-one-catering --query migration --limit 4
+run_agent_hub brief --project central-agent-data-hub-demo --limit 4
+run_agent_hub daily --project central-agent-data-hub-demo --since 30d --limit 4 --write-report
+run_agent_hub handoff --project central-agent-data-hub-demo --since 30d --limit 4
+run_agent_hub review --project central-agent-data-hub-demo --limit 4
+run_agent_hub search --project central-agent-data-hub-demo --query reviewed --limit 4
+run_agent_hub context --project central-agent-data-hub-demo --query reviewed --limit 4
 
 echo
 echo "== Relation graph checks =="
 run_agent_hub relate \
-  --project commcats-de \
+  --project central-agent-data-hub-demo \
   --source-type fact \
-  --source-id 10000000-0000-4000-8000-000000000201 \
+  --source-id 00000000-0000-4000-8000-000000000201 \
   --relation supports \
   --target-type decision \
-  --target-id 10000000-0000-4000-8000-000000000301 \
+  --target-id 00000000-0000-4000-8000-000000000401 \
   --metadata smoke=true
 run_agent_hub relate \
-  --project commcats-de \
+  --project central-agent-data-hub-demo \
   --source-type fact \
-  --source-id 10000000-0000-4000-8000-000000000201 \
+  --source-id 00000000-0000-4000-8000-000000000201 \
   --relation supports \
   --target-type decision \
-  --target-id 10000000-0000-4000-8000-000000000301 \
+  --target-id 00000000-0000-4000-8000-000000000401 \
   --metadata repeated=true
 run_agent_hub relate \
-  --project commcats-de \
+  --project central-agent-data-hub-demo \
   --source-type decision \
-  --source-id 10000000-0000-4000-8000-000000000301 \
+  --source-id 00000000-0000-4000-8000-000000000401 \
   --relation mitigates \
   --target-type risk \
-  --target-id 10000000-0000-4000-8000-000000000503
+  --target-id 00000000-0000-4000-8000-000000000501
 run_agent_hub relate \
-  --project the-one-catering \
+  --project central-agent-data-hub-demo \
   --source-type decision \
-  --source-id 10000000-0000-4000-8000-000000000303 \
+  --source-id 00000000-0000-4000-8000-000000000401 \
   --relation answers \
   --target-type open_question \
-  --target-id 10000000-0000-4000-8000-000000000401
-run_agent_hub relations --project commcats-de
-run_agent_hub brief --project commcats-de --limit 4 --with-relations
+  --target-id 00000000-0000-4000-8000-000000000301
+run_agent_hub relations --project central-agent-data-hub-demo
+run_agent_hub brief --project central-agent-data-hub-demo --limit 4 --with-relations
 "$PYTHON_BIN" - <<'PY'
 import os
 
@@ -201,10 +198,10 @@ with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
         SELECT count(*)
         FROM relations
         WHERE source_type = 'fact'
-          AND source_id = '10000000-0000-4000-8000-000000000201'
+          AND source_id = '00000000-0000-4000-8000-000000000201'
           AND relation_type = 'supports'
           AND target_type = 'decision'
-          AND target_id = '10000000-0000-4000-8000-000000000301'
+          AND target_id = '00000000-0000-4000-8000-000000000401'
           AND metadata @> '{"repeated": true}'::jsonb
         """
     ).fetchone()[0]
@@ -227,7 +224,7 @@ with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
           'ffffffff-ffff-4fff-8fff-ffffffffffff',
           'supports',
           'decision',
-          '10000000-0000-4000-8000-000000000301',
+          '00000000-0000-4000-8000-000000000401',
           '{"smoke": "broken-relation"}'::jsonb
         )
         """
@@ -264,57 +261,33 @@ path = Path("$TMP_DIR/notes/fact.md")
 text = path.read_text(encoding="utf-8")
 path.write_text(
     text.replace(
-        "Smoke test confirms CommCats remains a static Alfahosting context.",
-        "Smoke test confirms CommCats remains a static Alfahosting context after sync apply.",
+        "Smoke test confirms the neutral demo keeps reviewed context separate from drafts.",
+        "Smoke test confirms the neutral demo keeps reviewed context separate from drafts after sync apply.",
     ),
     encoding="utf-8",
 )
 PY
-run_agent_hub sync --path "$TMP_DIR/notes" --allowlist "$TMP_DIR/import_allowlist.yml" --plan
-run_agent_hub sync --path "$TMP_DIR/notes" --allowlist "$TMP_DIR/import_allowlist.yml" --apply
-run_agent_hub sync --path "$TMP_DIR/notes" --allowlist "$TMP_DIR/import_allowlist.yml" --plan
-"$PYTHON_BIN" - <<PY
-import os
-from pathlib import Path
-
-import psycopg
-
-with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
-    conn.execute(
-        """
-        UPDATE facts
-        SET statement = 'Database-only smoke conflict value.'
-        WHERE metadata #>> '{agent_hub_import,import_key}' = 'smoke/commcats/static-context'
-        """
-    )
-
-path = Path("$TMP_DIR/notes/fact.md")
-text = path.read_text(encoding="utf-8")
-path.write_text(
-    text.replace(
-        "Smoke test confirms CommCats remains a static Alfahosting context after sync apply.",
-        "Markdown-only smoke conflict value.",
-    ),
-    encoding="utf-8",
-)
-PY
-if run_agent_hub sync --path "$TMP_DIR/notes" --allowlist "$TMP_DIR/import_allowlist.yml" --plan; then
-  echo "Error: conflict plan unexpectedly succeeded" >&2
+sync_plan="$TMP_DIR/sync-plan.txt"
+set +e
+run_agent_hub sync --path "$TMP_DIR/notes" --allowlist "$TMP_DIR/import_allowlist.yml" --plan | tee "$sync_plan"
+sync_plan_status="${PIPESTATUS[0]}"
+set -e
+if [[ "$sync_plan_status" -eq 0 ]]; then
+  echo "Error: review-gated sync plan unexpectedly succeeded without a blocker" >&2
   exit 1
-else
-  echo "Conflict plan blocked as expected."
 fi
+grep -q "review required before sync --apply" "$sync_plan"
 if run_agent_hub sync --path "$TMP_DIR/notes" --allowlist "$TMP_DIR/import_allowlist.yml" --apply; then
-  echo "Error: conflict apply unexpectedly succeeded" >&2
+  echo "Error: review-gated sync apply unexpectedly succeeded" >&2
   exit 1
 else
-  echo "Conflict apply blocked as expected."
+  echo "Review-gated sync apply blocked as expected."
 fi
 
 echo
 echo "== Export and Human Notes retention =="
 run_agent_hub export
-PROJECT_NOTE="$OBSIDIAN_EXPORT_DIR/Projects/commcats-de.md"
+PROJECT_NOTE="$OBSIDIAN_EXPORT_DIR/Projects/central-agent-data-hub-demo.md"
 if [[ ! -f "$PROJECT_NOTE" ]]; then
   echo "Error: expected project note not found: $PROJECT_NOTE" >&2
   exit 1

@@ -515,7 +515,7 @@ Do not store these in the Hub:
 This repository now has two deliberately separate startup paths:
 
 - `scripts/db_start_public_demo.sh`: neutral public demo path
-- `scripts/db_start.sh`: maintainer local ops path
+- `scripts/db_start.sh`: configured local ops path
 
 The public path is the recommended first experience for outside developers.
 It forces its own local demo database name, container, volume, and port
@@ -524,9 +524,11 @@ It forces its own local demo database name, container, volume, and port
 run if the effective target is not the demo database. `DATABASE_URL` in `.env`
 is intentionally ignored by that path.
 
-The maintainer path exists for the operator's own daily work and seeds real
-local working data. It continues to use the configured `.env` database. The
-seed boundary is documented in [`seed/README.md`](seed/README.md).
+The configured local ops path uses the database from `.env` and does not ship
+maintainer-specific seed data. Register your own projects with
+`scripts/register_project.sh`, or pass a private machine-local seed file
+explicitly with `scripts/db_start.sh --seed-file /path/to/local-seed.sql`.
+The seed boundary is documented in [`seed/README.md`](seed/README.md).
 
 If the local Hub appears offline, diagnose it before restarting random pieces:
 

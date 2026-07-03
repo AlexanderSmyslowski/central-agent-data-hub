@@ -464,17 +464,17 @@ reports referencing facts, or decisions answering open questions.
 
 ## Domain Profile: Websites
 
-The current website project set can be loaded with:
+Website project sets can be loaded when projects are tagged with
+`metadata.project_type=website`:
 
 ```bash
 scripts/project_context.sh --all-websites
 ```
 
-Website boundaries:
-
-- `commcats-de`: live static Alfahosting site; work from the local static source and upload only after approval. If a live upload needs protected access, request a human secure handoff outside the Hub, Git, and Obsidian.
-- `the-one-catering`: live Framer site; keep it stable while SEO/AI work and protected static migration preparation happen.
-- `lamour`: planned future web presence; do not inherit positioning from CommCats or THE ONE without a separate decision.
+Website boundaries should live in reviewed project memory, not in this public
+workflow document. Keep each website in its own Hub project and do not inherit
+positioning, hosting state, or deployment assumptions across projects without a
+separate reviewed decision.
 
 For protected hosting, deployment, FTP, or production access, use the separate
 handoff rule in `docs/operator/sensitive-access-handoffs.md`.

@@ -301,7 +301,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     add_project_argument(
         brief_parser,
-        "Project slug to summarize, for example commcats-de.",
+        "Project slug to summarize, for example central-agent-data-hub-demo.",
     )
     add_limit_argument(brief_parser, 8, "Maximum rows per memory section.")
     add_format_argument(brief_parser, ("markdown", "json"), "markdown")

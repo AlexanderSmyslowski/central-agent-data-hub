@@ -16,7 +16,7 @@ agent should read before project work.
 Options:
   --project <slug>   Project slug to brief.
   --all-projects     Brief all active projects from the Hub database.
-  --all-websites     Domain shortcut for commcats-de, the-one-catering, and lamour.
+  --all-websites     Brief active projects with metadata.project_type=website.
   --limit <n>        Maximum rows per brief section, default 8.
   --daily            Also print the last 24h project activity summary.
 
@@ -112,12 +112,19 @@ print_brief() {
   fi
 }
 
-if [[ "$ALL_PROJECTS" -eq 1 ]]; then
-  projects_json="$(run_agent_hub projects --format json)" || {
+load_project_slugs() {
+  local project_type="${1:-}"
+  local projects_json
+  local project_slugs=()
+  local projects_args=(projects --format json)
+  if [[ -n "$project_type" ]]; then
+    projects_args+=(--type "$project_type")
+  fi
+
+  projects_json="$(run_agent_hub "${projects_args[@]}")" || {
     echo "Data error: active project list unavailable." >&2
     exit 1
   }
-  project_slugs=()
   while IFS= read -r project_slug; do
     project_slugs+=("$project_slug")
   done < <(
@@ -129,6 +136,14 @@ for project in json.load(sys.stdin):
     print(project["slug"])
 '
   )
+  printf '%s\n' "${project_slugs[@]}"
+}
+
+if [[ "$ALL_PROJECTS" -eq 1 ]]; then
+  project_slugs=()
+  while IFS= read -r project_slug; do
+    [[ -n "$project_slug" ]] && project_slugs+=("$project_slug")
+  done < <(load_project_slugs)
   if [[ "${#project_slugs[@]}" -eq 0 ]]; then
     echo "Data error: no active projects found." >&2
     exit 1
@@ -137,7 +152,15 @@ for project in json.load(sys.stdin):
     print_brief "$project_slug" || exit 1
   done
 elif [[ "$ALL_WEBSITES" -eq 1 ]]; then
-  for project_slug in commcats-de the-one-catering lamour; do
+  project_slugs=()
+  while IFS= read -r project_slug; do
+    [[ -n "$project_slug" ]] && project_slugs+=("$project_slug")
+  done < <(load_project_slugs "website")
+  if [[ "${#project_slugs[@]}" -eq 0 ]]; then
+    echo "Data error: no active website projects found." >&2
+    exit 1
+  fi
+  for project_slug in "${project_slugs[@]}"; do
     print_brief "$project_slug" || exit 1
   done
 else

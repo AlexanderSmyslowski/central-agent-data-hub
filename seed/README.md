@@ -1,6 +1,6 @@
 # Seed Data
 
-This directory contains two different kinds of local seed data.
+This directory contains the neutral public demo seed data.
 
 ## Public Demo
 
@@ -13,16 +13,14 @@ scripts/first_run_demo.sh
 
 It should stay anonymous, small, and safe for outside developers.
 
-## Maintainer Local Ops
+## Local Operator Data
 
-`business_sites.sql` and `agentic_projects.sql` are maintainer-local operator
-seeds. They describe the maintainer's own local workset and may contain local
-paths, project slugs, and non-secret operational context.
-
-They are not part of the public first-run path and are loaded only by:
+Maintainer- or operator-specific seed files are not shipped in this public
+repository. Keep private local workset seeds outside Git and pass them
+explicitly when needed:
 
 ```bash
-scripts/db_start.sh
+scripts/db_start.sh --seed-file /path/to/local-operator-seed.sql
 ```
 
 Do not add secrets, credentials, private customer data, raw invoices, or raw

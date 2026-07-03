@@ -4,7 +4,7 @@ set -euo pipefail
 # shellcheck disable=SC1091
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/db_common.sh"
 
-LABEL="de.alexandersmyslowski.central-agent-data-hub.backup"
+LABEL="org.agent-data-hub.backup"
 MAX_AGE_HOURS="${AGENT_HUB_BACKUP_MAX_AGE_HOURS:-36}"
 REQUIRE=0
 REQUIRE_REMOTE="${AGENT_HUB_REQUIRE_REMOTE_BACKUP:-0}"

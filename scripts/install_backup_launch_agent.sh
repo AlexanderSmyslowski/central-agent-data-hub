@@ -4,7 +4,7 @@ set -euo pipefail
 # shellcheck disable=SC1091
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/db_common.sh"
 
-LABEL="de.alexandersmyslowski.central-agent-data-hub.backup"
+LABEL="org.agent-data-hub.backup"
 PLIST_DIR="$HOME/Library/LaunchAgents"
 PLIST_PATH="$PLIST_DIR/${LABEL}.plist"
 LOG_DIR="$ROOT_DIR/.local/logs"

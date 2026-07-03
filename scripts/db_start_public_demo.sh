@@ -47,20 +47,24 @@ WITH searchable AS (
   SELECT 'sync_events', id::text, lower(concat_ws(' ', source, payload::text, coalesce(error, ''), metadata::text))
   FROM sync_events
 ),
+non_demo_projects AS (
+  SELECT 1
+  FROM projects
+  WHERE slug <> 'central-agent-data-hub-demo'
+  LIMIT 1
+),
 forbidden(term) AS (
   VALUES
-    ('hermes'),
-    ('ronak'),
     ('telegram'),
     ('review_api'),
     ('review api'),
-    ('commcats-de'),
-    ('the-one-catering'),
-    ('lamour'),
     ('smoke')
 )
 SELECT count(*)
 FROM (
+  SELECT 1
+  FROM non_demo_projects
+  UNION ALL
   SELECT 1
   FROM searchable
   CROSS JOIN forbidden

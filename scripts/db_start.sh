@@ -8,23 +8,37 @@ INCLUDE_DEMO=0
 
 usage() {
   cat <<'EOF'
-Usage: scripts/db_start.sh [--demo]
+Usage: scripts/db_start.sh [--demo] [--seed-file <path>]
 
 Starts the durable local Central Agent Data Hub database, waits for readiness,
-applies the schema, and seeds the maintainer's local working set.
+and applies the schema.
 
 For the neutral public demo path, use scripts/db_start_public_demo.sh instead.
 
 Options:
   --demo    Also apply seed/demo.sql, the neutral public sample dataset.
+  --seed-file <path>
+            Also apply an explicit local operator seed file. This is for
+            private, machine-local setup files kept outside the public repo.
 EOF
 }
+
+EXTRA_SEED_FILES=()
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --demo)
       INCLUDE_DEMO=1
       shift
+      ;;
+    --seed-file)
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: --seed-file requires a path." >&2
+        usage >&2
+        exit 1
+      fi
+      EXTRA_SEED_FILES+=("${2:-}")
+      shift 2
       ;;
     -h|--help)
       usage
@@ -56,17 +70,21 @@ if [[ "$INCLUDE_DEMO" -eq 1 ]]; then
 else
   echo "Skipping seed/demo.sql. Pass --demo to include sample demo records."
 fi
-apply_sql_file "seed/business_sites.sql"
-apply_sql_file "seed/agentic_projects.sql"
+if (( ${#EXTRA_SEED_FILES[@]} )); then
+  for seed_file in "${EXTRA_SEED_FILES[@]}"; do
+    apply_sql_file "$seed_file"
+  done
+else
+  echo "No private operator seed files were applied."
+  echo "Register local projects with scripts/register_project.sh or pass --seed-file explicitly."
+fi
 
 echo
 echo "Readiness check:"
 run_agent_hub status
 echo
-run_agent_hub brief --project commcats-de --limit 4
-echo
-run_agent_hub brief --project catering-agents-platform --limit 4
+run_agent_hub projects
 
 echo
 echo "Durable local Hub database is ready."
-echo "This is the maintainer local ops path."
+echo "This is the configured local ops path."

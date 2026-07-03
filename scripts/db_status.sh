@@ -56,4 +56,4 @@ run_agent_hub status
 
 echo
 echo "== Readiness Brief =="
-run_agent_hub brief --project commcats-de --limit 4
+run_agent_hub projects

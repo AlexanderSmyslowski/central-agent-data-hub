@@ -20,7 +20,7 @@ Options:
   --project <slug>   Project slug to load.
   --query <focus>    Optional focused context query. Requires --project.
   --all-projects     Load all active projects.
-  --all-websites     Domain shortcut for commcats-de, the-one-catering, lamour.
+  --all-websites     Load active website projects from metadata.project_type.
   --limit <n>        Maximum rows per section, default 8.
   --review           Also print the decision/risk/open-question review.
   --no-lock          Skip the local working-tree run lock.
