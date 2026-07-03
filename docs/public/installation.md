@@ -37,8 +37,8 @@ The public preview is tested on:
 
 The scripts require Bash, Python 3.11+, Docker, and Docker Compose.
 
-Native Windows is not a supported v0.2 target. Windows users should treat WSL2
-plus Docker as the realistic path and verify it locally.
+Native Windows is not a supported target for this preview. Windows users should
+treat WSL2 plus Docker as the realistic path and verify it locally.
 
 ## Upgrade Model
 

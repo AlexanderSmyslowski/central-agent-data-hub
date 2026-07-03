@@ -518,6 +518,15 @@ After the test, a real observation note should exist containing:
 
 - at least one genuine uncertainty
 - at least one genuine tester explanation in their own words
+- whether the tester could reach Hub View and explain reviewed memory without
+  maintainer explanation
+
+For v1.0 release readiness, this protocol is the human proof path that complements
+`scripts/v1_readiness_check.sh`. The script proves reproducibility; this
+protocol proves whether the public README and Getting Started can carry a
+technical newcomer without maintainer memory. If no tester is available before a
+release, record that deferral explicitly instead of treating automated smokes as
+a substitute for human first-run proof.
 - exact errors, if any occurred
 - a clear decision: change / do not change / test again
 

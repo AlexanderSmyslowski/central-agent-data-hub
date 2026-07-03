@@ -461,6 +461,28 @@ def test_package_version_is_ready_for_next_public_patch_release() -> None:
     assert "[Release checklist](docs/public/release-checklist.md)" in readme
 
 
+def test_release_checklist_tracks_v1_evidence_and_human_first_run_proof() -> None:
+    checklist = read_script("docs/public/release-checklist.md")
+    protocol = read_script("docs/first-run-test-protocol.md")
+
+    assert "scripts/v1_readiness_check.sh" in checklist
+    assert "v1.0-definition.md" in checklist
+    assert "v0.7-definition.md" not in checklist
+    assert "public demo receipt" in checklist
+    assert "first external project smoke" in checklist
+    assert "restore drill" in checklist
+    assert "`agent-hub doctor`" in checklist
+    assert "docs/first-run-test-protocol.md" in checklist
+    assert "real technical tester" in checklist
+    assert "Keep observation notes outside the repository" in checklist
+    assert "publicly reachable in an" in checklist
+    assert "unauthenticated browser before using it in public copy" in checklist
+    assert "A green unit-test job alone is not enough" in checklist
+    assert "human proof path that complements" in protocol
+    assert "`scripts/v1_readiness_check.sh`" in protocol
+    assert "without maintainer memory" in protocol
+
+
 def test_ci_uses_node24_github_actions() -> None:
     ci = read_script(".github/workflows/ci.yml")
 
@@ -571,7 +593,8 @@ def test_installation_boundary_documents_checkout_as_installation_unit() -> None
     assert "repository checkout is the installation unit" in getting_started
     assert "# Installation Boundary" in installation
     assert "git checkout as the installation unit" in installation
-    assert "Native Windows is not a supported v0.2 target" in installation
+    assert "Native Windows is not a supported target for this preview" in installation
+    assert "v0.2 target" not in installation
     assert "A regular `pip install` can expose importable Python modules" in installation
     assert "checkout_script_path" in system
     assert "requires an Agent Data Hub repository checkout" in system
@@ -1234,7 +1257,6 @@ def test_v07_definition_tracks_release_candidate_evidence() -> None:
     assert "not enough evidence for release readiness" in definition
     assert "production authentication or roles" in definition
     assert "write-capable MCP tools" in definition
-    assert "v0.7-definition.md" in checklist
     assert "separate behavioral" in checklist
     assert "scripts/release_candidate_check.sh" in checklist
     assert "scripts/release_candidate_check.sh" in definition
@@ -1300,12 +1322,14 @@ def test_v10_definition_tracks_local_reliability_end_goal() -> None:
     definition = read_script("docs/public/v1.0-definition.md")
     finish = read_script("scripts/agent_finish.sh")
     installation = read_script("docs/public/installation.md")
+    protocol = read_script("docs/first-run-test-protocol.md")
     v1_readiness = read_script("scripts/v1_readiness_check.sh")
 
     assert "v1 readiness contract" in ci
     assert "scripts/v1_readiness_check.sh --contract-only" in ci
     assert "restore-drill" in ci
     assert "scripts/restore_drill.sh" in ci
+    assert "human proof path that complements" in protocol
     assert "[`docs/public/v1.0-definition.md`](docs/public/v1.0-definition.md)" in readme
     assert "[v1.0 definition](docs/public/v1.0-definition.md)" in readme
     assert "docs/public/v1.0-definition.md" in roadmap
@@ -1315,6 +1339,7 @@ def test_v10_definition_tracks_local_reliability_end_goal() -> None:
     assert "scripts/v1_readiness_check.sh" in definition
     assert "scripts/release_candidate_check.sh" in definition
     assert "scripts/restore_drill.sh" in definition
+    assert "docs/first-run-test-protocol.md" in definition
     assert "scripts/agent_finish.sh --project <project-slug> --review --export --backup" in definition
     assert "scripts/memory_receipt.sh --project <project-slug> --since 24h" in definition
     assert "agent-hub prepare --project <project-slug> --task \"<task>\" --format json" in definition
@@ -1326,6 +1351,9 @@ def test_v10_definition_tracks_local_reliability_end_goal() -> None:
     assert "backup was restored and checked" in definition
     assert "MCP remains read-only" in definition
     assert "Stale and orphaned run locks are visible" in definition
+    assert "human observation proof" in definition
+    assert "Observation notes stay local and outside Git" in definition
+    assert "real person rather than maintainer memory" in definition
     assert "hosted SaaS" in definition
     assert "automatic promotion, demotion, or review" in definition
     assert "raw chats, secrets, private customer data" in definition
@@ -1335,8 +1363,11 @@ def test_v10_definition_tracks_local_reliability_end_goal() -> None:
     assert "scripts/v1_readiness_check.sh" in v1_readiness
     assert "scripts/release_candidate_check.sh" in v1_readiness
     assert "scripts/restore_drill.sh" in v1_readiness
+    assert "docs/first-run-test-protocol.md" in v1_readiness
     assert "External-developer smoke" in v1_readiness
     assert "Restore drill" in v1_readiness
+    assert "human proof path that complements" in v1_readiness
+    assert "without maintainer memory" in v1_readiness
     assert "== Database Backup Verification ==" in v1_readiness
     assert "scripts/memory_receipt.sh" in v1_readiness
     assert "scripts/db_verify_backup.sh" in v1_readiness
