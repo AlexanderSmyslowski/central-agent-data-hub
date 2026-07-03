@@ -88,9 +88,9 @@ What is already real:
 
 What is still rough:
 
-- some scripts are tuned for the maintainer's own local workflow
 - installation is currently checkout-based rather than a standalone package
-- the demo path is narrower than the internal day-to-day path
+- the daily operator path still depends on repo-local shell scripts
+- the human first-run proof is required before a v1.0 tag or broader promotion
 
 ## Trust Model
 
@@ -569,6 +569,7 @@ volumes, or alter Hub memory rows.
 - [Daily local use](docs/public/daily-use.md)
 - [First-run demo session](docs/public/first-run-demo-session.md)
 - [Hub View app roadmap](docs/hub-view-app-roadmap.md)
+- [v0.1.21 release notes](docs/public/v0.1.21-release-notes.md)
 - [v0.1.20 release notes](docs/public/v0.1.20-release-notes.md)
 - [v0.1.19 release notes](docs/public/v0.1.19-release-notes.md)
 - [v0.1.18 release notes](docs/public/v0.1.18-release-notes.md)

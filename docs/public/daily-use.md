@@ -158,3 +158,17 @@ A good daily ADH run has these properties:
 
 The goal is not to remember everything. The goal is to make tomorrow's agent
 start from fewer, better, reviewed assumptions.
+
+## v1.0 Proof Boundary
+
+The automated proof for the daily path is:
+
+```bash
+scripts/smoke_external_developer.sh
+```
+
+That smoke proves the mechanics: register one temporary local project, install
+repo-local agent instructions, start from reviewed context, review one draft,
+and finish with a handoff. It does not prove that a first-time user understands
+the workflow. That proof comes from `docs/first-run-test-protocol.md` with a
+real technical tester.

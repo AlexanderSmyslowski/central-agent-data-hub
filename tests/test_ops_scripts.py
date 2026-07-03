@@ -319,6 +319,29 @@ def test_v020_release_notes_describe_v02_readiness_cleanup() -> None:
     assert "no new Hub-memory write path" in notes
 
 
+def test_v021_release_notes_describe_v1_adoption_readiness_cleanup() -> None:
+    readme = read_script("README.md")
+    notes = read_script("docs/public/v0.1.21-release-notes.md")
+    definition = read_script("docs/public/v1.0-definition.md")
+    checklist = read_script("docs/public/release-checklist.md")
+    daily_use = read_script("docs/public/daily-use.md")
+
+    assert "[v0.1.21 release notes](docs/public/v0.1.21-release-notes.md)" in readme
+    assert "[v0.1.21 release notes]" in readme.split("[v0.1.20 release notes]")[0]
+    assert "Agent Data Hub v0.1.21" in notes
+    assert "v1.0 adoption-readiness cleanup release" in notes
+    assert "neutral demo seed data" in notes
+    assert "Private operator seeds must live outside Git" in notes
+    assert "neutral demo project names and placeholder paths" in notes
+    assert "no packaging change" in notes
+    assert "no new review channel" in notes
+    assert "Do not tag or broadly promote v1.0" in notes
+    assert "missing first-run observation as an open release gate" in definition
+    assert "first-time human understanding" in checklist
+    assert "scripts/smoke_external_developer.sh" in daily_use
+    assert "does not prove that a first-time user understands" in daily_use
+
+
 def test_ci_runs_agent_offline_smoke() -> None:
     ci = read_script(".github/workflows/ci.yml")
     script = read_script("scripts/smoke_agent_offline.sh")
@@ -461,7 +484,7 @@ def test_package_version_is_ready_for_next_public_patch_release() -> None:
     readme = read_script("README.md")
 
     assert 'version = "0.1.20"' in pyproject
-    assert "[v0.1.20 release notes](docs/public/v0.1.20-release-notes.md)" in readme
+    assert "[v0.1.21 release notes](docs/public/v0.1.21-release-notes.md)" in readme
     assert "version` matches the tag" in checklist
     assert "Do not move an already published tag" in checklist
     assert "[Release checklist](docs/public/release-checklist.md)" in readme
@@ -481,6 +504,8 @@ def test_release_checklist_tracks_v1_evidence_and_human_first_run_proof() -> Non
     assert "docs/first-run-test-protocol.md" in checklist
     assert "real technical tester" in checklist
     assert "Keep observation notes outside the repository" in checklist
+    assert "If the human proof is deferred" in checklist
+    assert "Do not imply that automated checks measured" in checklist
     assert "publicly reachable in an" in checklist
     assert "unauthenticated browser before using it in public copy" in checklist
     assert "A green unit-test job alone is not enough" in checklist
@@ -1343,6 +1368,7 @@ def test_v10_definition_tracks_local_reliability_end_goal() -> None:
     assert "scripts/release_candidate_check.sh" in definition
     assert "scripts/restore_drill.sh" in definition
     assert "docs/first-run-test-protocol.md" in definition
+    assert "It does not replace the human proof" in definition
     assert "scripts/agent_finish.sh --project <project-slug> --review --export --backup" in definition
     assert "scripts/memory_receipt.sh --project <project-slug> --since 24h" in definition
     assert "agent-hub prepare --project <project-slug> --task \"<task>\" --format json" in definition

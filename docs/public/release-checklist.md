@@ -16,11 +16,14 @@ Use this short checklist before tagging a public release.
    [`docs/first-run-test-protocol.md`](../first-run-test-protocol.md) with a
    real technical tester, or explicitly record why that human proof is deferred.
    Keep observation notes outside the repository.
-6. Push `main` and wait for CI to pass, including the separate behavioral
+6. If the human proof is deferred, say that plainly in the release notes before
+   tagging or broader promotion. Do not imply that automated checks measured
+   first-time human understanding.
+7. Push `main` and wait for CI to pass, including the separate behavioral
    smoke jobs. A green unit-test job alone is not enough.
-7. Verify that the GitHub repository link is publicly reachable in an
+8. Verify that the GitHub repository link is publicly reachable in an
    unauthenticated browser before using it in public copy.
-8. Tag the checked commit and create the GitHub release from the release notes.
+9. Tag the checked commit and create the GitHub release from the release notes.
 
 Do not move an already published tag. If a release needs a correction after it
 is public, publish the next patch version instead.
