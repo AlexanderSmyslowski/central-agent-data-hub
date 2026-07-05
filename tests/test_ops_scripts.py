@@ -1,4 +1,5 @@
 import os
+import shlex
 import subprocess
 from pathlib import Path
 
@@ -915,7 +916,10 @@ def test_backup_health_keeps_remote_parity_explicit_not_default_blocking() -> No
     latest_backup = common.split("latest_backup_dump()", 1)[1].split("verify_backup_checksum()", 1)[0]
     assert "agent_hub-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]" in latest_backup
     assert "-[0-9][0-9][0-9][0-9][0-9][0-9].dump" in latest_backup
-    assert "-name 'agent_hub-*.dump'" not in latest_backup
+    assert "-name 'agent_hub-*.dump'" in latest_backup
+    assert latest_backup.index("-[0-9][0-9][0-9][0-9][0-9][0-9].dump") < latest_backup.index(
+        "-name 'agent_hub-*.dump'"
+    )
     assert 'dump_path="$(latest_backup_dump)"' in backup_health
     assert 'dump_path="$(latest_backup_dump)"' in verify_backup
     assert "--require-remote" in backup_health
@@ -927,6 +931,38 @@ def test_backup_health_keeps_remote_parity_explicit_not_default_blocking() -> No
     assert "fresh verified local backup" in workflow
     assert "remote parity is" in workflow
     assert "strict only" in workflow
+
+
+def test_latest_backup_dump_prefers_timestamped_backups_and_allows_named_smoke_dump(tmp_path: Path) -> None:
+    external_dump = tmp_path / "agent_hub-external-developer-demo.dump"
+    timestamped_dump = tmp_path / "agent_hub-20260705-124118.dump"
+    external_dump.write_text("external", encoding="utf-8")
+
+    script = f"""
+set -euo pipefail
+export AGENT_HUB_BACKUP_DIR={shlex.quote(str(tmp_path))}
+export AGENT_HUB_IGNORE_ENV_FILE=1
+source scripts/db_common.sh
+latest_backup_dump
+"""
+    result = subprocess.run(
+        ["bash", "-lc", script],
+        cwd=ROOT,
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    assert result.stdout.strip() == str(external_dump)
+
+    timestamped_dump.write_text("timestamped", encoding="utf-8")
+    result = subprocess.run(
+        ["bash", "-lc", script],
+        cwd=ROOT,
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    assert result.stdout.strip() == str(timestamped_dump)
 
 
 def test_agent_finish_surfaces_question_answer_dry_run() -> None:
