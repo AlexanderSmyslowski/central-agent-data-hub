@@ -847,8 +847,7 @@ def test_db_doctor_and_recover_are_safe_local_ops_paths() -> None:
     assert "print_host_runtime_health" in doctor
     assert "Port listener:" in doctor
     assert 'lsof -nP -iTCP:"$DB_PORT" -sTCP:LISTEN' in doctor
-    assert "agent_hub-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]" in verify_backup
-    assert "-[0-9][0-9][0-9][0-9][0-9][0-9].dump" in verify_backup
+    assert 'dump_path="$(latest_backup_dump)"' in verify_backup
     assert "-name '*.dump'" not in verify_backup
     assert "projects --format json" in verify_backup
     assert "brief --project \"$brief_project\"" in verify_backup
@@ -908,9 +907,17 @@ def test_db_status_uses_fast_healthcheck_paths() -> None:
 
 def test_backup_health_keeps_remote_parity_explicit_not_default_blocking() -> None:
     backup_health = read_script("scripts/db_backup_health.sh")
+    common = read_script("scripts/db_common.sh")
+    verify_backup = read_script("scripts/db_verify_backup.sh")
     preflight = read_script("scripts/agent_preflight.sh")
     workflow = read_script("docs/agent-workflow.md")
 
+    latest_backup = common.split("latest_backup_dump()", 1)[1].split("verify_backup_checksum()", 1)[0]
+    assert "agent_hub-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]" in latest_backup
+    assert "-[0-9][0-9][0-9][0-9][0-9][0-9].dump" in latest_backup
+    assert "-name 'agent_hub-*.dump'" not in latest_backup
+    assert 'dump_path="$(latest_backup_dump)"' in backup_health
+    assert 'dump_path="$(latest_backup_dump)"' in verify_backup
     assert "--require-remote" in backup_health
     assert "AGENT_HUB_REQUIRE_REMOTE_BACKUP" in backup_health
     assert "mark_remote_problem()" in backup_health

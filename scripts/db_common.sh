@@ -383,7 +383,9 @@ sha256_file() {
 }
 
 latest_backup_dump() {
-  find "$AGENT_HUB_BACKUP_DIR" -maxdepth 1 -type f -name 'agent_hub-*.dump' -print 2>/dev/null \
+  find "$AGENT_HUB_BACKUP_DIR" -maxdepth 1 -type f \
+    -name 'agent_hub-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9].dump' \
+    -print 2>/dev/null \
     | sort \
     | tail -n 1
 }
