@@ -13,8 +13,9 @@ Read-only operational readiness check for Codex/Hermes before Hub writeback.
 Options:
   --compact  Print only successful check summaries; print full output on failure.
   --allow-direct-db
-             If Docker/Compose is unavailable, allow read-only Hub access when
-             DATABASE_URL is reachable and agent-hub check is ok.
+             If Docker/Compose or local container visibility is unavailable,
+             allow read-only Hub access when DATABASE_URL is reachable and
+             agent-hub check is ok.
 
 Exit codes:
   0  ready
@@ -67,6 +68,31 @@ direct_db_preflight() {
 
   echo
   echo "Agent preflight result: ready for read-only context"
+  return 0
+}
+
+try_direct_db_preflight() {
+  local reason="$1"
+  local direct_code=0
+
+  if [[ "$ALLOW_DIRECT_DB" -ne 1 ]]; then
+    return 0
+  fi
+
+  set +e
+  direct_db_preflight "$reason"
+  direct_code=$?
+  set -e
+  if [[ "$direct_code" -eq 0 ]]; then
+    exit 0
+  fi
+
+  # Keep the original Docker diagnosis visible when the direct read-only path
+  # also fails. This distinguishes "agent sandbox cannot inspect Docker" from
+  # "the Hub is actually offline."
+  echo >&2
+  echo "Operational warning: direct read-only fallback was not usable; continuing with Docker diagnosis." >&2
+  echo >&2
   return 0
 }
 
@@ -138,12 +164,14 @@ docker_quick inspect "$DB_CONTAINER" >/dev/null 2>&1
 inspect_code=$?
 set -e
 if [[ "$inspect_code" -eq 124 ]]; then
+  try_direct_db_preflight "docker is not responding within ${AGENT_HUB_DOCKER_TIMEOUT_SECONDS}s."
   hub_unavailable_message
   echo "Operational error: docker is not responding within ${AGENT_HUB_DOCKER_TIMEOUT_SECONDS}s." >&2
   echo "Restart Docker Desktop, then run $ROOT_DIR/scripts/db_status.sh." >&2
   exit 2
 fi
 if [[ "$inspect_code" -ne 0 ]]; then
+  try_direct_db_preflight "durable DB container is not visible to this runtime."
   hub_unavailable_message
   echo "Operational error: durable DB container is missing." >&2
   echo "Run $ROOT_DIR/scripts/db_start.sh first." >&2
@@ -155,12 +183,14 @@ running_state="$(docker_quick inspect -f '{{.State.Running}}' "$DB_CONTAINER" 2>
 running_code=$?
 set -e
 if [[ "$running_code" -eq 124 ]]; then
+  try_direct_db_preflight "docker is not responding within ${AGENT_HUB_DOCKER_TIMEOUT_SECONDS}s."
   hub_unavailable_message
   echo "Operational error: docker is not responding within ${AGENT_HUB_DOCKER_TIMEOUT_SECONDS}s." >&2
   echo "Restart Docker Desktop, then run $ROOT_DIR/scripts/db_status.sh." >&2
   exit 2
 fi
 if [[ "$running_state" != "true" ]]; then
+  try_direct_db_preflight "durable DB container is not running in this runtime."
   hub_unavailable_message
   echo "Operational error: durable DB container is not running." >&2
   echo "Run $ROOT_DIR/scripts/db_start.sh first." >&2
@@ -168,6 +198,7 @@ if [[ "$running_state" != "true" ]]; then
 fi
 
 if ! postgres_ready; then
+  try_direct_db_preflight "durable DB readiness could not be confirmed through local runtime checks."
   hub_unavailable_message
   echo "Operational error: durable DB is not accepting connections." >&2
   exit 2

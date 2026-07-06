@@ -352,6 +352,7 @@ def test_ci_runs_agent_offline_smoke() -> None:
     assert "scripts/smoke_agent_offline.sh" in ci
 
     assert "central-agent-data-hub-offline-smoke-postgres-missing" in script
+    assert "AGENT_HUB_IGNORE_ENV_FILE=1" in script
     assert "scripts/agent_preflight.sh" in script
     assert "scripts/agent_start.sh" in script
     assert "scripts/agent_finish.sh" in script
@@ -793,6 +794,9 @@ def test_preflight_uses_bounded_docker_checks() -> None:
 
     assert "print_host_runtime_health --compact" in preflight
     assert "Operational error: host runtime is not ready." in preflight
+    assert "try_direct_db_preflight()" in preflight
+    assert "durable DB container is not visible to this runtime." in preflight
+    assert "direct read-only fallback was not usable; continuing with Docker diagnosis." in preflight
     assert "docker_quick inspect \"$DB_CONTAINER\"" in preflight
     assert "Der zentrale Agent Data Hub laeuft lokal gerade nicht." in preflight
     assert "Bitte Docker starten oder kurz warten" in preflight
@@ -931,6 +935,9 @@ def test_backup_health_keeps_remote_parity_explicit_not_default_blocking() -> No
     assert "fresh verified local backup" in workflow
     assert "remote parity is" in workflow
     assert "strict only" in workflow
+    assert "permits a narrower" in workflow
+    assert "read-only fallback" in workflow
+    assert "current agent runtime cannot inspect Docker" in workflow
 
 
 def test_latest_backup_dump_prefers_timestamped_backups_and_allows_named_smoke_dump(tmp_path: Path) -> None:

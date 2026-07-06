@@ -16,6 +16,7 @@ offline_env=(
   AGENT_HUB_DB_NAME=agent_hub_offline_smoke
   AGENT_HUB_DB_PORT=55999
   AGENT_HUB_DOCKER_TIMEOUT_SECONDS=5
+  AGENT_HUB_IGNORE_ENV_FILE=1
   AGENT_HUB_OFFLINE_FINISH_DIR="$tmp_dir/offline-finish"
 )
 

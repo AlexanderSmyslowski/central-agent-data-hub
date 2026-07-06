@@ -165,6 +165,12 @@ configured remote backup target is checked and reported, but remote parity is
 strict only when `AGENT_HUB_REQUIRE_REMOTE_BACKUP=1` or
 `scripts/db_backup_health.sh --require-remote` is used.
 
+For single-project starts, `scripts/agent_start.sh` permits a narrower
+read-only fallback: if the current agent runtime cannot inspect Docker or the
+local container, but `DATABASE_URL` is reachable and `agent-hub check` passes,
+the start may still load context. Finish, writeback, export, and backup paths
+stay on the stricter preflight because they can create durable artifacts.
+
 If preflight reports that the central Hub is offline, do not guess at the
 failure. Run the local doctor first:
 
