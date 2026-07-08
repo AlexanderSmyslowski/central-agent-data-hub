@@ -24,6 +24,11 @@
     grid-template-columns: 1fr;
   }
 
+  .workspace-summary,
+  .workspace-focus-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
 }
 
 @media (max-width: 640px) {
@@ -422,6 +427,31 @@
   .project-overview-map,
   .project-overview-metrics {
     grid-template-columns: 1fr;
+  }
+
+  .workspace-summary,
+  .workspace-focus-grid,
+  .workspace-panel-header,
+  .workspace-category-header {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace-category-metrics {
+    justify-content: start;
+    max-width: none;
+  }
+
+  .workspace-focus-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .workspace-focus-row strong {
+    white-space: normal;
+  }
+
+  .workspace-table {
+    min-width: 760px;
   }
 
   .project-overview-signal {

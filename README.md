@@ -455,6 +455,12 @@ scripts/project_schema_friction.sh \
 
 Agent Data Hub can project reviewed memory into Markdown for human reading and
 Obsidian graph navigation. It can also render the same project set in Hub View.
+Hub View includes a **Workspace Overview** for seeing the local Hub as a whole.
+It shows which projects already contain reviewed knowledge, where suggestions
+are waiting, which risks are visible, and which projects are still empty,
+demo-only, or likely private. This is meant to help a maintainer understand what
+is already stored before adding more shared company knowledge.
+
 Hub View is mostly read-only. Its only Hub-memory write actions are accepting or
 rejecting one draft at a time through the Review Inbox. It may also install the
 repo-local Codex `AGENTS.md` setup block after an explicit local click.
@@ -462,6 +468,7 @@ repo-local Codex `AGENTS.md` setup block after an explicit local click.
 The human-facing surfaces are for:
 
 - reading
+- workspace inventory
 - explicit draft review
 - graph navigation
 - notes and handoff inspection

@@ -92,6 +92,7 @@ HUB_VIEW_STATIC_ASSET_MANIFEST = {
         "base.css",
         "layout.css",
         "project_overview.css",
+        "workspace_overview.css",
         "workbench.css",
         "memory_library.css",
         "memory_search.css",
@@ -1578,6 +1579,319 @@ def review_activity_card(row: dict[str, object]) -> dict[str, object]:
 
 def review_activity_cards(rows: list[dict[str, object]]) -> list[dict[str, object]]:
     return [review_activity_card(row) for row in rows]
+
+WORKSPACE_CATEGORY_ORDER = (
+    "website_brand",
+    "product_platform",
+    "agent_infrastructure",
+    "company_relevant",
+    "empty_ad_hoc",
+    "personal_private_candidate",
+    "demo",
+)
+
+WORKSPACE_CATEGORY_LABEL_KEYS = {
+    "website_brand": "workspace_category_website_brand",
+    "product_platform": "workspace_category_product_platform",
+    "agent_infrastructure": "workspace_category_agent_infrastructure",
+    "company_relevant": "workspace_category_company_relevant",
+    "empty_ad_hoc": "workspace_category_empty_ad_hoc",
+    "personal_private_candidate": "workspace_category_personal_private",
+    "demo": "workspace_category_demo",
+}
+
+WORKSPACE_CATEGORY_BODY_KEYS = {
+    "website_brand": "workspace_category_website_brand_body",
+    "product_platform": "workspace_category_product_platform_body",
+    "agent_infrastructure": "workspace_category_agent_infrastructure_body",
+    "company_relevant": "workspace_category_company_relevant_body",
+    "empty_ad_hoc": "workspace_category_empty_ad_hoc_body",
+    "personal_private_candidate": "workspace_category_personal_private_body",
+    "demo": "workspace_category_demo_body",
+}
+
+WORKSPACE_CATEGORY_REASON_KEYS = {
+    "website_brand": "workspace_reason_website_brand",
+    "product_platform": "workspace_reason_product_platform",
+    "agent_infrastructure": "workspace_reason_agent_infrastructure",
+    "company_relevant": "workspace_reason_company_relevant",
+    "empty_ad_hoc": "workspace_reason_empty_ad_hoc",
+    "personal_private_candidate": "workspace_reason_personal_private",
+    "demo": "workspace_reason_demo",
+}
+
+WORKSPACE_AGENT_INFRASTRUCTURE_SLUGS = {
+    "agent-desk",
+    "central-agent-data-hub",
+    "hermes-agent",
+    "human-quality-review-skill",
+}
+
+WORKSPACE_PERSONAL_HINTS = (
+    "abitur",
+    "sohn",
+    "familie",
+    "personal",
+    "private",
+)
+
+
+def workspace_current_total(counts: dict[str, int]) -> int:
+    return sum(int(counts.get(key, 0) or 0) for key in PROJECT_CARD_COUNT_KEYS)
+
+
+def classify_workspace_project(
+    project: dict[str, object],
+    counts: dict[str, int],
+    *,
+    draft_count: int,
+) -> dict[str, str]:
+    metadata = project.get("metadata") or {}
+    metadata = metadata if isinstance(metadata, dict) else {}
+    slug = str(project.get("slug") or "")
+    slug_lower = slug.lower()
+    name_lower = str(project.get("name") or "").lower()
+    description_lower = str(project.get("description") or "").lower()
+    memory_scope = str(metadata.get("memory_scope") or "").lower()
+    project_type = str(metadata.get("project_type") or "").lower()
+    domain = str(metadata.get("domain") or "").strip()
+    current_total = workspace_current_total(counts)
+
+    if slug_lower.endswith("-demo") or project_type == "demo":
+        category = "demo"
+    elif any(
+        hint in " ".join([slug_lower, name_lower, description_lower])
+        for hint in WORKSPACE_PERSONAL_HINTS
+    ):
+        category = "personal_private_candidate"
+    elif current_total == 0 and draft_count == 0:
+        category = "empty_ad_hoc"
+    elif (
+        project_type == "website"
+        or memory_scope in {"website", "planned-website"}
+        or bool(domain)
+    ):
+        category = "website_brand"
+    elif "platform" in memory_scope or "platform" in project_type:
+        category = "product_platform"
+    elif (
+        slug_lower in WORKSPACE_AGENT_INFRASTRUCTURE_SLUGS
+        or project_type == "ops"
+        or memory_scope == "agentic-operations"
+        or slug_lower.startswith("agent-")
+        or slug_lower.endswith("-agent")
+    ):
+        category = "agent_infrastructure"
+    else:
+        category = "company_relevant"
+
+    return {
+        "category": category,
+        "label_key": WORKSPACE_CATEGORY_LABEL_KEYS[category],
+        "body_key": WORKSPACE_CATEGORY_BODY_KEYS[category],
+        "reason_key": WORKSPACE_CATEGORY_REASON_KEYS[category],
+    }
+
+
+def workspace_project_row(
+    project: dict[str, object],
+    *,
+    counts: dict[str, int],
+    draft_count: int,
+    latest_report: dict[str, object] | None = None,
+) -> dict[str, object]:
+    metadata = project.get("metadata") or {}
+    metadata = metadata if isinstance(metadata, dict) else {}
+    classification = classify_workspace_project(
+        project,
+        counts,
+        draft_count=draft_count,
+    )
+    open_attention = int(counts.get("risks", 0) or 0) + int(
+        counts.get("open_questions", 0) or 0
+    )
+    reviewed_total = workspace_current_total(counts)
+    if draft_count:
+        state = "review"
+        state_key = "workspace_project_state_review"
+    elif open_attention:
+        state = "attention"
+        state_key = "workspace_project_state_attention"
+    elif reviewed_total:
+        state = "ready"
+        state_key = "workspace_project_state_ready"
+    else:
+        state = "empty"
+        state_key = "workspace_project_state_empty"
+
+    latest_report = latest_report if isinstance(latest_report, dict) else None
+    return {
+        "slug": project["slug"],
+        "name": project["name"],
+        "description": truncate(project.get("description") or "", 120),
+        "status": project["status"],
+        "memory_scope": metadata.get("memory_scope") or "",
+        "project_type": metadata.get("project_type") or "",
+        "domain": metadata.get("domain") or "",
+        "counts": counts,
+        "reviewed_total": reviewed_total,
+        "draft_count": draft_count,
+        "open_attention": open_attention,
+        "category": classification["category"],
+        "category_label_key": classification["label_key"],
+        "category_body_key": classification["body_key"],
+        "category_reason_key": classification["reason_key"],
+        "state": state,
+        "state_key": state_key,
+        "latest_report_title": latest_report.get("title") if latest_report else None,
+        "latest_report_summary": (
+            truncate(latest_report.get("summary") or "", 100)
+            if latest_report
+            else None
+        ),
+        "project_url": f"/projects/{project['slug']}",
+        "memory_url": f"/projects/{project['slug']}/memory",
+        "agent_url": f"/projects/{project['slug']}/agent-context",
+        "updated_at": format_timestamp(project.get("updated_at")),
+    }
+
+
+def build_workspace_inventory(
+    cur,
+    projects: list[dict[str, object]],
+    draft_counts: dict[str, int],
+    *,
+    counts_by_project: dict[object, dict[str, int]] | None = None,
+    latest_reports: dict[object, dict[str, object]] | None = None,
+) -> dict[str, object]:
+    project_ids = [project["id"] for project in projects]
+    if counts_by_project is None:
+        counts_by_project = fetch_project_card_counts(cur, project_ids)
+    if latest_reports is None:
+        latest_reports = fetch_latest_reports_by_project(cur, project_ids)
+    rows = [
+        workspace_project_row(
+            project,
+            counts=counts_by_project.get(project["id"], empty_project_card_counts()),
+            draft_count=draft_counts.get(str(project["slug"]), 0),
+            latest_report=latest_reports.get(project["id"]),
+        )
+        for project in projects
+    ]
+    rows.sort(
+        key=lambda row: (
+            WORKSPACE_CATEGORY_ORDER.index(str(row["category"])),
+            -int(row["draft_count"]),
+            -int(row["open_attention"]),
+            str(row["slug"]),
+        )
+    )
+
+    categories = []
+    for category in WORKSPACE_CATEGORY_ORDER:
+        category_rows = [row for row in rows if row["category"] == category]
+        if not category_rows:
+            continue
+        categories.append(
+            {
+                "category": category,
+                "label_key": WORKSPACE_CATEGORY_LABEL_KEYS[category],
+                "body_key": WORKSPACE_CATEGORY_BODY_KEYS[category],
+                "count": len(category_rows),
+                "reviewed_total": sum(
+                    int(row["reviewed_total"]) for row in category_rows
+                ),
+                "draft_total": sum(int(row["draft_count"]) for row in category_rows),
+                "attention_total": sum(
+                    int(row["open_attention"]) for row in category_rows
+                ),
+                "projects": category_rows,
+            }
+        )
+
+    summary = {
+        "project_count": len(rows),
+        "reviewed_total": sum(int(row["reviewed_total"]) for row in rows),
+        "verified_facts": sum(int(row["counts"].get("facts", 0)) for row in rows),
+        "accepted_decisions": sum(
+            int(row["counts"].get("decisions", 0)) for row in rows
+        ),
+        "open_risks": sum(int(row["counts"].get("risks", 0)) for row in rows),
+        "open_questions": sum(
+            int(row["counts"].get("open_questions", 0)) for row in rows
+        ),
+        "published_reports": sum(int(row["counts"].get("reports", 0)) for row in rows),
+        "draft_total": sum(int(row["draft_count"]) for row in rows),
+        "company_relevant_count": sum(
+            1
+            for row in rows
+            if row["category"]
+            in {
+                "website_brand",
+                "product_platform",
+                "agent_infrastructure",
+                "company_relevant",
+            }
+        ),
+        "empty_count": sum(1 for row in rows if row["category"] == "empty_ad_hoc"),
+    }
+
+    focus = [
+        row
+        for row in rows
+        if int(row["draft_count"]) > 0 or int(row["open_attention"]) > 0
+    ][:6]
+    missing = [
+        row
+        for row in rows
+        if row["category"] in {"empty_ad_hoc", "personal_private_candidate", "demo"}
+    ][:8]
+    return {
+        "summary": summary,
+        "categories": categories,
+        "projects": rows,
+        "focus": focus,
+        "missing": missing,
+    }
+
+
+def load_workspace_overview_view_model() -> tuple[int, dict[str, object]]:
+    with _compat_attr("connect", connect)() as conn:
+        with conn.cursor() as cur:
+            projects = fetch_active_projects(cur)
+            drafts = fetch_drafts(cur, limit=None)
+            draft_counts = draft_counts_by_project(drafts)
+            draft_total = sum(draft_counts.values())
+            project_ids = [project["id"] for project in projects]
+            counts_by_project = fetch_project_card_counts(cur, project_ids)
+            latest_reports = fetch_latest_reports_by_project(cur, project_ids)
+            cards = [
+                build_project_card(
+                    cur,
+                    project,
+                    draft_count=draft_counts.get(str(project["slug"]), 0),
+                    counts=counts_by_project.get(
+                        project["id"],
+                        empty_project_card_counts(),
+                    ),
+                    latest_report=latest_reports.get(project["id"]),
+                )
+                for project in projects
+            ]
+            return 200, {
+                "projects": cards,
+                "selected_project": None,
+                "not_found_slug": None,
+                "draft_total": draft_total,
+                "workspace_overview": build_workspace_inventory(
+                    cur,
+                    projects,
+                    draft_counts,
+                    counts_by_project=counts_by_project,
+                    latest_reports=latest_reports,
+                ),
+            }
+
 
 def load_view_model(selected_slug: str | None) -> tuple[int, dict[str, object]]:
     with _compat_attr("connect", connect)() as conn:

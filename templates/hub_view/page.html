@@ -35,12 +35,13 @@
       </header>
 
       <nav class="app-nav" aria-label="{{ t('app_navigation') }}">
-        <a class="app-nav-link{% if not selected_project and view_name not in ('inbox', 'review_activity', 'project_onboarding') %} active{% endif %}" href="{{ url_for('/') }}"{% if not selected_project and view_name not in ('inbox', 'review_activity', 'project_onboarding') %} aria-current="page"{% endif %}>{{ t('nav_projects') }}</a>
+        <a class="app-nav-link{% if view_name == 'workspace_overview' %} active{% endif %}" href="{{ url_for('/workspace') }}"{% if view_name == 'workspace_overview' %} aria-current="page"{% endif %}>{{ t('nav_workspace') }}</a>
+        <a class="app-nav-link{% if not selected_project and view_name not in ('workspace_overview', 'inbox', 'review_activity', 'project_onboarding') %} active{% endif %}" href="{{ url_for('/') }}"{% if not selected_project and view_name not in ('workspace_overview', 'inbox', 'review_activity', 'project_onboarding') %} aria-current="page"{% endif %}>{{ t('nav_projects') }}</a>
         <a class="app-nav-link{% if view_name in ('inbox', 'review_activity') %} active{% endif %}" href="{{ url_for('/inbox') }}"{% if view_name in ('inbox', 'review_activity') %} aria-current="page"{% endif %}>{{ t('nav_review') }}</a>
         <a class="app-nav-link{% if view_name == 'project_onboarding' %} active{% endif %}" href="{{ url_for('/projects/new') }}"{% if view_name == 'project_onboarding' %} aria-current="page"{% endif %}>{{ t('nav_add_project') }}</a>
       </nav>
 
-      {% set show_sidebar = selected_project or view_name in ('inbox', 'review_activity', 'project_onboarding') or not projects %}
+      {% set show_sidebar = selected_project or view_name in ('inbox', 'review_activity', 'project_onboarding') or (not projects and view_name != 'workspace_overview') %}
       <div class="layout{% if not show_sidebar %} no-sidebar{% endif %}">
         {% if show_sidebar %}
         <aside class="panel sidebar">
@@ -119,7 +120,9 @@
         {% endif %}
 
         <section class="panel content" id="main-content" tabindex="-1">
-          {% if view_name == 'inbox' %}
+          {% if view_name == 'workspace_overview' %}
+            {% include "views/workspace_overview.html" %}
+          {% elif view_name == 'inbox' %}
             {% include "views/inbox.html" %}
           {% elif view_name == 'review_activity' %}
             {% include "views/review_activity.html" %}

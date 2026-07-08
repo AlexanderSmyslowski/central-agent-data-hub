@@ -1,0 +1,155 @@
+<section class="workspace-overview" aria-labelledby="workspace-overview-title">
+  <div class="detail-header">
+    <div>
+      <p class="section-kicker">{{ t('workspace_overview_kicker') }}</p>
+      <h2 class="detail-title" id="workspace-overview-title">{{ t('workspace_overview_title') }}</h2>
+      <p class="detail-description">{{ t('workspace_overview_body') }}</p>
+    </div>
+    <div class="workspace-overview-boundary">
+      <strong>{{ t('workspace_boundary_title') }}</strong>
+      <span>{{ t('workspace_boundary_body') }}</span>
+    </div>
+  </div>
+
+  {% if workspace_overview.projects %}
+    <section class="workspace-summary" aria-label="{{ t('workspace_summary_label') }}">
+      <div class="workspace-summary-item primary">
+        <span>{{ t('workspace_summary_projects') }}</span>
+        <strong>{{ workspace_overview.summary.project_count }}</strong>
+        <small>{{ tn('workspace_summary_company_relevant', workspace_overview.summary.company_relevant_count) }}</small>
+      </div>
+      <div class="workspace-summary-item">
+        <span>{{ t('workspace_summary_reviewed') }}</span>
+        <strong>{{ workspace_overview.summary.reviewed_total }}</strong>
+        <small>{{ t('workspace_summary_reviewed_body') }}</small>
+      </div>
+      <div class="workspace-summary-item{% if workspace_overview.summary.draft_total %} attention{% endif %}">
+        <span>{{ t('workspace_summary_drafts') }}</span>
+        <strong>{{ workspace_overview.summary.draft_total }}</strong>
+        <small>{{ t('workspace_summary_drafts_body') }}</small>
+      </div>
+      <div class="workspace-summary-item{% if workspace_overview.summary.open_risks or workspace_overview.summary.open_questions %} attention{% endif %}">
+        <span>{{ t('workspace_summary_attention') }}</span>
+        <strong>{{ workspace_overview.summary.open_risks + workspace_overview.summary.open_questions }}</strong>
+        <small>{{ t('workspace_summary_attention_body', risks=workspace_overview.summary.open_risks, questions=workspace_overview.summary.open_questions) }}</small>
+      </div>
+    </section>
+
+    <section class="workspace-focus-grid" aria-label="{{ t('workspace_focus_label') }}">
+      <article class="workspace-focus-panel">
+        <div class="workspace-panel-header">
+          <div>
+            <p class="section-kicker">{{ t('workspace_focus_kicker') }}</p>
+            <h3>{{ t('workspace_focus_title') }}</h3>
+          </div>
+          <a class="workspace-compact-link" href="{{ url_for('/inbox') }}">{{ t('workspace_open_review') }}</a>
+        </div>
+        {% if workspace_overview.focus %}
+          <div class="workspace-focus-list">
+            {% for project in workspace_overview.focus %}
+              <a class="workspace-focus-row {{ project.state }}" href="{{ url_for(project.project_url) }}">
+                <span>{{ t(project.state_key) }}</span>
+                <strong>{{ project.name }}</strong>
+                <small>{{ tn('workspace_count_suggestions', project.draft_count) }} · {{ tn('workspace_count_attention', project.open_attention) }}</small>
+              </a>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="workspace-empty">{{ t('workspace_focus_empty') }}</p>
+        {% endif %}
+      </article>
+
+      <article class="workspace-focus-panel">
+        <div class="workspace-panel-header">
+          <div>
+            <p class="section-kicker">{{ t('workspace_missing_kicker') }}</p>
+            <h3>{{ t('workspace_missing_title') }}</h3>
+          </div>
+          <a class="workspace-compact-link" href="{{ url_for('/projects/new') }}">{{ t('workspace_add_project') }}</a>
+        </div>
+        {% if workspace_overview.missing %}
+          <div class="workspace-focus-list">
+            {% for project in workspace_overview.missing %}
+              <a class="workspace-focus-row quiet" href="{{ url_for(project.project_url) }}">
+                <span>{{ t(project.category_label_key) }}</span>
+                <strong>{{ project.name }}</strong>
+                <small>{{ t(project.category_reason_key) }}</small>
+              </a>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="workspace-empty">{{ t('workspace_missing_empty') }}</p>
+        {% endif %}
+      </article>
+    </section>
+
+    <section class="workspace-breakdown" aria-labelledby="workspace-breakdown-title">
+      <div class="workspace-panel-header">
+        <div>
+          <p class="section-kicker">{{ t('workspace_breakdown_kicker') }}</p>
+          <h3 id="workspace-breakdown-title">{{ t('workspace_breakdown_title') }}</h3>
+        </div>
+        <span class="workspace-breakdown-note">{{ t('workspace_breakdown_note') }}</span>
+      </div>
+
+      <div class="workspace-category-list">
+        {% for category in workspace_overview.categories %}
+          <section class="workspace-category {{ category.category }}" aria-labelledby="workspace-category-{{ category.category }}">
+            <div class="workspace-category-header">
+              <div>
+                <h4 id="workspace-category-{{ category.category }}">{{ t(category.label_key) }}</h4>
+                <p>{{ t(category.body_key) }}</p>
+              </div>
+              <div class="workspace-category-metrics" aria-label="{{ t('workspace_category_metrics') }}">
+                <span>{{ tn('workspace_count_projects', category.count) }}</span>
+                <span>{{ tn('workspace_count_reviewed', category.reviewed_total) }}</span>
+                <span>{{ tn('workspace_count_suggestions', category.draft_total) }}</span>
+              </div>
+            </div>
+
+            <div class="workspace-table-wrap">
+              <table class="workspace-table">
+                <thead>
+                  <tr>
+                    <th scope="col">{{ t('workspace_table_project') }}</th>
+                    <th scope="col">{{ t('workspace_table_state') }}</th>
+                    <th scope="col">{{ t('workspace_table_reviewed') }}</th>
+                    <th scope="col">{{ t('workspace_table_drafts') }}</th>
+                    <th scope="col">{{ t('workspace_table_attention') }}</th>
+                    <th scope="col">{{ t('workspace_table_reason') }}</th>
+                    <th scope="col">{{ t('workspace_table_next') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for project in category.projects %}
+                    <tr>
+                      <th scope="row">
+                        <a href="{{ url_for(project.project_url) }}">{{ project.name }}</a>
+                        <span>{{ project.slug }}{% if project.memory_scope %} · {{ project.memory_scope }}{% endif %}</span>
+                      </th>
+                      <td><span class="workspace-state {{ project.state }}">{{ t(project.state_key) }}</span></td>
+                      <td>{{ project.reviewed_total }}</td>
+                      <td>{{ project.draft_count }}</td>
+                      <td>{{ project.open_attention }}</td>
+                      <td>{{ t(project.category_reason_key) }}</td>
+                      <td>
+                        <a href="{{ url_for(project.memory_url) }}">{{ t('workspace_open_memory') }}</a>
+                        <a href="{{ url_for(project.agent_url) }}">{{ t('workspace_open_agent') }}</a>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        {% endfor %}
+      </div>
+    </section>
+  {% else %}
+    <section class="workspace-empty-state">
+      <h3>{{ t('workspace_empty_title') }}</h3>
+      <p>{{ t('workspace_empty_body') }}</p>
+      <a class="project-overview-action" href="{{ url_for('/projects/new') }}">{{ t('project_onboarding_open') }}</a>
+    </section>
+  {% endif %}
+</section>

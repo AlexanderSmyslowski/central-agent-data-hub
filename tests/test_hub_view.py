@@ -298,6 +298,7 @@ def test_hub_view_static_asset_order_is_intentional() -> None:
     assert stylesheets[0] == "base.css"
     assert stylesheets[-1] == "responsive.css"
     assert stylesheets.index("layout.css") < stylesheets.index("project_overview.css")
+    assert stylesheets.index("project_overview.css") < stylesheets.index("workspace_overview.css")
     assert stylesheets.index("memory_search.css") < stylesheets.index("responsive.css")
     assert stylesheets.index("agent_handoff.css") < stylesheets.index("responsive.css")
 
@@ -713,6 +714,299 @@ def test_project_overview_renders_german_work_center() -> None:
     assert "Risiken und Fragen öffnen" in body
     assert "Eigenes Projekt nutzen" in body
     assert 'class="project-overview-card' not in body
+
+
+def workspace_counts(
+    *,
+    facts: int = 0,
+    decisions: int = 0,
+    risks: int = 0,
+    open_questions: int = 0,
+    reports: int = 0,
+    documents: int = 0,
+) -> dict[str, int]:
+    return {
+        "documents": documents,
+        "facts": facts,
+        "decisions": decisions,
+        "risks": risks,
+        "open_questions": open_questions,
+        "reports": reports,
+    }
+
+
+def test_workspace_project_classification_is_deterministic() -> None:
+    base_project = {
+        "id": "project-1",
+        "name": "Project",
+        "slug": "project",
+        "description": "",
+        "status": "active",
+        "metadata": {},
+        "updated_at": None,
+    }
+
+    cases = [
+        (
+            {**base_project, "slug": "central-agent-data-hub-demo"},
+            workspace_counts(facts=1),
+            0,
+            "demo",
+            "workspace_reason_demo",
+        ),
+        (
+            {**base_project, "slug": "wir-berlegen-unseren-sohn-zum-abitur"},
+            workspace_counts(),
+            0,
+            "personal_private_candidate",
+            "workspace_reason_personal_private",
+        ),
+        (
+            {**base_project, "slug": "empty-project"},
+            workspace_counts(),
+            0,
+            "empty_ad_hoc",
+            "workspace_reason_empty_ad_hoc",
+        ),
+        (
+            {
+                **base_project,
+                "slug": "commcats-de",
+                "metadata": {"memory_scope": "website", "project_type": "website"},
+            },
+            workspace_counts(facts=1),
+            0,
+            "website_brand",
+            "workspace_reason_website_brand",
+        ),
+        (
+            {
+                **base_project,
+                "slug": "central-agent-data-hub",
+                "metadata": {"memory_scope": "agentic-operations", "project_type": "ops"},
+            },
+            workspace_counts(facts=1),
+            0,
+            "agent_infrastructure",
+            "workspace_reason_agent_infrastructure",
+        ),
+        (
+            {
+                **base_project,
+                "slug": "catering-agents-platform",
+                "metadata": {"memory_scope": "product-platform"},
+            },
+            workspace_counts(facts=1),
+            0,
+            "product_platform",
+            "workspace_reason_product_platform",
+        ),
+        (
+            {**base_project, "slug": "ki-agentur"},
+            workspace_counts(reports=1),
+            0,
+            "company_relevant",
+            "workspace_reason_company_relevant",
+        ),
+    ]
+
+    for project, counts, draft_count, category, reason_key in cases:
+        row = hub_view_models.workspace_project_row(
+            project,
+            counts=counts,
+            draft_count=draft_count,
+            latest_report=None,
+        )
+        assert row["category"] == category
+        assert row["category_reason_key"] == reason_key
+
+
+def test_workspace_inventory_summarizes_reviewed_drafts_and_attention() -> None:
+    projects = [
+        {
+            "id": "commcats",
+            "name": "CommCats",
+            "slug": "commcats-de",
+            "description": "Website work.",
+            "status": "active",
+            "metadata": {"memory_scope": "website", "project_type": "website"},
+            "updated_at": None,
+        },
+        {
+            "id": "platform",
+            "name": "Catering Platform",
+            "slug": "catering-agents-platform",
+            "description": "Product work.",
+            "status": "active",
+            "metadata": {"memory_scope": "product-platform"},
+            "updated_at": None,
+        },
+        {
+            "id": "empty",
+            "name": "Empty Project",
+            "slug": "empty-project",
+            "description": "",
+            "status": "active",
+            "metadata": {},
+            "updated_at": None,
+        },
+    ]
+    counts_by_project = {
+        "commcats": workspace_counts(facts=2, decisions=1, risks=1, reports=1),
+        "platform": workspace_counts(facts=3, reports=2),
+        "empty": workspace_counts(),
+    }
+
+    inventory = hub_view_models.build_workspace_inventory(
+        object(),
+        projects,
+        {"commcats-de": 2},
+        counts_by_project=counts_by_project,
+        latest_reports={
+            "commcats": {"title": "Live status", "summary": "Security headers done."}
+        },
+    )
+
+    assert inventory["summary"] == {
+        "project_count": 3,
+        "reviewed_total": 10,
+        "verified_facts": 5,
+        "accepted_decisions": 1,
+        "open_risks": 1,
+        "open_questions": 0,
+        "published_reports": 3,
+        "draft_total": 2,
+        "company_relevant_count": 2,
+        "empty_count": 1,
+    }
+    assert [category["category"] for category in inventory["categories"]] == [
+        "website_brand",
+        "product_platform",
+        "empty_ad_hoc",
+    ]
+    assert [row["slug"] for row in inventory["focus"]] == ["commcats-de"]
+    assert [row["slug"] for row in inventory["missing"]] == ["empty-project"]
+    assert inventory["categories"][0]["projects"][0]["state"] == "review"
+
+
+def test_workspace_overview_renders_decision_maker_inventory() -> None:
+    project = hub_view_models.workspace_project_row(
+        {
+            "id": "commcats",
+            "name": "CommCats",
+            "slug": "commcats-de",
+            "description": "Website, SEO, and publishing work.",
+            "status": "active",
+            "metadata": {"memory_scope": "website", "project_type": "website"},
+            "updated_at": None,
+        },
+        counts=workspace_counts(facts=2, decisions=1, risks=1, reports=1),
+        draft_count=2,
+        latest_report={"title": "Live status", "summary": "Security headers done."},
+    )
+    workspace_overview = {
+        "summary": {
+            "project_count": 1,
+            "reviewed_total": 5,
+            "verified_facts": 2,
+            "accepted_decisions": 1,
+            "open_risks": 1,
+            "open_questions": 0,
+            "published_reports": 1,
+            "draft_total": 2,
+            "company_relevant_count": 1,
+            "empty_count": 0,
+        },
+        "categories": [
+            {
+                "category": "website_brand",
+                "label_key": "workspace_category_website_brand",
+                "body_key": "workspace_category_website_brand_body",
+                "count": 1,
+                "reviewed_total": 5,
+                "draft_total": 2,
+                "attention_total": 1,
+                "projects": [project],
+            }
+        ],
+        "projects": [project],
+        "focus": [project],
+        "missing": [],
+    }
+
+    body = hub_view.render_page(
+        {
+            "projects": [],
+            "selected_project": None,
+            "not_found_slug": None,
+            "draft_total": 2,
+            "workspace_overview": workspace_overview,
+        },
+        200,
+        view_name="workspace_overview",
+        language="de",
+        query_string="lang=de",
+    ).decode("utf-8")
+
+    assert 'class="view-workspace_overview"' in body
+    assert 'class="layout no-sidebar"' in body
+    assert 'href="/workspace?lang=de" aria-current="page">Überblick</a>' in body
+    assert "Bestand" in body
+    assert "Überblick" in body
+    assert "Nur Überblick, keine Änderung" in body
+    assert "Was ist hier schon festgehalten?" in body
+    assert "Website und Marke" in body
+    assert "CommCats" in body
+    assert "commcats-de · website" in body
+    assert "Vorschlag wartet" in body
+    assert "Domain, Website-Angaben oder Bereich markieren das als öffentliche Arbeit." in body
+    assert 'href="/projects/commcats-de/memory?lang=de">Wissen</a>' in body
+    assert 'href="/projects/commcats-de/agent-context?lang=de">Übergabe</a>' in body
+    assert "Workspace Overview" not in body
+    assert "review items" not in body
+    assert 'action="/inbox/accept"' not in body
+    assert 'method="post"' not in body
+
+
+def test_workspace_route_renders_through_application(monkeypatch) -> None:
+    def fake_workspace_view_model():
+        return 200, {
+            "projects": [],
+            "selected_project": None,
+            "not_found_slug": None,
+            "draft_total": 0,
+            "workspace_overview": {
+                "summary": {
+                    "project_count": 0,
+                    "reviewed_total": 0,
+                    "verified_facts": 0,
+                    "accepted_decisions": 0,
+                    "open_risks": 0,
+                    "open_questions": 0,
+                    "published_reports": 0,
+                    "draft_total": 0,
+                    "company_relevant_count": 0,
+                    "empty_count": 0,
+                },
+                "categories": [],
+                "projects": [],
+                "focus": [],
+                "missing": [],
+            },
+        }
+
+    monkeypatch.setattr(
+        hub_view,
+        "load_workspace_overview_view_model",
+        fake_workspace_view_model,
+    )
+
+    app = hub_view.create_application(bind_host="127.0.0.1", csrf_token="token")
+    captured, body = call_app(app, path="/workspace", query="lang=de")
+
+    assert captured["status"] == "200 OK"
+    assert "Überblick" in body
+    assert "Noch kein Projektwissen sichtbar." in body
 
 
 def test_inbox_page_lists_drafts_as_plain_cards() -> None:

@@ -26,6 +26,7 @@ from agent_hub.hub_view_models import (
     load_project_onboarding_view_model,
     load_review_activity_view_model,
     load_view_model,
+    load_workspace_overview_view_model,
     metadata_project_local_path,
     render_page,
     hub_view_static_dir,
@@ -260,6 +261,23 @@ class HubViewApplication:
                 start_response,
                 path.removeprefix("/static/"),
             )
+        elif path == "/workspace":
+            view_name = "workspace_overview"
+            status_code, view_model = _compat_attr(
+                "load_workspace_overview_view_model",
+                load_workspace_overview_view_model,
+            )()
+            body = _compat_attr("render_page", render_page)(
+                view_model,
+                status_code,
+                view_name=view_name,
+                csrf_token=self.csrf_token,
+                inbox_enabled=self.inbox_enabled,
+                language=language,
+                current_path=path,
+                query_string=str(environ.get("QUERY_STRING") or ""),
+            )
+            return html_response(start_response, status_code, body)
         elif path == "/projects/new":
             view_name = "project_onboarding"
             status_code, view_model = _compat_attr(

@@ -37,6 +37,7 @@ from agent_hub.hub_view_models import (
     load_project_onboarding_view_model,
     load_review_activity_view_model,
     load_view_model,
+    load_workspace_overview_view_model,
     metadata_project_local_path,
     memory_detail_path_type,
     memory_detail_url,
