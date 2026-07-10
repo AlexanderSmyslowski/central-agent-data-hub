@@ -890,6 +890,18 @@ def test_db_doctor_and_recover_are_safe_local_ops_paths() -> None:
     assert "doctor, migration" in architecture
 
 
+def test_backup_verification_is_isolated_per_process_by_default() -> None:
+    verify_backup = read_script("scripts/db_verify_backup.sh")
+
+    assert 'central-agent-data-hub-backup-verify-$$' in verify_backup
+    assert 'VERIFY_PORT="${AGENT_HUB_VERIFY_PORT:-}"' in verify_backup
+    assert 'VERIFY_PORT_BINDING="127.0.0.1::5432"' in verify_backup
+    assert 'docker port "$VERIFY_CONTAINER" 5432/tcp' in verify_backup
+    assert 'VERIFY_PORT="${published_address##*:}"' in verify_backup
+    assert 'central-agent-data-hub-backup-verify"' not in verify_backup
+    assert 'AGENT_HUB_VERIFY_PORT:-55433' not in verify_backup
+
+
 def test_public_demo_docs_use_demo_doctor_not_operator_doctor_for_first_run() -> None:
     readme = read_script("README.md")
     getting_started = read_script("docs/public/getting-started.md")

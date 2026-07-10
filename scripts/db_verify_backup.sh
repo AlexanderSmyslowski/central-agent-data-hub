@@ -4,12 +4,10 @@ set -euo pipefail
 # shellcheck disable=SC1091
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/db_common.sh"
 
-VERIFY_CONTAINER="central-agent-data-hub-backup-verify"
+VERIFY_CONTAINER="${AGENT_HUB_VERIFY_CONTAINER:-central-agent-data-hub-backup-verify-$$}"
 VERIFY_DB="agent_hub_verify"
-VERIFY_PORT="${AGENT_HUB_VERIFY_PORT:-55433}"
+VERIFY_PORT="${AGENT_HUB_VERIFY_PORT:-}"
 VERIFY_DB_PASSWORD="${AGENT_HUB_VERIFY_POSTGRES_PASSWORD:-changeme}"
-VERIFY_DATABASE_URL="postgresql://postgres:${VERIFY_DB_PASSWORD}@localhost:${VERIFY_PORT}/${VERIFY_DB}"
-VERIFY_DISPLAY_DATABASE_URL="postgresql://postgres:***@localhost:${VERIFY_PORT}/${VERIFY_DB}"
 
 usage() {
   cat <<'EOF'
@@ -46,15 +44,35 @@ cleanup
 echo "Verifying backup in temporary Postgres container..."
 echo "Dump:      $dump_path"
 echo "Container: $VERIFY_CONTAINER"
-echo "URL:       $VERIFY_DISPLAY_DATABASE_URL"
 echo
+
+# A process-scoped container and Docker-assigned port let independent agent
+# finishes verify backups without stopping or replacing each other's verifier.
+VERIFY_PORT_BINDING="127.0.0.1::5432"
+if [[ -n "$VERIFY_PORT" ]]; then
+  VERIFY_PORT_BINDING="127.0.0.1:${VERIFY_PORT}:5432"
+fi
 
 docker run -d \
   --name "$VERIFY_CONTAINER" \
   -e POSTGRES_DB="$VERIFY_DB" \
   -e POSTGRES_PASSWORD="$VERIFY_DB_PASSWORD" \
-  -p "127.0.0.1:${VERIFY_PORT}:5432" \
+  -p "$VERIFY_PORT_BINDING" \
   postgres:16 >/dev/null
+
+if [[ -z "$VERIFY_PORT" ]]; then
+  published_address="$(docker port "$VERIFY_CONTAINER" 5432/tcp | head -n 1)"
+  VERIFY_PORT="${published_address##*:}"
+fi
+if [[ ! "$VERIFY_PORT" =~ ^[0-9]+$ ]]; then
+  echo "Error: could not determine the temporary verification port." >&2
+  exit 2
+fi
+
+VERIFY_DATABASE_URL="postgresql://postgres:${VERIFY_DB_PASSWORD}@localhost:${VERIFY_PORT}/${VERIFY_DB}"
+VERIFY_DISPLAY_DATABASE_URL="postgresql://postgres:***@localhost:${VERIFY_PORT}/${VERIFY_DB}"
+echo "URL:       $VERIFY_DISPLAY_DATABASE_URL"
+echo
 
 echo "Waiting for verify database..."
 for _ in $(seq 1 60); do
