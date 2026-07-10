@@ -12,6 +12,7 @@ import pytest
 from agent_hub import hub_view
 from agent_hub.hub_view_i18n import language_switch_links, localize_ui_text, pluralizer
 from agent_hub import hub_view_models
+from agent_hub import workspace_overview
 from agent_hub.commands import inbox
 from agent_hub.statuses import current_memory_statuses_for
 from agent_hub.writeback_routing import lint_card_text
@@ -781,8 +782,7 @@ def test_workspace_inventory_summarizes_reviewed_drafts_and_attention() -> None:
         "research": workspace_counts(reports=1),
     }
 
-    inventory = hub_view_models.build_workspace_inventory(
-        object(),
+    inventory = workspace_overview.build_workspace_inventory(
         projects,
         {"public-site": 2},
         counts_by_project=counts_by_project,
@@ -818,7 +818,7 @@ def test_workspace_inventory_summarizes_reviewed_drafts_and_attention() -> None:
 
 
 def test_workspace_overview_renders_decision_maker_inventory() -> None:
-    project = hub_view_models.workspace_project_row(
+    project = workspace_overview.workspace_project_row(
         {
             "id": "public-site",
             "name": "Public Site",
@@ -832,7 +832,7 @@ def test_workspace_overview_renders_decision_maker_inventory() -> None:
         draft_count=2,
         latest_report={"title": "Current status", "summary": "Checks completed."},
     )
-    workspace_overview = {
+    workspace_payload = {
         "summary": {
             "project_count": 1,
             "reviewed_total": 5,
@@ -868,7 +868,7 @@ def test_workspace_overview_renders_decision_maker_inventory() -> None:
             "selected_project": None,
             "not_found_slug": None,
             "draft_total": 2,
-            "workspace_overview": workspace_overview,
+            "workspace_overview": workspace_payload,
         },
         200,
         view_name="workspace_overview",

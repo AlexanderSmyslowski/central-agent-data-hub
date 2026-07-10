@@ -91,6 +91,9 @@ The implementation is split by responsibility:
 
 - `project_taxonomy.py`: metadata-only workspace grouping; it never interprets
   project names, slugs, or descriptions.
+- `workspace_overview.py`: pure workspace row, category, summary, and priority
+  assembly from already loaded projects and counts.
+- `hub_view_formatting.py`: shared display formatting used by Hub View models.
 - `hub_view_models.py`: database reads, view-model assembly, context handoff
   data, and template rendering.
 - `hub_view_server.py`: WSGI request handling, local review/setup actions,

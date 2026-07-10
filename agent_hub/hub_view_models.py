@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
@@ -23,6 +22,7 @@ from agent_hub.commands.prepare import (
 from agent_hub.commands.summaries import fetch_compiled_payload
 from agent_hub.context_receipt import INFLUENCE_LINES, prepare_context_counts
 from agent_hub.db import connect
+from agent_hub.hub_view_formatting import format_timestamp
 from agent_hub.hub_view_i18n import (
     DEFAULT_LANGUAGE,
     language_switch_links,
@@ -33,14 +33,6 @@ from agent_hub.hub_view_i18n import (
     with_language,
 )
 from agent_hub.quality import fetch_project_quality
-from agent_hub.project_taxonomy import (
-    WORKSPACE_CATEGORY_BODY_KEYS,
-    WORKSPACE_CATEGORY_LABEL_KEYS,
-    WORKSPACE_CATEGORY_ORDER,
-    WORKSPACE_COMPANY_CATEGORIES,
-    WORKSPACE_SEPARATE_CATEGORIES,
-    classify_workspace_project,
-)
 from agent_hub.relations import fetch_project_relations
 from agent_hub.rendering import truncate
 from agent_hub.repo_agent_memory import (
@@ -57,6 +49,10 @@ from agent_hub.statuses import (
     sql_status_in_clause,
 )
 from agent_hub.writeback_routing import card_for_item, primary_text, source_value
+from agent_hub.workspace_overview import (
+    WORKSPACE_MEMORY_COUNT_KEYS,
+    build_workspace_inventory,
+)
 
 
 DRAFT_TYPE_LABELS = {
@@ -121,14 +117,7 @@ HUB_VIEW_STATIC_ASSET_MANIFEST = {
 }
 HUB_VIEW_STYLESHEET_ASSETS = HUB_VIEW_STATIC_ASSET_MANIFEST["stylesheets"]
 HUB_VIEW_SCRIPT_ASSETS = HUB_VIEW_STATIC_ASSET_MANIFEST["scripts"]
-PROJECT_CARD_COUNT_KEYS = (
-    "documents",
-    "facts",
-    "decisions",
-    "open_questions",
-    "risks",
-    "reports",
-)
+PROJECT_CARD_COUNT_KEYS = WORKSPACE_MEMORY_COUNT_KEYS
 MISSING_LATEST_REPORT = object()
 
 MEMORY_DETAIL_SPECS = {
@@ -254,15 +243,6 @@ def load_environment() -> Environment:
         loader=FileSystemLoader(str(hub_view_templates_dir())),
         autoescape=select_autoescape(("html", "xml")),
     )
-
-def format_timestamp(value: object | None) -> str | None:
-    if value is None:
-        return None
-    if isinstance(value, datetime):
-        dt = value.astimezone(timezone.utc)
-        return dt.strftime("%Y-%m-%d %H:%M UTC")
-    text = str(value)
-    return text.replace("T", " ").replace("+00:00", " UTC")
 
 def memory_detail_path_type(item_type: str) -> str:
     return MEMORY_DETAIL_URL_TYPES.get(item_type, item_type)
@@ -1588,166 +1568,6 @@ def review_activity_card(row: dict[str, object]) -> dict[str, object]:
 def review_activity_cards(rows: list[dict[str, object]]) -> list[dict[str, object]]:
     return [review_activity_card(row) for row in rows]
 
-def workspace_current_total(counts: dict[str, int]) -> int:
-    return sum(int(counts.get(key, 0) or 0) for key in PROJECT_CARD_COUNT_KEYS)
-
-
-def workspace_project_row(
-    project: dict[str, object],
-    *,
-    counts: dict[str, int],
-    draft_count: int,
-    latest_report: dict[str, object] | None = None,
-) -> dict[str, object]:
-    metadata = project.get("metadata") or {}
-    metadata = metadata if isinstance(metadata, dict) else {}
-    reviewed_total = workspace_current_total(counts)
-    classification = classify_workspace_project(
-        project,
-        current_total=reviewed_total,
-        draft_count=draft_count,
-    )
-    open_attention = int(counts.get("risks", 0) or 0) + int(
-        counts.get("open_questions", 0) or 0
-    )
-    if draft_count:
-        state = "review"
-        state_key = "workspace_project_state_review"
-    elif open_attention:
-        state = "attention"
-        state_key = "workspace_project_state_attention"
-    elif reviewed_total:
-        state = "ready"
-        state_key = "workspace_project_state_ready"
-    else:
-        state = "empty"
-        state_key = "workspace_project_state_empty"
-
-    latest_report = latest_report if isinstance(latest_report, dict) else None
-    return {
-        "slug": project["slug"],
-        "name": project["name"],
-        "description": truncate(project.get("description") or "", 120),
-        "status": project["status"],
-        "memory_scope": metadata.get("memory_scope") or "",
-        "project_type": metadata.get("project_type") or "",
-        "domain": metadata.get("domain") or "",
-        "counts": counts,
-        "reviewed_total": reviewed_total,
-        "draft_count": draft_count,
-        "open_attention": open_attention,
-        "category": classification["category"],
-        "category_label_key": classification["label_key"],
-        "category_body_key": classification["body_key"],
-        "category_reason_key": classification["reason_key"],
-        "state": state,
-        "state_key": state_key,
-        "latest_report_title": latest_report.get("title") if latest_report else None,
-        "latest_report_summary": (
-            truncate(latest_report.get("summary") or "", 100)
-            if latest_report
-            else None
-        ),
-        "project_url": f"/projects/{project['slug']}",
-        "memory_url": f"/projects/{project['slug']}/memory",
-        "agent_url": f"/projects/{project['slug']}/agent-context",
-        "updated_at": format_timestamp(project.get("updated_at")),
-    }
-
-
-def build_workspace_inventory(
-    cur,
-    projects: list[dict[str, object]],
-    draft_counts: dict[str, int],
-    *,
-    counts_by_project: dict[object, dict[str, int]] | None = None,
-    latest_reports: dict[object, dict[str, object]] | None = None,
-) -> dict[str, object]:
-    project_ids = [project["id"] for project in projects]
-    if counts_by_project is None:
-        counts_by_project = fetch_project_card_counts(cur, project_ids)
-    if latest_reports is None:
-        latest_reports = fetch_latest_reports_by_project(cur, project_ids)
-    rows = [
-        workspace_project_row(
-            project,
-            counts=counts_by_project.get(project["id"], empty_project_card_counts()),
-            draft_count=draft_counts.get(str(project["slug"]), 0),
-            latest_report=latest_reports.get(project["id"]),
-        )
-        for project in projects
-    ]
-    rows.sort(
-        key=lambda row: (
-            WORKSPACE_CATEGORY_ORDER.index(str(row["category"])),
-            -int(row["draft_count"]),
-            -int(row["open_attention"]),
-            str(row["slug"]),
-        )
-    )
-
-    categories = []
-    for category in WORKSPACE_CATEGORY_ORDER:
-        category_rows = [row for row in rows if row["category"] == category]
-        if not category_rows:
-            continue
-        categories.append(
-            {
-                "category": category,
-                "label_key": WORKSPACE_CATEGORY_LABEL_KEYS[category],
-                "body_key": WORKSPACE_CATEGORY_BODY_KEYS[category],
-                "count": len(category_rows),
-                "reviewed_total": sum(
-                    int(row["reviewed_total"]) for row in category_rows
-                ),
-                "draft_total": sum(int(row["draft_count"]) for row in category_rows),
-                "attention_total": sum(
-                    int(row["open_attention"]) for row in category_rows
-                ),
-                "projects": category_rows,
-            }
-        )
-
-    summary = {
-        "project_count": len(rows),
-        "reviewed_total": sum(int(row["reviewed_total"]) for row in rows),
-        "verified_facts": sum(int(row["counts"].get("facts", 0)) for row in rows),
-        "accepted_decisions": sum(
-            int(row["counts"].get("decisions", 0)) for row in rows
-        ),
-        "open_risks": sum(int(row["counts"].get("risks", 0)) for row in rows),
-        "open_questions": sum(
-            int(row["counts"].get("open_questions", 0)) for row in rows
-        ),
-        "published_reports": sum(int(row["counts"].get("reports", 0)) for row in rows),
-        "draft_total": sum(int(row["draft_count"]) for row in rows),
-        "company_relevant_count": sum(
-            1
-            for row in rows
-            if row["category"] in WORKSPACE_COMPANY_CATEGORIES
-        ),
-        "empty_count": sum(1 for row in rows if row["category"] == "empty_ad_hoc"),
-    }
-
-    focus = [
-        row
-        for row in rows
-        if int(row["draft_count"]) > 0 or int(row["open_attention"]) > 0
-    ][:6]
-    missing = [
-        row
-        for row in rows
-        if row["category"] in WORKSPACE_SEPARATE_CATEGORIES
-    ][:8]
-    return {
-        "summary": summary,
-        "categories": categories,
-        "projects": rows,
-        "focus": focus,
-        "missing": missing,
-    }
-
-
 def load_workspace_overview_view_model() -> tuple[int, dict[str, object]]:
     with _compat_attr("connect", connect)() as conn:
         with conn.cursor() as cur:
@@ -1777,7 +1597,6 @@ def load_workspace_overview_view_model() -> tuple[int, dict[str, object]]:
                 "not_found_slug": None,
                 "draft_total": draft_total,
                 "workspace_overview": build_workspace_inventory(
-                    cur,
                     projects,
                     draft_counts,
                     counts_by_project=counts_by_project,
