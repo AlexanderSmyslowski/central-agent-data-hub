@@ -40,8 +40,10 @@ an agent run, but it must not create, promote, or modify Hub memory.
 Hub View's Workspace Overview also belongs in this read-only layer. It shows
 which projects already have reviewed knowledge, which suggestions still need a
 decision, which risks are visible, and which projects are empty, demo-only, or
-likely private. It does not promote drafts, import signals, create company
-memory, or change project metadata.
+not classified yet. Personal work appears separately only when project metadata
+marks it as personal. The overview never infers company or private status from
+names, slugs, or descriptions. It does not promote drafts, import signals,
+create company memory, or change project metadata.
 
 Hub View may show one-time local agent connection instructions, such as Claude
 Code MCP setup, Codex `AGENTS.md` setup, Hermes/custom startup-rule text, or

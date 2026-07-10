@@ -334,8 +334,12 @@ def test_v021_release_notes_describe_v1_adoption_readiness_cleanup() -> None:
     assert "neutral demo seed data" in notes
     assert "Private operator seeds must live outside Git" in notes
     assert "neutral demo project names and placeholder paths" in notes
+    assert "database-independent" in notes
+    assert "initial 390 x 844 viewport" in notes
     assert "no packaging change" in notes
     assert "no new review channel" in notes
+    assert "explicit deferral, not usability evidence" in notes
+    assert "only open v1.0 release gate" in notes
     assert "Do not tag or broadly promote v1.0" in notes
     assert "missing first-run observation as an open release gate" in definition
     assert "first-time human understanding" in checklist
@@ -480,12 +484,12 @@ def test_hub_view_python_entrypoint_delegates_to_split_modules() -> None:
     assert "raise SystemExit(main())" in entrypoint
 
 
-def test_package_version_is_ready_for_next_public_patch_release() -> None:
+def test_package_version_matches_v021_release_candidate() -> None:
     pyproject = read_script("pyproject.toml")
     checklist = read_script("docs/public/release-checklist.md")
     readme = read_script("README.md")
 
-    assert 'version = "0.1.20"' in pyproject
+    assert 'version = "0.1.21"' in pyproject
     assert "[v0.1.21 release notes](docs/public/v0.1.21-release-notes.md)" in readme
     assert "version` matches the tag" in checklist
     assert "Do not move an already published tag" in checklist
@@ -1630,6 +1634,11 @@ def test_public_entrypoints_do_not_reference_maintainer_projects() -> None:
     assert "demo-catering" not in demo_start
     assert "apply_sql_file \"seed/business_sites.sql\"" not in demo_start
     assert "run_agent_hub brief --project demo-website" not in demo_start
+
+    boundaries = read_script("docs/automation-boundaries.md")
+    assert "likely private" not in boundaries
+    assert "marks it as personal" in boundaries
+    assert "never infers company or private status" in boundaries
 
 
 def test_signal_inbox_init_script_is_lazy_by_default() -> None:
