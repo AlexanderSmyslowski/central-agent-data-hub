@@ -73,6 +73,57 @@
     text-align: center;
   }
 
+  body.view-workspace_overview .brand-home .prototype-note,
+  body.view-workspace_overview .read-only {
+    display: none;
+  }
+
+  body.view-workspace_overview .masthead {
+    padding-bottom: 12px;
+  }
+
+  body.view-workspace_overview .masthead-actions {
+    margin-top: 10px;
+  }
+
+  body.view-workspace_overview .app-nav {
+    padding-top: 10px;
+  }
+
+  body.view-workspace_overview .layout {
+    padding-top: 14px;
+  }
+
+  body.view-workspace_overview .content {
+    padding-top: 18px;
+  }
+
+  body.view-workspace_overview .workspace-overview {
+    gap: 12px;
+  }
+
+  body.view-workspace_overview .workspace-overview .detail-header {
+    padding-bottom: 12px;
+  }
+
+  body.view-workspace_overview .workspace-overview-boundary {
+    margin-top: 12px;
+    padding: 10px 12px;
+  }
+
+  body.view-workspace_overview .workspace-overview-boundary span {
+    display: none;
+  }
+
+  body.view-workspace_overview .workspace-summary {
+    gap: 8px;
+  }
+
+  body.view-workspace_overview .workspace-summary-item {
+    min-height: 96px;
+    padding: 12px;
+  }
+
   body.has-selected-project .masthead {
     padding-bottom: 12px;
   }

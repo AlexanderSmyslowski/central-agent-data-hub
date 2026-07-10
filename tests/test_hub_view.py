@@ -937,6 +937,16 @@ def test_workspace_route_renders_through_application(monkeypatch) -> None:
     assert "Noch kein Projektwissen sichtbar." in body
 
 
+def test_workspace_mobile_css_prioritizes_inventory() -> None:
+    responsive_css = hub_view.hub_view_static_dir().joinpath(
+        "responsive.css"
+    ).read_text(encoding="utf-8")
+
+    assert "body.view-workspace_overview .brand-home .prototype-note" in responsive_css
+    assert "body.view-workspace_overview .workspace-overview-boundary span" in responsive_css
+    assert "body.view-workspace_overview .workspace-summary-item" in responsive_css
+
+
 def test_inbox_page_lists_drafts_as_plain_cards() -> None:
     groups = hub_view.group_draft_cards([draft_row()])
     body = hub_view.render_page(
