@@ -33,6 +33,14 @@ from agent_hub.hub_view_i18n import (
     with_language,
 )
 from agent_hub.quality import fetch_project_quality
+from agent_hub.project_taxonomy import (
+    WORKSPACE_CATEGORY_BODY_KEYS,
+    WORKSPACE_CATEGORY_LABEL_KEYS,
+    WORKSPACE_CATEGORY_ORDER,
+    WORKSPACE_COMPANY_CATEGORIES,
+    WORKSPACE_SEPARATE_CATEGORIES,
+    classify_workspace_project,
+)
 from agent_hub.relations import fetch_project_relations
 from agent_hub.rendering import truncate
 from agent_hub.repo_agent_memory import (
@@ -1580,117 +1588,8 @@ def review_activity_card(row: dict[str, object]) -> dict[str, object]:
 def review_activity_cards(rows: list[dict[str, object]]) -> list[dict[str, object]]:
     return [review_activity_card(row) for row in rows]
 
-WORKSPACE_CATEGORY_ORDER = (
-    "website_brand",
-    "product_platform",
-    "agent_infrastructure",
-    "company_relevant",
-    "empty_ad_hoc",
-    "personal_private_candidate",
-    "demo",
-)
-
-WORKSPACE_CATEGORY_LABEL_KEYS = {
-    "website_brand": "workspace_category_website_brand",
-    "product_platform": "workspace_category_product_platform",
-    "agent_infrastructure": "workspace_category_agent_infrastructure",
-    "company_relevant": "workspace_category_company_relevant",
-    "empty_ad_hoc": "workspace_category_empty_ad_hoc",
-    "personal_private_candidate": "workspace_category_personal_private",
-    "demo": "workspace_category_demo",
-}
-
-WORKSPACE_CATEGORY_BODY_KEYS = {
-    "website_brand": "workspace_category_website_brand_body",
-    "product_platform": "workspace_category_product_platform_body",
-    "agent_infrastructure": "workspace_category_agent_infrastructure_body",
-    "company_relevant": "workspace_category_company_relevant_body",
-    "empty_ad_hoc": "workspace_category_empty_ad_hoc_body",
-    "personal_private_candidate": "workspace_category_personal_private_body",
-    "demo": "workspace_category_demo_body",
-}
-
-WORKSPACE_CATEGORY_REASON_KEYS = {
-    "website_brand": "workspace_reason_website_brand",
-    "product_platform": "workspace_reason_product_platform",
-    "agent_infrastructure": "workspace_reason_agent_infrastructure",
-    "company_relevant": "workspace_reason_company_relevant",
-    "empty_ad_hoc": "workspace_reason_empty_ad_hoc",
-    "personal_private_candidate": "workspace_reason_personal_private",
-    "demo": "workspace_reason_demo",
-}
-
-WORKSPACE_AGENT_INFRASTRUCTURE_SLUGS = {
-    "agent-desk",
-    "central-agent-data-hub",
-    "hermes-agent",
-    "human-quality-review-skill",
-}
-
-WORKSPACE_PERSONAL_HINTS = (
-    "abitur",
-    "sohn",
-    "familie",
-    "personal",
-    "private",
-)
-
-
 def workspace_current_total(counts: dict[str, int]) -> int:
     return sum(int(counts.get(key, 0) or 0) for key in PROJECT_CARD_COUNT_KEYS)
-
-
-def classify_workspace_project(
-    project: dict[str, object],
-    counts: dict[str, int],
-    *,
-    draft_count: int,
-) -> dict[str, str]:
-    metadata = project.get("metadata") or {}
-    metadata = metadata if isinstance(metadata, dict) else {}
-    slug = str(project.get("slug") or "")
-    slug_lower = slug.lower()
-    name_lower = str(project.get("name") or "").lower()
-    description_lower = str(project.get("description") or "").lower()
-    memory_scope = str(metadata.get("memory_scope") or "").lower()
-    project_type = str(metadata.get("project_type") or "").lower()
-    domain = str(metadata.get("domain") or "").strip()
-    current_total = workspace_current_total(counts)
-
-    if slug_lower.endswith("-demo") or project_type == "demo":
-        category = "demo"
-    elif any(
-        hint in " ".join([slug_lower, name_lower, description_lower])
-        for hint in WORKSPACE_PERSONAL_HINTS
-    ):
-        category = "personal_private_candidate"
-    elif current_total == 0 and draft_count == 0:
-        category = "empty_ad_hoc"
-    elif (
-        project_type == "website"
-        or memory_scope in {"website", "planned-website"}
-        or bool(domain)
-    ):
-        category = "website_brand"
-    elif "platform" in memory_scope or "platform" in project_type:
-        category = "product_platform"
-    elif (
-        slug_lower in WORKSPACE_AGENT_INFRASTRUCTURE_SLUGS
-        or project_type == "ops"
-        or memory_scope == "agentic-operations"
-        or slug_lower.startswith("agent-")
-        or slug_lower.endswith("-agent")
-    ):
-        category = "agent_infrastructure"
-    else:
-        category = "company_relevant"
-
-    return {
-        "category": category,
-        "label_key": WORKSPACE_CATEGORY_LABEL_KEYS[category],
-        "body_key": WORKSPACE_CATEGORY_BODY_KEYS[category],
-        "reason_key": WORKSPACE_CATEGORY_REASON_KEYS[category],
-    }
 
 
 def workspace_project_row(
@@ -1702,15 +1601,15 @@ def workspace_project_row(
 ) -> dict[str, object]:
     metadata = project.get("metadata") or {}
     metadata = metadata if isinstance(metadata, dict) else {}
+    reviewed_total = workspace_current_total(counts)
     classification = classify_workspace_project(
         project,
-        counts,
+        current_total=reviewed_total,
         draft_count=draft_count,
     )
     open_attention = int(counts.get("risks", 0) or 0) + int(
         counts.get("open_questions", 0) or 0
     )
-    reviewed_total = workspace_current_total(counts)
     if draft_count:
         state = "review"
         state_key = "workspace_project_state_review"
@@ -1825,13 +1724,7 @@ def build_workspace_inventory(
         "company_relevant_count": sum(
             1
             for row in rows
-            if row["category"]
-            in {
-                "website_brand",
-                "product_platform",
-                "agent_infrastructure",
-                "company_relevant",
-            }
+            if row["category"] in WORKSPACE_COMPANY_CATEGORIES
         ),
         "empty_count": sum(1 for row in rows if row["category"] == "empty_ad_hoc"),
     }
@@ -1844,7 +1737,7 @@ def build_workspace_inventory(
     missing = [
         row
         for row in rows
-        if row["category"] in {"empty_ad_hoc", "personal_private_candidate", "demo"}
+        if row["category"] in WORKSPACE_SEPARATE_CATEGORIES
     ][:8]
     return {
         "summary": summary,

@@ -89,6 +89,8 @@ entrypoint for the local Hub View.
 
 The implementation is split by responsibility:
 
+- `project_taxonomy.py`: metadata-only workspace grouping; it never interprets
+  project names, slugs, or descriptions.
 - `hub_view_models.py`: database reads, view-model assembly, context handoff
   data, and template rendering.
 - `hub_view_server.py`: WSGI request handling, local review/setup actions,

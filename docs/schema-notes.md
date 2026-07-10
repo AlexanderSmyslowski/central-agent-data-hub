@@ -71,6 +71,14 @@ Documented values currently include:
 `agent-hub projects --type <project_type>` filters active projects by that
 metadata value.
 
+Hub View uses this metadata for its workspace overview. `website`, `product`,
+`ops`, `business`, and `personal` map to visible workspace areas; more specific
+`memory_scope` values can refine the same grouping, and `demo: true` marks
+example data. A project without enough metadata is shown as not classified yet.
+Names, slugs, and descriptions never decide whether a project is
+company-related or personal. Visible memory counts only determine whether a
+project is empty and which items need attention first.
+
 ## Relation Model
 
 `relations` is intentionally polymorphic.

@@ -458,8 +458,11 @@ Obsidian graph navigation. It can also render the same project set in Hub View.
 Hub View includes a **Workspace Overview** for seeing the local Hub as a whole.
 It shows which projects already contain reviewed knowledge, where suggestions
 are waiting, which risks are visible, and which projects are still empty,
-demo-only, or likely private. This is meant to help a maintainer understand what
-is already stored before adding more shared company knowledge.
+demo-only, explicitly marked as personal, or not classified yet. Workspace
+areas come only from project metadata and visible memory counts; Hub View never
+infers company or private status from a project name, slug, or description.
+This is meant to help a maintainer understand what is already stored before
+adding more shared company knowledge.
 
 Hub View is mostly read-only. Its only Hub-memory write actions are accepting or
 rejecting one draft at a time through the Review Inbox. It may also install the

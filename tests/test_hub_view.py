@@ -735,99 +735,13 @@ def workspace_counts(
     }
 
 
-def test_workspace_project_classification_is_deterministic() -> None:
-    base_project = {
-        "id": "project-1",
-        "name": "Project",
-        "slug": "project",
-        "description": "",
-        "status": "active",
-        "metadata": {},
-        "updated_at": None,
-    }
-
-    cases = [
-        (
-            {**base_project, "slug": "central-agent-data-hub-demo"},
-            workspace_counts(facts=1),
-            0,
-            "demo",
-            "workspace_reason_demo",
-        ),
-        (
-            {**base_project, "slug": "wir-berlegen-unseren-sohn-zum-abitur"},
-            workspace_counts(),
-            0,
-            "personal_private_candidate",
-            "workspace_reason_personal_private",
-        ),
-        (
-            {**base_project, "slug": "empty-project"},
-            workspace_counts(),
-            0,
-            "empty_ad_hoc",
-            "workspace_reason_empty_ad_hoc",
-        ),
-        (
-            {
-                **base_project,
-                "slug": "commcats-de",
-                "metadata": {"memory_scope": "website", "project_type": "website"},
-            },
-            workspace_counts(facts=1),
-            0,
-            "website_brand",
-            "workspace_reason_website_brand",
-        ),
-        (
-            {
-                **base_project,
-                "slug": "central-agent-data-hub",
-                "metadata": {"memory_scope": "agentic-operations", "project_type": "ops"},
-            },
-            workspace_counts(facts=1),
-            0,
-            "agent_infrastructure",
-            "workspace_reason_agent_infrastructure",
-        ),
-        (
-            {
-                **base_project,
-                "slug": "catering-agents-platform",
-                "metadata": {"memory_scope": "product-platform"},
-            },
-            workspace_counts(facts=1),
-            0,
-            "product_platform",
-            "workspace_reason_product_platform",
-        ),
-        (
-            {**base_project, "slug": "ki-agentur"},
-            workspace_counts(reports=1),
-            0,
-            "company_relevant",
-            "workspace_reason_company_relevant",
-        ),
-    ]
-
-    for project, counts, draft_count, category, reason_key in cases:
-        row = hub_view_models.workspace_project_row(
-            project,
-            counts=counts,
-            draft_count=draft_count,
-            latest_report=None,
-        )
-        assert row["category"] == category
-        assert row["category_reason_key"] == reason_key
-
-
 def test_workspace_inventory_summarizes_reviewed_drafts_and_attention() -> None:
     projects = [
         {
-            "id": "commcats",
-            "name": "CommCats",
-            "slug": "commcats-de",
-            "description": "Website work.",
+            "id": "public-site",
+            "name": "Public Site",
+            "slug": "public-site",
+            "description": "Public website work.",
             "status": "active",
             "metadata": {"memory_scope": "website", "project_type": "website"},
             "updated_at": None,
@@ -835,7 +749,7 @@ def test_workspace_inventory_summarizes_reviewed_drafts_and_attention() -> None:
         {
             "id": "platform",
             "name": "Catering Platform",
-            "slug": "catering-agents-platform",
+            "slug": "local-tool",
             "description": "Product work.",
             "status": "active",
             "metadata": {"memory_scope": "product-platform"},
@@ -850,31 +764,41 @@ def test_workspace_inventory_summarizes_reviewed_drafts_and_attention() -> None:
             "metadata": {},
             "updated_at": None,
         },
+        {
+            "id": "research",
+            "name": "Research Notes",
+            "slug": "research-notes",
+            "description": "A project that still needs a workspace area.",
+            "status": "active",
+            "metadata": {"project_type": "research"},
+            "updated_at": None,
+        },
     ]
     counts_by_project = {
-        "commcats": workspace_counts(facts=2, decisions=1, risks=1, reports=1),
+        "public-site": workspace_counts(facts=2, decisions=1, risks=1, reports=1),
         "platform": workspace_counts(facts=3, reports=2),
         "empty": workspace_counts(),
+        "research": workspace_counts(reports=1),
     }
 
     inventory = hub_view_models.build_workspace_inventory(
         object(),
         projects,
-        {"commcats-de": 2},
+        {"public-site": 2},
         counts_by_project=counts_by_project,
         latest_reports={
-            "commcats": {"title": "Live status", "summary": "Security headers done."}
+            "public-site": {"title": "Current status", "summary": "Checks completed."}
         },
     )
 
     assert inventory["summary"] == {
-        "project_count": 3,
-        "reviewed_total": 10,
+        "project_count": 4,
+        "reviewed_total": 11,
         "verified_facts": 5,
         "accepted_decisions": 1,
         "open_risks": 1,
         "open_questions": 0,
-        "published_reports": 3,
+        "published_reports": 4,
         "draft_total": 2,
         "company_relevant_count": 2,
         "empty_count": 1,
@@ -882,27 +806,31 @@ def test_workspace_inventory_summarizes_reviewed_drafts_and_attention() -> None:
     assert [category["category"] for category in inventory["categories"]] == [
         "website_brand",
         "product_platform",
+        "unclassified",
         "empty_ad_hoc",
     ]
-    assert [row["slug"] for row in inventory["focus"]] == ["commcats-de"]
-    assert [row["slug"] for row in inventory["missing"]] == ["empty-project"]
+    assert [row["slug"] for row in inventory["focus"]] == ["public-site"]
+    assert [row["slug"] for row in inventory["missing"]] == [
+        "research-notes",
+        "empty-project",
+    ]
     assert inventory["categories"][0]["projects"][0]["state"] == "review"
 
 
 def test_workspace_overview_renders_decision_maker_inventory() -> None:
     project = hub_view_models.workspace_project_row(
         {
-            "id": "commcats",
-            "name": "CommCats",
-            "slug": "commcats-de",
-            "description": "Website, SEO, and publishing work.",
+            "id": "public-site",
+            "name": "Public Site",
+            "slug": "public-site",
+            "description": "Website and publishing work.",
             "status": "active",
             "metadata": {"memory_scope": "website", "project_type": "website"},
             "updated_at": None,
         },
         counts=workspace_counts(facts=2, decisions=1, risks=1, reports=1),
         draft_count=2,
-        latest_report={"title": "Live status", "summary": "Security headers done."},
+        latest_report={"title": "Current status", "summary": "Checks completed."},
     )
     workspace_overview = {
         "summary": {
@@ -956,12 +884,12 @@ def test_workspace_overview_renders_decision_maker_inventory() -> None:
     assert "Nur Überblick, keine Änderung" in body
     assert "Was ist hier schon festgehalten?" in body
     assert "Website und Marke" in body
-    assert "CommCats" in body
-    assert "commcats-de · website" in body
+    assert "Public Site" in body
+    assert "public-site · website" in body
     assert "Vorschlag wartet" in body
-    assert "Domain, Website-Angaben oder Bereich markieren das als öffentliche Arbeit." in body
-    assert 'href="/projects/commcats-de/memory?lang=de">Wissen</a>' in body
-    assert 'href="/projects/commcats-de/agent-context?lang=de">Übergabe</a>' in body
+    assert "Projektart oder Wissensbereich markieren das als öffentliche Website-Arbeit." in body
+    assert 'href="/projects/public-site/memory?lang=de">Wissen</a>' in body
+    assert 'href="/projects/public-site/agent-context?lang=de">Übergabe</a>' in body
     assert "Workspace Overview" not in body
     assert "review items" not in body
     assert 'action="/inbox/accept"' not in body
