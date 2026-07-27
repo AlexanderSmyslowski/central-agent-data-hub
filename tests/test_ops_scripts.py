@@ -37,11 +37,14 @@ done
 if [[ "${1:-}" == *scripts/db_client.py ]]; then
   exec "$REAL_PYTHON" "$@"
 fi
+if [[ "${1:-}" == "-c" && "${2:-}" == *"psycopg.connect"* ]]; then
+  exit 0
+fi
 if [[ "${1:-}" == "-c" ]]; then
   exec "$REAL_PYTHON" "$@"
 fi
 if [[ "${1:-}" == "-" ]]; then
-  exit 0
+  exec "$REAL_PYTHON" "$@"
 fi
 printf 'python %s\n' "$*" >> "$FAKE_RUNTIME_LOG"
 case " $* " in
@@ -261,6 +264,7 @@ set -euo pipefail
 for argument in "$@"; do
   if [[ "$argument" == *native-secret* ]]; then exit 97; fi
 done
+if [[ "${1:-}" != "-c" ]]; then exit 97; fi
 if [[ "${DATABASE_URL:-}" != "postgresql://native:native-secret@localhost:55432/agent_hub" ]]; then
   exit 97
 fi
@@ -297,6 +301,46 @@ printf 'URL: %s\n' "$(mask_database_url "$DATABASE_URL")"
     assert "URL: postgresql://native:***@localhost:55432/agent_hub" in result.stdout
     assert "native-secret" not in result.stdout
     assert "native-secret" not in result.stderr
+
+
+def test_direct_database_readiness_propagates_connection_failure(tmp_path: Path) -> None:
+    fake_python = tmp_path / "python"
+    write_executable(
+        fake_python,
+        """#!/usr/bin/env bash
+set -euo pipefail
+if [[ "${1:-}" != "-c" ]]; then exit 97; fi
+exit 1
+""",
+    )
+    env = os.environ.copy()
+    env.update(
+        {
+            "AGENT_HUB_IGNORE_ENV_FILE": "1",
+            "DATABASE_URL": "postgresql://native:native-secret@localhost:55999/agent_hub",
+            "PYTHON": str(fake_python),
+        }
+    )
+    result = subprocess.run(
+        [
+            "bash",
+            "-c",
+            """
+set -euo pipefail
+source scripts/db_common.sh
+if direct_database_ready; then
+  exit 97
+fi
+""",
+        ],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
 
 
 def test_configured_native_service_pins_runtime_when_database_is_unreachable(
@@ -375,7 +419,7 @@ done
 if [[ "${1:-}" == *scripts/db_client.py ]]; then
   exec "$REAL_PYTHON" "$@"
 fi
-if [[ "${1:-}" == "-" ]]; then
+if [[ "${1:-}" == "-c" ]]; then
   if [[ -f "$FAKE_NATIVE_READY_MARKER" ]]; then exit 0; fi
   exit 1
 fi
@@ -439,7 +483,7 @@ set -euo pipefail
 if [[ "${1:-}" == *scripts/db_client.py ]]; then
   exec "$REAL_PYTHON" "$@"
 fi
-if [[ "${1:-}" == "-" ]]; then
+if [[ "${1:-}" == "-c" ]]; then
   count=0
   if [[ -f "$FAKE_READINESS_COUNT" ]]; then
     count="$(<"$FAKE_READINESS_COUNT")"
@@ -665,7 +709,7 @@ set -euo pipefail
 if [[ "${1:-}" == *scripts/db_client.py ]]; then
   exec "$REAL_PYTHON" "$@"
 fi
-if [[ "${1:-}" == "-" ]]; then
+if [[ "${1:-}" == "-c" ]]; then
   exit 1
 fi
 printf 'python %s\n' "$*" >> "$FAKE_RUNTIME_LOG"
@@ -723,7 +767,7 @@ def test_db_doctor_points_native_runtime_failure_to_start_not_docker_recovery(
         fake_python,
         """#!/usr/bin/env bash
 set -euo pipefail
-if [[ "${1:-}" == "-" ]]; then
+if [[ "${1:-}" == "-c" ]]; then
   exit 1
 fi
 exit 97

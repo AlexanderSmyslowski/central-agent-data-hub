@@ -166,7 +166,7 @@ direct_database_ready() {
     return 1
   fi
 
-  run_with_timeout "$AGENT_HUB_DB_READY_TIMEOUT_SECONDS" "$PYTHON_BIN" - <<'PY' >/dev/null 2>&1
+  run_with_timeout "$AGENT_HUB_DB_READY_TIMEOUT_SECONDS" "$PYTHON_BIN" -c '
 import os
 import sys
 
@@ -178,7 +178,7 @@ try:
         pass
 except Exception:
     sys.exit(1)
-PY
+' >/dev/null 2>&1
 }
 
 select_database_runtime() {
