@@ -8,7 +8,7 @@ usage() {
   cat <<'EOF'
 Usage: scripts/db_restore.sh --confirm <dump-file>
 
-Restores a custom-format pg_dump into the durable local Compose database.
+Restores a custom-format pg_dump into the configured durable local database.
 This drops and recreates the public schema in the local agent_hub database.
 EOF
 }
@@ -30,21 +30,28 @@ if [[ ! -f "$dump_path" ]]; then
   exit 1
 fi
 
+select_database_runtime
+
 echo "WARNING: this will replace the contents of local database '$DB_NAME'."
-echo "Container: $DB_CONTAINER"
-echo "Dump:      $dump_path"
+echo "Database runtime: $(database_runtime_label)"
+echo "URL:              $DISPLAY_DATABASE_URL"
+echo "Dump:             $dump_path"
+if ! database_runtime_is_direct; then
+  echo "Container:        $DB_CONTAINER"
+fi
 echo
 
-compose up -d "$DB_SERVICE"
-wait_for_postgres
+if database_runtime_is_direct; then
+  postgres_ready
+else
+  compose up -d "$DB_SERVICE"
+  wait_for_postgres
+fi
 
-compose exec -T "$DB_SERVICE" \
-  psql -v ON_ERROR_STOP=1 -U "$DB_USER" -d "$DB_NAME" \
+database_psql -v ON_ERROR_STOP=1 \
   -c "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;"
 
-compose exec -T "$DB_SERVICE" \
-  pg_restore -U "$DB_USER" -d "$DB_NAME" --no-owner \
-  < "$dump_path"
+database_pg_restore --no-owner < "$dump_path"
 
 echo
 echo "Restore complete. Running consistency check..."

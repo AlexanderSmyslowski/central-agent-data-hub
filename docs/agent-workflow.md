@@ -166,10 +166,15 @@ strict only when `AGENT_HUB_REQUIRE_REMOTE_BACKUP=1` or
 `scripts/db_backup_health.sh --require-remote` is used.
 
 For single-project starts, `scripts/agent_start.sh` permits a narrower
-read-only fallback: if the current agent runtime cannot inspect Docker or the
-local container, but `DATABASE_URL` is reachable and `agent-hub check` passes,
-the start may still load context. Finish, writeback, export, and backup paths
-stay on the stricter preflight because they can create durable artifacts.
+read-only fallback through a reachable `DATABASE_URL` and does not require Docker.
+This also covers sandboxes where the current agent runtime cannot inspect Docker.
+The public demo and an operator configuration without a native service may
+still use the optional Compose runtime.
+
+When a native runtime is selected, backup verification restores into a
+process-scoped temporary database on that local server and removes it after the
+check. The configured database role must be allowed to create and drop local
+databases.
 
 If preflight reports that the central Hub is offline, do not guess at the
 failure. Run the local doctor first:
@@ -178,8 +183,8 @@ failure. Run the local doctor first:
 agent-hub doctor
 ```
 
-When the doctor reports a known stale Postgres lock-file problem, use the
-guarded recovery script:
+When the optional Docker fallback reports a known stale Postgres lock-file
+problem, use the guarded recovery script:
 
 ```bash
 scripts/db_recover.sh --apply

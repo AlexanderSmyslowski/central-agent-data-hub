@@ -1,6 +1,9 @@
+import hashlib
 import os
 import shlex
+import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -9,6 +12,738 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def read_script(path: str) -> str:
     return (ROOT / path).read_text(encoding="utf-8")
+
+
+def write_executable(path: Path, content: str) -> None:
+    path.write_text(content, encoding="utf-8")
+    path.chmod(0o755)
+
+
+def native_script_env(tmp_path: Path) -> tuple[dict[str, str], Path]:
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    (tmp_path / "backups").mkdir()
+    command_log = tmp_path / "commands.log"
+    fake_python = bin_dir / "python"
+    write_executable(
+        fake_python,
+        """#!/usr/bin/env bash
+set -euo pipefail
+for argument in "$@"; do
+  if [[ "$argument" == *native-secret* ]]; then
+    exit 97
+  fi
+done
+if [[ "${1:-}" == *scripts/db_client.py ]]; then
+  exec "$REAL_PYTHON" "$@"
+fi
+if [[ "${1:-}" == "-c" ]]; then
+  exec "$REAL_PYTHON" "$@"
+fi
+if [[ "${1:-}" == "-" ]]; then
+  exit 0
+fi
+printf 'python %s\n' "$*" >> "$FAKE_RUNTIME_LOG"
+case " $* " in
+  *" agent_hub.cli migrate --status "*)
+    echo "001_init.sql: applied"
+    ;;
+  *" agent_hub.cli projects --format json "*)
+    echo '[{"slug": "central-agent-data-hub"}]'
+    ;;
+  *)
+    echo "ok"
+    ;;
+esac
+""",
+    )
+    for command, body in {
+        "docker": """printf 'docker %s\n' "$*" >> "$FAKE_RUNTIME_LOG"
+exit 91
+""",
+        "pg_dump": """printf 'pg_dump %s\n' "$*" >> "$FAKE_RUNTIME_LOG"
+printf 'native-dump\n'
+""",
+        "psql": """printf 'psql %s\n' "$*" >> "$FAKE_RUNTIME_LOG"
+payload="$(cat)"
+if [[ -n "$payload" ]]; then
+  printf 'psql-stdin %s\n' "$payload" >> "$FAKE_RUNTIME_LOG"
+fi
+""",
+        "pg_restore": """printf 'pg_restore %s\n' "$*" >> "$FAKE_RUNTIME_LOG"
+if [[ " $* " == *" --file=- "* ]]; then
+  cat >/dev/null
+  printf 'SELECT 1;\n'
+  exit 0
+fi
+if [[ " $* " != *" --dbname=agent_hub_verify_"* ]]; then exit 97; fi
+dump_path="${!#}"
+if [[ ! -f "$dump_path" ]]; then exit 97; fi
+""",
+    }.items():
+        write_executable(
+            bin_dir / command,
+            f"""#!/usr/bin/env bash
+set -euo pipefail
+if [[ "$PGHOST" != "localhost" ]]; then exit 97; fi
+if [[ "$PGPORT" != "55432" ]]; then exit 97; fi
+if [[ "$PGUSER" != "native" ]]; then exit 97; fi
+if [[ "$PGPASSWORD" != "native-secret" ]]; then exit 97; fi
+if [[ "$PGDATABASE" != "agent_hub" ]]; then exit 97; fi
+{body}""",
+        )
+
+    env = os.environ.copy()
+    env.pop("AGENT_HUB_BACKUP_REMOTE", None)
+    env.pop("AGENT_HUB_NATIVE_POSTGRES_SERVICE", None)
+    env.pop("AGENT_HUB_PUBLIC_DEMO", None)
+    env.update(
+        {
+            "AGENT_HUB_IGNORE_ENV_FILE": "1",
+            "AGENT_HUB_BACKUP_DIR": str(tmp_path / "backups"),
+            "DATABASE_URL": "postgresql://native:native-secret@localhost:55432/agent_hub",
+            "FAKE_RUNTIME_LOG": str(command_log),
+            "OBSIDIAN_EXPORT_DIR": str(tmp_path / "obsidian"),
+            "PATH": f"{bin_dir}:/usr/bin:/bin:/usr/sbin:/sbin",
+            "PYTHON": str(fake_python),
+            "REAL_PYTHON": sys.executable,
+        }
+    )
+    return env, command_log
+
+
+def create_valid_backup(backup_dir: Path) -> Path:
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    dump_path = backup_dir / "agent_hub-20260727-120000.dump"
+    payload = b"native-backup"
+    dump_path.write_bytes(payload)
+    checksum = hashlib.sha256(payload).hexdigest()
+    dump_path.with_suffix(".dump.sha256").write_text(
+        f"{checksum}  {dump_path}\n",
+        encoding="utf-8",
+    )
+    return dump_path
+
+
+def test_db_common_applies_native_service_loaded_from_repo_env(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    scripts = repo / "scripts"
+    scripts.mkdir(parents=True)
+    shutil.copy2(ROOT / "scripts/db_common.sh", scripts / "db_common.sh")
+    (repo / ".env").write_text(
+        "AGENT_HUB_NATIVE_POSTGRES_SERVICE=postgresql@16\n",
+        encoding="utf-8",
+    )
+    env = os.environ.copy()
+    env.pop("AGENT_HUB_NATIVE_POSTGRES_SERVICE", None)
+    env.pop("AGENT_HUB_IGNORE_ENV_FILE", None)
+
+    result = subprocess.run(
+        [
+            "bash",
+            "-c",
+            'source scripts/db_common.sh; printf "%s\\n" "$NATIVE_POSTGRES_SERVICE"',
+        ],
+        cwd=repo,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout == "postgresql@16\n"
+
+
+def test_public_env_template_keeps_native_service_opt_in() -> None:
+    env_example = read_script(".env.example")
+
+    assert "\nAGENT_HUB_NATIVE_POSTGRES_SERVICE=" not in env_example
+    assert "# AGENT_HUB_NATIVE_POSTGRES_SERVICE=postgresql@16" in env_example
+
+
+def test_db_client_maps_database_url_to_libpq_environment_without_secret_arguments(
+    tmp_path: Path,
+) -> None:
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    fake_psql = bin_dir / "psql"
+    write_executable(
+        fake_psql,
+        """#!/usr/bin/env bash
+set -euo pipefail
+for argument in "$@"; do
+  if [[ "$argument" == *"p@ss:word"* ]]; then exit 97; fi
+done
+if [[ "$PGHOST" != "127.0.0.1" ]]; then exit 97; fi
+if [[ "$PGPORT" != "65432" ]]; then exit 97; fi
+if [[ "$PGUSER" != "native user" ]]; then exit 97; fi
+if [[ "$PGPASSWORD" != "p@ss:word" ]]; then exit 97; fi
+if [[ "$PGDATABASE" != "agent_hub" ]]; then exit 97; fi
+if [[ "$PGSSLMODE" != "disable" ]]; then exit 97; fi
+if [[ "$PGAPPNAME" != "hub-test" ]]; then exit 97; fi
+if [[ -n "${PGSERVICE:-}" ]]; then exit 97; fi
+if [[ -n "${PGSERVICEFILE:-}" ]]; then exit 97; fi
+if [[ -n "${PGHOSTADDR:-}" ]]; then exit 97; fi
+if [[ -n "${PGPASSFILE:-}" ]]; then exit 97; fi
+printf 'safe-client-ok\n'
+""",
+    )
+    env = os.environ.copy()
+    env.pop("AGENT_HUB_NATIVE_POSTGRES_SERVICE", None)
+    env.update(
+        {
+            "DATABASE_URL": (
+                "postgresql://native%20user:p%40ss%3Aword@127.0.0.1:65432/"
+                "agent_hub?sslmode=disable&application_name=hub-test"
+            ),
+            "PATH": f"{bin_dir}:/usr/bin:/bin:/usr/sbin:/sbin",
+            "PGHOSTADDR": "203.0.113.9",
+            "PGPASSFILE": "/tmp/stale-pgpass",
+            "PGSERVICE": "stale-service",
+            "PGSERVICEFILE": "/tmp/stale-service.conf",
+        }
+    )
+    result = subprocess.run(
+        [sys.executable, "scripts/db_client.py", "psql", "--probe"],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout == "safe-client-ok\n"
+    assert "p@ss:word" not in result.stdout
+    assert "p@ss:word" not in result.stderr
+
+
+def test_db_client_builds_verification_url_without_putting_secret_in_arguments(
+    tmp_path: Path,
+) -> None:
+    env = os.environ.copy()
+    env["DATABASE_URL"] = (
+        "postgresql://native%20user:p%40ss%3Aword@127.0.0.1:65432/"
+        "agent_hub?sslmode=disable"
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/db_client.py",
+            "database-url",
+            "agent_hub_verify_123",
+        ],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == (
+        "postgresql://native%20user:p%40ss%3Aword@127.0.0.1:65432/"
+        "agent_hub_verify_123?sslmode=disable"
+    )
+    assert "p@ss:word" not in " ".join(result.args)
+
+
+def test_direct_database_readiness_uses_database_url_without_exposing_password(
+    tmp_path: Path,
+) -> None:
+    fake_python = tmp_path / "python"
+    write_executable(
+        fake_python,
+        """#!/usr/bin/env bash
+set -euo pipefail
+for argument in "$@"; do
+  if [[ "$argument" == *native-secret* ]]; then exit 97; fi
+done
+if [[ "${DATABASE_URL:-}" != "postgresql://native:native-secret@localhost:55432/agent_hub" ]]; then
+  exit 97
+fi
+exit 0
+""",
+    )
+    env = os.environ.copy()
+    env.update(
+        {
+            "AGENT_HUB_IGNORE_ENV_FILE": "1",
+            "DATABASE_URL": "postgresql://native:native-secret@localhost:55432/agent_hub",
+            "PYTHON": str(fake_python),
+        }
+    )
+    result = subprocess.run(
+        [
+            "bash",
+            "-lc",
+            """
+set -euo pipefail
+source scripts/db_common.sh
+direct_database_ready
+printf 'URL: %s\n' "$(mask_database_url "$DATABASE_URL")"
+""",
+        ],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "URL: postgresql://native:***@localhost:55432/agent_hub" in result.stdout
+    assert "native-secret" not in result.stdout
+    assert "native-secret" not in result.stderr
+
+
+def test_configured_native_service_pins_runtime_when_database_is_unreachable(
+    tmp_path: Path,
+) -> None:
+    fake_python = tmp_path / "python"
+    write_executable(
+        fake_python,
+        """#!/usr/bin/env bash
+set -euo pipefail
+exit 1
+""",
+    )
+    env = os.environ.copy()
+    env.update(
+        {
+            "AGENT_HUB_IGNORE_ENV_FILE": "1",
+            "AGENT_HUB_NATIVE_POSTGRES_SERVICE": "postgresql@16",
+            "DATABASE_URL": "postgresql://native:native-secret@localhost:55432/agent_hub",
+            "PYTHON": str(fake_python),
+        }
+    )
+    result = subprocess.run(
+        [
+            "bash",
+            "-c",
+            """
+set -euo pipefail
+source scripts/db_common.sh
+select_database_runtime
+database_runtime_label
+""",
+        ],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout == "direct (DATABASE_URL)\n"
+
+
+def test_db_start_uses_reachable_direct_database_without_docker(tmp_path: Path) -> None:
+    env, command_log = native_script_env(tmp_path)
+    result = subprocess.run(
+        ["bash", "scripts/db_start.sh"],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Database runtime: direct (DATABASE_URL)" in result.stdout
+    assert "native-secret" not in result.stdout
+    assert "native-secret" not in result.stderr
+    commands = command_log.read_text(encoding="utf-8")
+    assert "agent_hub.cli migrate --apply" in commands
+    assert "docker " not in commands
+
+
+def test_db_start_starts_configured_homebrew_service_before_docker(tmp_path: Path) -> None:
+    env, command_log = native_script_env(tmp_path)
+    ready_marker = tmp_path / "native-ready"
+    fake_python = Path(env["PYTHON"])
+    write_executable(
+        fake_python,
+        """#!/usr/bin/env bash
+set -euo pipefail
+for argument in "$@"; do
+  if [[ "$argument" == *native-secret* ]]; then exit 97; fi
+done
+if [[ "${1:-}" == *scripts/db_client.py ]]; then
+  exec "$REAL_PYTHON" "$@"
+fi
+if [[ "${1:-}" == "-" ]]; then
+  if [[ -f "$FAKE_NATIVE_READY_MARKER" ]]; then exit 0; fi
+  exit 1
+fi
+printf 'python %s\n' "$*" >> "$FAKE_RUNTIME_LOG"
+case " $* " in
+  *" agent_hub.cli migrate --status "*)
+    echo "001_init.sql: applied"
+    ;;
+  *" agent_hub.cli projects --format json "*)
+    echo '[{"slug": "central-agent-data-hub"}]'
+    ;;
+  *)
+    echo "ok"
+    ;;
+esac
+""",
+    )
+    write_executable(
+        tmp_path / "bin" / "brew",
+        """#!/usr/bin/env bash
+set -euo pipefail
+printf 'brew %s\n' "$*" >> "$FAKE_RUNTIME_LOG"
+if [[ "$*" != "services start postgresql@16" ]]; then exit 97; fi
+touch "$FAKE_NATIVE_READY_MARKER"
+""",
+    )
+    env.update(
+        {
+            "AGENT_HUB_NATIVE_POSTGRES_SERVICE": "postgresql@16",
+            "FAKE_NATIVE_READY_MARKER": str(ready_marker),
+        }
+    )
+
+    result = subprocess.run(
+        ["bash", "scripts/db_start.sh"],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Starting configured native database service: postgresql@16" in result.stdout
+    commands = command_log.read_text(encoding="utf-8")
+    assert "brew services start postgresql@16" in commands
+    assert "docker " not in commands
+
+
+def test_db_start_recovers_when_direct_database_stops_after_runtime_selection(
+    tmp_path: Path,
+) -> None:
+    env, command_log = native_script_env(tmp_path)
+    ready_marker = tmp_path / "native-ready"
+    readiness_count = tmp_path / "readiness-count"
+    fake_python = Path(env["PYTHON"])
+    write_executable(
+        fake_python,
+        """#!/usr/bin/env bash
+set -euo pipefail
+if [[ "${1:-}" == *scripts/db_client.py ]]; then
+  exec "$REAL_PYTHON" "$@"
+fi
+if [[ "${1:-}" == "-" ]]; then
+  count=0
+  if [[ -f "$FAKE_READINESS_COUNT" ]]; then
+    count="$(<"$FAKE_READINESS_COUNT")"
+  fi
+  count=$((count + 1))
+  printf '%s\n' "$count" > "$FAKE_READINESS_COUNT"
+  if [[ "$count" -eq 1 || -f "$FAKE_NATIVE_READY_MARKER" ]]; then
+    exit 0
+  fi
+  exit 1
+fi
+printf 'python %s\n' "$*" >> "$FAKE_RUNTIME_LOG"
+echo "ok"
+""",
+    )
+    write_executable(
+        tmp_path / "bin" / "brew",
+        """#!/usr/bin/env bash
+set -euo pipefail
+printf 'brew %s\n' "$*" >> "$FAKE_RUNTIME_LOG"
+if [[ "$*" != "services start postgresql@16" ]]; then exit 97; fi
+touch "$FAKE_NATIVE_READY_MARKER"
+""",
+    )
+    env.update(
+        {
+            "AGENT_HUB_NATIVE_POSTGRES_SERVICE": "postgresql@16",
+            "FAKE_NATIVE_READY_MARKER": str(ready_marker),
+            "FAKE_READINESS_COUNT": str(readiness_count),
+        }
+    )
+
+    result = subprocess.run(
+        ["bash", "scripts/db_start.sh"],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Starting configured native database service: postgresql@16" in result.stdout
+    commands = command_log.read_text(encoding="utf-8")
+    assert "brew services start postgresql@16" in commands
+    assert "docker " not in commands
+
+
+def test_db_status_uses_reachable_direct_database_without_docker(tmp_path: Path) -> None:
+    env, command_log = native_script_env(tmp_path)
+    result = subprocess.run(
+        ["bash", "scripts/db_status.sh"],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Database runtime: direct (DATABASE_URL)" in result.stdout
+    assert "Docker status: skipped" in result.stdout
+    assert "native-secret" not in result.stdout
+    assert "docker " not in command_log.read_text(encoding="utf-8")
+
+
+def test_db_backup_uses_native_pg_dump_without_docker(tmp_path: Path) -> None:
+    env, command_log = native_script_env(tmp_path)
+    result = subprocess.run(
+        ["bash", "scripts/db_backup.sh"],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    dumps = list((tmp_path / "backups").glob("agent_hub-*.dump"))
+    assert len(dumps) == 1
+    assert dumps[0].read_text(encoding="utf-8") == "native-dump\n"
+    assert dumps[0].with_suffix(".dump.sha256").exists()
+    commands = command_log.read_text(encoding="utf-8")
+    assert "pg_dump --format=custom" in commands
+    assert "docker " not in commands
+    assert "native-secret" not in result.stdout
+
+
+def test_db_backup_uses_clients_from_configured_homebrew_service(
+    tmp_path: Path,
+) -> None:
+    env, command_log = native_script_env(tmp_path)
+    service_prefix = tmp_path / "postgresql@16"
+    service_bin = service_prefix / "bin"
+    service_bin.mkdir(parents=True)
+    write_executable(
+        service_bin / "pg_dump",
+        """#!/usr/bin/env bash
+set -euo pipefail
+printf 'service-pg-dump %s\n' "$*" >> "$FAKE_RUNTIME_LOG"
+printf 'native-16-dump\n'
+""",
+    )
+    write_executable(
+        tmp_path / "bin" / "brew",
+        """#!/usr/bin/env bash
+set -euo pipefail
+printf 'brew %s\n' "$*" >> "$FAKE_RUNTIME_LOG"
+if [[ "$*" != "--prefix postgresql@16" ]]; then exit 97; fi
+printf '%s\n' "$FAKE_SERVICE_PREFIX"
+""",
+    )
+    env.update(
+        {
+            "AGENT_HUB_NATIVE_POSTGRES_SERVICE": "postgresql@16",
+            "FAKE_SERVICE_PREFIX": str(service_prefix),
+        }
+    )
+
+    result = subprocess.run(
+        ["bash", "scripts/db_backup.sh"],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    commands = command_log.read_text(encoding="utf-8")
+    assert "brew --prefix postgresql@16" in commands
+    assert "service-pg-dump --format=custom" in commands
+    assert "\npg_dump --format=custom" not in commands
+
+
+def test_db_verify_backup_uses_isolated_native_database_without_docker(
+    tmp_path: Path,
+) -> None:
+    env, command_log = native_script_env(tmp_path)
+    dump_path = create_valid_backup(tmp_path / "backups")
+
+    result = subprocess.run(
+        ["bash", "scripts/db_verify_backup.sh", str(dump_path)],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Database runtime: direct (DATABASE_URL)" in result.stdout
+    assert "Backup verification succeeded." in result.stdout
+    commands = command_log.read_text(encoding="utf-8")
+    assert 'psql -X -v ON_ERROR_STOP=1 -d postgres -c CREATE DATABASE "' in commands
+    assert "pg_restore --exit-on-error --no-owner" in commands
+    assert "--dbname=agent_hub_verify_" in commands
+    assert 'psql -X -v ON_ERROR_STOP=1 -d postgres -c DROP DATABASE IF EXISTS "' in commands
+    assert "docker " not in commands
+    assert "native-secret" not in result.stdout
+    assert "native-secret" not in result.stderr
+
+
+def test_db_restore_uses_native_postgres_clients_without_docker(tmp_path: Path) -> None:
+    env, command_log = native_script_env(tmp_path)
+    dump_path = tmp_path / "restore.dump"
+    dump_path.write_bytes(b"restore-payload")
+    result = subprocess.run(
+        ["bash", "scripts/db_restore.sh", "--confirm", str(dump_path)],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Database runtime: direct (DATABASE_URL)" in result.stdout
+    commands = command_log.read_text(encoding="utf-8")
+    assert "psql -v ON_ERROR_STOP=1" in commands
+    assert "pg_restore --file=- --no-owner" in commands
+    assert "psql -X -v ON_ERROR_STOP=1" in commands
+    assert "psql-stdin SELECT 1;" in commands
+    assert "docker " not in commands
+    assert "native-secret" not in result.stdout
+
+
+def test_agent_preflight_accepts_reachable_direct_database_by_default(
+    tmp_path: Path,
+) -> None:
+    env, command_log = native_script_env(tmp_path)
+    create_valid_backup(tmp_path / "backups")
+    result = subprocess.run(
+        ["bash", "scripts/agent_preflight.sh", "--compact"],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Database: ok (direct)" in result.stdout
+    assert "Schema migrations: ok" in result.stdout
+    assert "Agent preflight result: ready" in result.stdout
+    commands = (
+        command_log.read_text(encoding="utf-8") if command_log.exists() else ""
+    )
+    assert "docker " not in commands
+    assert "native-secret" not in result.stdout
+    assert "native-secret" not in result.stderr
+
+
+def test_preflight_refuses_silent_docker_fallback_for_configured_native_service(
+    tmp_path: Path,
+) -> None:
+    env, command_log = native_script_env(tmp_path)
+    fake_python = Path(env["PYTHON"])
+    write_executable(
+        fake_python,
+        """#!/usr/bin/env bash
+set -euo pipefail
+if [[ "${1:-}" == *scripts/db_client.py ]]; then
+  exec "$REAL_PYTHON" "$@"
+fi
+if [[ "${1:-}" == "-" ]]; then
+  exit 1
+fi
+printf 'python %s\n' "$*" >> "$FAKE_RUNTIME_LOG"
+echo "ok"
+""",
+    )
+    env["AGENT_HUB_NATIVE_POSTGRES_SERVICE"] = "postgresql@16"
+
+    result = subprocess.run(
+        ["bash", "scripts/agent_preflight.sh", "--compact"],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 2
+    assert "configured native database is not reachable" in result.stderr
+    assert "scripts/db_start.sh" in result.stderr
+    commands = (
+        command_log.read_text(encoding="utf-8") if command_log.exists() else ""
+    )
+    assert "docker " not in commands
+
+
+def test_db_doctor_diagnoses_reachable_direct_database_without_docker(
+    tmp_path: Path,
+) -> None:
+    env, command_log = native_script_env(tmp_path)
+    result = subprocess.run(
+        ["bash", "scripts/db_doctor.sh"],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Database runtime: direct (DATABASE_URL)" in result.stdout
+    assert "Docker: skipped (not required for direct database access)" in result.stdout
+    assert "Doctor result: ready" in result.stdout
+    assert "docker " not in command_log.read_text(encoding="utf-8")
+    assert "native-secret" not in result.stdout
+    assert "native-secret" not in result.stderr
+
+
+def test_db_doctor_points_native_runtime_failure_to_start_not_docker_recovery(
+    tmp_path: Path,
+) -> None:
+    env, _ = native_script_env(tmp_path)
+    fake_python = Path(env["PYTHON"])
+    write_executable(
+        fake_python,
+        """#!/usr/bin/env bash
+set -euo pipefail
+if [[ "${1:-}" == "-" ]]; then
+  exit 1
+fi
+exit 97
+""",
+    )
+    env["AGENT_HUB_NATIVE_POSTGRES_SERVICE"] = "postgresql@16"
+
+    result = subprocess.run(
+        ["bash", "scripts/db_doctor.sh"],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 2
+    assert "scripts/db_start.sh" in result.stdout
+    assert "scripts/db_recover.sh --apply" not in result.stdout
+    assert "Docker Postgres instance" not in result.stdout
 
 
 def test_public_templates_leave_reviewer_identity_explicit() -> None:

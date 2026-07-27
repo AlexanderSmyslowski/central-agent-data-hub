@@ -9,9 +9,9 @@ Usage: scripts/db_doctor.sh [--public-demo]
 
 Diagnoses the local Agent Data Hub Postgres runtime without writing data.
 
-The doctor checks Docker, the compose service, the configured container and
-volume, Postgres readiness, recent logs, and the normal agent-hub status/check
-commands when the database is reachable.
+The doctor checks the configured database runtime, Postgres readiness, host
+health, and the normal agent-hub status/check commands. Docker-specific state
+and logs are included only when the Compose runtime is selected.
 
 Options:
   --public-demo  Diagnose the isolated public demo database instead of the
@@ -53,15 +53,20 @@ mark_operational_issue() {
   healthy=0
 }
 
+select_database_runtime
+
 echo "Central Agent Data Hub doctor"
 echo
 echo "Target:"
-echo "  Compose project: $COMPOSE_PROJECT_NAME"
-echo "  Container:       $DB_CONTAINER"
-echo "  Volume:          $DB_VOLUME"
+echo "  Database runtime: $(database_runtime_label)"
 echo "  Database:        $DB_NAME"
 echo "  Port:            $DB_PORT"
 echo "  URL:             $(mask_database_url "$DATABASE_URL")"
+if ! database_runtime_is_direct; then
+  echo "  Compose project: $COMPOSE_PROJECT_NAME"
+  echo "  Container:       $DB_CONTAINER"
+  echo "  Volume:          $DB_VOLUME"
+fi
 echo
 
 set +e
@@ -73,6 +78,18 @@ if [[ "$host_health_code" -eq 2 ]]; then
 fi
 echo
 
+if database_runtime_is_direct; then
+  echo "Docker: skipped (not required for direct database access)"
+  if postgres_ready; then
+    postgres_ready_now=1
+    echo "Postgres readiness: ok (direct)"
+  else
+    echo "Postgres readiness: not ready"
+    mark_operational_issue
+  fi
+  echo
+  echo "Recent log scan: skipped (no Docker container selected)"
+else
 if ! command -v docker >/dev/null 2>&1; then
   echo "Docker: error (docker command not found)"
   echo
@@ -156,6 +173,7 @@ elif grep -q "bogus data in lock file" <<<"$log_output"; then
 else
   echo "  no known stale-lock symptom found in the latest logs"
 fi
+fi
 
 if [[ "$postgres_ready_now" -eq 1 ]]; then
   echo
@@ -181,7 +199,11 @@ fi
 
 if [[ "$operational_issue" -eq 1 ]]; then
   echo "Doctor result: operational issue"
-  echo "Run $ROOT_DIR/scripts/db_recover.sh --apply only for this local Docker Postgres instance."
+  if database_runtime_is_direct; then
+    echo "Run $ROOT_DIR/scripts/db_start.sh to start or recheck the configured database."
+  else
+    echo "Run $ROOT_DIR/scripts/db_recover.sh --apply only for this local Docker Postgres instance."
+  fi
   exit 2
 fi
 

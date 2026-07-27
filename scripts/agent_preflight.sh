@@ -136,6 +136,19 @@ if [[ "$host_health_code" -eq 2 ]]; then
   exit 2
 fi
 
+select_database_runtime
+if database_runtime_is_direct; then
+  if ! postgres_ready; then
+    if [[ -n "$NATIVE_POSTGRES_SERVICE" ]]; then
+      echo "Operational error: configured native database is not reachable." >&2
+      echo "Run $ROOT_DIR/scripts/db_start.sh to start $NATIVE_POSTGRES_SERVICE." >&2
+    else
+      echo "Operational error: configured direct database is not reachable." >&2
+    fi
+    exit 2
+  fi
+  echo "Database: ok (direct)"
+else
 if ! command -v docker >/dev/null 2>&1; then
   if [[ "$ALLOW_DIRECT_DB" -eq 1 ]]; then
     direct_db_preflight "docker is not available."
@@ -205,6 +218,7 @@ if ! postgres_ready; then
 fi
 
 echo "Database: ok"
+fi
 
 echo
 if [[ "$COMPACT" -eq 0 ]]; then

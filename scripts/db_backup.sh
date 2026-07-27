@@ -5,21 +5,25 @@ set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/db_common.sh"
 
 mkdir -p "$AGENT_HUB_BACKUP_DIR"
+select_database_runtime
 
 echo "Creating Central Agent Data Hub backup..."
+echo "Database runtime: $(database_runtime_label)"
 echo "Backup dir: $AGENT_HUB_BACKUP_DIR"
 echo "Remote:     ${AGENT_HUB_BACKUP_REMOTE:-not configured}"
 echo
 
-wait_for_postgres
+if database_runtime_is_direct; then
+  postgres_ready
+else
+  wait_for_postgres
+fi
 
 timestamp="$(date +"%Y%m%d-%H%M%S")"
 dump_path="$AGENT_HUB_BACKUP_DIR/agent_hub-${timestamp}.dump"
 sha_path="${dump_path}.sha256"
 
-compose exec -T "$DB_SERVICE" \
-  pg_dump -U "$DB_USER" -d "$DB_NAME" --format=custom \
-  > "$dump_path"
+database_pg_dump --format=custom > "$dump_path"
 
 sha256_file "$dump_path" > "$sha_path"
 

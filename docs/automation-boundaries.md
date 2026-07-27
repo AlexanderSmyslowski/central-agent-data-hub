@@ -200,8 +200,9 @@ This keeps public onboarding scripts from writing into the maintainer's
 operational memory store.
 
 `agent-hub doctor` and `scripts/db_doctor.sh` are read-only diagnostics for
-the local Docker/Postgres runtime. `scripts/db_recover.sh --apply` is an
-explicit local operator action for known stale Postgres lock-file failures: it
+the configured database runtime. A reachable `DATABASE_URL` uses native/direct
+diagnostics without Docker. `scripts/db_recover.sh --apply` applies only to the
+optional Docker fallback and remains an explicit local operator action: it
 creates a volume snapshot, recreates the container, and removes only empty or
 NUL-only lock files. It must not delete volumes, drop databases, or write Hub
 memory.

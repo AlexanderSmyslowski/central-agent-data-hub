@@ -34,6 +34,7 @@ if [[ "${AGENT_HUB_IGNORE_ENV_FILE:-0}" != "1" && -n "$ENV_FILE" ]]; then
   set +a
 fi
 
+NATIVE_POSTGRES_SERVICE="${AGENT_HUB_NATIVE_POSTGRES_SERVICE:-}"
 DB_SERVICE="postgres"
 DB_CONTAINER="${AGENT_HUB_DB_CONTAINER:-central-agent-data-hub-postgres}"
 DB_VOLUME="${AGENT_HUB_DB_VOLUME:-central-agent-data-hub-pgdata}"
@@ -42,7 +43,6 @@ DB_USER="${AGENT_HUB_DB_USER:-postgres}"
 DB_PORT="${AGENT_HUB_DB_PORT:-55432}"
 POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-changeme}"
 DEFAULT_DATABASE_URL="postgresql://${DB_USER}:${POSTGRES_PASSWORD}@localhost:${DB_PORT}/${DB_NAME}"
-DISPLAY_DATABASE_URL="postgresql://${DB_USER}:***@localhost:${DB_PORT}/${DB_NAME}"
 
 export AGENT_HUB_DB_CONTAINER="$DB_CONTAINER"
 export AGENT_HUB_DB_VOLUME="$DB_VOLUME"
@@ -54,8 +54,13 @@ export AGENT_HUB_BACKUP_DIR="${AGENT_HUB_BACKUP_DIR:-$SHARED_ROOT/.local/backups
 
 mask_database_url() {
   local url="$1"
-  printf '%s\n' "$url" | sed -E 's#(://[^:/@]+):[^@]*@#\1:***@#'
+  printf '%s\n' "$url" \
+    | sed -E \
+      -e 's#(://[^:/@]+):[^@]*@#\1:***@#' \
+      -e 's#([?&]password=)[^&]*#\1***#g'
 }
+
+DISPLAY_DATABASE_URL="$(mask_database_url "$DATABASE_URL")"
 
 database_name_from_url() {
   local url_without_query="${1%%\?*}"
@@ -127,6 +132,7 @@ if [[ -x "$ROOT_DIR/.venv/bin/python" && -z "${PYTHON:-}" ]]; then
 elif [[ -x "$SHARED_ROOT/.venv/bin/python" && -z "${PYTHON:-}" ]]; then
   PYTHON_BIN="$SHARED_ROOT/.venv/bin/python"
 fi
+DATABASE_RUNTIME="unselected"
 
 compose() {
   docker compose -p "$COMPOSE_PROJECT_NAME" -f "$COMPOSE_FILE" "$@"
@@ -155,6 +161,83 @@ run_with_timeout() {
   wait "$pid"
 }
 
+direct_database_ready() {
+  if [[ "$PUBLIC_DEMO_REQUESTED" == "1" ]]; then
+    return 1
+  fi
+
+  run_with_timeout "$AGENT_HUB_DB_READY_TIMEOUT_SECONDS" "$PYTHON_BIN" - <<'PY' >/dev/null 2>&1
+import os
+import sys
+
+import psycopg
+
+try:
+    timeout = max(1, int(os.environ.get("AGENT_HUB_DB_READY_TIMEOUT_SECONDS", "5")))
+    with psycopg.connect(os.environ["DATABASE_URL"], connect_timeout=timeout):
+        pass
+except Exception:
+    sys.exit(1)
+PY
+}
+
+select_database_runtime() {
+  if [[ "$PUBLIC_DEMO_REQUESTED" == "1" ]]; then
+    DATABASE_RUNTIME="compose"
+  elif [[ -n "$NATIVE_POSTGRES_SERVICE" ]]; then
+    # An explicit native service pins the durable target even while it is down.
+    # Backup and restore must never fall through to a retained Docker cluster.
+    DATABASE_RUNTIME="direct"
+  elif direct_database_ready; then
+    DATABASE_RUNTIME="direct"
+  else
+    DATABASE_RUNTIME="compose"
+  fi
+}
+
+database_runtime_is_direct() {
+  [[ "$DATABASE_RUNTIME" == "direct" ]]
+}
+
+database_runtime_label() {
+  if database_runtime_is_direct; then
+    printf '%s\n' "direct (DATABASE_URL)"
+  else
+    printf '%s\n' "Docker Compose"
+  fi
+}
+
+start_configured_native_database() {
+  if [[ -z "$NATIVE_POSTGRES_SERVICE" || "$PUBLIC_DEMO_REQUESTED" == "1" ]]; then
+    return 1
+  fi
+  if [[ ! "$NATIVE_POSTGRES_SERVICE" =~ ^[A-Za-z0-9@._+-]+$ ]]; then
+    echo "Error: AGENT_HUB_NATIVE_POSTGRES_SERVICE contains unsupported characters." >&2
+    return 2
+  fi
+  if ! command -v brew >/dev/null 2>&1; then
+    echo "Error: Homebrew is required to start $NATIVE_POSTGRES_SERVICE." >&2
+    return 2
+  fi
+  if direct_database_ready; then
+    DATABASE_RUNTIME="direct"
+    return 0
+  fi
+
+  echo "Starting configured native database service: $NATIVE_POSTGRES_SERVICE"
+  if ! run_with_timeout "$AGENT_HUB_DB_START_TIMEOUT_SECONDS" \
+    brew services start "$NATIVE_POSTGRES_SERVICE"; then
+    echo "Error: Homebrew could not start $NATIVE_POSTGRES_SERVICE." >&2
+    return 2
+  fi
+  if ! direct_database_ready; then
+    echo "Error: DATABASE_URL is still unreachable after starting $NATIVE_POSTGRES_SERVICE." >&2
+    return 2
+  fi
+
+  DATABASE_RUNTIME="direct"
+}
+
 compose_quick() {
   run_with_timeout "$AGENT_HUB_DOCKER_TIMEOUT_SECONDS" docker compose -p "$COMPOSE_PROJECT_NAME" -f "$COMPOSE_FILE" "$@"
 }
@@ -163,7 +246,7 @@ docker_quick() {
   run_with_timeout "$AGENT_HUB_DOCKER_TIMEOUT_SECONDS" docker "$@"
 }
 
-postgres_ready() {
+compose_postgres_ready() {
   if command -v pg_isready >/dev/null 2>&1; then
     run_with_timeout "$AGENT_HUB_DB_READY_TIMEOUT_SECONDS" \
       pg_isready -h localhost -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" >/dev/null 2>&1
@@ -171,6 +254,87 @@ postgres_ready() {
   fi
 
   compose_quick exec -T "$DB_SERVICE" pg_isready -U "$DB_USER" -d "$DB_NAME" >/dev/null 2>&1
+}
+
+postgres_ready() {
+  if database_runtime_is_direct; then
+    direct_database_ready
+  else
+    compose_postgres_ready
+  fi
+}
+
+native_postgres_command_path() {
+  local command_name="$1"
+  local service_prefix=""
+  local service_command=""
+
+  if [[ -n "$NATIVE_POSTGRES_SERVICE" ]]; then
+    if ! command -v brew >/dev/null 2>&1; then
+      echo "Error: Homebrew is required to locate $NATIVE_POSTGRES_SERVICE clients." >&2
+      return 2
+    fi
+    if ! service_prefix="$(brew --prefix "$NATIVE_POSTGRES_SERVICE" 2>/dev/null)"; then
+      echo "Error: Homebrew could not locate $NATIVE_POSTGRES_SERVICE." >&2
+      return 2
+    fi
+    service_command="$service_prefix/bin/$command_name"
+    if [[ ! -x "$service_command" ]]; then
+      echo "Error: $command_name is unavailable in $NATIVE_POSTGRES_SERVICE." >&2
+      return 2
+    fi
+    printf '%s\n' "$service_command"
+    return 0
+  fi
+
+  if ! command -v "$command_name" >/dev/null 2>&1; then
+    echo "Error: $command_name is required for direct DATABASE_URL operations." >&2
+    return 2
+  fi
+  command -v "$command_name"
+}
+
+require_native_postgres_command() {
+  native_postgres_command_path "$1" >/dev/null
+}
+
+database_client() {
+  local action="$1"
+  local client_path=""
+  shift
+
+  if [[ "$action" == "database-url" ]]; then
+    "$PYTHON_BIN" "$ROOT_DIR/scripts/db_client.py" "$action" "$@"
+    return
+  fi
+
+  client_path="$(native_postgres_command_path "$action")"
+  "$PYTHON_BIN" "$ROOT_DIR/scripts/db_client.py" "$client_path" "$@"
+}
+
+database_psql() {
+  if database_runtime_is_direct; then
+    database_client psql "$@"
+  else
+    compose exec -T "$DB_SERVICE" psql -U "$DB_USER" -d "$DB_NAME" "$@"
+  fi
+}
+
+database_pg_dump() {
+  if database_runtime_is_direct; then
+    database_client pg_dump "$@"
+  else
+    compose exec -T "$DB_SERVICE" pg_dump -U "$DB_USER" -d "$DB_NAME" "$@"
+  fi
+}
+
+database_pg_restore() {
+  if database_runtime_is_direct; then
+    database_client pg_restore --file=- "$@" \
+      | database_client psql -X -v ON_ERROR_STOP=1
+  else
+    compose exec -T "$DB_SERVICE" pg_restore -U "$DB_USER" -d "$DB_NAME" "$@"
+  fi
 }
 
 postgres_container_state() {
@@ -354,9 +518,7 @@ apply_sql_file() {
   fi
 
   echo "Applying $sql_file"
-  compose exec -T "$DB_SERVICE" \
-    psql -v ON_ERROR_STOP=1 -U "$DB_USER" -d "$DB_NAME" \
-    < "$sql_file"
+  database_psql -v ON_ERROR_STOP=1 < "$sql_file"
 }
 
 schema_exists() {

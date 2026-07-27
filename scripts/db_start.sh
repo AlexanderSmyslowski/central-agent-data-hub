@@ -53,15 +53,36 @@ while [[ $# -gt 0 ]]; do
 done
 
 mkdir -p "$OBSIDIAN_EXPORT_DIR"
+if [[ -n "$NATIVE_POSTGRES_SERVICE" && "$PUBLIC_DEMO_REQUESTED" != "1" ]]; then
+  start_configured_native_database
+else
+  select_database_runtime
+fi
 
 echo "Starting durable local Hub database..."
-echo "Container: $DB_CONTAINER"
-echo "Volume:    $DB_VOLUME"
-echo "URL:       $DISPLAY_DATABASE_URL"
+echo "Database runtime: $(database_runtime_label)"
+echo "URL:              $DISPLAY_DATABASE_URL"
+if database_runtime_is_direct; then
+  echo "Using the reachable database configured by DATABASE_URL."
+else
+  echo "Container:        $DB_CONTAINER"
+  echo "Volume:           $DB_VOLUME"
+fi
 echo
 
-compose up -d "$DB_SERVICE"
-wait_for_postgres
+if database_runtime_is_direct; then
+  if ! postgres_ready; then
+    if [[ -n "$NATIVE_POSTGRES_SERVICE" && "$PUBLIC_DEMO_REQUESTED" != "1" ]]; then
+      start_configured_native_database
+    else
+      echo "Error: the configured direct database stopped responding." >&2
+      exit 1
+    fi
+  fi
+else
+  compose up -d "$DB_SERVICE"
+  wait_for_postgres
+fi
 
 cd "$ROOT_DIR"
 run_agent_hub migrate --apply

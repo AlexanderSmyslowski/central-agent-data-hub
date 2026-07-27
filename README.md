@@ -540,6 +540,27 @@ maintainer-specific seed data. Register your own projects with
 explicitly with `scripts/db_start.sh --seed-file /path/to/local-seed.sql`.
 The seed boundary is documented in [`seed/README.md`](seed/README.md).
 
+On macOS, the configured local ops path can use a Homebrew-managed PostgreSQL
+service instead of Docker:
+
+```bash
+brew install postgresql@16
+brew services start postgresql@16
+scripts/db_start.sh
+```
+
+After the one-time database provisioning or migration, set
+`AGENT_HUB_NATIVE_POSTGRES_SERVICE=postgresql@16` in `.env`.
+`scripts/db_start.sh` then starts that service when necessary and will not
+silently switch the durable Hub back to Docker. Docker Compose remains the
+isolated public-demo path and an optional fallback when the native-service
+setting is absent.
+
+Backup verification for the native path restores into a process-scoped
+temporary database on the same local server and removes that database after the
+check. The configured database role therefore needs permission to create and
+drop local databases.
+
 If the local Hub appears offline, diagnose it before restarting random pieces:
 
 ```bash
@@ -550,8 +571,7 @@ scripts/db_doctor.sh --public-demo
 agent-hub doctor
 ```
 
-For known local Docker/Postgres stale-lock failures, the guarded recovery path
-is:
+For the optional Docker fallback only, the guarded stale-lock recovery path is:
 
 ```bash
 scripts/db_recover.sh --apply
