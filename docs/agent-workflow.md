@@ -51,12 +51,13 @@ Use `scripts/agent_lock_status.sh --repo /path/to/project` or
 `scripts/agent_lock_status.sh --all` when a start is blocked and you need to see
 which checkout is locked.
 
-If `--all` shows `orphaned: yes`, the recorded repo path no longer exists.
-Clean only those orphaned locks explicitly:
+A missing recorded repo (`orphaned: true`) and an old lock (`stale: true`) are
+independent observations, not proof of owner death. Nothing expires automatically.
+Keep the `run_id` printed by start and supply it to finish. For interrupted or
+legacy runs, preview one exact snapshot with `scripts/agent_lock_recover.sh --repo
+/path/to/project`, then follow the explicit digest/reason/acknowledgement and
+mixed-version quiescence procedure in [Agent Run Loop](agent-run-loop.md).
 
-```bash
-scripts/agent_lock_status.sh --all --clean-orphaned
-```
 
 If the next step is parallel write-capable work, prepare a separate checkout:
 
@@ -326,7 +327,7 @@ controlled import or writeback paths.
 Run the finish helper to produce a final daily summary and handoff:
 
 ```bash
-scripts/agent_finish.sh --project <project-slug>
+scripts/agent_finish.sh --project <project-slug> --run-id <id-from-start>
 ```
 
 The finish helper also prints recent audited agent actions for the same project
@@ -340,7 +341,7 @@ writebacks when useful memory emerged, and export/backup after important writes.
 For stronger closure, include review, export, and backup:
 
 ```bash
-scripts/agent_finish.sh --project <project-slug> --review --export --backup
+scripts/agent_finish.sh --project <project-slug> --review --export --backup --run-id <id-from-start>
 ```
 
 The finish helper prints a memory triage before any manual writeback. It should

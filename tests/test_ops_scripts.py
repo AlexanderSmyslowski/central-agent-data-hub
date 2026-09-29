@@ -1811,29 +1811,6 @@ def test_project_update_decision_wrapper_has_change_guard() -> None:
     assert "Project decision update result: dry-run ok" in script
 
 
-def test_agent_start_lock_error_points_to_status_and_force_lock() -> None:
-    run_lock = read_script("scripts/agent_run_lock.sh")
-    lock_status = read_script("scripts/agent_lock_status.sh")
-    run_loop = read_script("docs/agent-run-loop.md")
-    run_card = read_script("docs/agent-run-card.md")
-    workflow = read_script("docs/agent-workflow.md")
-
-    assert 'AGENT_HUB_RUN_LOCK_ROOT="${SHARED_ROOT:-$ROOT_DIR}"' in run_lock
-    assert 'AGENT_HUB_RUN_LOCK_DIR="${AGENT_HUB_RUN_LOCK_ROOT}/.local/run-locks"' in run_lock
-    assert "agent_run_lock_is_orphaned()" in run_lock
-    assert '[[ -n "$repo" && ! -e "$repo" ]]' in run_lock
-    assert "scripts/agent_lock_status.sh --repo" in run_lock
-    assert "If this is your interrupted run, rerun agent_start.sh with --force-lock." in run_lock
-    assert "--clean-orphaned" in lock_status
-    assert "orphaned:" in lock_status
-    assert "agent_run_lock_is_orphaned" in lock_status
-    assert "rm -f \"$lock_path\"" in lock_status
-    assert "Existing repo paths are never removed." in lock_status
-    assert "scripts/agent_lock_status.sh --all --clean-orphaned" in run_loop
-    assert "scripts/agent_lock_status.sh --all --clean-orphaned" in run_card
-    assert "scripts/agent_lock_status.sh --all --clean-orphaned" in workflow
-
-
 def test_agent_start_and_project_context_use_compact_preflight() -> None:
     start = read_script("scripts/agent_start.sh")
     context = read_script("scripts/project_context.sh")

@@ -4,7 +4,11 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 tmp_dir="$(mktemp -d)"
 cleanup() {
-  rm -rf "$tmp_dir"
+  if [[ -x /usr/bin/trash ]]; then
+    /usr/bin/trash "$tmp_dir"
+  else
+    echo "Offline smoke fixture retained for recoverable cleanup: $tmp_dir"
+  fi
 }
 trap cleanup EXIT
 
@@ -58,6 +62,10 @@ require_offline_preflight_reason() {
   if grep -Fq "Operational error: docker is not available." "$output_path"; then
     return 0
   fi
+  if grep -Fq "Operational error: direct Hub check failed." "$output_path"; then
+    require_output "$output_path" "Trying direct read-only Hub check through DATABASE_URL."
+    return 0
+  fi
   echo "Expected a known offline preflight reason." >&2
   cat "$output_path" >&2
   return 1
@@ -96,7 +104,7 @@ require_output "$finish_output" "== Offline Finish Protocol =="
 require_output "$finish_output" "No reviewed memory was written by this finish attempt."
 require_output "$finish_output" "Do not mark Hub writeback, export, backup, or review-memory as complete."
 require_output "$finish_output" "Retry:"
-require_output "$finish_output" "$ROOT_DIR/scripts/agent_finish.sh --project central-agent-data-hub-demo --review"
+require_output "$finish_output" "$ROOT_DIR/scripts/agent_finish.sh --project central-agent-data-hub-demo --review --no-lock"
 require_output "$finish_output" "Recovery note:"
 recovery_note="$tmp_dir/offline-finish/central-agent-data-hub-demo-latest.md"
 if [[ ! -f "$recovery_note" ]]; then
@@ -108,7 +116,7 @@ require_output "$recovery_note" "# Offline Finish Recovery"
 require_output "$recovery_note" "reviewed_memory_written: no"
 require_output "$recovery_note" "export_completed: no"
 require_output "$recovery_note" "backup_completed: no"
-require_output "$recovery_note" "$ROOT_DIR/scripts/agent_finish.sh --project central-agent-data-hub-demo --review"
+require_output "$recovery_note" "$ROOT_DIR/scripts/agent_finish.sh --project central-agent-data-hub-demo --review --no-lock"
 require_output "$recovery_note" "This file is a local recovery note only."
 
 echo "Offline-agent smoke: ok"

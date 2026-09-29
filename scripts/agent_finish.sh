@@ -8,7 +8,7 @@ source "$ROOT_DIR/scripts/agent_run_lock.sh"
 
 usage() {
   cat <<'EOF'
-Usage: scripts/agent_finish.sh --project <slug> [--since <duration|date>] [--write-report] [--limit <n>] [--review] [--export] [--backup] [--no-lock]
+Usage: scripts/agent_finish.sh --project <slug> [--since <duration|date>] [--write-report] [--limit <n>] [--review] [--export] [--backup] [--run-id <id> | --no-lock]
 
 Finish wrapper for Codex/Hermes work. It runs read-only operational preflight,
 prints a daily summary, handoff, and recent audited agent actions, and optionally
@@ -25,6 +25,7 @@ Options:
   --review           Also print decision/risk/open-question review.
   --export           Export current Hub memory to Obsidian Markdown after finish.
   --backup           Create and verify local/remote DB backup after finish.
+  --run-id <id>      Caller-owned ID printed by the matching start.
   --no-lock          Do not release a local working-tree run lock.
 
 Exit codes:
@@ -42,31 +43,27 @@ REVIEW=0
 EXPORT=0
 BACKUP=0
 NO_LOCK=0
+RUN_ID=""
+LOCK_DIGEST=""
 UNRESOLVED_QUESTION_COUNT=""
 HAS_RECENT_ACTIVITY=0
 OFFLINE_FINISH_DIR="${AGENT_HUB_OFFLINE_FINISH_DIR:-$SHARED_ROOT/.local/offline-finish}"
 
 finish_retry_command() {
-  local retry_command="$ROOT_DIR/scripts/agent_finish.sh --project $PROJECT"
-  if [[ "$SINCE" != "24h" ]]; then
-    retry_command+=" --since $SINCE"
+  local retry_args=("$ROOT_DIR/scripts/agent_finish.sh" --project "$PROJECT")
+  [[ "$SINCE" == "24h" ]] || retry_args+=(--since "$SINCE")
+  [[ "$WRITE_REPORT" -eq 0 ]] || retry_args+=(--write-report)
+  [[ "$REVIEW" -eq 0 ]] || retry_args+=(--review)
+  [[ "$EXPORT" -eq 0 ]] || retry_args+=(--export)
+  [[ "$BACKUP" -eq 0 ]] || retry_args+=(--backup)
+  [[ "$LIMIT" == "8" ]] || retry_args+=(--limit "$LIMIT")
+  if [[ "$NO_LOCK" -eq 1 ]]; then
+    retry_args+=(--no-lock)
+  else
+    retry_args+=(--run-id "$RUN_ID")
   fi
-  if [[ "$WRITE_REPORT" -eq 1 ]]; then
-    retry_command+=" --write-report"
-  fi
-  if [[ "$REVIEW" -eq 1 ]]; then
-    retry_command+=" --review"
-  fi
-  if [[ "$EXPORT" -eq 1 ]]; then
-    retry_command+=" --export"
-  fi
-  if [[ "$BACKUP" -eq 1 ]]; then
-    retry_command+=" --backup"
-  fi
-  if [[ "$LIMIT" != "8" ]]; then
-    retry_command+=" --limit $LIMIT"
-  fi
-  printf '%s\n' "$retry_command"
+  printf '%q ' "${retry_args[@]}"
+  echo
 }
 
 offline_finish_note_path() {
@@ -124,7 +121,7 @@ report, and not proof that finish writeback, export, or backup completed.
 EOF
   then
     echo "Warning: could not write offline finish recovery note: $note_path" >&2
-    rm -f "$temp_path" >/dev/null 2>&1 || true
+    echo "Partial recovery note retained at: $temp_path" >&2
     return 0
   fi
 
@@ -193,6 +190,10 @@ while [[ $# -gt 0 ]]; do
       BACKUP=1
       shift
       ;;
+    --run-id)
+      RUN_ID="${2:-}"
+      shift 2
+      ;;
     --no-lock)
       NO_LOCK=1
       shift
@@ -222,6 +223,14 @@ fi
 if ! [[ "$LIMIT" =~ ^[0-9]+$ ]] || (( LIMIT < 1 )); then
   echo "Error: --limit must be a positive integer." >&2
   exit 2
+fi
+
+if [[ "$NO_LOCK" -eq 1 && -n "$RUN_ID" ]]; then
+  echo "Error: --no-lock and --run-id cannot be combined." >&2
+  exit 2
+fi
+if [[ "$NO_LOCK" -eq 0 ]]; then
+  LOCK_DIGEST="$(agent_run_lock_validate "$PROJECT" "$RUN_ID")" || exit 2
 fi
 
 if ! "$ROOT_DIR/scripts/agent_preflight.sh" --compact; then
@@ -315,14 +324,14 @@ else
 fi
 if [[ "$EXPORT" -eq 0 ]]; then
   if [[ "$WRITE_REPORT" -eq 1 ]]; then
-    echo "- This finish step wrote a report; export now with scripts/agent_finish.sh --project $PROJECT --review --export, or run agent-hub export directly."
+    echo "- This finish step wrote a report; export now with scripts/agent_finish.sh --project $PROJECT --review --export --no-lock, or run agent-hub export directly."
   else
     echo "- Export only if you write reviewed memory after this finish step."
   fi
 fi
 if [[ "$BACKUP" -eq 0 ]]; then
   if [[ "$WRITE_REPORT" -eq 1 ]]; then
-    echo "- This finish step wrote durable memory; run scripts/agent_finish.sh --project $PROJECT --review --backup to create and verify a backup."
+    echo "- This finish step wrote durable memory; run scripts/agent_finish.sh --project $PROJECT --review --backup --no-lock to create and verify a backup."
   else
     echo "- Backup only if you write or export important reviewed memory after this finish step."
   fi
@@ -362,7 +371,7 @@ fi
 if [[ "$NO_LOCK" -eq 0 ]]; then
   echo
   echo "== Run Lock =="
-  agent_run_lock_release "$PROJECT"
+  agent_run_lock_release "$PROJECT" "$RUN_ID" "$LOCK_DIGEST"
 fi
 
 echo

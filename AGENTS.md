@@ -11,12 +11,14 @@ Use the Run Card rhythm for substantial work: start with Hub context, work insid
 one project boundary, finish with review, and write back only reviewed,
 non-sensitive memory.
 
-Use the shared Hub before and after substantial project work:
+Use one start command before substantial project work. Keep its printed run_id
+and pass that caller-owned ID to finish. Explicitly unlocked runs use --no-lock
+at both ends:
 
 ```bash
 scripts/agent_start.sh --project central-agent-data-hub --query "<current focus>"
 scripts/agent_start.sh --project central-agent-data-hub --query "<current focus>" --review
-scripts/agent_finish.sh --project central-agent-data-hub --review
+scripts/agent_finish.sh --project central-agent-data-hub --review --run-id <id-from-start>
 ```
 
 For reviewed, non-sensitive memory candidates, dry-run first:

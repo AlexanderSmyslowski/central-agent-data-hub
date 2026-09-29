@@ -48,12 +48,14 @@ If work requires protected hosting, deployment, FTP, or production access,
 request a human secure handoff outside the Hub, Git, and Obsidian. Store back
 only the reviewed, non-sensitive outcome.
 
-Use the shared Hub before and after substantial project work:
+Use one of the start commands before substantial project work. Keep the run_id
+printed by that successful start and pass it to finish; never take another run's
+ID from a lock file. An explicitly unlocked run uses --no-lock at both ends:
 
 ```bash
 {root}/scripts/agent_start.sh --project {project_slug} --query "<current focus>"
 {root}/scripts/agent_start.sh --project {project_slug} --query "<current focus>" --review
-{root}/scripts/agent_finish.sh --project {project_slug} --review
+{root}/scripts/agent_finish.sh --project {project_slug} --review --run-id <id-from-start>
 ```
 
 For reviewed, non-sensitive memory candidates, dry-run first:

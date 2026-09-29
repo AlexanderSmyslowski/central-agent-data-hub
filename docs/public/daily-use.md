@@ -95,10 +95,11 @@ audited; there is no time-based auto-accept and no silent promotion.
 
 ## 6. Finish The Run
 
-Close the loop with a summary and handoff:
+Keep the `run_id` printed by your successful start. Close the loop with a summary
+and handoff using that caller-owned ID:
 
 ```bash
-scripts/agent_finish.sh --project <project-slug> --review
+scripts/agent_finish.sh --project <project-slug> --review --run-id <id-from-start>
 ```
 
 If the Hub is offline, finish stops before writing reviewed memory and prints
@@ -108,11 +109,12 @@ is ready. The failed finish also writes a local recovery note under
 `.local/offline-finish/` with the retry command and explicit markers that no
 reviewed memory, export, or backup completed.
 
-If durable memory was written and the session should end with projection and
-backup, use:
+If durable memory was written after the successful finish above, run an explicitly
+unlocked follow-up for projection and backup. For a first finish, use your
+`--run-id <id-from-start>` instead of `--no-lock`:
 
 ```bash
-scripts/agent_finish.sh --project <project-slug> --review --export --backup
+scripts/agent_finish.sh --project <project-slug> --review --export --backup --no-lock
 scripts/memory_receipt.sh --project <project-slug> --since 24h
 ```
 

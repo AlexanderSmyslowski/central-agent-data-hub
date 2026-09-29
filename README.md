@@ -233,7 +233,7 @@ work loop:
 agent-hub register-project --repo /path/to/project --slug <project-slug> --name "Project Name"
 scripts/agent_start.sh --project <project-slug> --query "<current focus>" --review
 # work inside that project boundary
-scripts/agent_finish.sh --project <project-slug> --review
+scripts/agent_finish.sh --project <project-slug> --review --run-id <id-from-start>
 ```
 
 Use Hub View as the local human workbench: inspect reviewed memory, review
@@ -273,8 +273,12 @@ The normal run rhythm is:
 ```bash
 scripts/agent_start.sh --project <project-slug> --query "<current focus>" --review
 # work inside one project boundary
-scripts/agent_finish.sh --project <project-slug> --review
+scripts/agent_finish.sh --project <project-slug> --review --run-id <id-from-start>
 ```
+
+Keep the `run_id` printed by the successful start and use its recommended finish
+command. Locks never expire automatically; interrupted runs use the explicit
+[lock recovery procedure](docs/agent-run-loop.md#inspect-and-recover-one-lock).
 
 `agent_start.sh` prints an **ADH Context Loaded** receipt before the detailed
 memory sections. The receipt shows the project, task, reviewed-memory counts,
