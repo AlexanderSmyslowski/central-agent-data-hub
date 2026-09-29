@@ -8,7 +8,7 @@ source "$ROOT_DIR/scripts/agent_run_lock.sh"
 
 usage() {
   cat <<'EOF'
-Usage: scripts/agent_start.sh --project <slug> [--query <focus>] [--limit <n>] [--review] [--no-lock] [--force-lock]
+Usage: scripts/agent_start.sh --project <slug> [--query <focus>] [--limit <n>] [--review] [--no-lock] [--owner-pid <durable-pid>]
        scripts/agent_start.sh --all-projects [--limit <n>]
        scripts/agent_start.sh --all-websites [--limit <n>]
 
@@ -24,7 +24,7 @@ Options:
   --limit <n>        Maximum rows per section, default 8.
   --review           Also print the decision/risk/open-question review.
   --no-lock          Skip the local working-tree run lock.
-  --force-lock       Replace an existing local working-tree run lock.
+  --owner-pid <pid>  Explicit durable owner process (never the temporary wrapper).
 
 Exit codes:
   0  start context loaded
@@ -40,13 +40,16 @@ ALL_WEBSITES=0
 LIMIT=8
 REVIEW=0
 NO_LOCK=0
-FORCE_LOCK=0
+OWNER_PID=""
+AGENT_RUN_ID=""
+AGENT_RUN_DIGEST=""
+AGENT_RUN_REPO=""
 LOCK_ACQUIRED=0
 
 cleanup_start_lock_on_error() {
   local exit_code=$?
   if [[ "$exit_code" -ne 0 && "$LOCK_ACQUIRED" -eq 1 ]]; then
-    agent_run_lock_release "$PROJECT" >/dev/null 2>&1 || true
+    agent_run_lock_release "$PROJECT" "$AGENT_RUN_ID" "$AGENT_RUN_DIGEST" "$AGENT_RUN_REPO" || echo "Warning: failed-start lock retained; inspect exact snapshot." >&2
   fi
   exit "$exit_code"
 }
@@ -83,9 +86,13 @@ while [[ $# -gt 0 ]]; do
       NO_LOCK=1
       shift
       ;;
+    --owner-pid)
+      OWNER_PID="${2:-}"
+      shift 2
+      ;;
     --force-lock)
-      FORCE_LOCK=1
-      shift
+      echo "Error: --force-lock is disabled; inspect agent_lock_status.sh and use explicit agent_lock_recover.sh." >&2
+      exit 2
       ;;
     -h|--help)
       usage
@@ -131,8 +138,8 @@ if ! [[ "$LIMIT" =~ ^[0-9]+$ ]] || (( LIMIT < 1 )); then
   exit 2
 fi
 
-if [[ "$NO_LOCK" -eq 1 && "$FORCE_LOCK" -eq 1 ]]; then
-  echo "Error: --no-lock and --force-lock cannot be combined." >&2
+if [[ "$NO_LOCK" -eq 1 && -n "$OWNER_PID" ]]; then
+  echo "Error: --no-lock and --owner-pid cannot be combined." >&2
   exit 2
 fi
 
@@ -147,7 +154,7 @@ fi
 
 if [[ -n "$PROJECT" && "$NO_LOCK" -eq 0 ]]; then
   echo "== Run Lock =="
-  if ! agent_run_lock_acquire "$PROJECT" "$FORCE_LOCK"; then
+  if ! agent_run_lock_acquire "$PROJECT" "$OWNER_PID"; then
     exit 2
   fi
   LOCK_ACQUIRED=1
@@ -210,5 +217,12 @@ echo
 echo "Agent start result: ready"
 if [[ -n "$PROJECT" ]]; then
   echo "Recommended finish:"
-  echo "  scripts/agent_finish.sh --project $PROJECT --review"
+  finish_args=(scripts/agent_finish.sh --project "$PROJECT" --review)
+  if [[ "$NO_LOCK" -eq 1 ]]; then
+    finish_args+=(--no-lock)
+  else
+    finish_args+=(--run-id "$AGENT_RUN_ID")
+  fi
+  printf "  %q" "${finish_args[@]}"
+  echo
 fi

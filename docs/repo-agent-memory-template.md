@@ -43,12 +43,15 @@ If there is no focused query yet:
 
 ## After Work
 
-Produce a finish summary and handoff:
+Keep the `run_id` printed by the successful start. Produce a finish summary and
+handoff with that caller-owned ID; never borrow an ID from an existing lock.
+For an explicitly unlocked run, use `--no-lock` at both start and finish:
 
 ```bash
 /path/to/central-agent-data-hub/scripts/agent_finish.sh \
   --project <project-slug> \
-  --review
+  --review \
+  --run-id <id-from-start>
 ```
 
 For a reviewed memory candidate, dry-run first:

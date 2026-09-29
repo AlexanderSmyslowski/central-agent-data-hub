@@ -23,7 +23,7 @@ belongs to the selected project. If the project and directory do not match, stop
 and switch to the correct Codex project or repo.
 
 For single-project work this also creates a local working-tree run lock. If the
-lock blocks, another agent is already using this checkout. Finish that run or
+lock blocks, a previous run still holds this checkout. Finish that exact run or
 create a separate git worktree for parallel work.
 
 To inspect locks without changing them:
@@ -33,12 +33,13 @@ scripts/agent_lock_status.sh --repo /path/to/project
 scripts/agent_lock_status.sh --all
 ```
 
-If a lock is marked `orphaned: yes`, its recorded repo path no longer exists.
-Clean only those orphaned locks explicitly:
+A missing recorded repo (`orphaned: true`) and an old lock (`stale: true`) are
+independent observations, not proof of owner death. Nothing expires automatically.
+Keep the `run_id` printed by start and supply it to finish. For interrupted or
+legacy runs, preview one exact snapshot with `scripts/agent_lock_recover.sh --repo
+/path/to/project`, then follow the explicit digest/reason/acknowledgement and
+mixed-version quiescence procedure in [Agent Run Loop](agent-run-loop.md).
 
-```bash
-scripts/agent_lock_status.sh --all --clean-orphaned
-```
 
 For parallel write-capable work, create a separate worktree first:
 
@@ -66,7 +67,7 @@ scripts/agent_worktree.sh \
 ## 3. Finish
 
 ```bash
-scripts/agent_finish.sh --project <project-slug> --review
+scripts/agent_finish.sh --project <project-slug> --review --run-id <id-from-start>
 ```
 
 Read the handoff, memory triage, Next Best Step, and recent agent actions.
@@ -102,8 +103,11 @@ Store at most 1-3 reviewed, non-sensitive memories per run.
 
 ## 5. Close Strongly When Memory Was Written
 
+If step 3 already finished and released your lock, this follow-up is explicitly
+unlocked. If finishing for the first time, use `--run-id <id-from-start>` instead:
+
 ```bash
-scripts/agent_finish.sh --project <project-slug> --review --export --backup
+scripts/agent_finish.sh --project <project-slug> --review --export --backup --no-lock
 scripts/memory_receipt.sh --project <project-slug> --since 24h
 ```
 

@@ -54,10 +54,11 @@ scripts/agent_start.sh --project <project-slug> --query "<current focus>" --revi
 That start step loads reviewed project context, checks project boundaries, and
 prints a working contract for the run.
 
-After the work, the agent finishes with:
+After the work, the agent finishes with the caller-owned `run_id` printed by
+the successful start:
 
 ```bash
-scripts/agent_finish.sh --project <project-slug> --review
+scripts/agent_finish.sh --project <project-slug> --review --run-id <id-from-start>
 ```
 
 Only useful, reviewed residue should be written back.

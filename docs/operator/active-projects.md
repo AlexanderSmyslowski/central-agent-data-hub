@@ -30,12 +30,13 @@ For substantial work, start inside the correct repository and run:
   --review
 ```
 
-After substantial work, finish with:
+After substantial work, finish with the caller-owned `run_id` printed by the
+successful start:
 
 ```bash
 /path/to/central-agent-data-hub/scripts/agent_finish.sh \
   --project <hub-slug> \
-  --review
+  --review --run-id <id-from-start>
 ```
 
 Only store reviewed, non-sensitive memory through:

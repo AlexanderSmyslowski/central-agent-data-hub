@@ -75,3 +75,29 @@ def test_plan_repo_agent_memory_rejects_paths_outside_repo(tmp_path) -> None:
             hub_root="/opt/adh",
             target_file="../AGENTS.md",
         )
+
+
+def test_installed_finish_command_transports_callers_run_id(tmp_path) -> None:
+    """A regenerated instruction block must produce an executable owned finish."""
+    import json
+    import shlex
+    import subprocess
+    import sys
+
+    hub = tmp_path / 'hub'
+    scripts = hub / 'scripts'
+    scripts.mkdir(parents=True)
+    finish = scripts / 'agent_finish.sh'
+    finish.write_text('#!' + sys.executable + '\nimport json, sys\nprint(json.dumps(sys.argv[1:]))\n')
+    finish.chmod(0o755)
+    plan = plan_repo_agent_memory(repo_path=tmp_path, project_slug='example', hub_root=hub)
+    install_repo_agent_memory(plan)
+    command = next(line for line in plan.target_path.read_text().splitlines()
+                   if line.startswith(str(finish)))
+    run_id = '0123456789abcdef0123456789abcdef'
+    result = subprocess.run(shlex.split(command.replace('<id-from-start>', run_id)),
+                            capture_output=True, text=True, check=True)
+    args = json.loads(result.stdout)
+    assert '--run-id' in args
+    assert args[args.index('--run-id') + 1] == run_id
+    assert '--no-lock' not in args

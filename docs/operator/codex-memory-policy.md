@@ -11,10 +11,11 @@ Before substantial project work:
 /path/to/central-agent-data-hub/scripts/agent_start.sh --project <project-slug> --query "<current focus>"
 ```
 
-After substantial project work:
+After substantial project work, finish with the caller-owned `run_id` printed
+by the successful start:
 
 ```bash
-/path/to/central-agent-data-hub/scripts/agent_finish.sh --project <project-slug>
+/path/to/central-agent-data-hub/scripts/agent_finish.sh --project <project-slug> --run-id <id-from-start>
 ```
 
 Write back only reviewed, non-sensitive memory:
